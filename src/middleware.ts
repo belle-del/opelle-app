@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
 
   if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/(auth)/login";
+    redirectUrl.pathname = "/login";
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
 
   if (!session) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/(auth)/login";
+    redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("redirectedFrom", request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }
