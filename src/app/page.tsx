@@ -35,10 +35,10 @@ export default function HomePage() {
             Open Client Portal
           </Link>
           <Link
-            href="/login"
+            href="/"
             className="rounded-full border border-emerald-500/60 px-5 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-400"
           >
-            Sign in
+            Home
           </Link>
         </div>
 

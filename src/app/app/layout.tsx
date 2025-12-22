@@ -31,10 +31,10 @@ export default function AppLayout({
             ))}
           </nav>
           <Link
-            href="/(auth)/logout"
+            href="/"
             className="mt-auto rounded-lg border border-slate-700 px-3 py-2 text-center text-sm text-slate-200 transition hover:border-slate-500"
           >
-            Logout
+            Back home
           </Link>
         </aside>
 
@@ -48,10 +48,10 @@ export default function AppLayout({
             </div>
             <div className="flex items-center gap-3">
               <Link
-                href="/(auth)/logout"
+                href="/"
                 className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500"
               >
-                Logout
+                Home
               </Link>
             </div>
           </header>
