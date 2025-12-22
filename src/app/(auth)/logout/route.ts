@@ -1,10 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { env } from "@/lib/env";
 
 export async function GET(request: NextRequest) {
-  const cookieStore = cookies();
   const response = NextResponse.redirect(new URL("/", request.url));
 
   const supabase = createServerClient(
@@ -13,7 +11,7 @@ export async function GET(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll();
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
