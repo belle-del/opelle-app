@@ -1,6 +1,10 @@
 import Link from "next/link";
 
 export default function HomePage() {
+  const commit =
+    process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "unknown";
+  const env = process.env.VERCEL_ENV ?? "unknown";
+
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">
       <div className="mx-auto flex max-w-4xl flex-col gap-10">
@@ -36,6 +40,11 @@ export default function HomePage() {
           >
             Sign in
           </Link>
+        </div>
+
+        <div className="text-xs text-slate-400">
+          <p>Deploy check: commit {commit} • env {env}</p>
+          <p>Health: /api/health</p>
         </div>
       </div>
     </main>
