@@ -1,15 +1,21 @@
-import type { StorageState } from "@/lib/models";
+import type { Appointment, Client, Formula } from "@/lib/models";
+
+export type StorageState = {
+  clients: Client[];
+  appointments: Appointment[];
+  formulas: Formula[];
+};
 
 export const getMockSeed = (): StorageState => {
   const now = new Date();
   const nowIso = now.toISOString();
 
   return {
-    version: 1,
     clients: [
       {
         id: "client_avery",
-        name: "Avery Chen",
+        firstName: "Avery",
+        lastName: "Chen",
         pronouns: "she/her",
         phone: "(415) 555-0188",
         email: "avery@example.com",
@@ -19,7 +25,8 @@ export const getMockSeed = (): StorageState => {
       },
       {
         id: "client_maya",
-        name: "Maya Torres",
+        firstName: "Maya",
+        lastName: "Torres",
         pronouns: "they/them",
         phone: "(415) 555-0122",
         email: "maya@example.com",

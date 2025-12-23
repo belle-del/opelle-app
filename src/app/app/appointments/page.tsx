@@ -7,6 +7,7 @@ import type {
   AppointmentStatus,
   Client,
 } from "@/lib/models";
+import { getClientDisplayName } from "@/lib/models";
 import {
   deleteAppointment,
   listAppointments,
@@ -220,14 +221,14 @@ export default function AppointmentsPage() {
                   (item) => item.id === event.target.value
                 );
                 handleChange("clientId", event.target.value || undefined);
-                handleChange("clientName", client?.name ?? "");
+                handleChange("clientName", client ? getClientDisplayName(client) : "");
               }}
               className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
             >
               <option value="">Select client (or type below)</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>
-                  {client.name}
+                  {getClientDisplayName(client)}
                 </option>
               ))}
             </select>

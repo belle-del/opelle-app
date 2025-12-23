@@ -2,22 +2,50 @@ import type {
   Appointment,
   AppointmentInput,
   Client,
-  ClientInput,
   Formula,
   FormulaInput,
-  StorageState,
 } from "@/lib/models";
 import { getMockSeed } from "@/lib/mockSeed";
 
-const STORAGE_KEY = "opelle.storage.v1";
-const STORAGE_VERSION = 1;
+const KEY_PREFIX = "opelle:v1";
+const CLIENTS_KEY = `${KEY_PREFIX}:clients`;
+const APPOINTMENTS_KEY = `${KEY_PREFIX}:appointments`;
+const FORMULAS_KEY = `${KEY_PREFIX}:formulas`;
 
-const emptyState = (): StorageState => ({
-  version: STORAGE_VERSION,
-  clients: [],
-  appointments: [],
-  formulas: [],
-});
+const safeParse = <T>(raw: string | null, fallback: T): T => {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+};
+
+const readList = <T>(key: string, fallback: T[]): T[] => {
+  if (typeof window === "undefined") return fallback;
+  return safeParse<T[]>(window.localStorage.getItem(key), fallback);
+};
+
+const writeList = <T>(key: string, value: T[]) => {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(key, JSON.stringify(value));
+};
+
+const ensureSeed = () => {
+  if (typeof window === "undefined") return;
+  if (
+    window.localStorage.getItem(CLIENTS_KEY) ||
+    window.localStorage.getItem(APPOINTMENTS_KEY) ||
+    window.localStorage.getItem(FORMULAS_KEY)
+  ) {
+    return;
+  }
+
+  const seeded = getMockSeed();
+  writeList(CLIENTS_KEY, seeded.clients);
+  writeList(APPOINTMENTS_KEY, seeded.appointments);
+  writeList(FORMULAS_KEY, seeded.formulas);
+};
 
 const createId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -26,179 +54,147 @@ const createId = () => {
   return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 };
 
-const normalizeState = (state: StorageState): StorageState => ({
-  version: STORAGE_VERSION,
-  clients: Array.isArray(state.clients) ? state.clients : [],
-  appointments: Array.isArray(state.appointments) ? state.appointments : [],
-  formulas: Array.isArray(state.formulas) ? state.formulas : [],
-});
-
-const safeParse = (raw: string | null): StorageState | null => {
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as StorageState;
-  } catch {
-    return null;
-  }
+export const getClients = (): Client[] => {
+  ensureSeed();
+  return readList<Client>(CLIENTS_KEY, []).sort((a, b) =>
+    b.updatedAt.localeCompare(a.updatedAt)
+  );
 };
 
-export const readStorage = (): StorageState => {
-  if (typeof window === "undefined") {
-    return emptyState();
-  }
+export const listClients = (): Client[] => getClients();
 
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    const seeded = getMockSeed();
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-    return normalizeState(seeded);
-  }
-
-  const parsed = safeParse(raw);
-  if (!parsed || parsed.version !== STORAGE_VERSION) {
-    const seeded = getMockSeed();
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-    return normalizeState(seeded);
-  }
-
-  return normalizeState(parsed);
+export const getClientById = (id: string): Client | null => {
+  ensureSeed();
+  const clients = readList<Client>(CLIENTS_KEY, []);
+  return clients.find((client) => client.id === id) ?? null;
 };
 
-export const writeStorage = (state: StorageState) => {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-};
-
-const updateStorage = (updater: (state: StorageState) => StorageState) => {
-  const current = readStorage();
-  const next = updater(current);
-  writeStorage(next);
-  return next;
-};
-
-export const listClients = (): Client[] =>
-  readStorage().clients.slice().sort((a, b) => a.name.localeCompare(b.name));
-
-export const getClientById = (id: string): Client | undefined =>
-  readStorage().clients.find((client) => client.id === id);
-
-export const saveClient = (input: ClientInput): Client[] => {
+export const upsertClient = (client: Client): Client => {
+  ensureSeed();
   const now = new Date().toISOString();
-  return updateStorage((state) => {
-    let clients = state.clients.slice();
-    if (input.id) {
-      clients = clients.map((client) =>
-        client.id === input.id
-          ? { ...client, ...input, updatedAt: now }
-          : client
-      );
-    } else {
-      const newClient: Client = {
-        id: createId(),
-        name: input.name,
-        pronouns: input.pronouns,
-        phone: input.phone,
-        email: input.email,
-        notes: input.notes,
-        createdAt: now,
-        updatedAt: now,
-      };
-      clients = [...clients, newClient];
-    }
-    return { ...state, clients };
-  }).clients;
+  const clients = readList<Client>(CLIENTS_KEY, []);
+  const exists = clients.some((item) => item.id === client.id);
+  const nextClient: Client = {
+    ...client,
+    id: client.id || createId(),
+    firstName: client.firstName.trim(),
+    lastName: client.lastName?.trim() || undefined,
+    pronouns: client.pronouns?.trim() || undefined,
+    phone: client.phone?.trim() || undefined,
+    email: client.email?.trim() || undefined,
+    notes: client.notes?.trim() || undefined,
+    createdAt: exists ? client.createdAt : now,
+    updatedAt: now,
+  };
+
+  const nextClients = exists
+    ? clients.map((item) => (item.id === nextClient.id ? nextClient : item))
+    : [...clients, nextClient];
+
+  writeList(CLIENTS_KEY, nextClients);
+  return nextClient;
 };
 
-export const deleteClient = (id: string): Client[] => {
-  return updateStorage((state) => ({
-    ...state,
-    clients: state.clients.filter((client) => client.id !== id),
-    appointments: state.appointments.filter(
-      (appointment) => appointment.clientId !== id
-    ),
-  })).clients;
+export const deleteClient = (id: string): void => {
+  ensureSeed();
+  const clients = readList<Client>(CLIENTS_KEY, []);
+  const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
+  writeList(
+    CLIENTS_KEY,
+    clients.filter((client) => client.id !== id)
+  );
+  writeList(
+    APPOINTMENTS_KEY,
+    appointments.filter((appointment) => appointment.clientId !== id)
+  );
 };
 
-export const listAppointments = (): Appointment[] =>
-  readStorage()
-    .appointments.slice()
-    .sort((a, b) => a.startAt.localeCompare(b.startAt));
+export const listAppointments = (): Appointment[] => {
+  ensureSeed();
+  return readList<Appointment>(APPOINTMENTS_KEY, []).sort((a, b) =>
+    a.startAt.localeCompare(b.startAt)
+  );
+};
 
 export const saveAppointment = (input: AppointmentInput): Appointment[] => {
+  ensureSeed();
   const now = new Date().toISOString();
-  return updateStorage((state) => {
-    let appointments = state.appointments.slice();
-    if (input.id) {
-      appointments = appointments.map((appointment) =>
+  const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
+  const nextAppointments = input.id
+    ? appointments.map((appointment) =>
         appointment.id === input.id
           ? { ...appointment, ...input, updatedAt: now }
           : appointment
-      );
-    } else {
-      const newAppointment: Appointment = {
-        id: createId(),
-        clientId: input.clientId,
-        clientName: input.clientName,
-        service: input.service,
-        startAt: input.startAt,
-        durationMinutes: input.durationMinutes,
-        status: input.status,
-        notes: input.notes,
-        createdAt: now,
-        updatedAt: now,
-      };
-      appointments = [...appointments, newAppointment];
-    }
-    return { ...state, appointments };
-  }).appointments;
+      )
+    : [
+        ...appointments,
+        {
+          id: createId(),
+          clientId: input.clientId,
+          clientName: input.clientName,
+          service: input.service,
+          startAt: input.startAt,
+          durationMinutes: input.durationMinutes,
+          status: input.status,
+          notes: input.notes,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+
+  writeList(APPOINTMENTS_KEY, nextAppointments);
+  return nextAppointments;
 };
 
 export const deleteAppointment = (id: string): Appointment[] => {
-  return updateStorage((state) => ({
-    ...state,
-    appointments: state.appointments.filter(
-      (appointment) => appointment.id !== id
-    ),
-  })).appointments;
+  ensureSeed();
+  const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
+  const next = appointments.filter((appointment) => appointment.id !== id);
+  writeList(APPOINTMENTS_KEY, next);
+  return next;
 };
 
-export const listFormulas = (): Formula[] =>
-  readStorage()
-    .formulas.slice()
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export const listFormulas = (): Formula[] => {
+  ensureSeed();
+  return readList<Formula>(FORMULAS_KEY, []).sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt)
+  );
+};
 
 export const saveFormula = (input: FormulaInput): Formula[] => {
+  ensureSeed();
   const now = new Date().toISOString();
-  return updateStorage((state) => {
-    let formulas = state.formulas.slice();
-    if (input.id) {
-      formulas = formulas.map((formula) =>
+  const formulas = readList<Formula>(FORMULAS_KEY, []);
+  const nextFormulas = input.id
+    ? formulas.map((formula) =>
         formula.id === input.id
           ? { ...formula, ...input, updatedAt: now }
           : formula
-      );
-    } else {
-      const newFormula: Formula = {
-        id: createId(),
-        clientName: input.clientName,
-        service: input.service,
-        colorLine: input.colorLine,
-        grams: input.grams,
-        developer: input.developer,
-        processingTime: input.processingTime,
-        notes: input.notes,
-        createdAt: now,
-        updatedAt: now,
-      };
-      formulas = [...formulas, newFormula];
-    }
-    return { ...state, formulas };
-  }).formulas;
+      )
+    : [
+        ...formulas,
+        {
+          id: createId(),
+          clientName: input.clientName,
+          service: input.service,
+          colorLine: input.colorLine,
+          grams: input.grams,
+          developer: input.developer,
+          processingTime: input.processingTime,
+          notes: input.notes,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+
+  writeList(FORMULAS_KEY, nextFormulas);
+  return nextFormulas;
 };
 
 export const deleteFormula = (id: string): Formula[] => {
-  return updateStorage((state) => ({
-    ...state,
-    formulas: state.formulas.filter((formula) => formula.id !== id),
-  })).formulas;
+  ensureSeed();
+  const formulas = readList<Formula>(FORMULAS_KEY, []);
+  const next = formulas.filter((formula) => formula.id !== id);
+  writeList(FORMULAS_KEY, next);
+  return next;
 };

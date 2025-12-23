@@ -1,6 +1,7 @@
 export type Client = {
   id: string;
-  name: string;
+  firstName: string;
+  lastName?: string;
   pronouns?: string;
   phone?: string;
   email?: string;
@@ -9,8 +10,10 @@ export type Client = {
   updatedAt: string;
 };
 
-export type ClientInput = Omit<Client, "id" | "createdAt" | "updatedAt"> & {
-  id?: string;
+export const getClientDisplayName = (client: Client) => {
+  return client.lastName
+    ? `${client.firstName} ${client.lastName}`
+    : client.firstName;
 };
 
 export type AppointmentStatus = "scheduled" | "completed" | "canceled";
@@ -50,11 +53,4 @@ export type Formula = {
 
 export type FormulaInput = Omit<Formula, "id" | "createdAt" | "updatedAt"> & {
   id?: string;
-};
-
-export type StorageState = {
-  version: number;
-  clients: Client[];
-  appointments: Appointment[];
-  formulas: Formula[];
 };
