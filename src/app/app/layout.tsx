@@ -1,13 +1,6 @@
 import Link from "next/link";
-
-const navItems = [
-  { href: "/app", label: "Dashboard" },
-  { href: "/app/clients", label: "Clients" },
-  { href: "/app/appointments", label: "Appointments" },
-  { href: "/app/formulas", label: "Formulas" },
-  { href: "/app/education", label: "Education" },
-  { href: "/app/settings", label: "Settings" },
-];
+import AppNav from "@/app/app/_components/AppNav";
+import NewItemMenu from "@/app/app/_components/NewItemMenu";
 
 export default function AppLayout({
   children,
@@ -18,18 +11,10 @@ export default function AppLayout({
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <div className="flex min-h-screen">
         <aside className="hidden w-64 flex-col border-r border-slate-800 bg-slate-900/60 p-6 lg:flex">
-          <div className="text-lg font-semibold tracking-tight">Student Console</div>
-          <nav className="mt-8 flex flex-1 flex-col gap-2 text-sm">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-lg px-3 py-2 text-slate-300 transition hover:bg-slate-800 hover:text-white"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="text-lg font-semibold tracking-tight">
+            Student Console
+          </div>
+          <AppNav />
           <Link
             href="/"
             className="mt-auto rounded-lg border border-slate-700 px-3 py-2 text-center text-sm text-slate-200 transition hover:border-slate-500"
@@ -47,12 +32,7 @@ export default function AppLayout({
               <h1 className="text-xl font-semibold">Student Console</h1>
             </div>
             <div className="flex items-center gap-3">
-              <Link
-                href="/"
-                className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500"
-              >
-                Home
-              </Link>
+              <NewItemMenu />
             </div>
           </header>
 
