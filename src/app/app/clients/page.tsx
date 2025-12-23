@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import type { Client, ClientInput } from "@/lib/models";
 import { deleteClient, listClients, saveClient } from "@/lib/storage";
 import Modal from "@/app/app/_components/Modal";
@@ -19,7 +18,6 @@ export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [form, setForm] = useState<ClientInput>(emptyForm);
   const [modalOpen, setModalOpen] = useState(false);
-  const searchParams = useSearchParams();
 
   const refreshClients = () => {
     setClients(listClients());
@@ -30,11 +28,13 @@ export default function ClientsPage() {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get("new") === "1") {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "1") {
       setForm(emptyForm);
       setModalOpen(true);
     }
-  }, [searchParams]);
+  }, []);
 
   const handleChange = (
     field: keyof ClientInput,

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import type { Formula, FormulaInput } from "@/lib/models";
 import { deleteFormula, listFormulas, saveFormula } from "@/lib/storage";
 import Modal from "@/app/app/_components/Modal";
@@ -21,7 +20,6 @@ export default function FormulasPage() {
   const [form, setForm] = useState<FormulaInput>(emptyForm);
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const searchParams = useSearchParams();
 
   const refreshFormulas = () => {
     setFormulas(listFormulas());
@@ -32,11 +30,13 @@ export default function FormulasPage() {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get("new") === "1") {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "1") {
       setForm(emptyForm);
       setModalOpen(true);
     }
-  }, [searchParams]);
+  }, []);
 
   const handleChange = (
     field: keyof FormulaInput,

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import type {
   Appointment,
   AppointmentInput,
@@ -38,7 +37,6 @@ export default function AppointmentsPage() {
   const [form, setForm] = useState<AppointmentInput>(emptyForm);
   const [modalOpen, setModalOpen] = useState(false);
   const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
-  const searchParams = useSearchParams();
 
   const refreshData = () => {
     setAppointments(listAppointments());
@@ -50,11 +48,13 @@ export default function AppointmentsPage() {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get("new") === "1") {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "1") {
       setForm(emptyForm);
       setModalOpen(true);
     }
-  }, [searchParams]);
+  }, []);
 
   const handleChange = (
     field: keyof AppointmentInput,
