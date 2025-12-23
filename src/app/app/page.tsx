@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import EmbeddedAiDemo from "./embedded-ai-demo";
 import { flags } from "@/lib/flags";
-import { listAppointments, listClients, listFormulas } from "@/lib/storage";
+import { getAppointments, getClients, listFormulas } from "@/lib/storage";
 
 export default function AppDashboardPage() {
   const [clientsCount, setClientsCount] = useState(0);
@@ -12,8 +12,8 @@ export default function AppDashboardPage() {
   const [formulasCount, setFormulasCount] = useState(0);
 
   useEffect(() => {
-    const clients = listClients();
-    const appointments = listAppointments();
+    const clients = getClients();
+    const appointments = getAppointments();
     const formulas = listFormulas();
     const now = new Date().toISOString();
 
@@ -22,7 +22,7 @@ export default function AppDashboardPage() {
     setUpcomingCount(
       appointments.filter(
         (appointment) =>
-          appointment.startAt >= now && appointment.status !== "canceled"
+          appointment.startAt >= now && appointment.status !== "cancelled"
       ).length
     );
     setFormulasCount(formulas.length);

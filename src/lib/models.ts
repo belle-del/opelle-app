@@ -16,26 +16,18 @@ export const getClientDisplayName = (client: Client) => {
     : client.firstName;
 };
 
-export type AppointmentStatus = "scheduled" | "completed" | "canceled";
+export type AppointmentStatus = "scheduled" | "completed" | "cancelled";
 
 export type Appointment = {
   id: string;
-  clientId?: string;
-  clientName: string;
-  service: string;
+  clientId: string;
+  serviceName: string;
   startAt: string;
-  durationMinutes: number;
-  status: AppointmentStatus;
+  durationMin: number;
   notes?: string;
+  status: AppointmentStatus;
   createdAt: string;
   updatedAt: string;
-};
-
-export type AppointmentInput = Omit<
-  Appointment,
-  "id" | "createdAt" | "updatedAt"
-> & {
-  id?: string;
 };
 
 export type Formula = {

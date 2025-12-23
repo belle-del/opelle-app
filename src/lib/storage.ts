@@ -1,6 +1,6 @@
 import type {
   Appointment,
-  AppointmentInput,
+  AppointmentStatus,
   Client,
   Formula,
   FormulaInput,
@@ -54,11 +54,31 @@ const createId = () => {
   return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 };
 
+const normalizeClient = (raw: Partial<Client>): Client => {
+  const now = new Date().toISOString();
+  const legacyName = (raw as { name?: string }).name ?? "";
+  const [legacyFirst, ...legacyRest] = legacyName.trim().split(" ");
+  const legacyLast = legacyRest.join(" ");
+  const firstName = raw.firstName ?? legacyFirst ?? "";
+  const lastName = raw.lastName ?? (legacyLast ? legacyLast : undefined);
+  return {
+    id: raw.id ?? createId(),
+    firstName,
+    lastName,
+    pronouns: raw.pronouns ?? undefined,
+    phone: raw.phone ?? undefined,
+    email: raw.email ?? undefined,
+    notes: raw.notes ?? undefined,
+    createdAt: raw.createdAt ?? now,
+    updatedAt: raw.updatedAt ?? now,
+  };
+};
+
 export const getClients = (): Client[] => {
   ensureSeed();
-  return readList<Client>(CLIENTS_KEY, []).sort((a, b) =>
-    b.updatedAt.localeCompare(a.updatedAt)
-  );
+  return readList<Client>(CLIENTS_KEY, [])
+    .map((client) => normalizeClient(client))
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 };
 
 export const listClients = (): Client[] => getClients();
@@ -66,7 +86,8 @@ export const listClients = (): Client[] => getClients();
 export const getClientById = (id: string): Client | null => {
   ensureSeed();
   const clients = readList<Client>(CLIENTS_KEY, []);
-  return clients.find((client) => client.id === id) ?? null;
+  const match = clients.find((client) => client.id === id);
+  return match ? normalizeClient(match) : null;
 };
 
 export const upsertClient = (client: Client): Client => {
@@ -109,50 +130,78 @@ export const deleteClient = (id: string): void => {
   );
 };
 
-export const listAppointments = (): Appointment[] => {
-  ensureSeed();
-  return readList<Appointment>(APPOINTMENTS_KEY, []).sort((a, b) =>
-    a.startAt.localeCompare(b.startAt)
-  );
+const normalizeStatus = (status: string | undefined): AppointmentStatus => {
+  if (status === "completed") return "completed";
+  if (status === "cancelled" || status === "canceled") return "cancelled";
+  return "scheduled";
 };
 
-export const saveAppointment = (input: AppointmentInput): Appointment[] => {
+const normalizeAppointment = (raw: Partial<Appointment>): Appointment => {
+  const now = new Date().toISOString();
+  return {
+    id: raw.id ?? createId(),
+    clientId: raw.clientId ?? "",
+    serviceName: raw.serviceName ?? (raw as { service?: string }).service ?? "",
+    startAt: raw.startAt ?? now,
+    durationMin:
+      raw.durationMin ?? (raw as { durationMinutes?: number }).durationMinutes ?? 60,
+    status: normalizeStatus(raw.status),
+    notes: raw.notes,
+    createdAt: raw.createdAt ?? now,
+    updatedAt: raw.updatedAt ?? now,
+  };
+};
+
+export const getAppointments = (): Appointment[] => {
+  ensureSeed();
+  const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
+  return appointments
+    .map((appointment) => normalizeAppointment(appointment))
+    .sort((a, b) => b.startAt.localeCompare(a.startAt));
+};
+
+export const getAppointmentById = (id: string): Appointment | null => {
+  ensureSeed();
+  const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
+  const match = appointments.find((appointment) => appointment.id === id);
+  return match ? normalizeAppointment(match) : null;
+};
+
+export const upsertAppointment = (appointment: Appointment): Appointment => {
   ensureSeed();
   const now = new Date().toISOString();
   const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
-  const nextAppointments = input.id
-    ? appointments.map((appointment) =>
-        appointment.id === input.id
-          ? { ...appointment, ...input, updatedAt: now }
-          : appointment
+  const exists = appointments.some((item) => item.id === appointment.id);
+  const nextAppointment: Appointment = {
+    ...appointment,
+    id: appointment.id || createId(),
+    serviceName: appointment.serviceName.trim(),
+    notes: appointment.notes?.trim() || undefined,
+    status: normalizeStatus(appointment.status),
+    createdAt: exists ? appointment.createdAt : now,
+    updatedAt: now,
+  };
+
+  const nextAppointments = exists
+    ? appointments.map((item) =>
+        item.id === nextAppointment.id ? nextAppointment : item
       )
-    : [
-        ...appointments,
-        {
-          id: createId(),
-          clientId: input.clientId,
-          clientName: input.clientName,
-          service: input.service,
-          startAt: input.startAt,
-          durationMinutes: input.durationMinutes,
-          status: input.status,
-          notes: input.notes,
-          createdAt: now,
-          updatedAt: now,
-        },
-      ];
+    : [...appointments, nextAppointment];
 
   writeList(APPOINTMENTS_KEY, nextAppointments);
-  return nextAppointments;
+  return nextAppointment;
 };
 
-export const deleteAppointment = (id: string): Appointment[] => {
+export const deleteAppointment = (id: string): void => {
   ensureSeed();
   const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
-  const next = appointments.filter((appointment) => appointment.id !== id);
-  writeList(APPOINTMENTS_KEY, next);
-  return next;
+  writeList(
+    APPOINTMENTS_KEY,
+    appointments.filter((appointment) => appointment.id !== id)
+  );
 };
+
+export const listAppointments = (): Appointment[] => getAppointments();
 
 export const listFormulas = (): Formula[] => {
   ensureSeed();
