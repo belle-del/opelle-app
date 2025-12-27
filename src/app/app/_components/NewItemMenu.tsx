@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 const items = [
   { href: "/app/clients/new", label: "New Client" },
   { href: "/app/appointments/new", label: "New Appointment" },
-  { href: "/app/formulas?new=1", label: "New Formula" },
+  { href: "/app/formulas/new", label: "New Formula" },
 ];
 
 export default function NewItemMenu() {

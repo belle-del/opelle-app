@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import EmbeddedAiDemo from "./embedded-ai-demo";
 import { flags } from "@/lib/flags";
-import { getAppointments, getClients, listFormulas } from "@/lib/storage";
+import { getAppointments, getClients, getFormulas } from "@/lib/storage";
 
 export default function AppDashboardPage() {
   const [clientsCount, setClientsCount] = useState(0);
@@ -14,7 +14,7 @@ export default function AppDashboardPage() {
   useEffect(() => {
     const clients = getClients();
     const appointments = getAppointments();
-    const formulas = listFormulas();
+    const formulas = getFormulas();
     const now = new Date().toISOString();
 
     setClientsCount(clients.length);

@@ -30,19 +30,26 @@ export type Appointment = {
   updatedAt: string;
 };
 
-export type Formula = {
-  id: string;
-  clientName: string;
-  service: string;
-  colorLine: string;
-  grams: number;
-  developer: string;
-  processingTime: string;
+export type FormulaServiceType = "color" | "lighten" | "tone" | "gloss" | "other";
+
+export type FormulaStep = {
+  stepName: string;
+  product: string;
+  developer?: string;
+  ratio?: string;
+  grams?: number;
+  processingMin?: number;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
 };
 
-export type FormulaInput = Omit<Formula, "id" | "createdAt" | "updatedAt"> & {
-  id?: string;
+export type Formula = {
+  id: string;
+  clientId: string;
+  serviceType: FormulaServiceType;
+  title: string;
+  colorLine?: string;
+  steps: FormulaStep[];
+  appointmentId?: string;
+  createdAt: string;
+  updatedAt: string;
 };

@@ -3,19 +3,26 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { Client } from "@/lib/models";
+import type { Client, Formula } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
-import { deleteClient, getClientById, upsertClient } from "@/lib/storage";
+import {
+  deleteClient,
+  getClientById,
+  getFormulas,
+  upsertClient,
+} from "@/lib/storage";
 
 export default function ClientDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [client, setClient] = useState<Client | null>(null);
+  const [formulas, setFormulas] = useState<Formula[]>([]);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!params?.id) return;
     setClient(getClientById(params.id));
+    setFormulas(getFormulas());
   }, [params?.id]);
 
   if (!client) {
@@ -162,29 +169,79 @@ export default function ClientDetailPage() {
           </div>
         </form>
       ) : (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                Contact
-              </p>
-              <p className="mt-2">{client.phone || "No phone on file"}</p>
-              <p>{client.email || "No email on file"}</p>
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                  Contact
+                </p>
+                <p className="mt-2">{client.phone || "No phone on file"}</p>
+                <p>{client.email || "No email on file"}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                  Pronouns
+                </p>
+                <p className="mt-2">{client.pronouns || "Not specified"}</p>
+              </div>
             </div>
-            <div>
+            <div className="mt-4">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                Pronouns
+                Notes
               </p>
-              <p className="mt-2">{client.pronouns || "Not specified"}</p>
+              <p className="mt-2 text-slate-300">
+                {client.notes || "No notes yet."}
+              </p>
             </div>
           </div>
-          <div className="mt-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-              Notes
-            </p>
-            <p className="mt-2 text-slate-300">
-              {client.notes || "No notes yet."}
-            </p>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold">Formulas</h3>
+                <p className="text-slate-400">
+                  Recent formulas for {getClientDisplayName(client)}.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href={`/app/formulas?clientId=${client.id}`}
+                  className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
+                >
+                  View all
+                </Link>
+                <Link
+                  href={`/app/formulas/new?clientId=${client.id}`}
+                  className="rounded-full border border-emerald-500/60 px-3 py-1 text-xs text-emerald-200"
+                >
+                  New formula
+                </Link>
+              </div>
+            </div>
+            <div className="mt-4 space-y-2">
+              {formulas.filter((formula) => formula.clientId === client.id).slice(0, 3)
+                .length === 0 ? (
+                <p className="text-sm text-slate-400">No formulas yet.</p>
+              ) : (
+                formulas
+                  .filter((formula) => formula.clientId === client.id)
+                  .slice(0, 3)
+                  .map((formula) => (
+                    <Link
+                      key={formula.id}
+                      href={`/app/formulas/${formula.id}`}
+                      className="block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-200"
+                    >
+                      <p className="font-semibold">{formula.title}</p>
+                      <p className="text-xs text-slate-400">
+                        {formula.colorLine || "No color line"} •{" "}
+                        {new Date(formula.updatedAt).toLocaleDateString()}
+                      </p>
+                    </Link>
+                  ))
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -3,7 +3,8 @@ import type {
   AppointmentStatus,
   Client,
   Formula,
-  FormulaInput,
+  FormulaServiceType,
+  FormulaStep,
 } from "@/lib/models";
 import { getMockSeed } from "@/lib/mockSeed";
 
@@ -144,7 +145,9 @@ const normalizeAppointment = (raw: Partial<Appointment>): Appointment => {
     serviceName: raw.serviceName ?? (raw as { service?: string }).service ?? "",
     startAt: raw.startAt ?? now,
     durationMin:
-      raw.durationMin ?? (raw as { durationMinutes?: number }).durationMinutes ?? 60,
+      raw.durationMin ??
+      (raw as { durationMinutes?: number }).durationMinutes ??
+      60,
     status: normalizeStatus(raw.status),
     notes: raw.notes,
     createdAt: raw.createdAt ?? now,
@@ -203,47 +206,118 @@ export const deleteAppointment = (id: string): void => {
 
 export const listAppointments = (): Appointment[] => getAppointments();
 
-export const listFormulas = (): Formula[] => {
-  ensureSeed();
-  return readList<Formula>(FORMULAS_KEY, []).sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt)
-  );
+const normalizeServiceType = (value: string | undefined): FormulaServiceType => {
+  if (
+    value === "color" ||
+    value === "lighten" ||
+    value === "tone" ||
+    value === "gloss"
+  ) {
+    return value;
+  }
+  return "other";
 };
 
-export const saveFormula = (input: FormulaInput): Formula[] => {
+const normalizeStep = (step: Partial<FormulaStep>, index: number): FormulaStep => {
+  return {
+    stepName: step.stepName?.trim() || `Step ${index + 1}`,
+    product: step.product?.trim() || "",
+    developer: step.developer?.trim() || undefined,
+    ratio: step.ratio?.trim() || undefined,
+    grams: step.grams ?? undefined,
+    processingMin: step.processingMin ?? undefined,
+    notes: step.notes?.trim() || undefined,
+  };
+};
+
+const normalizeFormula = (raw: Partial<Formula>): Formula => {
+  const now = new Date().toISOString();
+  const legacy = raw as {
+    clientName?: string;
+    service?: string;
+    developer?: string;
+    ratio?: string;
+    grams?: number;
+    processingTime?: string;
+  };
+  const legacyProcessing = legacy.processingTime
+    ? Number.parseInt(legacy.processingTime, 10)
+    : undefined;
+  const safeLegacyProcessing = Number.isNaN(legacyProcessing)
+    ? undefined
+    : legacyProcessing;
+  const baseStep: FormulaStep = {
+    stepName: "Formula",
+    product: legacy.service ?? raw.title ?? "",
+    developer: legacy.developer,
+    ratio: legacy.ratio,
+    grams: legacy.grams,
+    processingMin: safeLegacyProcessing,
+    notes: raw.notes,
+  };
+
+  const steps = Array.isArray(raw.steps) && raw.steps.length > 0
+    ? raw.steps.map((step, index) => normalizeStep(step, index))
+    : [normalizeStep(baseStep, 0)];
+
+  return {
+    id: raw.id ?? createId(),
+    clientId: raw.clientId ?? "",
+    serviceType: normalizeServiceType(raw.serviceType),
+    title: raw.title ?? legacy.service ?? "Untitled formula",
+    colorLine: raw.colorLine ?? undefined,
+    steps,
+    appointmentId: raw.appointmentId ?? undefined,
+    createdAt: raw.createdAt ?? now,
+    updatedAt: raw.updatedAt ?? now,
+  };
+};
+
+export const getFormulas = (): Formula[] => {
+  ensureSeed();
+  const formulas = readList<Formula>(FORMULAS_KEY, []);
+  return formulas
+    .map((formula) => normalizeFormula(formula))
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+};
+
+export const getFormulaById = (id: string): Formula | null => {
+  ensureSeed();
+  const formulas = readList<Formula>(FORMULAS_KEY, []);
+  const match = formulas.find((formula) => formula.id === id);
+  return match ? normalizeFormula(match) : null;
+};
+
+export const upsertFormula = (formula: Formula): Formula => {
   ensureSeed();
   const now = new Date().toISOString();
   const formulas = readList<Formula>(FORMULAS_KEY, []);
-  const nextFormulas = input.id
-    ? formulas.map((formula) =>
-        formula.id === input.id
-          ? { ...formula, ...input, updatedAt: now }
-          : formula
-      )
-    : [
-        ...formulas,
-        {
-          id: createId(),
-          clientName: input.clientName,
-          service: input.service,
-          colorLine: input.colorLine,
-          grams: input.grams,
-          developer: input.developer,
-          processingTime: input.processingTime,
-          notes: input.notes,
-          createdAt: now,
-          updatedAt: now,
-        },
-      ];
+  const exists = formulas.some((item) => item.id === formula.id);
+  const nextFormula = normalizeFormula({
+    ...formula,
+    id: formula.id || createId(),
+    title: formula.title.trim(),
+    colorLine: formula.colorLine?.trim() || undefined,
+    appointmentId: formula.appointmentId || undefined,
+    createdAt: exists ? formula.createdAt : now,
+    updatedAt: now,
+  });
+
+  const nextFormulas = exists
+    ? formulas.map((item) => (item.id === nextFormula.id ? nextFormula : item))
+    : [...formulas, nextFormula];
 
   writeList(FORMULAS_KEY, nextFormulas);
-  return nextFormulas;
+  return nextFormula;
 };
 
-export const deleteFormula = (id: string): Formula[] => {
+export const deleteFormula = (id: string): void => {
   ensureSeed();
   const formulas = readList<Formula>(FORMULAS_KEY, []);
-  const next = formulas.filter((formula) => formula.id !== id);
-  writeList(FORMULAS_KEY, next);
-  return next;
+  writeList(
+    FORMULAS_KEY,
+    formulas.filter((formula) => formula.id !== id)
+  );
 };
+
+export const listFormulas = (): Formula[] => getFormulas();

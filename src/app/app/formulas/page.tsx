@@ -1,99 +1,83 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { Formula, FormulaInput } from "@/lib/models";
-import { deleteFormula, listFormulas, saveFormula } from "@/lib/storage";
-import Modal from "@/app/app/_components/Modal";
+import type { Formula, FormulaServiceType, Client, Appointment } from "@/lib/models";
+import { getClientDisplayName } from "@/lib/models";
+import { getAppointments, getClients, getFormulas } from "@/lib/storage";
 
-const emptyForm: FormulaInput = {
-  clientName: "",
-  service: "",
-  colorLine: "",
-  grams: 0,
-  developer: "",
-  processingTime: "",
-  notes: "",
-};
+const filterOptions = ["all", "color", "lighten", "tone", "gloss", "other"] as const;
+
+type Filter = (typeof filterOptions)[number];
 
 export default function FormulasPage() {
   const [formulas, setFormulas] = useState<Formula[]>([]);
-  const [form, setForm] = useState<FormulaInput>(emptyForm);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
-
-  const refreshFormulas = () => {
-    setFormulas(listFormulas());
-  };
+  const [clientFilter, setClientFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    refreshFormulas();
+    setFormulas(getFormulas());
+    setClients(getClients());
+    setAppointments(getAppointments());
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get("new") === "1") {
-      setForm(emptyForm);
-      setModalOpen(true);
+    const clientId = params.get("clientId");
+    if (clientId) {
+      setClientFilter(clientId);
     }
   }, []);
 
-  const handleChange = (
-    field: keyof FormulaInput,
-    value: string | number | undefined
-  ) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
+  const clientMap = useMemo(() => {
+    return new Map(clients.map((client) => [client.id, client]));
+  }, [clients]);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!form.clientName.trim() || !form.service.trim()) return;
+  const appointmentMap = useMemo(() => {
+    return new Map(appointments.map((appt) => [appt.id, appt]));
+  }, [appointments]);
 
-    saveFormula({
-      ...form,
-      clientName: form.clientName.trim(),
-      service: form.service.trim(),
-      colorLine: form.colorLine.trim(),
-      developer: form.developer.trim(),
-      processingTime: form.processingTime.trim(),
-      notes: form.notes?.trim() || undefined,
-      grams: Number(form.grams) || 0,
-    });
-    refreshFormulas();
-    setModalOpen(false);
-    setForm(emptyForm);
-  };
-
-  const handleEdit = (formula: Formula) => {
-    setForm({
-      id: formula.id,
-      clientName: formula.clientName,
-      service: formula.service,
-      colorLine: formula.colorLine,
-      grams: formula.grams,
-      developer: formula.developer,
-      processingTime: formula.processingTime,
-      notes: formula.notes ?? "",
-    });
-    setModalOpen(true);
-  };
-
-  const handleDelete = (formulaId: string) => {
-    if (!confirm("Delete this formula?")) return;
-    deleteFormula(formulaId);
-    refreshFormulas();
-  };
-
-  const filteredFormulas = useMemo(() => {
+  const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return formulas;
-    return formulas.filter((formula) =>
-      [formula.clientName, formula.service, formula.colorLine]
+
+    return formulas.filter((formula) => {
+      if (filter !== "all" && formula.serviceType !== filter) {
+        return false;
+      }
+      if (clientFilter && formula.clientId !== clientFilter) {
+        return false;
+      }
+
+      if (!term) return true;
+
+      const clientName = clientMap.has(formula.clientId)
+        ? getClientDisplayName(clientMap.get(formula.clientId)!)
+        : "unknown client";
+
+      const stepText = formula.steps
+        .map((step) => step.product)
+        .join(" ")
+        .toLowerCase();
+
+      return [formula.title, formula.colorLine ?? "", clientName, stepText]
         .join(" ")
         .toLowerCase()
-        .includes(term)
-    );
-  }, [formulas, search]);
+        .includes(term);
+    });
+  }, [clientFilter, clientMap, filter, formulas, search]);
+
+  const filterLabel = (value: Filter) => {
+    if (value === "all") return "All";
+    if (value === "color") return "Color";
+    if (value === "lighten") return "Lighten";
+    if (value === "tone") return "Tone";
+    if (value === "gloss") return "Gloss";
+    return "Other";
+  };
 
   return (
     <div className="space-y-6">
@@ -101,174 +85,88 @@ export default function FormulasPage() {
         <div>
           <h2 className="text-2xl font-semibold">Formulas</h2>
           <p className="text-slate-300">
-            Track formula details and color mixes locally.
+            Track formulas and color recipes stored locally.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            setForm(emptyForm);
-            setModalOpen(true);
-          }}
+        <Link
+          href={clientFilter ? `/app/formulas/new?clientId=${clientFilter}` : "/app/formulas/new"}
           className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
         >
-          New formula
-        </button>
+          New Formula
+        </Link>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {filterOptions.map((value) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setFilter(value)}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              filter === value
+                ? "bg-slate-100 text-slate-950"
+                : "border border-slate-700 text-slate-200"
+            }`}
+          >
+            {filterLabel(value)}
+          </button>
+        ))}
       </div>
 
       <input
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-slate-200"
-        placeholder="Search by client, service, or color line"
+        placeholder="Search by title, client, color line, or product"
       />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {filteredFormulas.length === 0 ? (
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-sm text-slate-300">
-            No formulas yet. Add a new formula to keep reference notes.
+            No formulas yet. Add a formula to start building your recipe library.
           </div>
         ) : (
-          filteredFormulas.map((formula) => (
-            <div
-              key={formula.id}
-              className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-lg font-semibold text-slate-100">
-                    {formula.clientName}
-                  </p>
-                  <p className="text-sm text-slate-400">
-                    {formula.service}
-                  </p>
+          filtered.map((formula) => {
+            const client = clientMap.get(formula.clientId);
+            const appointment = formula.appointmentId
+              ? appointmentMap.get(formula.appointmentId)
+              : undefined;
+
+            return (
+              <Link
+                key={formula.id}
+                href={`/app/formulas/${formula.id}`}
+                className="block rounded-2xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-emerald-500/50"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-lg font-semibold text-slate-100">
+                      {formula.title}
+                    </p>
+                    <p className="text-sm text-slate-400">
+                      {client ? getClientDisplayName(client) : "Unknown client"}
+                    </p>
+                    {formula.colorLine ? (
+                      <p className="text-xs text-slate-500">
+                        {formula.colorLine}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="text-right text-sm text-slate-300">
+                    <p className="capitalize">{formula.serviceType}</p>
+                    <p>Updated {new Date(formula.updatedAt).toLocaleDateString()}</p>
+                    {appointment ? (
+                      <p className="text-xs text-slate-500">
+                        Appt {new Date(appointment.startAt).toLocaleDateString()}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleEdit(formula)}
-                    className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(formula.id)}
-                    className="rounded-full border border-rose-500/60 px-3 py-1 text-xs text-rose-200"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-              <div className="mt-4 space-y-1 text-sm text-slate-300">
-                <p>Color line: {formula.colorLine}</p>
-                <p>Grams: {formula.grams}</p>
-                <p>Developer: {formula.developer}</p>
-                <p>Processing time: {formula.processingTime}</p>
-                {formula.notes ? (
-                  <p className="text-slate-400">Notes: {formula.notes}</p>
-                ) : null}
-              </div>
-            </div>
-          ))
+              </Link>
+            );
+          })
         )}
       </div>
-
-      <Modal
-        open={modalOpen}
-        title={form.id ? "Edit formula" : "New formula"}
-        onClose={() => setModalOpen(false)}
-      >
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="grid gap-3 md:grid-cols-2">
-            <label className="block text-sm text-slate-200">
-              Client
-              <input
-                value={form.clientName}
-                onChange={(event) =>
-                  handleChange("clientName", event.target.value)
-                }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-                required
-              />
-            </label>
-            <label className="block text-sm text-slate-200">
-              Service
-              <input
-                value={form.service}
-                onChange={(event) => handleChange("service", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-                required
-              />
-            </label>
-          </div>
-          <label className="block text-sm text-slate-200">
-            Color line
-            <input
-              value={form.colorLine}
-              onChange={(event) => handleChange("colorLine", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              required
-            />
-          </label>
-          <div className="grid gap-3 md:grid-cols-3">
-            <label className="block text-sm text-slate-200">
-              Grams
-              <input
-                type="number"
-                min={0}
-                value={form.grams}
-                onChange={(event) =>
-                  handleChange("grams", Number(event.target.value))
-                }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block text-sm text-slate-200">
-              Developer
-              <input
-                value={form.developer}
-                onChange={(event) => handleChange("developer", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block text-sm text-slate-200">
-              Processing time
-              <input
-                value={form.processingTime}
-                onChange={(event) =>
-                  handleChange("processingTime", event.target.value)
-                }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              />
-            </label>
-          </div>
-          <label className="block text-sm text-slate-200">
-            Notes
-            <textarea
-              value={form.notes}
-              onChange={(event) => handleChange("notes", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              rows={3}
-            />
-          </label>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setModalOpen(false)}
-              className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
-            >
-              Save formula
-            </button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 }
