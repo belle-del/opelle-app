@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import type { Client, Formula } from "@/lib/models";
+import { useEffect, useMemo, useState } from "react";
+import type { Appointment, Client, Formula } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
 import {
   deleteClient,
+  getAppointments,
   getClientById,
   getFormulas,
   upsertClient,
@@ -17,13 +18,61 @@ export default function ClientDetailPage() {
   const router = useRouter();
   const [client, setClient] = useState<Client | null>(null);
   const [formulas, setFormulas] = useState<Formula[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!params?.id) return;
     setClient(getClientById(params.id));
     setFormulas(getFormulas());
+    setAppointments(getAppointments());
   }, [params?.id]);
+
+  const upcomingAppointments = useMemo(() => {
+    if (!client) return [];
+    const now = new Date().toISOString();
+    return appointments
+      .filter(
+        (appointment) =>
+          appointment.clientId === client.id &&
+          appointment.startAt >= now &&
+          appointment.status !== "cancelled"
+      )
+      .sort((a, b) => a.startAt.localeCompare(b.startAt))
+      .slice(0, 3);
+  }, [appointments, client]);
+
+  const recentFormulas = useMemo(() => {
+    if (!client) return [];
+    return formulas
+      .filter((formula) => formula.clientId === client.id)
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      .slice(0, 3);
+  }, [client, formulas]);
+
+  const activity = useMemo(() => {
+    if (!client) return [];
+    const appointmentItems = appointments
+      .filter((appt) => appt.clientId === client.id)
+      .map((appt) => ({
+        id: appt.id,
+        label: `Appointment • ${appt.serviceName}`,
+        date: appt.updatedAt,
+        href: `/app/appointments/${appt.id}`,
+      }));
+    const formulaItems = formulas
+      .filter((formula) => formula.clientId === client.id)
+      .map((formula) => ({
+        id: formula.id,
+        label: `Formula • ${formula.title}`,
+        date: formula.updatedAt,
+        href: `/app/formulas/${formula.id}`,
+      }));
+
+    return [...appointmentItems, ...formulaItems]
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 5);
+  }, [appointments, client, formulas]);
 
   if (!client) {
     return (
@@ -199,6 +248,41 @@ export default function ClientDetailPage() {
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
+                <h3 className="text-lg font-semibold">Upcoming appointments</h3>
+                <p className="text-slate-400">
+                  Next sessions for {getClientDisplayName(client)}.
+                </p>
+              </div>
+              <Link
+                href={`/app/appointments/new?clientId=${client.id}`}
+                className="rounded-full border border-emerald-500/60 px-3 py-1 text-xs text-emerald-200"
+              >
+                New appointment
+              </Link>
+            </div>
+            <div className="mt-4 space-y-2">
+              {upcomingAppointments.length === 0 ? (
+                <p className="text-sm text-slate-400">No upcoming appointments.</p>
+              ) : (
+                upcomingAppointments.map((appointment) => (
+                  <Link
+                    key={appointment.id}
+                    href={`/app/appointments/${appointment.id}`}
+                    className="block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-200"
+                  >
+                    <p className="font-semibold">{appointment.serviceName}</p>
+                    <p className="text-xs text-slate-400">
+                      {new Date(appointment.startAt).toLocaleString()}
+                    </p>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
                 <h3 className="text-lg font-semibold">Formulas</h3>
                 <p className="text-slate-400">
                   Recent formulas for {getClientDisplayName(client)}.
@@ -220,29 +304,45 @@ export default function ClientDetailPage() {
               </div>
             </div>
             <div className="mt-4 space-y-2">
-              {formulas.filter((formula) => formula.clientId === client.id).slice(0, 3)
-                .length === 0 ? (
+              {recentFormulas.length === 0 ? (
                 <p className="text-sm text-slate-400">No formulas yet.</p>
               ) : (
-                formulas
-                  .filter((formula) => formula.clientId === client.id)
-                  .slice(0, 3)
-                  .map((formula) => (
-                    <Link
-                      key={formula.id}
-                      href={`/app/formulas/${formula.id}`}
-                      className="block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-200"
-                    >
-                      <p className="font-semibold">{formula.title}</p>
-                      <p className="text-xs text-slate-400">
-                        {formula.colorLine || "No color line"} •{" "}
-                        {new Date(formula.updatedAt).toLocaleDateString()}
-                      </p>
-                    </Link>
-                  ))
+                recentFormulas.map((formula) => (
+                  <Link
+                    key={formula.id}
+                    href={`/app/formulas/${formula.id}`}
+                    className="block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-200"
+                  >
+                    <p className="font-semibold">{formula.title}</p>
+                    <p className="text-xs text-slate-400">
+                      {formula.colorLine || "No color line"} •{" "}
+                      {new Date(formula.updatedAt).toLocaleDateString()}
+                    </p>
+                  </Link>
+                ))
               )}
             </div>
           </div>
+
+          {activity.length > 0 ? (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
+              <h3 className="text-lg font-semibold">Activity</h3>
+              <div className="mt-4 space-y-2">
+                {activity.map((item) => (
+                  <Link
+                    key={`${item.label}-${item.id}`}
+                    href={item.href}
+                    className="block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-200"
+                  >
+                    <p className="font-semibold">{item.label}</p>
+                    <p className="text-xs text-slate-400">
+                      {new Date(item.date).toLocaleDateString()}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

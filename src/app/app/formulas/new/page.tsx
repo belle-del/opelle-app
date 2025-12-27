@@ -63,6 +63,14 @@ export default function NewFormulaPage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!form.clientId) return;
+    const exists = clients.some((client) => client.id === form.clientId);
+    if (!exists) {
+      setForm((prev) => ({ ...prev, clientId: "" }));
+    }
+  }, [clients, form.clientId]);
+
   const filteredAppointments = useMemo(() => {
     if (!form.clientId) return [];
     return appointments.filter((appt) => appt.clientId === form.clientId);

@@ -34,6 +34,23 @@ export default function NewAppointmentPage() {
     setClients(getClients());
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const clientId = params.get("clientId");
+    if (clientId) {
+      setForm((prev) => ({ ...prev, clientId }));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!form.clientId) return;
+    const exists = clients.some((client) => client.id === form.clientId);
+    if (!exists) {
+      setForm((prev) => ({ ...prev, clientId: "" }));
+    }
+  }, [clients, form.clientId]);
+
   const handleChange = (
     field: keyof Appointment,
     value: string | number | AppointmentStatus

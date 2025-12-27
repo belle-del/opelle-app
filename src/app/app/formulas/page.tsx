@@ -133,19 +133,30 @@ export default function FormulasPage() {
               : undefined;
 
             return (
-              <Link
+              <div
                 key={formula.id}
-                href={`/app/formulas/${formula.id}`}
-                className="block rounded-2xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-emerald-500/50"
+                className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-lg font-semibold text-slate-100">
+                    <Link
+                      href={`/app/formulas/${formula.id}`}
+                      className="text-lg font-semibold text-slate-100 transition hover:text-emerald-200"
+                    >
                       {formula.title}
-                    </p>
-                    <p className="text-sm text-slate-400">
-                      {client ? getClientDisplayName(client) : "Unknown client"}
-                    </p>
+                    </Link>
+                    <div className="text-sm text-slate-400">
+                      {client ? (
+                        <Link
+                          href={`/app/clients/${client.id}`}
+                          className="transition hover:text-emerald-200"
+                        >
+                          {getClientDisplayName(client)}
+                        </Link>
+                      ) : (
+                        "Unknown client"
+                      )}
+                    </div>
                     {formula.colorLine ? (
                       <p className="text-xs text-slate-500">
                         {formula.colorLine}
@@ -162,7 +173,7 @@ export default function FormulasPage() {
                     ) : null}
                   </div>
                 </div>
-              </Link>
+              </div>
             );
           })
         )}

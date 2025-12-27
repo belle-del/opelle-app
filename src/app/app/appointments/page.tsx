@@ -110,19 +110,30 @@ export default function AppointmentsPage() {
               : "Unknown client";
 
             return (
-              <Link
+              <div
                 key={appointment.id}
-                href={`/app/appointments/${appointment.id}`}
-                className="block rounded-2xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-emerald-500/50"
+                className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-lg font-semibold text-slate-100">
-                      {clientName}
-                    </p>
-                    <p className="text-sm text-slate-400">
+                    <Link
+                      href={`/app/appointments/${appointment.id}`}
+                      className="text-lg font-semibold text-slate-100 transition hover:text-emerald-200"
+                    >
                       {appointment.serviceName}
-                    </p>
+                    </Link>
+                    <div className="text-sm text-slate-400">
+                      {client ? (
+                        <Link
+                          href={`/app/clients/${client.id}`}
+                          className="transition hover:text-emerald-200"
+                        >
+                          {clientName}
+                        </Link>
+                      ) : (
+                        clientName
+                      )}
+                    </div>
                   </div>
                   <div className="text-right text-sm text-slate-300">
                     <p>{new Date(appointment.startAt).toLocaleString()}</p>
@@ -132,7 +143,7 @@ export default function AppointmentsPage() {
                     </p>
                   </div>
                 </div>
-              </Link>
+              </div>
             );
           })
         )}
