@@ -8,7 +8,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useSearchParams } from "next/navigation";
 
 const TOKEN_KEY = "opelle:client:v1:token";
 
@@ -20,7 +19,6 @@ type TokenContextValue = {
 const TokenContext = createContext<TokenContextValue | null>(null);
 
 export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
-  const searchParams = useSearchParams();
   const [token, setTokenState] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,16 +28,6 @@ export const TokenProvider = ({ children }: { children: React.ReactNode }) => {
       setTokenState(stored);
     }
   }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const queryToken = searchParams.get("token");
-    if (queryToken && queryToken.trim().length > 0) {
-      const trimmed = queryToken.trim();
-      setTokenState(trimmed);
-      window.localStorage.setItem(TOKEN_KEY, trimmed);
-    }
-  }, [searchParams]);
 
   const setToken = useCallback((nextToken: string | null) => {
     if (typeof window === "undefined") return;

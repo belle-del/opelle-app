@@ -1,25 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useClientPacket } from "@/lib/portal/useClientPacket";
+import { useToken } from "@/lib/portal/tokenContext";
 
-export default function AftercareClient({
-  initialToken,
-}: {
-  initialToken?: string;
-}) {
+export default function AftercareClient() {
   const [status, setStatus] = useState<string | null>(null);
-  const [localToken, setLocalToken] = useState<string | null>(null);
-  const activeToken = initialToken ?? localToken ?? undefined;
-  const { packet } = useClientPacket(activeToken ?? null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem("opelle:client:v1:token");
-    if (stored) {
-      setLocalToken(stored);
-    }
-  }, []);
+  const { token } = useToken();
+  const { packet } = useClientPacket(token ?? null);
 
   const aftercare = packet?.aftercare;
 

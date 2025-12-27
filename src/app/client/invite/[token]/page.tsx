@@ -41,7 +41,7 @@ export default function ClientInvitePage() {
     if (typeof window !== "undefined") {
       window.localStorage.setItem(TOKEN_KEY, token.trim());
     }
-    router.push(`/client?token=${encodeURIComponent(token.trim())}`);
+    router.push("/client");
   };
 
   const handlePasteSubmit = (event: React.FormEvent<HTMLFormElement>) => {
