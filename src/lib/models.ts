@@ -6,6 +6,8 @@ export type Client = {
   phone?: string;
   email?: string;
   notes?: string;
+  inviteToken?: string;
+  inviteUpdatedAt?: string;
   createdAt: string;
   updatedAt: string;
 };

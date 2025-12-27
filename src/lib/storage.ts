@@ -71,6 +71,8 @@ const normalizeClient = (raw: Partial<Client>): Client => {
     phone: raw.phone ?? undefined,
     email: raw.email ?? undefined,
     notes: raw.notes ?? undefined,
+    inviteToken: raw.inviteToken ?? undefined,
+    inviteUpdatedAt: raw.inviteUpdatedAt ?? undefined,
     createdAt: raw.createdAt ?? now,
     updatedAt: raw.updatedAt ?? now,
   };
@@ -130,6 +132,59 @@ export const deleteClient = (id: string): void => {
     APPOINTMENTS_KEY,
     appointments.filter((appointment) => appointment.clientId !== id)
   );
+};
+
+const INVITE_ALPHABET =
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+const generateInviteToken = (length: number) => {
+  const size = Math.max(10, Math.min(16, length));
+  if (typeof crypto !== "undefined" && "getRandomValues" in crypto) {
+    const values = new Uint32Array(size);
+    crypto.getRandomValues(values);
+    return Array.from(values, (value) => INVITE_ALPHABET[value % INVITE_ALPHABET.length]).join(
+      ""
+    );
+  }
+  let token = "";
+  for (let i = 0; i < size; i += 1) {
+    token += INVITE_ALPHABET[Math.floor(Math.random() * INVITE_ALPHABET.length)];
+  }
+  return token;
+};
+
+const updateClientInvite = (clientId: string, token: string) => {
+  ensureSeed();
+  const clients = readList<Client>(CLIENTS_KEY, []);
+  const now = new Date().toISOString();
+  const nextClients = clients.map((client) =>
+    client.id === clientId
+      ? {
+          ...client,
+          inviteToken: token,
+          inviteUpdatedAt: now,
+          updatedAt: now,
+        }
+      : client
+  );
+  writeList(CLIENTS_KEY, nextClients);
+  return { token, updatedAt: now };
+};
+
+export const ensureClientInviteToken = (clientId: string) => {
+  ensureSeed();
+  const clients = readList<Client>(CLIENTS_KEY, []);
+  const match = clients.find((client) => client.id === clientId);
+  if (match?.inviteToken && match.inviteUpdatedAt) {
+    return { token: match.inviteToken, updatedAt: match.inviteUpdatedAt };
+  }
+  const token = generateInviteToken(12);
+  return updateClientInvite(clientId, token);
+};
+
+export const regenerateClientInviteToken = (clientId: string) => {
+  const token = generateInviteToken(12);
+  return updateClientInvite(clientId, token);
 };
 
 const normalizeStatus = (status: string | undefined): AppointmentStatus => {

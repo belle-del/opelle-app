@@ -4,14 +4,21 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Client } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
-import { getClients } from "@/lib/storage";
+import { ensureClientInviteToken, getClients } from "@/lib/storage";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
+  const [copyStatus, setCopyStatus] = useState<Record<string, string>>({});
+  const [origin, setOrigin] = useState("");
 
   useEffect(() => {
     setClients(getClients());
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setOrigin(window.location.origin);
   }, []);
 
   const filtered = useMemo(() => {
@@ -79,6 +86,47 @@ export default function ClientsPage() {
                   {client.phone ? <p>{client.phone}</p> : null}
                   {client.email ? <p>{client.email}</p> : null}
                 </div>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (!origin) return;
+                    const { token } = ensureClientInviteToken(client.id);
+                    const link = `${origin}/client/invite/${token}`;
+                    navigator.clipboard
+                      .writeText(link)
+                      .then(() => {
+                        setCopyStatus((prev) => ({
+                          ...prev,
+                          [client.id]: "Copied!",
+                        }));
+                        setTimeout(() => {
+                          setCopyStatus((prev) => {
+                            const next = { ...prev };
+                            delete next[client.id];
+                            return next;
+                          });
+                        }, 2000);
+                      })
+                      .catch(() => {
+                        setCopyStatus((prev) => ({
+                          ...prev,
+                          [client.id]: "Copy failed",
+                        }));
+                      });
+                  }}
+                  className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
+                >
+                  Invite
+                </button>
+                {copyStatus[client.id] ? (
+                  <span className="text-emerald-200">
+                    {copyStatus[client.id]}
+                  </span>
+                ) : null}
               </div>
             </Link>
           ))

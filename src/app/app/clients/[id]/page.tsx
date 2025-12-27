@@ -7,9 +7,11 @@ import type { Appointment, Client, Formula } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
 import {
   deleteClient,
+  ensureClientInviteToken,
   getAppointments,
   getClientById,
   getFormulas,
+  regenerateClientInviteToken,
   upsertClient,
 } from "@/lib/storage";
 
@@ -20,6 +22,10 @@ export default function ClientDetailPage() {
   const [formulas, setFormulas] = useState<Formula[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [inviteUpdatedAt, setInviteUpdatedAt] = useState<string | null>(null);
+  const [inviteOrigin, setInviteOrigin] = useState<string | null>(null);
+  const [inviteStatus, setInviteStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!params?.id) return;
@@ -27,6 +33,11 @@ export default function ClientDetailPage() {
     setFormulas(getFormulas());
     setAppointments(getAppointments());
   }, [params?.id]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setInviteOrigin(window.location.origin);
+  }, []);
 
   const upcomingAppointments = useMemo(() => {
     if (!client) return [];
@@ -110,6 +121,47 @@ export default function ClientDetailPage() {
     if (!confirm("Delete this client and related appointments?")) return;
     deleteClient(client.id);
     router.push("/app/clients");
+  };
+
+  const handleEnsureInvite = () => {
+    if (!client) return;
+    const { token, updatedAt } = ensureClientInviteToken(client.id);
+    setInviteToken(token);
+    setInviteUpdatedAt(updatedAt);
+  };
+
+  const handleCopyInvite = async () => {
+    if (!client || !inviteOrigin) return;
+    const token =
+      inviteToken ?? ensureClientInviteToken(client.id).token;
+    setInviteToken(token);
+    const url = `${inviteOrigin}/client/invite/${token}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setInviteStatus("Copied!");
+    } catch {
+      setInviteStatus("Copy failed.");
+    }
+  };
+
+  const handleOpenInvite = () => {
+    if (!client || !inviteOrigin) return;
+    const token =
+      inviteToken ?? ensureClientInviteToken(client.id).token;
+    setInviteToken(token);
+    const url = `${inviteOrigin}/client/invite/${token}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleRegenerateInvite = () => {
+    if (!client) return;
+    if (!confirm("Regenerate invite link? The previous link will stop working.")) {
+      return;
+    }
+    const { token, updatedAt } = regenerateClientInviteToken(client.id);
+    setInviteToken(token);
+    setInviteUpdatedAt(updatedAt);
+    setInviteStatus("Regenerated.");
   };
 
   return (
@@ -242,6 +294,66 @@ export default function ClientDetailPage() {
               <p className="mt-2 text-slate-300">
                 {client.notes || "No notes yet."}
               </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold">Invite link</h3>
+                <p className="text-slate-400">
+                  Share this link with your client to access the portal.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleEnsureInvite}
+                className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
+              >
+                {inviteToken ? "Refresh" : "Generate"}
+              </button>
+            </div>
+            <div className="mt-4 space-y-2">
+              <input
+                readOnly
+                value={
+                  inviteOrigin && inviteToken
+                    ? `${inviteOrigin}/client/invite/${inviteToken}`
+                    : "Generate a link to share"
+                }
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-200"
+              />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopyInvite}
+                  className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
+                >
+                  Copy link
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenInvite}
+                  className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
+                >
+                  Open link
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRegenerateInvite}
+                  className="rounded-full border border-rose-500/60 px-3 py-1 text-xs text-rose-200"
+                >
+                  Regenerate
+                </button>
+              </div>
+              <p className="text-xs text-slate-500">
+                {inviteUpdatedAt
+                  ? `Last generated ${new Date(inviteUpdatedAt).toLocaleString()}`
+                  : "Not generated yet"}
+              </p>
+              {inviteStatus ? (
+                <p className="text-xs text-emerald-200">{inviteStatus}</p>
+              ) : null}
             </div>
           </div>
 
