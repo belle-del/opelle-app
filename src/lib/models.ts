@@ -50,6 +50,7 @@ export type Formula = {
   colorLine?: string;
   steps: FormulaStep[];
   appointmentId?: string;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 };
