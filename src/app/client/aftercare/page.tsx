@@ -1,10 +1,11 @@
-import { Suspense } from "react";
 import AftercareClient from "@/app/client/aftercare/AftercareClient";
 
-export default function ClientAftercarePage() {
-  return (
-    <Suspense fallback={<div className="p-6">Loading…</div>}>
-      <AftercareClient />
-    </Suspense>
-  );
+export default function AftercarePage({
+  searchParams,
+}: {
+  searchParams?: { token?: string };
+}) {
+  const token =
+    typeof searchParams?.token === "string" ? searchParams.token : undefined;
+  return <AftercareClient initialToken={token} />;
 }

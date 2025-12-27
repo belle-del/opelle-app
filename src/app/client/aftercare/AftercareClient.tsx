@@ -1,13 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useClientPacket } from "@/lib/portal/useClientPacket";
 import { useToken } from "@/lib/portal/tokenContext";
 
-export default function AftercareClient() {
+export default function AftercareClient({
+  initialToken,
+}: {
+  initialToken?: string;
+}) {
   const [status, setStatus] = useState<string | null>(null);
-  const { token } = useToken();
-  const { packet } = useClientPacket(token);
+  const { token, setToken } = useToken();
+  const activeToken = initialToken ?? token;
+  const { packet } = useClientPacket(activeToken ?? null);
+
+  useEffect(() => {
+    if (initialToken && initialToken !== token) {
+      setToken(initialToken);
+    }
+  }, [initialToken, setToken, token]);
 
   const aftercare = packet?.aftercare;
 
