@@ -20,6 +20,20 @@ export type AftercareDraftPayload = {
   highlights: string[];
 };
 
+export type AftercareDraftInput = {
+  clientName: string;
+  serviceName: string;
+  notes?: string;
+};
+
+export type AftercareDraftResult = {
+  title: string;
+  summary: string;
+  do: string[];
+  dont: string[];
+  rebookRecommendation: string;
+};
+
 export type IntakeSummaryPayload = {
   overview: string;
   concerns: string[];

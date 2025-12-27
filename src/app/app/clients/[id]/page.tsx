@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { Appointment, Client, Formula } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
+import type { AftercareDraftResult } from "@/lib/ai/types";
+import { generateAftercareDraft } from "@/lib/ai/embedded";
 import {
   deleteClient,
   ensureClientInviteToken,
@@ -26,6 +28,11 @@ export default function ClientDetailPage() {
   const [inviteUpdatedAt, setInviteUpdatedAt] = useState<string | null>(null);
   const [inviteOrigin, setInviteOrigin] = useState<string | null>(null);
   const [inviteStatus, setInviteStatus] = useState<string | null>(null);
+  const [aftercareService, setAftercareService] = useState("");
+  const [aftercareNotes, setAftercareNotes] = useState("");
+  const [aftercareDraft, setAftercareDraft] =
+    useState<AftercareDraftResult | null>(null);
+  const [aftercareStatus, setAftercareStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!params?.id) return;
@@ -38,6 +45,28 @@ export default function ClientDetailPage() {
     if (typeof window === "undefined") return;
     setInviteOrigin(window.location.origin);
   }, []);
+
+  useEffect(() => {
+    if (!client?.id || typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(
+      `opelle:v1:aftercareDraft:${client.id}`
+    );
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored) as {
+        draft?: AftercareDraftResult;
+        serviceName?: string;
+        notes?: string;
+      };
+      if (parsed.draft) {
+        setAftercareDraft(parsed.draft);
+        setAftercareService(parsed.serviceName ?? "");
+        setAftercareNotes(parsed.notes ?? "");
+      }
+    } catch {
+      // ignore invalid stored drafts
+    }
+  }, [client?.id]);
 
   const upcomingAppointments = useMemo(() => {
     if (!client) return [];
@@ -60,6 +89,20 @@ export default function ClientDetailPage() {
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
       .slice(0, 3);
   }, [client, formulas]);
+
+  const latestAppointment = useMemo(() => {
+    if (!client) return null;
+    return appointments
+      .filter((appointment) => appointment.clientId === client.id)
+      .sort((a, b) => b.startAt.localeCompare(a.startAt))[0] ?? null;
+  }, [appointments, client]);
+
+  useEffect(() => {
+    if (aftercareService.trim()) return;
+    if (latestAppointment?.serviceName) {
+      setAftercareService(latestAppointment.serviceName);
+    }
+  }, [aftercareService, latestAppointment?.serviceName]);
 
   const activity = useMemo(() => {
     if (!client) return [];
@@ -162,6 +205,59 @@ export default function ClientDetailPage() {
     setInviteToken(token);
     setInviteUpdatedAt(updatedAt);
     setInviteStatus("Regenerated.");
+  };
+
+  const handleGenerateAftercare = () => {
+    if (!client) return;
+    const draft = generateAftercareDraft({
+      clientName: getClientDisplayName(client),
+      serviceName: aftercareService || "Signature Service",
+      notes: aftercareNotes || undefined,
+    });
+    setAftercareDraft(draft);
+    setAftercareStatus("Draft generated.");
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        `opelle:v1:aftercareDraft:${client.id}`,
+        JSON.stringify({
+          draft,
+          serviceName: aftercareService,
+          notes: aftercareNotes,
+        })
+      );
+    }
+  };
+
+  const handleCopyAftercare = async () => {
+    if (!aftercareDraft) return;
+    const copyText = [
+      aftercareDraft.title,
+      "",
+      aftercareDraft.summary,
+      "",
+      "Do:",
+      ...aftercareDraft.do.map((item) => `- ${item}`),
+      "",
+      "Don't:",
+      ...aftercareDraft.dont.map((item) => `- ${item}`),
+      "",
+      `Rebook: ${aftercareDraft.rebookRecommendation}`,
+    ].join("\n");
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setAftercareStatus("Copied to clipboard.");
+    } catch {
+      setAftercareStatus("Copy failed.");
+    }
+  };
+
+  const handleClearAftercare = () => {
+    if (!client) return;
+    setAftercareDraft(null);
+    setAftercareStatus(null);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(`opelle:v1:aftercareDraft:${client.id}`);
+    }
   };
 
   return (
@@ -355,6 +451,107 @@ export default function ClientDetailPage() {
                 <p className="text-xs text-emerald-200">{inviteStatus}</p>
               ) : null}
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold">Aftercare Draft</h3>
+                <p className="text-slate-400">
+                  Generate a local aftercare plan for this client.
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="block text-sm text-slate-200">
+                Service name
+                <input
+                  value={aftercareService}
+                  onChange={(event) => setAftercareService(event.target.value)}
+                  className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                  placeholder="Service name"
+                />
+              </label>
+              <label className="block text-sm text-slate-200 md:col-span-2">
+                Notes (optional)
+                <textarea
+                  value={aftercareNotes}
+                  onChange={(event) => setAftercareNotes(event.target.value)}
+                  className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                  rows={3}
+                  placeholder="Sensitive areas, product preferences, follow-up tips"
+                />
+              </label>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleGenerateAftercare}
+                className="rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-slate-950"
+              >
+                Generate Aftercare (Local)
+              </button>
+              <button
+                type="button"
+                onClick={handleCopyAftercare}
+                className="rounded-full border border-slate-700 px-3 py-2 text-xs text-slate-200"
+                disabled={!aftercareDraft}
+              >
+                Copy to clipboard
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAftercare}
+                className="rounded-full border border-slate-700 px-3 py-2 text-xs text-slate-200"
+              >
+                Clear draft
+              </button>
+            </div>
+            {aftercareStatus ? (
+              <p className="mt-2 text-xs text-emerald-200">
+                {aftercareStatus}
+              </p>
+            ) : null}
+
+            {aftercareDraft ? (
+              <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm text-slate-200">
+                <h4 className="text-lg font-semibold">
+                  {aftercareDraft.title}
+                </h4>
+                <p className="mt-2 text-slate-300">
+                  {aftercareDraft.summary}
+                </p>
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                      Do
+                    </p>
+                    <ul className="mt-2 space-y-1 text-slate-300">
+                      {aftercareDraft.do.map((item) => (
+                        <li key={item}>- {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                      Don&apos;t
+                    </p>
+                    <ul className="mt-2 space-y-1 text-slate-300">
+                      {aftercareDraft.dont.map((item) => (
+                        <li key={item}>- {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm text-slate-300">
+                  {aftercareDraft.rebookRecommendation}
+                </p>
+              </div>
+            ) : (
+              <div className="mt-4 rounded-xl border border-dashed border-slate-700 bg-slate-950/60 p-4 text-xs text-slate-400">
+                No draft yet. Generate a local aftercare plan to preview it.
+              </div>
+            )}
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">

@@ -65,6 +65,9 @@ When to come back
         <p className="text-slate-300">
           Review the care steps your stylist recommends between visits.
         </p>
+        <p className="mt-2 text-xs text-slate-400">
+          This is a sample aftercare plan. Your stylist may customize it.
+        </p>
       </div>
 
       <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
