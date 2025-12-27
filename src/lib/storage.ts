@@ -5,6 +5,7 @@ import type {
   Formula,
   FormulaServiceType,
   FormulaStep,
+  OpelleBackupV1,
 } from "@/lib/models";
 import { getMockSeed } from "@/lib/mockSeed";
 
@@ -268,6 +269,7 @@ const normalizeFormula = (raw: Partial<Formula>): Formula => {
     colorLine: raw.colorLine ?? undefined,
     steps,
     appointmentId: raw.appointmentId ?? undefined,
+    notes: raw.notes ?? undefined,
     createdAt: raw.createdAt ?? now,
     updatedAt: raw.updatedAt ?? now,
   };
@@ -321,3 +323,84 @@ export const deleteFormula = (id: string): void => {
 };
 
 export const listFormulas = (): Formula[] => getFormulas();
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isBackupV1 = (value: unknown): value is OpelleBackupV1 => {
+  if (!isRecord(value)) return false;
+  return (
+    value.version === 1 &&
+    typeof value.exportedAt === "string" &&
+    Array.isArray(value.clients) &&
+    Array.isArray(value.appointments) &&
+    Array.isArray(value.formulas)
+  );
+};
+
+export const exportBackup = (): OpelleBackupV1 => {
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    clients: getClients(),
+    appointments: getAppointments(),
+    formulas: getFormulas(),
+  };
+};
+
+export const importBackup = (
+  data: unknown,
+  opts?: { merge?: boolean }
+): { ok: true } | { ok: false; error: string } => {
+  if (!isBackupV1(data)) {
+    return { ok: false, error: "Invalid backup file." };
+  }
+
+  const merge = Boolean(opts?.merge);
+  const now = new Date().toISOString();
+  const incomingClients = data.clients.map((client) => normalizeClient(client));
+  const incomingAppointments = data.appointments.map((appointment) =>
+    normalizeAppointment(appointment)
+  );
+  const incomingFormulas = data.formulas.map((formula) =>
+    normalizeFormula(formula)
+  );
+
+  if (!merge) {
+    writeList(CLIENTS_KEY, incomingClients);
+    writeList(APPOINTMENTS_KEY, incomingAppointments);
+    writeList(FORMULAS_KEY, incomingFormulas);
+    return { ok: true };
+  }
+
+  const existingClients = readList<Client>(CLIENTS_KEY, []);
+  const existingAppointments = readList<Appointment>(APPOINTMENTS_KEY, []);
+  const existingFormulas = readList<Formula>(FORMULAS_KEY, []);
+
+  const mergeById = <T extends { id: string; updatedAt: string }>(
+    existing: T[],
+    incoming: T[]
+  ) => {
+    const map = new Map(existing.map((item) => [item.id, item]));
+    incoming.forEach((item) => {
+      map.set(item.id, { ...item, updatedAt: now });
+    });
+    return Array.from(map.values());
+  };
+
+  writeList(CLIENTS_KEY, mergeById(existingClients, incomingClients));
+  writeList(
+    APPOINTMENTS_KEY,
+    mergeById(existingAppointments, incomingAppointments)
+  );
+  writeList(FORMULAS_KEY, mergeById(existingFormulas, incomingFormulas));
+
+  return { ok: true };
+};
+
+export const resetAll = (): void => {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(CLIENTS_KEY);
+  window.localStorage.removeItem(APPOINTMENTS_KEY);
+  window.localStorage.removeItem(FORMULAS_KEY);
+};

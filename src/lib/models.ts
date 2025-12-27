@@ -54,3 +54,11 @@ export type Formula = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type OpelleBackupV1 = {
+  version: 1;
+  exportedAt: string;
+  clients: Client[];
+  appointments: Appointment[];
+  formulas: Formula[];
+};
