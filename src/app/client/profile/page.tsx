@@ -32,6 +32,7 @@ export default function ClientProfilePage() {
   const { packet } = useClientPacket(token);
   const [intake, setIntake] = useState<IntakeForm | null>(null);
   const [confirm, setConfirm] = useState("");
+  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -84,6 +85,26 @@ export default function ClientProfilePage() {
             Disconnect
           </button>
         </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Debug</h3>
+          <button
+            type="button"
+            onClick={() => setShowDebug((prev) => !prev)}
+            className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
+          >
+            {showDebug ? "Hide" : "Show"}
+          </button>
+        </div>
+        {showDebug ? (
+          <div className="mt-3 space-y-1 text-xs text-slate-400">
+            <p>Token: {token ?? "none"}</p>
+            <p>Packet version: {packet?.version ?? "none"}</p>
+            <p>Packet updated: {packet?.updatedAt ?? "none"}</p>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">

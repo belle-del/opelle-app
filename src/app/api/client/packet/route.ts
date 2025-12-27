@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import type { ClientPacketV1 } from "@/lib/portal/packet";
+import { lookupInvite } from "@/lib/portal/inviteDirectory";
 
 const MIN_TOKEN_LENGTH = 6;
 
 const buildPacket = (token: string): ClientPacketV1 => {
+  const record = lookupInvite(token);
   const now = new Date();
   const appointmentDate = new Date(now);
   appointmentDate.setDate(now.getDate() + 7);
@@ -12,10 +14,14 @@ const buildPacket = (token: string): ClientPacketV1 => {
   return {
     version: 1,
     token,
-    stylist: { displayName: "Belle" },
+    stylist: {
+      displayName: record?.stylistDisplay.displayName ?? "Belle",
+      salonName: record?.stylistDisplay.salonName,
+    },
     client: {
-      firstName: "Client",
-      lastName: token.slice(0, 4).toUpperCase(),
+      firstName: record?.clientDisplay.firstName ?? "Client",
+      lastName: record?.clientDisplay.lastName,
+      pronouns: record?.clientDisplay.pronouns,
     },
     nextAppointment: {
       startAt: appointmentDate.toISOString(),
