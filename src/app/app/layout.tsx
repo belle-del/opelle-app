@@ -33,6 +33,12 @@ export default function AppLayout({
             </div>
             <div className="flex items-center gap-3">
               <NewItemMenu />
+              <Link
+                href="/logout"
+                className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 transition hover:border-slate-500"
+              >
+                Logout
+              </Link>
             </div>
           </header>
 
