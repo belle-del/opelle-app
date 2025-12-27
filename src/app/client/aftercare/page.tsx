@@ -1,34 +1,53 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useClientPacket } from "@/lib/portal/useClientPacket";
+import { useToken } from "@/lib/portal/tokenContext";
 
 export default function ClientAftercarePage() {
   const [status, setStatus] = useState<string | null>(null);
+  const { token } = useToken();
+  const { packet } = useClientPacket(token);
 
-  const template = useMemo(
-    () => `Opelle Aftercare Plan
+  const aftercare = packet?.aftercare;
+
+  const template = useMemo(() => {
+    const summary =
+      aftercare?.summary ??
+      "Customized service tailored to your goals. We focused on maintaining scalp and hair health.";
+    const doItems = aftercare?.do?.length
+      ? aftercare.do
+      : [
+          "Use a gentle, sulfate-free cleanser.",
+          "Apply heat protectant before styling.",
+          "Book your follow-up within 6-8 weeks.",
+        ];
+    const dontItems = aftercare?.dont?.length
+      ? aftercare.dont
+      : ["Over-wash for the first 48 hours.", "Use high heat without protection."];
+    const rebook =
+      aftercare?.rebookWindowDays
+        ? `${Math.round(aftercare.rebookWindowDays / 7)}-week refresh`
+        : "6-8 weeks for refresh or adjustment";
+
+    return `Opelle Aftercare Plan
 
 What we did today
-- Customized service tailored to your goals.
-- Focused on maintaining scalp and hair health.
+- ${summary}
 
 Do
-- Use a gentle, sulfate-free cleanser.
-- Apply heat protectant before styling.
-- Book your follow-up within 6-8 weeks.
+${doItems.map((item) => `- ${item}`).join("\n")}
 
 Don't
-- Over-wash for the first 48 hours.
-- Use high heat without protection.
+${dontItems.map((item) => `- ${item}`).join("\n")}
 
 Product suggestions
 - Hydrating mask (1-2x weekly)
 - Lightweight leave-in conditioner
 
 When to come back
-- 6-8 weeks for refresh or adjustment.`,
-    []
-  );
+- ${rebook}.`;
+  }, [aftercare]);
 
   const handleCopy = async () => {
     try {
@@ -51,24 +70,32 @@ When to come back
       <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
         <h3 className="text-lg font-semibold">What we did today</h3>
         <p className="mt-2 text-slate-300">
-          Customized service tailored to your goals. We focused on maintaining
-          scalp and hair health.
+          {aftercare?.summary ??
+            "Customized service tailored to your goals. We focused on maintaining scalp and hair health."}
         </p>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <div>
             <h4 className="text-sm font-semibold text-slate-100">Do</h4>
             <ul className="mt-2 space-y-1 text-slate-300">
-              <li>Use a gentle, sulfate-free cleanser.</li>
-              <li>Apply heat protectant before styling.</li>
-              <li>Book your follow-up within 6-8 weeks.</li>
+              {(aftercare?.do?.length ? aftercare.do : [
+                "Use a gentle, sulfate-free cleanser.",
+                "Apply heat protectant before styling.",
+                "Book your follow-up within 6-8 weeks.",
+              ]).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           </div>
           <div>
             <h4 className="text-sm font-semibold text-slate-100">Don&apos;t</h4>
             <ul className="mt-2 space-y-1 text-slate-300">
-              <li>Over-wash for the first 48 hours.</li>
-              <li>Use high heat without protection.</li>
+              {(aftercare?.dont?.length ? aftercare.dont : [
+                "Over-wash for the first 48 hours.",
+                "Use high heat without protection.",
+              ]).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           </div>
         </div>
@@ -88,7 +115,9 @@ When to come back
             When to come back
           </h4>
           <p className="mt-2 text-slate-300">
-            6-8 weeks for a refresh or adjustment.
+            {aftercare?.rebookWindowDays
+              ? `About ${Math.round(aftercare.rebookWindowDays / 7)} weeks for a refresh.`
+              : "6-8 weeks for a refresh or adjustment."}
           </p>
         </div>
       </div>

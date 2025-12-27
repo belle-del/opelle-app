@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { flags } from "@/lib/flags";
+import { TokenProvider } from "@/lib/portal/tokenContext";
 
 export default function ClientLayout({
   children,
@@ -31,9 +32,11 @@ export default function ClientLayout({
         </div>
       ) : null}
 
-      <main className="mx-auto w-full max-w-4xl px-5 py-8 sm:px-8">
-        {children}
-      </main>
+      <TokenProvider>
+        <main className="mx-auto w-full max-w-4xl px-5 py-8 sm:px-8">
+          {children}
+        </main>
+      </TokenProvider>
 
       <footer className="border-t border-slate-800 px-5 py-6 text-xs text-slate-400 sm:px-8">
         <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-3">

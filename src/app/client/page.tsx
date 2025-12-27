@@ -1,6 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { useClientPacket } from "@/lib/portal/useClientPacket";
+import { useToken } from "@/lib/portal/tokenContext";
 
 export default function ClientHomePage() {
+  const { token } = useToken();
+  const { packet } = useClientPacket(token);
+
+  const nextAppointment = packet?.nextAppointment;
   return (
     <div className="space-y-6">
       <div>
@@ -15,10 +23,20 @@ export default function ClientHomePage() {
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
             Upcoming appointment
           </p>
-          <p className="mt-2 text-sm text-slate-200">
-            No appointment scheduled yet. Your stylist will update this after
-            confirmation.
-          </p>
+          {nextAppointment ? (
+            <div className="mt-2 text-sm text-slate-200">
+              <p className="font-semibold">
+                {nextAppointment.serviceName}
+              </p>
+              <p>{new Date(nextAppointment.startAt).toLocaleString()}</p>
+              <p>{nextAppointment.durationMin} min</p>
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-slate-200">
+              No appointment scheduled yet. Your stylist will update this after
+              confirmation.
+            </p>
+          )}
         </div>
 
         <Link
@@ -29,7 +47,8 @@ export default function ClientHomePage() {
             Aftercare
           </p>
           <p className="mt-2 text-sm text-slate-200">
-            Review your personalized care plan and product tips.
+            {packet?.aftercare.summary ??
+              "Review your personalized care plan and product tips."}
           </p>
         </Link>
 

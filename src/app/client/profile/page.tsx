@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useClientPacket } from "@/lib/portal/useClientPacket";
+import { useToken } from "@/lib/portal/tokenContext";
 
 const INTAKE_KEY = "opelle:client:v1:intake";
 const REBOOK_KEY = "opelle:client:v1:rebookRequest";
@@ -26,6 +28,8 @@ const safeParse = (value: string | null): IntakeForm | null => {
 };
 
 export default function ClientProfilePage() {
+  const { token, setToken } = useToken();
+  const { packet } = useClientPacket(token);
   const [intake, setIntake] = useState<IntakeForm | null>(null);
   const [confirm, setConfirm] = useState("");
 
@@ -50,6 +54,37 @@ export default function ClientProfilePage() {
           Review the information saved on this device.
         </p>
       </div>
+
+      <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
+        <h3 className="text-lg font-semibold">Portal connection</h3>
+        {packet ? (
+          <div className="mt-3 space-y-2">
+            <p className="text-sm text-slate-300">
+              Stylist: {packet.stylist.displayName}
+              {packet.stylist.salonName
+                ? ` · ${packet.stylist.salonName}`
+                : ""}
+            </p>
+            <p className="text-sm text-slate-300">
+              Client: {packet.client.firstName}{" "}
+              {packet.client.lastName ?? ""}
+            </p>
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-slate-400">
+            No invite token connected yet.
+          </p>
+        )}
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setToken(null)}
+            className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-200"
+          >
+            Disconnect
+          </button>
+        </div>
+      </section>
 
       <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
         <h3 className="text-lg font-semibold">Intake details</h3>
