@@ -11,13 +11,11 @@ import type {
   FormulaStep,
 } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
+import { formatDbError, isDbConfigured } from "@/lib/db/health";
 import {
-  deleteFormula,
   getAppointments,
-  getClientById,
   getClients,
   getFormulaById,
-  upsertFormula,
 } from "@/lib/storage";
 
 const serviceTypes: FormulaServiceType[] = [
@@ -45,18 +43,76 @@ export default function FormulaDetailPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [dbError, setDbError] = useState<string | null>(null);
+  const dbConfigured = isDbConfigured();
+  const canWrite = dbConfigured && !dbError;
 
   useEffect(() => {
     if (!params?.id) return;
-    setFormula(getFormulaById(params.id));
-    setClients(getClients());
-    setAppointments(getAppointments());
-  }, [params?.id]);
+    let active = true;
+    const load = async () => {
+      if (!dbConfigured) {
+        setFormula(getFormulaById(params.id));
+        setClients(getClients());
+        setAppointments(getAppointments());
+        return;
+      }
+      try {
+        const [formulaRes, clientRes, apptRes] = await Promise.all([
+          fetch(`/api/db/formulas/${params.id}`),
+          fetch("/api/db/clients"),
+          fetch("/api/db/appointments"),
+        ]);
+        const formulaJson = (await formulaRes.json()) as {
+          ok: boolean;
+          data?: Formula | null;
+          error?: string;
+        };
+        const clientJson = (await clientRes.json()) as {
+          ok: boolean;
+          data?: Client[];
+          error?: string;
+        };
+        const apptJson = (await apptRes.json()) as {
+          ok: boolean;
+          data?: Appointment[];
+          error?: string;
+        };
+        if (!formulaRes.ok || !formulaJson.ok) {
+          throw new Error(formulaJson.error || "Formula fetch failed");
+        }
+        if (!clientRes.ok || !clientJson.ok) {
+          throw new Error(clientJson.error || "Clients fetch failed");
+        }
+        if (!apptRes.ok || !apptJson.ok) {
+          throw new Error(apptJson.error || "Appointments fetch failed");
+        }
+        if (active) {
+          setFormula(formulaJson.data ?? null);
+          setClients(clientJson.data ?? []);
+          setAppointments(apptJson.data ?? []);
+        }
+      } catch (error) {
+        const message = formatDbError(error);
+        setDbError(message);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+        }
+        setFormula(getFormulaById(params.id));
+        setClients(getClients());
+        setAppointments(getAppointments());
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [dbConfigured, params?.id]);
 
   const client = useMemo(() => {
     if (!formula) return null;
-    return getClientById(formula.clientId);
-  }, [formula]);
+    return clients.find((item) => item.id === formula.clientId) ?? null;
+  }, [formula, clients]);
 
   const appointment = useMemo(() => {
     if (!formula?.appointmentId) return undefined;
@@ -105,33 +161,71 @@ export default function FormulaDetailPage() {
     });
   };
 
-  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!formula.clientId || !formula.title.trim()) return;
 
-    const saved = upsertFormula({
-      ...formula,
-      title: formula.title.trim(),
-      colorLine: formula.colorLine?.trim() || undefined,
-      steps: formula.steps.map((step, index) => ({
-        stepName: step.stepName?.trim() || `Step ${index + 1}`,
-        product: step.product?.trim() || "",
-        developer: step.developer?.trim() || undefined,
-        ratio: step.ratio?.trim() || undefined,
-        grams: step.grams ?? undefined,
-        processingMin: step.processingMin ?? undefined,
-        notes: step.notes?.trim() || undefined,
-      })),
-    });
-
-    setFormula(saved);
-    setIsEditing(false);
+    if (!canWrite) return;
+    try {
+      const res = await fetch(`/api/db/formulas/${formula.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: formula.clientId,
+          serviceType: formula.serviceType,
+          title: formula.title,
+          colorLine: formula.colorLine,
+          appointmentId: formula.appointmentId,
+          notes: formula.notes,
+          steps: formula.steps.map((step, index) => ({
+            stepName: step.stepName?.trim() || `Step ${index + 1}`,
+            product: step.product?.trim() || "",
+            developer: step.developer?.trim() || undefined,
+            ratio: step.ratio?.trim() || undefined,
+            grams: step.grams ?? undefined,
+            processingMin: step.processingMin ?? undefined,
+            notes: step.notes?.trim() || undefined,
+          })),
+        }),
+      });
+      const json = (await res.json()) as {
+        ok: boolean;
+        data?: Formula;
+        error?: string;
+      };
+      if (!res.ok || !json.ok || !json.data) {
+        throw new Error(json.error || "Update failed.");
+      }
+      setFormula(json.data);
+      setIsEditing(false);
+    } catch (error) {
+      const message = formatDbError(error);
+      setDbError(message);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+      }
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!confirm("Delete this formula?")) return;
-    deleteFormula(formula.id);
-    router.push("/app/formulas");
+    if (!canWrite) return;
+    try {
+      const res = await fetch(`/api/db/formulas/${formula.id}`, {
+        method: "DELETE",
+      });
+      const json = (await res.json()) as { ok: boolean; error?: string };
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "Delete failed.");
+      }
+      router.push("/app/formulas");
+    } catch (error) {
+      const message = formatDbError(error);
+      setDbError(message);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+      }
+    }
   };
 
   return (
@@ -358,12 +452,16 @@ export default function FormulaDetailPage() {
               type="button"
               onClick={handleDelete}
               className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-200"
+              disabled={!canWrite}
+              title={canWrite ? "Delete formula" : "Connect DB to enable deletes"}
             >
               Delete formula
             </button>
             <button
               type="submit"
               className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
+              disabled={!canWrite}
+              title={canWrite ? "Save changes" : "Connect DB to enable saves"}
             >
               Save changes
             </button>

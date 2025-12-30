@@ -5,12 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { Appointment, AppointmentStatus, Client } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
+import { formatDbError, isDbConfigured } from "@/lib/db/health";
 import {
-  deleteAppointment,
   getAppointmentById,
-  getClientById,
   getClients,
-  upsertAppointment,
 } from "@/lib/storage";
 
 const toLocalInput = (iso: string) => {
@@ -25,17 +23,64 @@ export default function AppointmentDetailPage() {
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [dbError, setDbError] = useState<string | null>(null);
+  const dbConfigured = isDbConfigured();
+  const canWrite = dbConfigured && !dbError;
 
   useEffect(() => {
     if (!params?.id) return;
-    setAppointment(getAppointmentById(params.id));
-    setClients(getClients());
-  }, [params?.id]);
+    let active = true;
+    const load = async () => {
+      if (!dbConfigured) {
+        setAppointment(getAppointmentById(params.id));
+        setClients(getClients());
+        return;
+      }
+      try {
+        const [apptRes, clientRes] = await Promise.all([
+          fetch(`/api/db/appointments/${params.id}`),
+          fetch("/api/db/clients"),
+        ]);
+        const apptJson = (await apptRes.json()) as {
+          ok: boolean;
+          data?: Appointment | null;
+          error?: string;
+        };
+        const clientJson = (await clientRes.json()) as {
+          ok: boolean;
+          data?: Client[];
+          error?: string;
+        };
+        if (!apptRes.ok || !apptJson.ok) {
+          throw new Error(apptJson.error || "Appointment fetch failed");
+        }
+        if (!clientRes.ok || !clientJson.ok) {
+          throw new Error(clientJson.error || "Client fetch failed");
+        }
+        if (active) {
+          setAppointment(apptJson.data ?? null);
+          setClients(clientJson.data ?? []);
+        }
+      } catch (error) {
+        const message = formatDbError(error);
+        setDbError(message);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+        }
+        setAppointment(getAppointmentById(params.id));
+        setClients(getClients());
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [dbConfigured, params?.id]);
 
   const client = useMemo(() => {
     if (!appointment) return null;
-    return getClientById(appointment.clientId);
-  }, [appointment]);
+    return clients.find((item) => item.id === appointment.clientId) ?? null;
+  }, [appointment, clients]);
 
   if (!appointment) {
     return (
@@ -55,23 +100,62 @@ export default function AppointmentDetailPage() {
     setAppointment((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
 
-  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!appointment.clientId || !appointment.serviceName.trim()) return;
 
-    const saved = upsertAppointment({
-      ...appointment,
-      serviceName: appointment.serviceName.trim(),
-      notes: appointment.notes?.trim() || undefined,
-    });
-    setAppointment(saved);
-    setIsEditing(false);
+    if (!canWrite) return;
+    try {
+      const res = await fetch(`/api/db/appointments/${appointment.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: appointment.clientId,
+          serviceName: appointment.serviceName,
+          startAt: appointment.startAt,
+          durationMin: appointment.durationMin,
+          status: appointment.status,
+          notes: appointment.notes,
+        }),
+      });
+      const json = (await res.json()) as {
+        ok: boolean;
+        data?: Appointment;
+        error?: string;
+      };
+      if (!res.ok || !json.ok || !json.data) {
+        throw new Error(json.error || "Update failed.");
+      }
+      setAppointment(json.data);
+      setIsEditing(false);
+    } catch (error) {
+      const message = formatDbError(error);
+      setDbError(message);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+      }
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!confirm("Delete this appointment?")) return;
-    deleteAppointment(appointment.id);
-    router.push("/app/appointments");
+    if (!canWrite) return;
+    try {
+      const res = await fetch(`/api/db/appointments/${appointment.id}`, {
+        method: "DELETE",
+      });
+      const json = (await res.json()) as { ok: boolean; error?: string };
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "Delete failed.");
+      }
+      router.push("/app/appointments");
+    } catch (error) {
+      const message = formatDbError(error);
+      setDbError(message);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+      }
+    }
   };
 
   return (
@@ -188,12 +272,16 @@ export default function AppointmentDetailPage() {
               type="button"
               onClick={handleDelete}
               className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-200"
+              disabled={!canWrite}
+              title={canWrite ? "Delete appointment" : "Connect DB to enable deletes"}
             >
               Delete appointment
             </button>
             <button
               type="submit"
               className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
+              disabled={!canWrite}
+              title={canWrite ? "Save changes" : "Connect DB to enable saves"}
             >
               Save changes
             </button>

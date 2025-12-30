@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Appointment, AppointmentStatus, Client } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
+import { formatDbError, isDbConfigured } from "@/lib/db/health";
 import { getAppointments, getClients } from "@/lib/storage";
 
 const filterOptions = ["upcoming", "past", "all"] as const;
@@ -15,11 +16,59 @@ export default function AppointmentsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [filter, setFilter] = useState<Filter>("upcoming");
   const [search, setSearch] = useState("");
+  const [dbError, setDbError] = useState<string | null>(null);
+  const dbConfigured = isDbConfigured();
 
   useEffect(() => {
-    setAppointments(getAppointments());
-    setClients(getClients());
-  }, []);
+    let active = true;
+    const load = async () => {
+      if (!dbConfigured) {
+        setAppointments(getAppointments());
+        setClients(getClients());
+        return;
+      }
+      try {
+        const [apptRes, clientRes] = await Promise.all([
+          fetch("/api/db/appointments"),
+          fetch("/api/db/clients"),
+        ]);
+        const apptJson = (await apptRes.json()) as {
+          ok: boolean;
+          data?: Appointment[];
+          error?: string;
+        };
+        const clientJson = (await clientRes.json()) as {
+          ok: boolean;
+          data?: Client[];
+          error?: string;
+        };
+        if (!apptRes.ok || !apptJson.ok) {
+          throw new Error(apptJson.error || "Appointments fetch failed");
+        }
+        if (!clientRes.ok || !clientJson.ok) {
+          throw new Error(clientJson.error || "Clients fetch failed");
+        }
+        if (active) {
+          setAppointments(apptJson.data ?? []);
+          setClients(clientJson.data ?? []);
+        }
+      } catch (error) {
+        const message = formatDbError(error);
+        setDbError(message);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("opelle:db-error", { detail: message })
+          );
+        }
+        setAppointments(getAppointments());
+        setClients(getClients());
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [dbConfigured]);
 
   const clientMap = useMemo(() => {
     return new Map(clients.map((client) => [client.id, client]));

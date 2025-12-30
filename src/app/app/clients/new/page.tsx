@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Client } from "@/lib/models";
-import { upsertClient } from "@/lib/storage";
+import { formatDbError, isDbConfigured } from "@/lib/db/health";
 
 const emptyClient: Client = {
   id: "",
@@ -20,26 +20,47 @@ const emptyClient: Client = {
 export default function NewClientPage() {
   const router = useRouter();
   const [form, setForm] = useState<Client>(emptyClient);
+  const [error, setError] = useState<string | null>(null);
+  const dbConfigured = isDbConfigured();
 
   const handleChange = (field: keyof Client, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!form.firstName.trim()) return;
 
-    const saved = upsertClient({
-      ...form,
-      firstName: form.firstName.trim(),
-      lastName: form.lastName?.trim() || undefined,
-      pronouns: form.pronouns?.trim() || undefined,
-      phone: form.phone?.trim() || undefined,
-      email: form.email?.trim() || undefined,
-      notes: form.notes?.trim() || undefined,
-    });
+    if (!dbConfigured) {
+      setError("Connect DB to enable saves.");
+      return;
+    }
 
-    router.push(`/app/clients/${saved.id}`);
+    try {
+      const res = await fetch("/api/db/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          pronouns: form.pronouns,
+          phone: form.phone,
+          email: form.email,
+          notes: form.notes,
+        }),
+      });
+      const json = (await res.json()) as { ok: boolean; data?: Client; error?: string };
+      if (!res.ok || !json.ok || !json.data) {
+        throw new Error(json.error || "Unable to save client.");
+      }
+      router.push(`/app/clients/${json.data.id}`);
+    } catch (err) {
+      const message = formatDbError(err);
+      setError(message);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+      }
+    }
   };
 
   return (
@@ -116,10 +137,15 @@ export default function NewClientPage() {
           <button
             type="submit"
             className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
+            disabled={!dbConfigured}
+            title={dbConfigured ? "Save client" : "Connect DB to enable saves"}
           >
             Save client
           </button>
         </div>
+        {error ? (
+          <p className="mt-3 text-sm text-rose-200">{error}</p>
+        ) : null}
       </form>
     </div>
   );

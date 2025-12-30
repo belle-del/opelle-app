@@ -1,6 +1,8 @@
 import Link from "next/link";
 import AppNav from "@/app/app/_components/AppNav";
 import NewItemMenu from "@/app/app/_components/NewItemMenu";
+import DbStatusBanner from "@/app/app/_components/DbStatusBanner";
+import { isDbConfigured } from "@/lib/db/health";
 
 export default function AppLayout({
   children,
@@ -24,6 +26,7 @@ export default function AppLayout({
         </aside>
 
         <div className="flex min-h-screen flex-1 flex-col">
+          <DbStatusBanner dbConfigured={isDbConfigured()} />
           <header className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] text-slate-500">

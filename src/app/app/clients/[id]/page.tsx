@@ -7,15 +7,8 @@ import type { Appointment, Client, Formula } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
 import type { AftercareDraftResult } from "@/lib/ai/types";
 import { generateAftercareDraft } from "@/lib/ai/embedded";
-import {
-  deleteClient,
-  ensureClientInviteToken,
-  getAppointments,
-  getClientById,
-  getFormulas,
-  regenerateClientInviteToken,
-  upsertClient,
-} from "@/lib/storage";
+import { formatDbError, isDbConfigured } from "@/lib/db/health";
+import { getAppointments, getClientById, getFormulas } from "@/lib/storage";
 
 export default function ClientDetailPage() {
   const params = useParams<{ id: string }>();
@@ -28,18 +21,78 @@ export default function ClientDetailPage() {
   const [inviteUpdatedAt, setInviteUpdatedAt] = useState<string | null>(null);
   const [inviteOrigin, setInviteOrigin] = useState<string | null>(null);
   const [inviteStatus, setInviteStatus] = useState<string | null>(null);
+  const [dbError, setDbError] = useState<string | null>(null);
   const [aftercareService, setAftercareService] = useState("");
   const [aftercareNotes, setAftercareNotes] = useState("");
   const [aftercareDraft, setAftercareDraft] =
     useState<AftercareDraftResult | null>(null);
   const [aftercareStatus, setAftercareStatus] = useState<string | null>(null);
+  const dbConfigured = isDbConfigured();
+  const canWrite = dbConfigured && !dbError;
 
   useEffect(() => {
     if (!params?.id) return;
-    setClient(getClientById(params.id));
-    setFormulas(getFormulas());
-    setAppointments(getAppointments());
-  }, [params?.id]);
+    let active = true;
+    const load = async () => {
+      if (!dbConfigured) {
+        setClient(getClientById(params.id));
+        setFormulas(getFormulas());
+        setAppointments(getAppointments());
+        return;
+      }
+      try {
+        const [clientRes, apptRes, formulaRes] = await Promise.all([
+          fetch(`/api/db/clients/${params.id}`),
+          fetch("/api/db/appointments"),
+          fetch("/api/db/formulas"),
+        ]);
+        const clientJson = (await clientRes.json()) as {
+          ok: boolean;
+          data?: Client | null;
+          error?: string;
+        };
+        const apptJson = (await apptRes.json()) as {
+          ok: boolean;
+          data?: Appointment[];
+          error?: string;
+        };
+        const formulaJson = (await formulaRes.json()) as {
+          ok: boolean;
+          data?: Formula[];
+          error?: string;
+        };
+        if (!clientRes.ok || !clientJson.ok) {
+          throw new Error(clientJson.error || "Client fetch failed");
+        }
+        if (!apptRes.ok || !apptJson.ok) {
+          throw new Error(apptJson.error || "Appointments fetch failed");
+        }
+        if (!formulaRes.ok || !formulaJson.ok) {
+          throw new Error(formulaJson.error || "Formulas fetch failed");
+        }
+        if (active) {
+          setClient(clientJson.data ?? null);
+          setAppointments(apptJson.data ?? []);
+          setFormulas(formulaJson.data ?? []);
+        }
+      } catch (error) {
+        const message = formatDbError(error);
+        setDbError(message);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("opelle:db-error", { detail: message })
+          );
+        }
+        setClient(getClientById(params.id));
+        setFormulas(getFormulas());
+        setAppointments(getAppointments());
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [dbConfigured, params?.id]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -143,41 +196,110 @@ export default function ClientDetailPage() {
     setClient((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
 
-  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!client.firstName.trim()) return;
 
-    const saved = upsertClient({
-      ...client,
-      firstName: client.firstName.trim(),
-      lastName: client.lastName?.trim() || undefined,
-      pronouns: client.pronouns?.trim() || undefined,
-      phone: client.phone?.trim() || undefined,
-      email: client.email?.trim() || undefined,
-      notes: client.notes?.trim() || undefined,
-    });
-    setClient(saved);
-    setIsEditing(false);
+    if (!canWrite) {
+      setInviteStatus("Connect DB to enable saves.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/db/clients/${client.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: client.firstName,
+          lastName: client.lastName,
+          pronouns: client.pronouns,
+          phone: client.phone,
+          email: client.email,
+          notes: client.notes,
+        }),
+      });
+      const json = (await res.json()) as { ok: boolean; data?: Client; error?: string };
+      if (!res.ok || !json.ok || !json.data) {
+        throw new Error(json.error || "Update failed.");
+      }
+      setClient(json.data);
+      setIsEditing(false);
+    } catch (error) {
+      const message = formatDbError(error);
+      setDbError(message);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+      }
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!confirm("Delete this client and related appointments?")) return;
-    deleteClient(client.id);
-    router.push("/app/clients");
+    if (!canWrite) {
+      setInviteStatus("Connect DB to enable deletes.");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/db/clients/${client.id}`, {
+        method: "DELETE",
+      });
+      const json = (await res.json()) as { ok: boolean; error?: string };
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "Delete failed.");
+      }
+      router.push("/app/clients");
+    } catch (error) {
+      const message = formatDbError(error);
+      setDbError(message);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+      }
+    }
   };
 
   const handleEnsureInvite = () => {
     if (!client) return;
-    const { token, updatedAt } = ensureClientInviteToken(client.id);
-    setInviteToken(token);
-    setInviteUpdatedAt(updatedAt);
+    if (!canWrite) {
+      setInviteStatus("Connect DB to enable invites.");
+      return;
+    }
+    fetch(`/api/db/clients/${client.id}/invite`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "ensure" }),
+    })
+      .then(async (res) => {
+        const json = (await res.json()) as {
+          ok: boolean;
+          data?: { token: string; updatedAt: string };
+          error?: string;
+        };
+        if (!res.ok || !json.ok || !json.data) {
+          throw new Error(json.error || "Invite failed.");
+        }
+        setInviteToken(json.data.token);
+        setInviteUpdatedAt(json.data.updatedAt);
+      })
+      .catch((error) => {
+        const message = formatDbError(error);
+        setDbError(message);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+        }
+      });
   };
 
   const handleCopyInvite = async () => {
     if (!client || !inviteOrigin) return;
-    const token =
-      inviteToken ?? ensureClientInviteToken(client.id).token;
-    setInviteToken(token);
+    if (!canWrite) {
+      setInviteStatus("Connect DB to enable invites.");
+      return;
+    }
+    const token = inviteToken;
+    if (!token) {
+      handleEnsureInvite();
+      return;
+    }
     const url = `${inviteOrigin}/client/invite/${token}`;
     try {
       await navigator.clipboard.writeText(url);
@@ -189,9 +311,15 @@ export default function ClientDetailPage() {
 
   const handleOpenInvite = () => {
     if (!client || !inviteOrigin) return;
-    const token =
-      inviteToken ?? ensureClientInviteToken(client.id).token;
-    setInviteToken(token);
+    if (!canWrite) {
+      setInviteStatus("Connect DB to enable invites.");
+      return;
+    }
+    const token = inviteToken;
+    if (!token) {
+      handleEnsureInvite();
+      return;
+    }
     const url = `${inviteOrigin}/client/invite/${token}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
@@ -201,10 +329,35 @@ export default function ClientDetailPage() {
     if (!confirm("Regenerate invite link? The previous link will stop working.")) {
       return;
     }
-    const { token, updatedAt } = regenerateClientInviteToken(client.id);
-    setInviteToken(token);
-    setInviteUpdatedAt(updatedAt);
-    setInviteStatus("Regenerated.");
+    if (!canWrite) {
+      setInviteStatus("Connect DB to enable invites.");
+      return;
+    }
+    fetch(`/api/db/clients/${client.id}/invite`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "regenerate" }),
+    })
+      .then(async (res) => {
+        const json = (await res.json()) as {
+          ok: boolean;
+          data?: { token: string; updatedAt: string };
+          error?: string;
+        };
+        if (!res.ok || !json.ok || !json.data) {
+          throw new Error(json.error || "Invite failed.");
+        }
+        setInviteToken(json.data.token);
+        setInviteUpdatedAt(json.data.updatedAt);
+        setInviteStatus("Regenerated.");
+      })
+      .catch((error) => {
+        const message = formatDbError(error);
+        setDbError(message);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+        }
+      });
   };
 
   const handleGenerateAftercare = () => {
@@ -354,12 +507,18 @@ export default function ClientDetailPage() {
               type="button"
               onClick={handleDelete}
               className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-200"
+              disabled={!canWrite}
+              title={
+                canWrite ? "Delete client" : "Connect DB to enable deletes"
+              }
             >
               Delete client
             </button>
             <button
               type="submit"
               className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
+              disabled={!canWrite}
+              title={canWrite ? "Save changes" : "Connect DB to enable saves"}
             >
               Save changes
             </button>
@@ -405,6 +564,8 @@ export default function ClientDetailPage() {
                 type="button"
                 onClick={handleEnsureInvite}
                 className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
+                disabled={!canWrite}
+                title={canWrite ? "Generate invite" : "Connect DB to enable"}
               >
                 {inviteToken ? "Refresh" : "Generate"}
               </button>
@@ -424,6 +585,8 @@ export default function ClientDetailPage() {
                   type="button"
                   onClick={handleCopyInvite}
                   className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
+                  disabled={!canWrite}
+                  title={canWrite ? "Copy link" : "Connect DB to enable"}
                 >
                   Copy link
                 </button>
@@ -431,6 +594,8 @@ export default function ClientDetailPage() {
                   type="button"
                   onClick={handleOpenInvite}
                   className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
+                  disabled={!canWrite}
+                  title={canWrite ? "Open link" : "Connect DB to enable"}
                 >
                   Open link
                 </button>
@@ -438,6 +603,8 @@ export default function ClientDetailPage() {
                   type="button"
                   onClick={handleRegenerateInvite}
                   className="rounded-full border border-rose-500/60 px-3 py-1 text-xs text-rose-200"
+                  disabled={!canWrite}
+                  title={canWrite ? "Regenerate link" : "Connect DB to enable"}
                 >
                   Regenerate
                 </button>

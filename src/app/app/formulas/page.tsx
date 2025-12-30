@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Formula, FormulaServiceType, Client, Appointment } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
+import { formatDbError, isDbConfigured } from "@/lib/db/health";
 import { getAppointments, getClients, getFormulas } from "@/lib/storage";
 
 const filterOptions = ["all", "color", "lighten", "tone", "gloss", "other"] as const;
@@ -17,12 +18,71 @@ export default function FormulasPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [clientFilter, setClientFilter] = useState<string | null>(null);
+  const [dbError, setDbError] = useState<string | null>(null);
+  const dbConfigured = isDbConfigured();
 
   useEffect(() => {
-    setFormulas(getFormulas());
-    setClients(getClients());
-    setAppointments(getAppointments());
-  }, []);
+    let active = true;
+    const load = async () => {
+      if (!dbConfigured) {
+        setFormulas(getFormulas());
+        setClients(getClients());
+        setAppointments(getAppointments());
+        return;
+      }
+      try {
+        const [formulaRes, clientRes, apptRes] = await Promise.all([
+          fetch("/api/db/formulas"),
+          fetch("/api/db/clients"),
+          fetch("/api/db/appointments"),
+        ]);
+        const formulaJson = (await formulaRes.json()) as {
+          ok: boolean;
+          data?: Formula[];
+          error?: string;
+        };
+        const clientJson = (await clientRes.json()) as {
+          ok: boolean;
+          data?: Client[];
+          error?: string;
+        };
+        const apptJson = (await apptRes.json()) as {
+          ok: boolean;
+          data?: Appointment[];
+          error?: string;
+        };
+        if (!formulaRes.ok || !formulaJson.ok) {
+          throw new Error(formulaJson.error || "Formulas fetch failed");
+        }
+        if (!clientRes.ok || !clientJson.ok) {
+          throw new Error(clientJson.error || "Clients fetch failed");
+        }
+        if (!apptRes.ok || !apptJson.ok) {
+          throw new Error(apptJson.error || "Appointments fetch failed");
+        }
+        if (active) {
+          setFormulas(formulaJson.data ?? []);
+          setClients(clientJson.data ?? []);
+          setAppointments(apptJson.data ?? []);
+        }
+      } catch (error) {
+        const message = formatDbError(error);
+        setDbError(message);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("opelle:db-error", { detail: message })
+          );
+        }
+        setFormulas(getFormulas());
+        setClients(getClients());
+        setAppointments(getAppointments());
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [dbConfigured]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
