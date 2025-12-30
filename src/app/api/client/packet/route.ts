@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { ClientPacketV1 } from "@/lib/portal/packet";
 import { lookupInvite } from "@/lib/portal/inviteDirectory";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const MIN_TOKEN_LENGTH = 6;
 
@@ -59,7 +60,22 @@ const serviceRoleConfigured = () =>
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const token = url.searchParams.get("token")?.trim() ?? "";
+  const queryToken = url.searchParams.get("token")?.trim() ?? "";
+  let token = queryToken;
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data } = await supabase.auth.getUser();
+    const metadataToken =
+      typeof data.user?.user_metadata?.invite_token === "string"
+        ? data.user.user_metadata.invite_token
+        : "";
+    if (metadataToken) {
+      token = metadataToken;
+    }
+  } catch {
+    // ignore auth lookup failures and fall back to query token
+  }
 
   if (token.length < MIN_TOKEN_LENGTH) {
     return NextResponse.json(

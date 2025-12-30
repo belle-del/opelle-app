@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useToken } from "@/lib/portal/tokenContext";
+import { useClientAuth } from "@/lib/portal/authContext";
 
 const STORAGE_KEY = "opelle:client:v1:intake";
+const PENDING_KEY = "opelle:client:v1:pending_token";
 
 type IntakeForm = {
   name: string;
@@ -34,9 +37,12 @@ const safeParse = (value: string | null): IntakeForm | null => {
 };
 
 export default function ClientIntakePage() {
+  const { token } = useToken();
+  const { user, loading } = useClientAuth();
   const [form, setForm] = useState<IntakeForm>(buildEmptyForm());
   const [isSaved, setIsSaved] = useState(false);
   const [isEditing, setIsEditing] = useState(true);
+  const [pendingToken, setPendingToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -46,6 +52,7 @@ export default function ClientIntakePage() {
       setIsSaved(true);
       setIsEditing(false);
     }
+    setPendingToken(window.localStorage.getItem(PENDING_KEY));
   }, []);
 
   const handleChange = (field: keyof IntakeForm, value: string) => {
@@ -70,6 +77,57 @@ export default function ClientIntakePage() {
     setIsSaved(true);
     setIsEditing(false);
   };
+
+  if (loading) {
+    return (
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 text-sm text-slate-300">
+        Checking your session...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold">Intake form</h2>
+        <p className="text-slate-300">
+          Sign in to submit your intake form.
+        </p>
+        <Link
+          href="/client/login"
+          className="inline-flex rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
+        >
+          Sign in
+        </Link>
+      </div>
+    );
+  }
+
+  if (!token) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold">Claim your invite</h2>
+        <p className="text-slate-300">
+          Connect your invite link before submitting this form.
+        </p>
+        {pendingToken ? (
+          <Link
+            href={`/client/invite/${pendingToken}`}
+            className="inline-flex rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
+          >
+            Continue claim
+          </Link>
+        ) : (
+          <Link
+            href="/client/invite/your-invite"
+            className="inline-flex rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
+          >
+            Open invite link
+          </Link>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
