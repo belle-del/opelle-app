@@ -20,6 +20,7 @@ Set these in Vercel (and locally in `.env.local`):
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only, required for client packet lookup by invite token)
 
 ## Done when
 
