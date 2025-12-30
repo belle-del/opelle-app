@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import {
   deleteClient,
   getClient,
@@ -7,11 +7,13 @@ import {
 import { formatDbError } from "@/lib/db/health";
 
 export async function GET(
-  _request: Request,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const data = await getClient(params.id);
+    const p = await (context.params as Promise<{ id: string }> | { id: string });
+    const id = p?.id;
+    const data = await getClient(id);
     return NextResponse.json({ ok: true, data });
   } catch (error) {
     return NextResponse.json(
@@ -22,12 +24,14 @@ export async function GET(
 }
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const p = await (context.params as Promise<{ id: string }> | { id: string });
+    const id = p?.id;
     const payload = (await request.json()) as Record<string, unknown>;
-    const data = await updateClient(params.id, payload);
+    const data = await updateClient(id, payload);
     return NextResponse.json({ ok: true, data });
   } catch (error) {
     return NextResponse.json(
@@ -38,11 +42,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    await deleteClient(params.id);
+    const p = await (context.params as Promise<{ id: string }> | { id: string });
+    const id = p?.id;
+    await deleteClient(id);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json(

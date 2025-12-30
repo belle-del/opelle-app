@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getClient, updateClient } from "@/lib/db/clients";
 import { formatDbError } from "@/lib/db/health";
 
@@ -22,13 +22,15 @@ const generateInviteToken = (length: number) => {
 };
 
 export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
+    const p = await (context.params as Promise<{ id: string }> | { id: string });
+    const id = p?.id;
     const payload = (await request.json()) as { action?: string };
     const action = payload.action ?? "ensure";
-    const client = await getClient(params.id);
+    const client = await getClient(id);
     if (!client) {
       return NextResponse.json({ ok: false, error: "not_found" }, { status: 404 });
     }
@@ -41,7 +43,7 @@ export async function POST(
     }
 
     const token = generateInviteToken(12);
-    const updated = await updateClient(params.id, {
+    const updated = await updateClient(id, {
       inviteToken: token,
       inviteUpdatedAt: new Date().toISOString(),
     });
