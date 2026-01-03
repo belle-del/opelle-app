@@ -2,11 +2,20 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export default async function proxy(request: NextRequest) {
+  const authDisabled = process.env.OPPELLE_AUTH_DISABLED === "true";
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
+
+  if (
+    authDisabled &&
+    (request.nextUrl.pathname.startsWith("/app") ||
+      request.nextUrl.pathname.startsWith("/client"))
+  ) {
+    return NextResponse.next();
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

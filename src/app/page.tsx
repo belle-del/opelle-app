@@ -3,6 +3,7 @@ import LinkCard from "@/components/LinkCard";
 export default function HomePage() {
   const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7);
   const env = process.env.NEXT_PUBLIC_APP_ENV ?? "unknown";
+  const authDisabled = process.env.OPPELLE_AUTH_DISABLED === "true";
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">
@@ -40,6 +41,11 @@ export default function HomePage() {
           <span>
             {commit ? `Commit: ${commit}` : "Commit: unknown"}
           </span>
+          {authDisabled ? (
+            <span className="rounded-full border border-amber-400/50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-amber-200">
+              Auth Disabled (dev)
+            </span>
+          ) : null}
         </footer>
       </div>
     </main>
