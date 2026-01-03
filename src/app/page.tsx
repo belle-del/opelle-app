@@ -1,51 +1,46 @@
-import Link from "next/link";
+import LinkCard from "@/components/LinkCard";
 
 export default function HomePage() {
-  const commit =
-    process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "unknown";
-  const env = process.env.VERCEL_ENV ?? "unknown";
+  const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7);
+  const env = process.env.NEXT_PUBLIC_APP_ENV ?? "unknown";
 
   return (
     <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">
-      <div className="mx-auto flex max-w-4xl flex-col gap-10">
-        <div className="space-y-4">
-          <p className="text-sm uppercase tracking-[0.3em] text-slate-400">
-            Opelle Platform
+      <div className="mx-auto flex max-w-5xl flex-col gap-12">
+        <header className="space-y-4">
+          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+            Opelle
           </p>
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-            Opelle is live ✅
+            Your workspace, organized.
           </h1>
-          <p className="max-w-2xl text-lg text-slate-300">
-            Your student console and client portal are ready for stitching in
-            Supabase auth, local AI stubs, and dashboard workflows.
+          <p className="max-w-2xl text-base text-slate-300 sm:text-lg">
+            Jump into the Student Console to manage clients or open the Client
+            Portal to preview the experience.
           </p>
-        </div>
+        </header>
 
-        <div className="flex flex-wrap gap-4">
-          <Link
+        <div className="grid gap-6 md:grid-cols-2">
+          <LinkCard
+            title="Student"
+            description="Manage clients, appointments, and formulas in the console."
             href="/app"
-            className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-          >
-            Open Student Console
-          </Link>
-          <Link
+            icon={<span className="text-sm font-semibold">S</span>}
+          />
+          <LinkCard
+            title="Client"
+            description="Preview the client-facing portal experience."
             href="/client"
-            className="rounded-full border border-slate-700 px-5 py-2 text-sm font-semibold text-slate-100 transition hover:border-slate-500"
-          >
-            Open Client Portal
-          </Link>
-          <Link
-            href="/"
-            className="rounded-full border border-emerald-500/60 px-5 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-400"
-          >
-            Home
-          </Link>
+            icon={<span className="text-sm font-semibold">C</span>}
+          />
         </div>
 
-        <div className="text-xs text-slate-400">
-          <p>Deploy check: commit {commit} • env {env}</p>
-          <p>Health: /api/health</p>
-        </div>
+        <footer className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+          <span>Environment: {env}</span>
+          <span>
+            {commit ? `Commit: ${commit}` : "Commit: unknown"}
+          </span>
+        </footer>
       </div>
     </main>
   );
