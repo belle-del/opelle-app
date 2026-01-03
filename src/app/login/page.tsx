@@ -15,7 +15,8 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      const callbackUrl = `${window.location.origin}/auth/callback`;
+      const origin = window.location.origin;
+      const callbackUrl = `${origin}/auth/callback?next=/app`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
