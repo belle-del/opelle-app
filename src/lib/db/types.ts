@@ -2,120 +2,100 @@ import type { Appointment, Client, Formula, FormulaStep } from "@/lib/models";
 
 export type ClientRow = {
   id: string;
-  stylist_id: string;
-  first_name: string;
-  last_name: string | null;
-  pronouns: string | null;
-  phone: string | null;
+  name: string;
   email: string | null;
-  notes: string | null;
-  invite_token: string | null;
-  invite_updated_at: string | null;
+  phone: string | null;
   created_at: string;
-  updated_at: string;
 };
 
 export type AppointmentRow = {
   id: string;
-  stylist_id: string;
   client_id: string;
-  service_name: string;
-  start_at: string;
-  duration_min: number;
-  status: "scheduled" | "completed" | "cancelled";
+  starts_at: string;
+  service: string;
   notes: string | null;
   created_at: string;
-  updated_at: string;
 };
 
 export type FormulaRow = {
   id: string;
-  stylist_id: string;
   client_id: string;
-  appointment_id: string | null;
-  service_type: "color" | "lighten" | "tone" | "gloss" | "other";
   title: string;
-  color_line: string | null;
+  product_lines: FormulaStep[];
   notes: string | null;
-  steps: FormulaStep[];
   created_at: string;
-  updated_at: string;
 };
 
-export const clientRowToModel = (row: ClientRow): Client => ({
-  id: row.id,
-  firstName: row.first_name,
-  lastName: row.last_name ?? undefined,
-  pronouns: row.pronouns ?? undefined,
-  phone: row.phone ?? undefined,
-  email: row.email ?? undefined,
-  notes: row.notes ?? undefined,
-  inviteToken: row.invite_token ?? undefined,
-  inviteUpdatedAt: row.invite_updated_at ?? undefined,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at,
-});
+const splitName = (name: string) => {
+  const trimmed = name.trim();
+  if (!trimmed) return { firstName: "", lastName: undefined };
+  const [firstName, ...rest] = trimmed.split(" ");
+  const lastName = rest.join(" ").trim();
+  return { firstName, lastName: lastName || undefined };
+};
+
+export const clientRowToModel = (row: ClientRow): Client => {
+  const { firstName, lastName } = splitName(row.name);
+  return {
+    id: row.id,
+    firstName,
+    lastName,
+    phone: row.phone ?? undefined,
+    email: row.email ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.created_at,
+  };
+};
 
 export const appointmentRowToModel = (row: AppointmentRow): Appointment => ({
   id: row.id,
   clientId: row.client_id,
-  serviceName: row.service_name,
-  startAt: row.start_at,
-  durationMin: row.duration_min,
-  status: row.status,
+  serviceName: row.service,
+  startAt: row.starts_at,
+  durationMin: 60,
+  status: "scheduled",
   notes: row.notes ?? undefined,
   createdAt: row.created_at,
-  updatedAt: row.updated_at,
+  updatedAt: row.created_at,
 });
 
 export const formulaRowToModel = (row: FormulaRow): Formula => ({
   id: row.id,
   clientId: row.client_id,
-  serviceType: row.service_type,
+  serviceType: "other",
   title: row.title,
-  colorLine: row.color_line ?? undefined,
+  steps: Array.isArray(row.product_lines) ? row.product_lines : [],
   notes: row.notes ?? undefined,
-  steps: row.steps ?? [],
-  appointmentId: row.appointment_id ?? undefined,
   createdAt: row.created_at,
-  updatedAt: row.updated_at,
+  updatedAt: row.created_at,
 });
 
-export const clientModelToRow = (
-  client: Partial<Client> & { stylist_id?: string }
-): Partial<ClientRow> => ({
-  stylist_id: client.stylist_id,
-  first_name: client.firstName?.trim() ?? "",
-  last_name: client.lastName?.trim() || null,
-  pronouns: client.pronouns?.trim() || null,
-  phone: client.phone?.trim() || null,
-  email: client.email?.trim() || null,
-  notes: client.notes?.trim() || null,
-  invite_token: client.inviteToken ?? null,
-  invite_updated_at: client.inviteUpdatedAt ?? null,
-});
+export const clientModelToRow = (client: Partial<Client>): Partial<ClientRow> => {
+  const name = [client.firstName, client.lastName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  return {
+    name,
+    email: client.email?.trim() || null,
+    phone: client.phone?.trim() || null,
+  };
+};
 
 export const appointmentModelToRow = (
-  appointment: Partial<Appointment> & { stylist_id?: string }
+  appointment: Partial<Appointment>
 ): Partial<AppointmentRow> => ({
-  stylist_id: appointment.stylist_id,
   client_id: appointment.clientId,
-  service_name: appointment.serviceName?.trim() ?? "",
-  start_at: appointment.startAt ?? new Date().toISOString(),
-  duration_min: appointment.durationMin ?? 60,
-  status: appointment.status ?? "scheduled",
+  starts_at: appointment.startAt ?? new Date().toISOString(),
+  service: appointment.serviceName?.trim() ?? "",
   notes: appointment.notes?.trim() || null,
 });
 
 export const formulaModelToRow = (
-  formula: Partial<Formula> & { stylist_id?: string }
+  formula: Partial<Formula>
 ): Partial<FormulaRow> => ({
-  stylist_id: formula.stylist_id,
   client_id: formula.clientId,
-  appointment_id: formula.appointmentId ?? null,
-  service_type: formula.serviceType ?? "other",
   title: formula.title?.trim() ?? "",
-  color_line: formula.colorLine?.trim() || null,
+  product_lines: formula.steps ?? [],
   notes: formula.notes?.trim() || null,
-  steps: formula.steps ?? [],
 });

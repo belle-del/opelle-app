@@ -8,11 +8,20 @@ import type {
   OpelleBackupV1,
 } from "@/lib/models";
 import { getMockSeed } from "@/lib/mockSeed";
+import { formatDbError, isDbConfigured } from "@/lib/db/health";
 
 const KEY_PREFIX = "opelle:v1";
 const CLIENTS_KEY = `${KEY_PREFIX}:clients`;
 const APPOINTMENTS_KEY = `${KEY_PREFIX}:appointments`;
 const FORMULAS_KEY = `${KEY_PREFIX}:formulas`;
+
+const isDbMode = () => isDbConfigured();
+
+const reportDbError = (error: unknown) => {
+  if (typeof window === "undefined") return;
+  const message = formatDbError(error);
+  window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+};
 
 const safeParse = <T>(raw: string | null, fallback: T): T => {
   if (!raw) return fallback;
@@ -56,6 +65,21 @@ const createId = () => {
   return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 };
 
+const fetchDb = async <T>(path: string, init?: RequestInit): Promise<T> => {
+  const res = await fetch(path, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+  });
+  const json = (await res.json()) as { ok: boolean; data?: T; error?: string };
+  if (!res.ok || !json.ok) {
+    throw new Error(json.error || "DB request failed");
+  }
+  return json.data as T;
+};
+
 const normalizeClient = (raw: Partial<Client>): Client => {
   const now = new Date().toISOString();
   const legacyName = (raw as { name?: string }).name ?? "";
@@ -78,23 +102,64 @@ const normalizeClient = (raw: Partial<Client>): Client => {
   };
 };
 
-export const getClients = (): Client[] => {
+export const getClients = async (): Promise<Client[]> => {
+  if (isDbMode()) {
+    try {
+      const data = await fetchDb<Client[]>("/api/db/clients");
+      return data ?? [];
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
   ensureSeed();
   return readList<Client>(CLIENTS_KEY, [])
     .map((client) => normalizeClient(client))
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 };
 
-export const listClients = (): Client[] => getClients();
+export const listClients = async (): Promise<Client[]> => getClients();
 
-export const getClientById = (id: string): Client | null => {
+export const getClientById = async (id: string): Promise<Client | null> => {
+  if (isDbMode()) {
+    try {
+      const data = await fetchDb<Client | null>(`/api/db/clients/${id}`);
+      return data ?? null;
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
   ensureSeed();
   const clients = readList<Client>(CLIENTS_KEY, []);
   const match = clients.find((client) => client.id === id);
   return match ? normalizeClient(match) : null;
 };
 
-export const upsertClient = (client: Client): Client => {
+export const upsertClient = async (client: Client): Promise<Client> => {
+  if (isDbMode()) {
+    const payload = {
+      firstName: client.firstName,
+      lastName: client.lastName,
+      pronouns: client.pronouns,
+      phone: client.phone,
+      email: client.email,
+      notes: client.notes,
+    };
+    try {
+      if (client.id) {
+        return await fetchDb<Client>(`/api/db/clients/${client.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        });
+      }
+      return await fetchDb<Client>("/api/db/clients", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
+
   ensureSeed();
   const now = new Date().toISOString();
   const clients = readList<Client>(CLIENTS_KEY, []);
@@ -120,7 +185,15 @@ export const upsertClient = (client: Client): Client => {
   return nextClient;
 };
 
-export const deleteClient = (id: string): void => {
+export const deleteClient = async (id: string): Promise<void> => {
+  if (isDbMode()) {
+    try {
+      await fetchDb(`/api/db/clients/${id}`, { method: "DELETE" });
+      return;
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
   ensureSeed();
   const clients = readList<Client>(CLIENTS_KEY, []);
   const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
@@ -171,7 +244,20 @@ const updateClientInvite = (clientId: string, token: string) => {
   return { token, updatedAt: now };
 };
 
-export const ensureClientInviteToken = (clientId: string) => {
+export const ensureClientInviteToken = async (clientId: string) => {
+  if (isDbMode()) {
+    try {
+      return await fetchDb<{ token: string; updatedAt: string }>(
+        `/api/db/clients/${clientId}/invite`,
+        {
+          method: "POST",
+          body: JSON.stringify({ action: "ensure" }),
+        }
+      );
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
   ensureSeed();
   const clients = readList<Client>(CLIENTS_KEY, []);
   const match = clients.find((client) => client.id === clientId);
@@ -182,7 +268,20 @@ export const ensureClientInviteToken = (clientId: string) => {
   return updateClientInvite(clientId, token);
 };
 
-export const regenerateClientInviteToken = (clientId: string) => {
+export const regenerateClientInviteToken = async (clientId: string) => {
+  if (isDbMode()) {
+    try {
+      return await fetchDb<{ token: string; updatedAt: string }>(
+        `/api/db/clients/${clientId}/invite`,
+        {
+          method: "POST",
+          body: JSON.stringify({ action: "regenerate" }),
+        }
+      );
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
   const token = generateInviteToken(12);
   return updateClientInvite(clientId, token);
 };
@@ -211,7 +310,15 @@ const normalizeAppointment = (raw: Partial<Appointment>): Appointment => {
   };
 };
 
-export const getAppointments = (): Appointment[] => {
+export const getAppointments = async (): Promise<Appointment[]> => {
+  if (isDbMode()) {
+    try {
+      const data = await fetchDb<Appointment[]>("/api/db/appointments");
+      return data ?? [];
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
   ensureSeed();
   const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
   return appointments
@@ -219,14 +326,56 @@ export const getAppointments = (): Appointment[] => {
     .sort((a, b) => b.startAt.localeCompare(a.startAt));
 };
 
-export const getAppointmentById = (id: string): Appointment | null => {
+export const getAppointmentById = async (
+  id: string
+): Promise<Appointment | null> => {
+  if (isDbMode()) {
+    try {
+      const data = await fetchDb<Appointment | null>(
+        `/api/db/appointments/${id}`
+      );
+      return data ?? null;
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
   ensureSeed();
   const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
   const match = appointments.find((appointment) => appointment.id === id);
   return match ? normalizeAppointment(match) : null;
 };
 
-export const upsertAppointment = (appointment: Appointment): Appointment => {
+export const upsertAppointment = async (
+  appointment: Appointment
+): Promise<Appointment> => {
+  if (isDbMode()) {
+    const payload = {
+      clientId: appointment.clientId,
+      serviceName: appointment.serviceName,
+      startAt: appointment.startAt,
+      durationMin: appointment.durationMin,
+      status: appointment.status,
+      notes: appointment.notes,
+    };
+    try {
+      if (appointment.id) {
+        return await fetchDb<Appointment>(
+          `/api/db/appointments/${appointment.id}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify(payload),
+          }
+        );
+      }
+      return await fetchDb<Appointment>("/api/db/appointments", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
+
   ensureSeed();
   const now = new Date().toISOString();
   const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
@@ -251,7 +400,15 @@ export const upsertAppointment = (appointment: Appointment): Appointment => {
   return nextAppointment;
 };
 
-export const deleteAppointment = (id: string): void => {
+export const deleteAppointment = async (id: string): Promise<void> => {
+  if (isDbMode()) {
+    try {
+      await fetchDb(`/api/db/appointments/${id}`, { method: "DELETE" });
+      return;
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
   ensureSeed();
   const appointments = readList<Appointment>(APPOINTMENTS_KEY, []);
   writeList(
@@ -260,7 +417,8 @@ export const deleteAppointment = (id: string): void => {
   );
 };
 
-export const listAppointments = (): Appointment[] => getAppointments();
+export const listAppointments = async (): Promise<Appointment[]> =>
+  getAppointments();
 
 const normalizeServiceType = (value: string | undefined): FormulaServiceType => {
   if (
@@ -330,7 +488,15 @@ const normalizeFormula = (raw: Partial<Formula>): Formula => {
   };
 };
 
-export const getFormulas = (): Formula[] => {
+export const getFormulas = async (): Promise<Formula[]> => {
+  if (isDbMode()) {
+    try {
+      const data = await fetchDb<Formula[]>("/api/db/formulas");
+      return data ?? [];
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
   ensureSeed();
   const formulas = readList<Formula>(FORMULAS_KEY, []);
   return formulas
@@ -338,14 +504,48 @@ export const getFormulas = (): Formula[] => {
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 };
 
-export const getFormulaById = (id: string): Formula | null => {
+export const getFormulaById = async (id: string): Promise<Formula | null> => {
+  if (isDbMode()) {
+    try {
+      const data = await fetchDb<Formula | null>(`/api/db/formulas/${id}`);
+      return data ?? null;
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
   ensureSeed();
   const formulas = readList<Formula>(FORMULAS_KEY, []);
   const match = formulas.find((formula) => formula.id === id);
   return match ? normalizeFormula(match) : null;
 };
 
-export const upsertFormula = (formula: Formula): Formula => {
+export const upsertFormula = async (formula: Formula): Promise<Formula> => {
+  if (isDbMode()) {
+    const payload = {
+      clientId: formula.clientId,
+      serviceType: formula.serviceType,
+      title: formula.title,
+      colorLine: formula.colorLine,
+      steps: formula.steps,
+      appointmentId: formula.appointmentId,
+      notes: formula.notes,
+    };
+    try {
+      if (formula.id) {
+        return await fetchDb<Formula>(`/api/db/formulas/${formula.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        });
+      }
+      return await fetchDb<Formula>("/api/db/formulas", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
+
   ensureSeed();
   const now = new Date().toISOString();
   const formulas = readList<Formula>(FORMULAS_KEY, []);
@@ -368,7 +568,15 @@ export const upsertFormula = (formula: Formula): Formula => {
   return nextFormula;
 };
 
-export const deleteFormula = (id: string): void => {
+export const deleteFormula = async (id: string): Promise<void> => {
+  if (isDbMode()) {
+    try {
+      await fetchDb(`/api/db/formulas/${id}`, { method: "DELETE" });
+      return;
+    } catch (error) {
+      reportDbError(error);
+    }
+  }
   ensureSeed();
   const formulas = readList<Formula>(FORMULAS_KEY, []);
   writeList(
@@ -377,7 +585,7 @@ export const deleteFormula = (id: string): void => {
   );
 };
 
-export const listFormulas = (): Formula[] => getFormulas();
+export const listFormulas = async (): Promise<Formula[]> => getFormulas();
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
@@ -393,20 +601,25 @@ const isBackupV1 = (value: unknown): value is OpelleBackupV1 => {
   );
 };
 
-export const exportBackup = (): OpelleBackupV1 => {
+export const exportBackup = async (): Promise<OpelleBackupV1> => {
+  const [clients, appointments, formulas] = await Promise.all([
+    getClients(),
+    getAppointments(),
+    getFormulas(),
+  ]);
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
-    clients: getClients(),
-    appointments: getAppointments(),
-    formulas: getFormulas(),
+    clients,
+    appointments,
+    formulas,
   };
 };
 
-export const importBackup = (
+export const importBackup = async (
   data: unknown,
   opts?: { merge?: boolean }
-): { ok: true } | { ok: false; error: string } => {
+): Promise<{ ok: true } | { ok: false; error: string }> => {
   if (!isBackupV1(data)) {
     return { ok: false, error: "Invalid backup file." };
   }

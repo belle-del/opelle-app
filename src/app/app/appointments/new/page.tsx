@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Appointment, AppointmentStatus, Client } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
-import { formatDbError, isDbConfigured } from "@/lib/db/health";
-import { getClients } from "@/lib/storage";
+import { formatDbError } from "@/lib/db/health";
+import { getClients, upsertAppointment } from "@/lib/storage";
 
 const buildEmptyAppointment = (): Appointment => ({
   id: "",
@@ -31,27 +31,13 @@ export default function NewAppointmentPage() {
   const [form, setForm] = useState<Appointment>(buildEmptyAppointment());
   const [clients, setClients] = useState<Client[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const dbConfigured = isDbConfigured();
 
   useEffect(() => {
     let active = true;
     const load = async () => {
-      if (!dbConfigured) {
-        setClients(getClients());
-        return;
-      }
       try {
-        const res = await fetch("/api/db/clients");
-        const json = (await res.json()) as {
-          ok: boolean;
-          data?: Client[];
-          error?: string;
-        };
-        if (!res.ok || !json.ok) {
-          throw new Error(json.error || "Client fetch failed.");
-        }
         if (active) {
-          setClients(json.data ?? []);
+          setClients(await getClients());
         }
       } catch (err) {
         const message = formatDbError(err);
@@ -59,14 +45,14 @@ export default function NewAppointmentPage() {
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
         }
-        setClients(getClients());
+        setClients(await getClients());
       }
     };
     load();
     return () => {
       active = false;
     };
-  }, [dbConfigured]);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -96,33 +82,9 @@ export default function NewAppointmentPage() {
     event.preventDefault();
     if (!form.clientId || !form.serviceName.trim()) return;
 
-    if (!dbConfigured) {
-      setError("Connect DB to enable saves.");
-      return;
-    }
-
     try {
-      const res = await fetch("/api/db/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientId: form.clientId,
-          serviceName: form.serviceName,
-          startAt: form.startAt,
-          durationMin: form.durationMin,
-          status: form.status,
-          notes: form.notes,
-        }),
-      });
-      const json = (await res.json()) as {
-        ok: boolean;
-        data?: Appointment;
-        error?: string;
-      };
-      if (!res.ok || !json.ok || !json.data) {
-        throw new Error(json.error || "Unable to save appointment.");
-      }
-      router.push(`/app/appointments/${json.data.id}`);
+      const saved = await upsertAppointment(form);
+      router.push(`/app/appointments/${saved.id}`);
     } catch (err) {
       const message = formatDbError(err);
       setError(message);
@@ -246,7 +208,7 @@ export default function NewAppointmentPage() {
             type="submit"
             disabled={clients.length === 0}
             className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-            title={dbConfigured ? "Save appointment" : "Connect DB to enable saves"}
+            title="Save appointment"
           >
             Save appointment
           </button>

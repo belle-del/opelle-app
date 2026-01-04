@@ -11,11 +11,13 @@ import type {
   FormulaStep,
 } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
-import { formatDbError, isDbConfigured } from "@/lib/db/health";
+import { formatDbError } from "@/lib/db/health";
 import {
+  deleteFormula,
   getAppointments,
   getClients,
   getFormulaById,
+  upsertFormula,
 } from "@/lib/storage";
 
 const serviceTypes: FormulaServiceType[] = [
@@ -44,53 +46,23 @@ export default function FormulaDetailPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
-  const dbConfigured = isDbConfigured();
-  const canWrite = dbConfigured && !dbError;
+  const canWrite = !dbError;
 
   useEffect(() => {
     if (!params?.id) return;
     let active = true;
     const load = async () => {
-      if (!dbConfigured) {
-        setFormula(getFormulaById(params.id));
-        setClients(getClients());
-        setAppointments(getAppointments());
-        return;
-      }
       try {
-        const [formulaRes, clientRes, apptRes] = await Promise.all([
-          fetch(`/api/db/formulas/${params.id}`),
-          fetch("/api/db/clients"),
-          fetch("/api/db/appointments"),
-        ]);
-        const formulaJson = (await formulaRes.json()) as {
-          ok: boolean;
-          data?: Formula | null;
-          error?: string;
-        };
-        const clientJson = (await clientRes.json()) as {
-          ok: boolean;
-          data?: Client[];
-          error?: string;
-        };
-        const apptJson = (await apptRes.json()) as {
-          ok: boolean;
-          data?: Appointment[];
-          error?: string;
-        };
-        if (!formulaRes.ok || !formulaJson.ok) {
-          throw new Error(formulaJson.error || "Formula fetch failed");
-        }
-        if (!clientRes.ok || !clientJson.ok) {
-          throw new Error(clientJson.error || "Clients fetch failed");
-        }
-        if (!apptRes.ok || !apptJson.ok) {
-          throw new Error(apptJson.error || "Appointments fetch failed");
-        }
         if (active) {
-          setFormula(formulaJson.data ?? null);
-          setClients(clientJson.data ?? []);
-          setAppointments(apptJson.data ?? []);
+          const [formulaData, clientsData, appointmentsData] =
+            await Promise.all([
+              getFormulaById(params.id),
+              getClients(),
+              getAppointments(),
+            ]);
+          setFormula(formulaData);
+          setClients(clientsData);
+          setAppointments(appointmentsData);
         }
       } catch (error) {
         const message = formatDbError(error);
@@ -98,16 +70,22 @@ export default function FormulaDetailPage() {
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
         }
-        setFormula(getFormulaById(params.id));
-        setClients(getClients());
-        setAppointments(getAppointments());
+        const [formulaData, clientsData, appointmentsData] =
+          await Promise.all([
+            getFormulaById(params.id),
+            getClients(),
+            getAppointments(),
+          ]);
+        setFormula(formulaData);
+        setClients(clientsData);
+        setAppointments(appointmentsData);
       }
     };
     load();
     return () => {
       active = false;
     };
-  }, [dbConfigured, params?.id]);
+  }, [params?.id]);
 
   const client = useMemo(() => {
     if (!formula) return null;
@@ -167,36 +145,8 @@ export default function FormulaDetailPage() {
 
     if (!canWrite) return;
     try {
-      const res = await fetch(`/api/db/formulas/${formula.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientId: formula.clientId,
-          serviceType: formula.serviceType,
-          title: formula.title,
-          colorLine: formula.colorLine,
-          appointmentId: formula.appointmentId,
-          notes: formula.notes,
-          steps: formula.steps.map((step, index) => ({
-            stepName: step.stepName?.trim() || `Step ${index + 1}`,
-            product: step.product?.trim() || "",
-            developer: step.developer?.trim() || undefined,
-            ratio: step.ratio?.trim() || undefined,
-            grams: step.grams ?? undefined,
-            processingMin: step.processingMin ?? undefined,
-            notes: step.notes?.trim() || undefined,
-          })),
-        }),
-      });
-      const json = (await res.json()) as {
-        ok: boolean;
-        data?: Formula;
-        error?: string;
-      };
-      if (!res.ok || !json.ok || !json.data) {
-        throw new Error(json.error || "Update failed.");
-      }
-      setFormula(json.data);
+      const saved = await upsertFormula(formula);
+      setFormula(saved);
       setIsEditing(false);
     } catch (error) {
       const message = formatDbError(error);
@@ -211,13 +161,7 @@ export default function FormulaDetailPage() {
     if (!confirm("Delete this formula?")) return;
     if (!canWrite) return;
     try {
-      const res = await fetch(`/api/db/formulas/${formula.id}`, {
-        method: "DELETE",
-      });
-      const json = (await res.json()) as { ok: boolean; error?: string };
-      if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Delete failed.");
-      }
+      await deleteFormula(formula.id);
       router.push("/app/formulas");
     } catch (error) {
       const message = formatDbError(error);

@@ -7,8 +7,16 @@ import type { Appointment, Client, Formula } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
 import type { AftercareDraftResult } from "@/lib/ai/types";
 import { generateAftercareDraft } from "@/lib/ai/embedded";
-import { formatDbError, isDbConfigured } from "@/lib/db/health";
-import { getAppointments, getClientById, getFormulas } from "@/lib/storage";
+import { formatDbError } from "@/lib/db/health";
+import {
+  deleteClient,
+  ensureClientInviteToken,
+  getAppointments,
+  getClientById,
+  getFormulas,
+  regenerateClientInviteToken,
+  upsertClient,
+} from "@/lib/storage";
 
 export default function ClientDetailPage() {
   const params = useParams<{ id: string }>();
@@ -27,53 +35,22 @@ export default function ClientDetailPage() {
   const [aftercareDraft, setAftercareDraft] =
     useState<AftercareDraftResult | null>(null);
   const [aftercareStatus, setAftercareStatus] = useState<string | null>(null);
-  const dbConfigured = isDbConfigured();
-  const canWrite = dbConfigured && !dbError;
+  const canWrite = !dbError;
 
   useEffect(() => {
     if (!params?.id) return;
     let active = true;
     const load = async () => {
-      if (!dbConfigured) {
-        setClient(getClientById(params.id));
-        setFormulas(getFormulas());
-        setAppointments(getAppointments());
-        return;
-      }
       try {
-        const [clientRes, apptRes, formulaRes] = await Promise.all([
-          fetch(`/api/db/clients/${params.id}`),
-          fetch("/api/db/appointments"),
-          fetch("/api/db/formulas"),
-        ]);
-        const clientJson = (await clientRes.json()) as {
-          ok: boolean;
-          data?: Client | null;
-          error?: string;
-        };
-        const apptJson = (await apptRes.json()) as {
-          ok: boolean;
-          data?: Appointment[];
-          error?: string;
-        };
-        const formulaJson = (await formulaRes.json()) as {
-          ok: boolean;
-          data?: Formula[];
-          error?: string;
-        };
-        if (!clientRes.ok || !clientJson.ok) {
-          throw new Error(clientJson.error || "Client fetch failed");
-        }
-        if (!apptRes.ok || !apptJson.ok) {
-          throw new Error(apptJson.error || "Appointments fetch failed");
-        }
-        if (!formulaRes.ok || !formulaJson.ok) {
-          throw new Error(formulaJson.error || "Formulas fetch failed");
-        }
         if (active) {
-          setClient(clientJson.data ?? null);
-          setAppointments(apptJson.data ?? []);
-          setFormulas(formulaJson.data ?? []);
+          const [clientData, apptData, formulaData] = await Promise.all([
+            getClientById(params.id),
+            getAppointments(),
+            getFormulas(),
+          ]);
+          setClient(clientData);
+          setAppointments(apptData);
+          setFormulas(formulaData);
         }
       } catch (error) {
         const message = formatDbError(error);
@@ -83,16 +60,21 @@ export default function ClientDetailPage() {
             new CustomEvent("opelle:db-error", { detail: message })
           );
         }
-        setClient(getClientById(params.id));
-        setFormulas(getFormulas());
-        setAppointments(getAppointments());
+        const [clientData, apptData, formulaData] = await Promise.all([
+          getClientById(params.id),
+          getAppointments(),
+          getFormulas(),
+        ]);
+        setClient(clientData);
+        setAppointments(apptData);
+        setFormulas(formulaData);
       }
     };
     load();
     return () => {
       active = false;
     };
-  }, [dbConfigured, params?.id]);
+  }, [params?.id]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -206,23 +188,8 @@ export default function ClientDetailPage() {
     }
 
     try {
-      const res = await fetch(`/api/db/clients/${client.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: client.firstName,
-          lastName: client.lastName,
-          pronouns: client.pronouns,
-          phone: client.phone,
-          email: client.email,
-          notes: client.notes,
-        }),
-      });
-      const json = (await res.json()) as { ok: boolean; data?: Client; error?: string };
-      if (!res.ok || !json.ok || !json.data) {
-        throw new Error(json.error || "Update failed.");
-      }
-      setClient(json.data);
+      const saved = await upsertClient(client);
+      setClient(saved);
       setIsEditing(false);
     } catch (error) {
       const message = formatDbError(error);
@@ -240,13 +207,7 @@ export default function ClientDetailPage() {
       return;
     }
     try {
-      const res = await fetch(`/api/db/clients/${client.id}`, {
-        method: "DELETE",
-      });
-      const json = (await res.json()) as { ok: boolean; error?: string };
-      if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Delete failed.");
-      }
+      await deleteClient(client.id);
       router.push("/app/clients");
     } catch (error) {
       const message = formatDbError(error);
@@ -263,22 +224,10 @@ export default function ClientDetailPage() {
       setInviteStatus("Connect DB to enable invites.");
       return;
     }
-    fetch(`/api/db/clients/${client.id}/invite`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "ensure" }),
-    })
-      .then(async (res) => {
-        const json = (await res.json()) as {
-          ok: boolean;
-          data?: { token: string; updatedAt: string };
-          error?: string;
-        };
-        if (!res.ok || !json.ok || !json.data) {
-          throw new Error(json.error || "Invite failed.");
-        }
-        setInviteToken(json.data.token);
-        setInviteUpdatedAt(json.data.updatedAt);
+    ensureClientInviteToken(client.id)
+      .then((data) => {
+        setInviteToken(data.token);
+        setInviteUpdatedAt(data.updatedAt);
       })
       .catch((error) => {
         const message = formatDbError(error);
@@ -333,22 +282,10 @@ export default function ClientDetailPage() {
       setInviteStatus("Connect DB to enable invites.");
       return;
     }
-    fetch(`/api/db/clients/${client.id}/invite`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "regenerate" }),
-    })
-      .then(async (res) => {
-        const json = (await res.json()) as {
-          ok: boolean;
-          data?: { token: string; updatedAt: string };
-          error?: string;
-        };
-        if (!res.ok || !json.ok || !json.data) {
-          throw new Error(json.error || "Invite failed.");
-        }
-        setInviteToken(json.data.token);
-        setInviteUpdatedAt(json.data.updatedAt);
+    regenerateClientInviteToken(client.id)
+      .then((data) => {
+        setInviteToken(data.token);
+        setInviteUpdatedAt(data.updatedAt);
         setInviteStatus("Regenerated.");
       })
       .catch((error) => {

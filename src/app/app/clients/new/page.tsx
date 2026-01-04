@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Client } from "@/lib/models";
-import { formatDbError, isDbConfigured } from "@/lib/db/health";
+import { formatDbError } from "@/lib/db/health";
+import { upsertClient } from "@/lib/storage";
 
 const emptyClient: Client = {
   id: "",
@@ -21,7 +22,6 @@ export default function NewClientPage() {
   const router = useRouter();
   const [form, setForm] = useState<Client>(emptyClient);
   const [error, setError] = useState<string | null>(null);
-  const dbConfigured = isDbConfigured();
 
   const handleChange = (field: keyof Client, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -31,29 +31,9 @@ export default function NewClientPage() {
     event.preventDefault();
     if (!form.firstName.trim()) return;
 
-    if (!dbConfigured) {
-      setError("Connect DB to enable saves.");
-      return;
-    }
-
     try {
-      const res = await fetch("/api/db/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: form.firstName,
-          lastName: form.lastName,
-          pronouns: form.pronouns,
-          phone: form.phone,
-          email: form.email,
-          notes: form.notes,
-        }),
-      });
-      const json = (await res.json()) as { ok: boolean; data?: Client; error?: string };
-      if (!res.ok || !json.ok || !json.data) {
-        throw new Error(json.error || "Unable to save client.");
-      }
-      router.push(`/app/clients/${json.data.id}`);
+      const saved = await upsertClient(form);
+      router.push(`/app/clients/${saved.id}`);
     } catch (err) {
       const message = formatDbError(err);
       setError(message);
@@ -137,8 +117,7 @@ export default function NewClientPage() {
           <button
             type="submit"
             className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
-            disabled={!dbConfigured}
-            title={dbConfigured ? "Save client" : "Connect DB to enable saves"}
+            title="Save client"
           >
             Save client
           </button>

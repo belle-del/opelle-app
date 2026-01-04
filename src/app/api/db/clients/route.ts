@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient, listClients } from "@/lib/db/clients";
 import { formatDbError } from "@/lib/db/health";
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     const data = await listClients();
     return NextResponse.json({ ok: true, data });
@@ -14,7 +14,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const payload = (await request.json()) as Record<string, unknown>;
     const data = await createClient(payload);

@@ -5,10 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { Appointment, AppointmentStatus, Client } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
-import { formatDbError, isDbConfigured } from "@/lib/db/health";
+import { formatDbError } from "@/lib/db/health";
 import {
+  deleteAppointment,
   getAppointmentById,
   getClients,
+  upsertAppointment,
 } from "@/lib/storage";
 
 const toLocalInput = (iso: string) => {
@@ -24,42 +26,20 @@ export default function AppointmentDetailPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
-  const dbConfigured = isDbConfigured();
-  const canWrite = dbConfigured && !dbError;
+  const canWrite = !dbError;
 
   useEffect(() => {
     if (!params?.id) return;
     let active = true;
     const load = async () => {
-      if (!dbConfigured) {
-        setAppointment(getAppointmentById(params.id));
-        setClients(getClients());
-        return;
-      }
       try {
-        const [apptRes, clientRes] = await Promise.all([
-          fetch(`/api/db/appointments/${params.id}`),
-          fetch("/api/db/clients"),
-        ]);
-        const apptJson = (await apptRes.json()) as {
-          ok: boolean;
-          data?: Appointment | null;
-          error?: string;
-        };
-        const clientJson = (await clientRes.json()) as {
-          ok: boolean;
-          data?: Client[];
-          error?: string;
-        };
-        if (!apptRes.ok || !apptJson.ok) {
-          throw new Error(apptJson.error || "Appointment fetch failed");
-        }
-        if (!clientRes.ok || !clientJson.ok) {
-          throw new Error(clientJson.error || "Client fetch failed");
-        }
         if (active) {
-          setAppointment(apptJson.data ?? null);
-          setClients(clientJson.data ?? []);
+          const [appointmentData, clientsData] = await Promise.all([
+            getAppointmentById(params.id),
+            getClients(),
+          ]);
+          setAppointment(appointmentData);
+          setClients(clientsData);
         }
       } catch (error) {
         const message = formatDbError(error);
@@ -67,15 +47,19 @@ export default function AppointmentDetailPage() {
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
         }
-        setAppointment(getAppointmentById(params.id));
-        setClients(getClients());
+        const [appointmentData, clientsData] = await Promise.all([
+          getAppointmentById(params.id),
+          getClients(),
+        ]);
+        setAppointment(appointmentData);
+        setClients(clientsData);
       }
     };
     load();
     return () => {
       active = false;
     };
-  }, [dbConfigured, params?.id]);
+  }, [params?.id]);
 
   const client = useMemo(() => {
     if (!appointment) return null;
@@ -106,27 +90,8 @@ export default function AppointmentDetailPage() {
 
     if (!canWrite) return;
     try {
-      const res = await fetch(`/api/db/appointments/${appointment.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientId: appointment.clientId,
-          serviceName: appointment.serviceName,
-          startAt: appointment.startAt,
-          durationMin: appointment.durationMin,
-          status: appointment.status,
-          notes: appointment.notes,
-        }),
-      });
-      const json = (await res.json()) as {
-        ok: boolean;
-        data?: Appointment;
-        error?: string;
-      };
-      if (!res.ok || !json.ok || !json.data) {
-        throw new Error(json.error || "Update failed.");
-      }
-      setAppointment(json.data);
+      const saved = await upsertAppointment(appointment);
+      setAppointment(saved);
       setIsEditing(false);
     } catch (error) {
       const message = formatDbError(error);
@@ -141,13 +106,7 @@ export default function AppointmentDetailPage() {
     if (!confirm("Delete this appointment?")) return;
     if (!canWrite) return;
     try {
-      const res = await fetch(`/api/db/appointments/${appointment.id}`, {
-        method: "DELETE",
-      });
-      const json = (await res.json()) as { ok: boolean; error?: string };
-      if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Delete failed.");
-      }
+      await deleteAppointment(appointment.id);
       router.push("/app/appointments");
     } catch (error) {
       const message = formatDbError(error);

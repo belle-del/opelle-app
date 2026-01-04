@@ -15,8 +15,8 @@ export default function SettingsPage() {
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [resetConfirm, setResetConfirm] = useState("");
 
-  const handleExport = () => {
-    const backup = exportBackup();
+  const handleExport = async () => {
+    const backup = await exportBackup();
     const date = new Date().toISOString().slice(0, 10);
     const filename = `opelle-backup-v1-${date}.json`;
     const blob = new Blob([JSON.stringify(backup, null, 2)], {
@@ -60,9 +60,9 @@ export default function SettingsPage() {
     }
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (!backupPreview) return;
-    const result = importBackup(backupPreview, {
+    const result = await importBackup(backupPreview, {
       merge: importMode === "merge",
     });
     setImportStatus(result.ok ? "Import complete." : result.error);

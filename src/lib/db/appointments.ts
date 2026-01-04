@@ -2,34 +2,25 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isDbConfigured } from "@/lib/db/health";
 import type { Appointment } from "@/lib/models";
 import {
-  AppointmentRow,
   appointmentModelToRow,
   appointmentRowToModel,
+  AppointmentRow,
 } from "@/lib/db/types";
-
-const requireUserId = async () => {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) {
-    throw new Error("Not authenticated.");
-  }
-  return { supabase, userId: data.user.id };
-};
 
 export const listAppointments = async (): Promise<Appointment[]> => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const { supabase } = await requireUserId();
+  const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("appointments")
     .select("*")
-    .order("start_at", { ascending: false });
+    .order("starts_at", { ascending: false });
   if (error) throw error;
   return (data as AppointmentRow[]).map(appointmentRowToModel);
 };
 
 export const getAppointment = async (id: string): Promise<Appointment | null> => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const { supabase } = await requireUserId();
+  const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("appointments")
     .select("*")
@@ -44,13 +35,10 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
 
 export const createAppointment = async (input: Partial<Appointment>) => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const { supabase, userId } = await requireUserId();
+  const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("appointments")
-    .insert({
-      ...appointmentModelToRow({ ...input, stylist_id: userId }),
-      stylist_id: userId,
-    })
+    .insert(appointmentModelToRow(input))
     .select("*")
     .single();
   if (error) throw error;
@@ -62,7 +50,7 @@ export const updateAppointment = async (
   input: Partial<Appointment>
 ) => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const { supabase } = await requireUserId();
+  const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("appointments")
     .update(appointmentModelToRow(input))
@@ -75,7 +63,7 @@ export const updateAppointment = async (
 
 export const deleteAppointment = async (id: string) => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const { supabase } = await requireUserId();
+  const supabase = createSupabaseServerClient();
   const { error } = await supabase.from("appointments").delete().eq("id", id);
   if (error) throw error;
 };

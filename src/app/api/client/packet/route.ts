@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { ClientPacketV1 } from "@/lib/portal/packet";
 import { lookupInvite } from "@/lib/portal/inviteDirectory";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAuthServerClient } from "@/lib/supabase/server";
 
 const MIN_TOKEN_LENGTH = 6;
 
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
   let token = queryToken;
 
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createSupabaseAuthServerClient();
     const { data } = await supabase.auth.getUser();
     const metadataToken =
       typeof data.user?.user_metadata?.invite_token === "string"

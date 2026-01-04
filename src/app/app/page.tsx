@@ -14,9 +14,22 @@ export default function AppDashboardPage() {
   const [formulas, setFormulas] = useState<Formula[]>([]);
 
   useEffect(() => {
-    setClients(getClients());
-    setAppointments(getAppointments());
-    setFormulas(getFormulas());
+    let active = true;
+    const load = async () => {
+      const [clientsData, appointmentsData, formulasData] = await Promise.all([
+        getClients(),
+        getAppointments(),
+        getFormulas(),
+      ]);
+      if (!active) return;
+      setClients(clientsData);
+      setAppointments(appointmentsData);
+      setFormulas(formulasData);
+    };
+    load();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const educationModulesCount = 6;

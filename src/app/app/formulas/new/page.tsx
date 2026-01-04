@@ -11,8 +11,8 @@ import type {
   FormulaStep,
 } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
-import { formatDbError, isDbConfigured } from "@/lib/db/health";
-import { getAppointments, getClients } from "@/lib/storage";
+import { formatDbError } from "@/lib/db/health";
+import { getAppointments, getClients, upsertFormula } from "@/lib/storage";
 
 const serviceTypes: FormulaServiceType[] = [
   "color",
@@ -50,40 +50,18 @@ export default function NewFormulaPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const dbConfigured = isDbConfigured();
 
   useEffect(() => {
     let active = true;
     const load = async () => {
-      if (!dbConfigured) {
-        setClients(getClients());
-        setAppointments(getAppointments());
-        return;
-      }
       try {
-        const [clientRes, apptRes] = await Promise.all([
-          fetch("/api/db/clients"),
-          fetch("/api/db/appointments"),
-        ]);
-        const clientJson = (await clientRes.json()) as {
-          ok: boolean;
-          data?: Client[];
-          error?: string;
-        };
-        const apptJson = (await apptRes.json()) as {
-          ok: boolean;
-          data?: Appointment[];
-          error?: string;
-        };
-        if (!clientRes.ok || !clientJson.ok) {
-          throw new Error(clientJson.error || "Client fetch failed.");
-        }
-        if (!apptRes.ok || !apptJson.ok) {
-          throw new Error(apptJson.error || "Appointment fetch failed.");
-        }
         if (active) {
-          setClients(clientJson.data ?? []);
-          setAppointments(apptJson.data ?? []);
+          const [clientsData, appointmentsData] = await Promise.all([
+            getClients(),
+            getAppointments(),
+          ]);
+          setClients(clientsData);
+          setAppointments(appointmentsData);
         }
       } catch (err) {
         const message = formatDbError(err);
@@ -91,15 +69,19 @@ export default function NewFormulaPage() {
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
         }
-        setClients(getClients());
-        setAppointments(getAppointments());
+        const [clientsData, appointmentsData] = await Promise.all([
+          getClients(),
+          getAppointments(),
+        ]);
+        setClients(clientsData);
+        setAppointments(appointmentsData);
       }
     };
     load();
     return () => {
       active = false;
     };
-  }, [dbConfigured]);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -157,42 +139,9 @@ export default function NewFormulaPage() {
     event.preventDefault();
     if (!form.clientId || !form.title.trim()) return;
 
-    if (!dbConfigured) {
-      setError("Connect DB to enable saves.");
-      return;
-    }
-
     try {
-      const res = await fetch("/api/db/formulas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientId: form.clientId,
-          serviceType: form.serviceType,
-          title: form.title,
-          colorLine: form.colorLine,
-          appointmentId: form.appointmentId,
-          notes: form.notes,
-          steps: form.steps.map((step, index) => ({
-            stepName: step.stepName?.trim() || `Step ${index + 1}`,
-            product: step.product?.trim() || "",
-            developer: step.developer?.trim() || undefined,
-            ratio: step.ratio?.trim() || undefined,
-            grams: step.grams ?? undefined,
-            processingMin: step.processingMin ?? undefined,
-            notes: step.notes?.trim() || undefined,
-          })),
-        }),
-      });
-      const json = (await res.json()) as {
-        ok: boolean;
-        data?: Formula;
-        error?: string;
-      };
-      if (!res.ok || !json.ok || !json.data) {
-        throw new Error(json.error || "Unable to save formula.");
-      }
-      router.push(`/app/formulas/${json.data.id}`);
+      const saved = await upsertFormula(form);
+      router.push(`/app/formulas/${saved.id}`);
     } catch (err) {
       const message = formatDbError(err);
       setError(message);
@@ -433,7 +382,7 @@ export default function NewFormulaPage() {
             type="submit"
             disabled={clients.length === 0}
             className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
-            title={dbConfigured ? "Save formula" : "Connect DB to enable saves"}
+            title="Save formula"
           >
             Save formula
           </button>

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Client } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
-import { getClients } from "@/lib/storage";
-import { formatDbError, isDbConfigured } from "@/lib/db/health";
+import { ensureClientInviteToken, getClients } from "@/lib/storage";
+import { formatDbError } from "@/lib/db/health";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -13,24 +13,14 @@ export default function ClientsPage() {
   const [copyStatus, setCopyStatus] = useState<Record<string, string>>({});
   const [origin, setOrigin] = useState("");
   const [dbError, setDbError] = useState<string | null>(null);
-  const dbConfigured = isDbConfigured();
-  const canWrite = dbConfigured && !dbError;
+  const canWrite = !dbError;
 
   useEffect(() => {
     let active = true;
     const load = async () => {
-      if (!dbConfigured) {
-        setClients(getClients());
-        return;
-      }
       try {
-        const res = await fetch("/api/db/clients");
-        const json = (await res.json()) as { ok: boolean; data?: Client[]; error?: string };
-        if (!res.ok || !json.ok) {
-          throw new Error(json.error || "DB fetch failed");
-        }
         if (active) {
-          setClients(json.data ?? []);
+          setClients(await getClients());
         }
       } catch (error) {
         const message = formatDbError(error);
@@ -40,14 +30,14 @@ export default function ClientsPage() {
             new CustomEvent("opelle:db-error", { detail: message })
           );
         }
-        setClients(getClients());
+        setClients(await getClients());
       }
     };
     load();
     return () => {
       active = false;
     };
-  }, [dbConfigured]);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -133,21 +123,9 @@ export default function ClientsPage() {
                     event.preventDefault();
                     event.stopPropagation();
                     if (!origin || !canWrite) return;
-                    fetch(`/api/db/clients/${client.id}/invite`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ action: "ensure" }),
-                    })
-                      .then(async (res) => {
-                        const json = (await res.json()) as {
-                          ok: boolean;
-                          data?: { token: string };
-                          error?: string;
-                        };
-                        if (!res.ok || !json.ok || !json.data?.token) {
-                          throw new Error(json.error || "Invite failed");
-                        }
-                        const link = `${origin}/client/invite/${json.data.token}`;
+                    ensureClientInviteToken(client.id)
+                      .then(async (data) => {
+                        const link = `${origin}/client/invite/${data.token}`;
                         await navigator.clipboard.writeText(link);
                         setCopyStatus((prev) => ({
                           ...prev,
@@ -171,7 +149,7 @@ export default function ClientsPage() {
                   className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
                   disabled={!canWrite}
                   title={
-                    canWrite ? "Copy invite link" : "Connect DB to enable saves"
+                    canWrite ? "Copy invite link" : "Unable to copy invite link"
                   }
                 >
                   Invite

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAuthServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const MIN_TOKEN_LENGTH = 6;
@@ -12,7 +12,7 @@ const serviceRoleConfigured = () =>
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createSupabaseAuthServerClient();
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
       return NextResponse.json(
