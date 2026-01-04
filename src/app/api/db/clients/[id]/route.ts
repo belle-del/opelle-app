@@ -8,10 +8,11 @@ import { formatDbError } from "@/lib/db/health";
 
 export async function GET(
   _request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const id = context.params.id;
+    const p = await (context.params as Promise<{ id: string }> | { id: string });
+    const id = p?.id;
     const data = await getClient(id);
     return NextResponse.json({ ok: true, data });
   } catch (error) {
@@ -24,10 +25,11 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const id = context.params.id;
+    const p = await (context.params as Promise<{ id: string }> | { id: string });
+    const id = p?.id;
     const payload = (await request.json()) as Record<string, unknown>;
     const data = await updateClient(id, payload);
     return NextResponse.json({ ok: true, data });
@@ -41,10 +43,11 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const id = context.params.id;
+    const p = await (context.params as Promise<{ id: string }> | { id: string });
+    const id = p?.id;
     await deleteClient(id);
     return NextResponse.json({ ok: true });
   } catch (error) {
