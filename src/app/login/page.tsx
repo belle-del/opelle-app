@@ -46,7 +46,7 @@ export default function LoginPage() {
 
       <div className="op-panel opelle-login-enter w-full max-w-md rounded-3xl p-8 sm:p-10">
         <div className="space-y-4 text-center">
-          <div className="inline-flex items-center gap-3 rounded-full border border-[hsl(var(--panel-border)/0.5)] bg-[hsl(var(--panel)/0.4)] px-4 py-1 text-[10px] uppercase tracking-[0.3em] text-[hsl(var(--muted))]">
+          <div className="inline-flex items-center gap-3 rounded-full border border-[hsl(var(--panelBorder)/0.5)] bg-[hsl(var(--panel)/0.4)] px-4 py-1 text-[10px] uppercase tracking-[0.3em] text-[hsl(var(--muted))]">
             <span className="op-gradient-text font-semibold">Opelle</span>
             <span className="rounded-full bg-[hsl(var(--accent-1)/0.2)] px-2 py-0.5 text-[10px] font-semibold text-[hsl(var(--accent-1))]">
               Beta

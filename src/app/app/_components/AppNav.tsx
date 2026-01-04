@@ -28,8 +28,8 @@ export default function AppNav() {
             href={item.href}
             className={`rounded-lg px-3 py-2 transition ${
               isActive
-                ? "bg-emerald-500/20 text-emerald-200"
-                : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                ? "bg-[hsl(var(--panel)/0.9)] text-[hsl(var(--fg))] shadow-[0_10px_30px_hsl(var(--mesh1)/0.15)]"
+                : "op-muted hover:bg-[hsl(var(--panel)/0.6)] hover:text-[hsl(var(--fg))]"
             }`}
           >
             {item.label}

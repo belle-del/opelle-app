@@ -15,7 +15,7 @@ export default function ThemeToggle() {
       type="button"
       onClick={handleToggle}
       aria-label="Toggle theme"
-      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[hsl(var(--panel-border)/0.6)] bg-[hsl(var(--panel)/0.6)] text-[hsl(var(--fg))] transition hover:-translate-y-0.5 hover:shadow-[0_10px_30px_hsl(var(--accent-2)/0.2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(var(--ring))]"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[hsl(var(--panelBorder)/0.6)] bg-[hsl(var(--panel)/0.6)] text-[hsl(var(--fg))] transition hover:-translate-y-0.5 hover:shadow-[0_10px_30px_hsl(var(--mesh2)/0.2)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(var(--ring))]"
     >
       {current === "dark" ? (
         <svg

@@ -12,16 +12,16 @@ export default function AppLayout({
   const authDisabled = process.env.OPPELLE_AUTH_DISABLED === "true";
 
   return (
-    <div className="min-h-screen op-bg">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-64 flex-col border-r op-border bg-[hsl(var(--panel)/0.55)] p-6 lg:flex">
+        <aside className="hidden w-64 flex-col border-r border-[hsl(var(--panelBorder)/0.6)] bg-[hsl(var(--panel)/0.55)] p-6 lg:flex">
           <div className="text-lg font-semibold tracking-tight op-title">
             Student Console
           </div>
           <AppNav />
           <Link
             href="/"
-            className="mt-auto rounded-lg border op-border px-3 py-2 text-center text-sm op-muted transition hover:border-[hsl(var(--panel-border)/0.9)]"
+            className="mt-auto rounded-lg border border-[hsl(var(--panelBorder)/0.6)] px-3 py-2 text-center text-sm op-muted transition hover:border-[hsl(var(--panelBorder)/0.9)]"
           >
             Back home
           </Link>
@@ -29,7 +29,7 @@ export default function AppLayout({
 
         <div className="flex min-h-screen flex-1 flex-col">
           <DbStatusBanner />
-          <header className="flex items-center justify-between border-b op-border px-6 py-4">
+          <header className="flex items-center justify-between border-b border-[hsl(var(--panelBorder)/0.6)] px-6 py-4">
             <div>
               <p className="text-sm uppercase tracking-[0.3em] op-muted">
                 Opelle
@@ -46,7 +46,7 @@ export default function AppLayout({
               ) : (
                 <Link
                   href="/logout"
-                  className="rounded-full border op-border px-3 py-1 text-xs op-muted transition hover:border-[hsl(var(--panel-border)/0.9)]"
+                  className="rounded-full border border-[hsl(var(--panelBorder)/0.6)] px-3 py-1 text-xs op-muted transition hover:border-[hsl(var(--panelBorder)/0.9)]"
                 >
                   Logout
                 </Link>

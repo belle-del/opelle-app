@@ -1,16 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --bg: 220 30% 98%;
-  --fg: 222 25% 12%;
+  --bg: 216 30% 98%;
+  --fg: 222 30% 12%;
   --muted: 220 10% 45%;
-  --panel: 220 35% 96%;
-  --panel-border: 220 16% 80%;
+  --panel: 218 38% 96%;
+  --panelBorder: 220 18% 82%;
+  --ring: 335 58% 58%;
+  --shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
   --accent-1: 340 65% 78%;
-  --accent-2: 150 45% 70%;
-  --accent-3: 260 55% 78%;
-  --ring: 340 55% 58%;
-  --shadow: 0 20px 60px rgba(15, 23, 42, 0.15);
+  --accent-2: 155 45% 70%;
+  --accent-3: 260 60% 78%;
+  --mesh1: 340 65% 84%;
+  --mesh2: 155 45% 76%;
+  --mesh3: 260 60% 84%;
+  --mesh4: 35 65% 88%;
 }
 
 .dark {
@@ -18,12 +22,16 @@
   --fg: 210 30% 96%;
   --muted: 215 12% 65%;
   --panel: 222 22% 14%;
-  --panel-border: 220 16% 28%;
+  --panelBorder: 220 16% 28%;
+  --ring: 340 70% 60%;
+  --shadow: 0 30px 70px rgba(3, 7, 18, 0.6);
   --accent-1: 340 70% 70%;
   --accent-2: 155 55% 60%;
   --accent-3: 260 70% 70%;
-  --ring: 340 70% 60%;
-  --shadow: 0 30px 70px rgba(3, 7, 18, 0.6);
+  --mesh1: 340 65% 60%;
+  --mesh2: 155 55% 55%;
+  --mesh3: 260 70% 60%;
+  --mesh4: 35 55% 55%;
 }
 
 @theme inline {
@@ -45,22 +53,14 @@ body {
 }
 
 .op-panel {
-  background: hsl(var(--panel) / 0.7);
-  border: 1px solid hsl(var(--panel-border) / 0.6);
+  background: hsl(var(--panel) / 0.72);
+  border: 1px solid hsl(var(--panelBorder) / 0.6);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
 }
 
-.op-border {
-  border-color: hsl(var(--panel-border) / 0.6);
-}
-
 .op-muted {
   color: hsl(var(--muted));
-}
-
-.op-title {
-  color: hsl(var(--fg));
 }
 
 .op-ring {
