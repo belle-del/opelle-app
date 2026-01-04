@@ -96,7 +96,7 @@ export default function FormulaDetailPage() {
     return (
       <div className="space-y-3">
         <h2 className="text-2xl font-semibold">Formula not found</h2>
-        <Link href="/app/formulas" className="text-sm text-emerald-200">
+        <Link href="/app/formulas" className="text-sm text-emerald-600 dark:text-emerald-200">
           Back to formulas
         </Link>
       </div>
@@ -172,19 +172,19 @@ export default function FormulaDetailPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold">{formula.title}</h2>
-          <p className="text-slate-300">Formula stored locally.</p>
+          <p className="text-muted-foreground">Formula stored locally.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
             href="/app/formulas"
-            className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
+            className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
           >
             Back to formulas
           </Link>
           <button
             type="button"
             onClick={() => setIsEditing((prev) => !prev)}
-            className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-200"
+            className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-200"
           >
             {isEditing ? "Cancel edit" : "Edit"}
           </button>
@@ -193,16 +193,16 @@ export default function FormulaDetailPage() {
 
       {isEditing ? (
         <form
-          className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6"
+          className="rounded-2xl border border-border bg-card/70 p-6"
           onSubmit={handleSave}
         >
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="block text-sm text-slate-200">
+            <label className="block text-sm text-foreground">
               Client
               <select
                 value={formula.clientId}
                 onChange={(event) => handleChange("clientId", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 required
               >
                 <option value="">Select client</option>
@@ -213,14 +213,14 @@ export default function FormulaDetailPage() {
                 ))}
               </select>
             </label>
-            <label className="block text-sm text-slate-200">
+            <label className="block text-sm text-foreground">
               Service type
               <select
                 value={formula.serviceType}
                 onChange={(event) =>
                   handleChange("serviceType", event.target.value as FormulaServiceType)
                 }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               >
                 {serviceTypes.map((type) => (
                   <option key={type} value={type}>
@@ -229,29 +229,29 @@ export default function FormulaDetailPage() {
                 ))}
               </select>
             </label>
-            <label className="block text-sm text-slate-200">
+            <label className="block text-sm text-foreground">
               Title
               <input
                 value={formula.title}
                 onChange={(event) => handleChange("title", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 required
               />
             </label>
-            <label className="block text-sm text-slate-200">
+            <label className="block text-sm text-foreground">
               Color line
               <input
                 value={formula.colorLine ?? ""}
                 onChange={(event) => handleChange("colorLine", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               />
             </label>
-            <label className="block text-sm text-slate-200">
+            <label className="block text-sm text-foreground">
               Link to appointment
               <select
                 value={formula.appointmentId ?? ""}
                 onChange={(event) => handleChange("appointmentId", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               >
                 <option value="">No appointment</option>
                 {appointments
@@ -271,7 +271,7 @@ export default function FormulaDetailPage() {
               <button
                 type="button"
                 onClick={handleAddStep}
-                className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
+                className="rounded-full border border-border px-3 py-1 text-xs text-foreground"
               >
                 Add step
               </button>
@@ -280,65 +280,65 @@ export default function FormulaDetailPage() {
             {formula.steps.map((step, index) => (
               <div
                 key={`step-${index}`}
-                className="rounded-xl border border-slate-800 bg-slate-950/60 p-4"
+                className="rounded-xl border border-border bg-card/70 p-4"
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-200">
+                  <p className="text-sm font-semibold text-foreground">
                     Step {index + 1}
                   </p>
                   {formula.steps.length > 1 ? (
                     <button
                       type="button"
                       onClick={() => handleRemoveStep(index)}
-                      className="text-xs text-rose-200"
+                      className="text-xs text-rose-600 dark:text-rose-300"
                     >
                       Remove
                     </button>
                   ) : null}
                 </div>
                 <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  <label className="block text-sm text-slate-200">
+                  <label className="block text-sm text-foreground">
                     Step name
                     <input
                       value={step.stepName}
                       onChange={(event) =>
                         handleStepChange(index, "stepName", event.target.value)
                       }
-                      className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                     />
                   </label>
-                  <label className="block text-sm text-slate-200">
+                  <label className="block text-sm text-foreground">
                     Product
                     <input
                       value={step.product}
                       onChange={(event) =>
                         handleStepChange(index, "product", event.target.value)
                       }
-                      className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                       required
                     />
                   </label>
-                  <label className="block text-sm text-slate-200">
+                  <label className="block text-sm text-foreground">
                     Developer
                     <input
                       value={step.developer ?? ""}
                       onChange={(event) =>
                         handleStepChange(index, "developer", event.target.value)
                       }
-                      className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                     />
                   </label>
-                  <label className="block text-sm text-slate-200">
+                  <label className="block text-sm text-foreground">
                     Ratio
                     <input
                       value={step.ratio ?? ""}
                       onChange={(event) =>
                         handleStepChange(index, "ratio", event.target.value)
                       }
-                      className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                     />
                   </label>
-                  <label className="block text-sm text-slate-200">
+                  <label className="block text-sm text-foreground">
                     Grams
                     <input
                       type="number"
@@ -351,10 +351,10 @@ export default function FormulaDetailPage() {
                           event.target.value ? Number(event.target.value) : undefined
                         )
                       }
-                      className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                     />
                   </label>
-                  <label className="block text-sm text-slate-200">
+                  <label className="block text-sm text-foreground">
                     Processing (min)
                     <input
                       type="number"
@@ -367,18 +367,18 @@ export default function FormulaDetailPage() {
                           event.target.value ? Number(event.target.value) : undefined
                         )
                       }
-                      className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                     />
                   </label>
                 </div>
-                <label className="mt-3 block text-sm text-slate-200">
+                <label className="mt-3 block text-sm text-foreground">
                   Notes
                   <textarea
                     value={step.notes ?? ""}
                     onChange={(event) =>
                       handleStepChange(index, "notes", event.target.value)
                     }
-                    className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                    className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                     rows={2}
                   />
                 </label>
@@ -390,7 +390,7 @@ export default function FormulaDetailPage() {
             <button
               type="button"
               onClick={handleDelete}
-              className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-200"
+              className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-600 dark:text-rose-300"
               disabled={!canWrite}
               title={canWrite ? "Delete formula" : "Connect DB to enable deletes"}
             >
@@ -398,7 +398,7 @@ export default function FormulaDetailPage() {
             </button>
             <button
               type="submit"
-              className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
+              className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent"
               disabled={!canWrite}
               title={canWrite ? "Save changes" : "Connect DB to enable saves"}
             >
@@ -408,10 +408,10 @@ export default function FormulaDetailPage() {
         </form>
       ) : (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
+          <div className="rounded-2xl border border-border bg-card/70 p-6 text-sm text-foreground">
             <div className="grid gap-3 md:grid-cols-2">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                   Client
                 </p>
                 <p className="mt-2">
@@ -419,19 +419,19 @@ export default function FormulaDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                   Service type
                 </p>
                 <p className="mt-2 capitalize">{formula.serviceType}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                   Color line
                 </p>
                 <p className="mt-2">{formula.colorLine || "Not set"}</p>
               </div>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                   Appointment
                 </p>
                 <p className="mt-2">
@@ -447,28 +447,28 @@ export default function FormulaDetailPage() {
             {formula.steps.map((step, index) => (
               <div
                 key={`recipe-${index}`}
-                className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5"
+                className="rounded-2xl border border-border bg-card/70 p-5"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-lg font-semibold text-slate-100">
+                    <p className="text-lg font-semibold text-foreground">
                       {step.stepName || `Step ${index + 1}`}
                     </p>
-                    <p className="text-sm text-slate-400">{step.product}</p>
+                    <p className="text-sm text-muted-foreground">{step.product}</p>
                   </div>
-                  <div className="text-right text-xs text-slate-400">
+                  <div className="text-right text-xs text-muted-foreground">
                     {step.processingMin ? (
                       <p>{step.processingMin} min</p>
                     ) : null}
                     {step.grams ? <p>{step.grams} g</p> : null}
                   </div>
                 </div>
-                <div className="mt-3 grid gap-2 text-sm text-slate-300 md:grid-cols-2">
+                <div className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
                   {step.developer ? <p>Developer: {step.developer}</p> : null}
                   {step.ratio ? <p>Ratio: {step.ratio}</p> : null}
                 </div>
                 {step.notes ? (
-                  <p className="mt-3 text-sm text-slate-400">
+                  <p className="mt-3 text-sm text-muted-foreground">
                     Notes: {step.notes}
                   </p>
                 ) : null}

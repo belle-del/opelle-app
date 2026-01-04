@@ -33,28 +33,28 @@ export default function EmbeddedAiDemo({ enabled }: { enabled: boolean }) {
         type="button"
         onClick={handleGenerate}
         disabled={!enabled || loading}
-        className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+        className="rounded-full bg-emerald-400 px-5 py-2 text-sm font-semibold op-on-accent transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
       >
         {loading ? "Generating..." : "Generate Next Actions (Local)"}
       </button>
 
       {!enabled ? (
-        <p className="text-sm text-amber-200">
+        <p className="text-sm text-amber-700 dark:text-amber-200">
           Embedded AI is disabled. Set OPLE_EMBEDDED_AI_ENABLED=true to enable
           it.
         </p>
       ) : null}
 
       {error ? (
-        <p className="text-sm text-rose-300">Error: {error}</p>
+        <p className="text-sm text-rose-600 dark:text-rose-300">Error: {error}</p>
       ) : null}
 
       {output ? (
-        <pre className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-xs text-slate-200">
+        <pre className="overflow-x-auto rounded-xl border border-border bg-card/70 p-4 text-xs text-foreground">
           {JSON.stringify(output, null, 2)}
         </pre>
       ) : (
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted-foreground">
           No output yet. Generate next actions to preview deterministic JSON.
         </p>
       )}

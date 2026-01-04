@@ -66,7 +66,7 @@ export default function AppointmentDetailPage() {
     return (
       <div className="space-y-3">
         <h2 className="text-2xl font-semibold">Appointment not found</h2>
-        <Link href="/app/appointments" className="text-sm text-emerald-200">
+        <Link href="/app/appointments" className="text-sm text-emerald-600 dark:text-emerald-200">
           Back to appointments
         </Link>
       </div>
@@ -118,19 +118,19 @@ export default function AppointmentDetailPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold">Appointment</h2>
-          <p className="text-slate-300">Details stored locally.</p>
+          <p className="text-muted-foreground">Details stored locally.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
             href="/app/appointments"
-            className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
+            className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
           >
             Back to appointments
           </Link>
           <button
             type="button"
             onClick={() => setIsEditing((prev) => !prev)}
-            className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-200"
+            className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-200"
           >
             {isEditing ? "Cancel edit" : "Edit"}
           </button>
@@ -139,18 +139,18 @@ export default function AppointmentDetailPage() {
 
       {isEditing ? (
         <form
-          className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6"
+          className="rounded-2xl border border-border bg-card/70 p-6"
           onSubmit={handleSave}
         >
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="block text-sm text-slate-200">
+            <label className="block text-sm text-foreground">
               Client
               <select
                 value={appointment.clientId}
                 onChange={(event) =>
                   handleChange("clientId", event.target.value)
                 }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 required
               >
                 <option value="">Select client</option>
@@ -161,18 +161,18 @@ export default function AppointmentDetailPage() {
                 ))}
               </select>
             </label>
-            <label className="block text-sm text-slate-200">
+            <label className="block text-sm text-foreground">
               Service name
               <input
                 value={appointment.serviceName}
                 onChange={(event) =>
                   handleChange("serviceName", event.target.value)
                 }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 required
               />
             </label>
-            <label className="block text-sm text-slate-200">
+            <label className="block text-sm text-foreground">
               Date & time
               <input
                 type="datetime-local"
@@ -183,10 +183,10 @@ export default function AppointmentDetailPage() {
                     new Date(event.target.value).toISOString()
                   )
                 }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               />
             </label>
-            <label className="block text-sm text-slate-200">
+            <label className="block text-sm text-foreground">
               Duration (min)
               <input
                 type="number"
@@ -195,17 +195,17 @@ export default function AppointmentDetailPage() {
                 onChange={(event) =>
                   handleChange("durationMin", Number(event.target.value))
                 }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               />
             </label>
-            <label className="block text-sm text-slate-200">
+            <label className="block text-sm text-foreground">
               Status
               <select
                 value={appointment.status}
                 onChange={(event) =>
                   handleChange("status", event.target.value as AppointmentStatus)
                 }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               >
                 <option value="scheduled">Scheduled</option>
                 <option value="completed">Completed</option>
@@ -213,12 +213,12 @@ export default function AppointmentDetailPage() {
               </select>
             </label>
           </div>
-          <label className="mt-4 block text-sm text-slate-200">
+          <label className="mt-4 block text-sm text-foreground">
             Notes
             <textarea
               value={appointment.notes ?? ""}
               onChange={(event) => handleChange("notes", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               rows={4}
             />
           </label>
@@ -226,7 +226,7 @@ export default function AppointmentDetailPage() {
             <button
               type="button"
               onClick={handleDelete}
-              className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-200"
+              className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-600 dark:text-rose-300"
               disabled={!canWrite}
               title={canWrite ? "Delete appointment" : "Connect DB to enable deletes"}
             >
@@ -234,7 +234,7 @@ export default function AppointmentDetailPage() {
             </button>
             <button
               type="submit"
-              className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
+              className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent"
               disabled={!canWrite}
               title={canWrite ? "Save changes" : "Connect DB to enable saves"}
             >
@@ -243,10 +243,10 @@ export default function AppointmentDetailPage() {
           </div>
         </form>
       ) : (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
+        <div className="rounded-2xl border border-border bg-card/70 p-6 text-sm text-foreground">
           <div className="grid gap-3 md:grid-cols-2">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                 Client
               </p>
               <p className="mt-2">
@@ -254,13 +254,13 @@ export default function AppointmentDetailPage() {
               </p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                 Service
               </p>
               <p className="mt-2">{appointment.serviceName}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                 Time
               </p>
               <p className="mt-2">
@@ -269,17 +269,17 @@ export default function AppointmentDetailPage() {
               <p>{appointment.durationMin} min</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                 Status
               </p>
               <p className="mt-2 capitalize">{appointment.status}</p>
             </div>
           </div>
           <div className="mt-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
               Notes
             </p>
-            <p className="mt-2 text-slate-300">
+            <p className="mt-2 text-muted-foreground">
               {appointment.notes || "No notes yet."}
             </p>
           </div>

@@ -99,15 +99,15 @@ export default function NewAppointmentPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold">New appointment</h2>
-        <p className="text-slate-300">Schedule a session locally.</p>
+        <p className="text-muted-foreground">Schedule a session locally.</p>
       </div>
 
       {clients.length === 0 ? (
-        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-6 text-sm text-amber-200">
+        <div className="rounded-2xl border border-amber-300/70 bg-amber-100/60 p-6 text-sm text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
           <p>No clients yet. Add a client before scheduling appointments.</p>
           <Link
             href="/app/clients/new"
-            className="mt-3 inline-flex rounded-full border border-amber-200 px-4 py-2 text-xs font-semibold text-amber-100"
+            className="mt-3 inline-flex rounded-full border border-amber-300 px-4 py-2 text-xs font-semibold text-amber-700 dark:border-amber-200 dark:text-amber-100"
           >
             Add a client
           </Link>
@@ -115,16 +115,16 @@ export default function NewAppointmentPage() {
       ) : null}
 
       <form
-        className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6"
+        className="rounded-2xl border border-border bg-card/70 p-6"
         onSubmit={handleSubmit}
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm text-slate-200">
+          <label className="block text-sm text-foreground">
             Client
             <select
               value={form.clientId}
               onChange={(event) => handleChange("clientId", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               required
             >
               <option value="">Select client</option>
@@ -135,19 +135,19 @@ export default function NewAppointmentPage() {
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-200">
+          <label className="block text-sm text-foreground">
             Service name
             <input
               value={form.serviceName}
               onChange={(event) =>
                 handleChange("serviceName", event.target.value)
               }
-              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               placeholder="Signature Glow Facial"
               required
             />
           </label>
-          <label className="block text-sm text-slate-200">
+          <label className="block text-sm text-foreground">
             Date & time
             <input
               type="datetime-local"
@@ -158,10 +158,10 @@ export default function NewAppointmentPage() {
                   new Date(event.target.value).toISOString()
                 )
               }
-              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
           </label>
-          <label className="block text-sm text-slate-200">
+          <label className="block text-sm text-foreground">
             Duration (min)
             <input
               type="number"
@@ -170,17 +170,17 @@ export default function NewAppointmentPage() {
               onChange={(event) =>
                 handleChange("durationMin", Number(event.target.value))
               }
-              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
           </label>
-          <label className="block text-sm text-slate-200">
+          <label className="block text-sm text-foreground">
             Status
             <select
               value={form.status}
               onChange={(event) =>
                 handleChange("status", event.target.value as AppointmentStatus)
               }
-              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             >
               <option value="scheduled">Scheduled</option>
               <option value="completed">Completed</option>
@@ -188,12 +188,12 @@ export default function NewAppointmentPage() {
             </select>
           </label>
         </div>
-        <label className="mt-4 block text-sm text-slate-200">
+        <label className="mt-4 block text-sm text-foreground">
           Notes
           <textarea
             value={form.notes}
             onChange={(event) => handleChange("notes", event.target.value)}
-            className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             rows={4}
           />
         </label>
@@ -201,21 +201,21 @@ export default function NewAppointmentPage() {
           <button
             type="button"
             onClick={() => router.push("/app/appointments")}
-            className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
+            className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={clients.length === 0}
-            className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+            className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
             title="Save appointment"
           >
             Save appointment
           </button>
         </div>
         {error ? (
-          <p className="mt-3 text-sm text-rose-200">{error}</p>
+          <p className="mt-3 text-sm text-rose-600 dark:text-rose-300">{error}</p>
         ) : null}
       </form>
     </div>

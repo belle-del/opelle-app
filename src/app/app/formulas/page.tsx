@@ -121,13 +121,13 @@ export default function FormulasPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold">Formulas</h2>
-          <p className="text-slate-300">
+          <p className="text-muted-foreground">
             Track formulas and color recipes stored locally.
           </p>
         </div>
         <Link
           href={clientFilter ? `/app/formulas/new?clientId=${clientFilter}` : "/app/formulas/new"}
-          className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
+          className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent transition hover:bg-emerald-300"
         >
           New Formula
         </Link>
@@ -141,8 +141,8 @@ export default function FormulasPage() {
             onClick={() => setFilter(value)}
             className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
               filter === value
-                ? "bg-slate-100 text-slate-950"
-                : "border border-slate-700 text-slate-200"
+                ? "bg-muted text-foreground"
+                : "border border-border text-foreground"
             }`}
           >
             {filterLabel(value)}
@@ -153,20 +153,20 @@ export default function FormulasPage() {
       <input
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-slate-200"
+        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground"
         placeholder="Search by title, client, color line, or product"
       />
 
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-sm text-slate-300">
+          <div className="rounded-2xl border border-dashed border-border bg-card/70 p-6 text-sm text-muted-foreground">
             <p>
               No formulas yet. Add your first formula to build the recipe
               library.
             </p>
             <Link
               href="/app/formulas/new"
-              className="mt-4 inline-flex rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-200"
+              className="mt-4 inline-flex rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-200"
             >
               Create first formula
             </Link>
@@ -181,21 +181,21 @@ export default function FormulasPage() {
             return (
               <div
                 key={formula.id}
-                className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5"
+                className="rounded-2xl border border-border bg-card/70 p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <Link
                       href={`/app/formulas/${formula.id}`}
-                      className="text-lg font-semibold text-slate-100 transition hover:text-emerald-200"
+                      className="text-lg font-semibold text-foreground transition hover:text-emerald-600 dark:text-emerald-200"
                     >
                       {formula.title}
                     </Link>
-                    <div className="text-sm text-slate-400">
+                    <div className="text-sm text-muted-foreground">
                       {client ? (
                         <Link
                           href={`/app/clients/${client.id}`}
-                          className="transition hover:text-emerald-200"
+                          className="transition hover:text-emerald-600 dark:text-emerald-200"
                         >
                           {getClientDisplayName(client)}
                         </Link>
@@ -204,16 +204,16 @@ export default function FormulasPage() {
                       )}
                     </div>
                     {formula.colorLine ? (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         {formula.colorLine}
                       </p>
                     ) : null}
                   </div>
-                  <div className="text-right text-sm text-slate-300">
+                  <div className="text-right text-sm text-muted-foreground">
                     <p className="capitalize">{formula.serviceType}</p>
                     <p>Updated {new Date(formula.updatedAt).toLocaleDateString()}</p>
                     {appointment ? (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         Appt {new Date(appointment.startAt).toLocaleDateString()}
                       </p>
                     ) : null}

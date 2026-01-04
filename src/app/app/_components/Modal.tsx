@@ -14,19 +14,19 @@ export default function Modal({ open, title, onClose, children }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-900/95 p-6 shadow-xl"
+        className="w-full max-w-xl rounded-2xl border border-border bg-card/95 p-6 shadow-xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-100">{title}</h3>
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="text-sm text-slate-400 transition hover:text-slate-200"
+            className="text-sm text-muted-foreground transition hover:text-foreground"
           >
             Close
           </button>

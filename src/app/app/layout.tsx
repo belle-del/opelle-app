@@ -48,7 +48,7 @@ export default function AppLayout({
               <NewItemMenu />
               <ThemeToggle />
               {authDisabled ? (
-                <span className="rounded-full border border-amber-400/50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-amber-200">
+                <span className="rounded-full border border-amber-300/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-amber-700 dark:border-amber-400/50 dark:text-amber-200">
                   Auth Disabled
                 </span>
               ) : (

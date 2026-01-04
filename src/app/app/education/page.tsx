@@ -48,27 +48,27 @@ export default function EducationPage() {
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-semibold">Education Hub</h2>
-        <p className="text-slate-300">
+        <p className="text-muted-foreground">
           Organize training modules, resources, and learning notes.
         </p>
       </div>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+      <section className="rounded-2xl border border-border bg-card/70 p-6">
         <h3 className="text-lg font-semibold">Modules</h3>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {modules.map((module) => (
             <div
               key={module.title}
-              className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4"
+              className="rounded-2xl border border-border bg-card/70 p-4"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-base font-semibold text-slate-100">
+                  <p className="text-base font-semibold text-foreground">
                     {module.title}
                   </p>
-                  <p className="text-sm text-slate-400">{module.description}</p>
+                  <p className="text-sm text-muted-foreground">{module.description}</p>
                 </div>
-                <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200">
+                <span className="rounded-full border border-border px-3 py-1 text-xs text-foreground">
                   {module.status}
                 </span>
               </div>
@@ -78,13 +78,13 @@ export default function EducationPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+        <div className="rounded-2xl border border-border bg-card/70 p-6">
           <h3 className="text-lg font-semibold">Saved notes</h3>
-          <div className="mt-4 space-y-2 text-sm text-slate-300">
+          <div className="mt-4 space-y-2 text-sm text-muted-foreground">
             {notes.map((note) => (
               <div
                 key={note}
-                className="rounded-xl border border-slate-800 bg-slate-950/60 p-3"
+                className="rounded-xl border border-border bg-card/70 p-3"
               >
                 {note}
               </div>
@@ -92,13 +92,13 @@ export default function EducationPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+        <div className="rounded-2xl border border-border bg-card/70 p-6">
           <h3 className="text-lg font-semibold">Quick links</h3>
-          <div className="mt-4 space-y-2 text-sm text-slate-300">
+          <div className="mt-4 space-y-2 text-sm text-muted-foreground">
             {links.map((link) => (
               <div
                 key={link}
-                className="rounded-xl border border-slate-800 bg-slate-950/60 p-3"
+                className="rounded-xl border border-border bg-card/70 p-3"
               >
                 {link}
               </div>

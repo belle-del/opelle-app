@@ -2,24 +2,25 @@
 
 :root {
   color-scheme: light dark;
-  --bg: 24 35% 97%;
+  --bg: 24 38% 97%;
   --fg: 222 30% 12%;
-  --muted: 220 10% 44%;
-  --panel: 24 40% 98%;
-  --panelBorder: 220 16% 86%;
+  --muted: 215 16% 42%;
+  --panel: 28 42% 98%;
+  --panelBorder: 25 22% 86%;
   --ring: 335 58% 56%;
   --shadow: 0 16px 42px rgba(30, 41, 59, 0.12);
-  --accent-1: 340 65% 74%;
-  --accent-2: 155 45% 68%;
-  --accent-3: 262 58% 76%;
-  --mesh1: 340 70% 90%;
-  --mesh2: 155 50% 86%;
-  --mesh3: 262 70% 88%;
-  --mesh4: 35 80% 90%;
-  --surface: 24 40% 99%;
-  --surface-2: 24 30% 95%;
+  --accent-1: 340 70% 74%;
+  --accent-2: 155 46% 66%;
+  --accent-3: 262 60% 76%;
+  --mesh1: 340 75% 90%;
+  --mesh2: 155 55% 88%;
+  --mesh3: 262 75% 90%;
+  --mesh4: 35 85% 90%;
+  --surface: 28 45% 99%;
+  --surface-2: 25 35% 95%;
   --text: 222 28% 14%;
-  --border: 220 14% 86%;
+  --border: 24 20% 88%;
+  --on-accent: 222 30% 12%;
 }
 
 .dark {
@@ -41,11 +42,17 @@
   --surface-2: 222 18% 12%;
   --text: 210 30% 96%;
   --border: 220 16% 28%;
+  --on-accent: 222 30% 12%;
 }
 
 @theme inline {
   --color-background: hsl(var(--bg));
   --color-foreground: hsl(var(--fg));
+  --color-card: hsl(var(--surface));
+  --color-muted: hsl(var(--surface-2));
+  --color-secondary: hsl(var(--surface-2));
+  --color-border: hsl(var(--border));
+  --color-muted-foreground: hsl(var(--muted));
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -76,6 +83,10 @@ body {
   box-shadow: 0 0 0 2px hsl(var(--ring) / 0.45);
 }
 
+.op-title {
+  color: hsl(var(--fg));
+}
+
 .op-gradient-text {
   background: linear-gradient(
     120deg,
@@ -86,4 +97,8 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.op-on-accent {
+  color: hsl(var(--on-accent));
 }

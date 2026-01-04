@@ -89,11 +89,11 @@ export default function AppDashboardPage() {
   return (
     <div className="space-y-8">
       <header className="space-y-3">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
           Student Console
         </p>
         <h2 className="text-3xl font-semibold">Command Center</h2>
-        <p className="text-slate-300">
+        <p className="text-muted-foreground">
           Track client activity, upcoming appointments, and formulas at a
           glance.
         </p>
@@ -108,42 +108,42 @@ export default function AppDashboardPage() {
         ].map((card) => (
           <div
             key={card.label}
-            className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5"
+            className="rounded-2xl border border-border bg-card/70 p-5"
           >
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
               {card.label}
             </p>
-            <p className="mt-3 text-2xl font-semibold text-slate-100">
+            <p className="mt-3 text-2xl font-semibold text-foreground">
               {card.value}
             </p>
           </div>
         ))}
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+      <section className="rounded-2xl border border-border bg-card/70 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-lg font-semibold">Quick actions</h3>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               Create new records in a single click.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
               href="/app/clients/new"
-              className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
+              className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
             >
               New Client
             </Link>
             <Link
               href="/app/appointments/new"
-              className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
+              className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
             >
               New Appointment
             </Link>
             <Link
               href="/app/formulas/new"
-              className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-200"
+              className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-200"
             >
               New Formula
             </Link>
@@ -151,21 +151,21 @@ export default function AppDashboardPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+      <section className="rounded-2xl border border-border bg-card/70 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-lg font-semibold">Recent activity</h3>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               The latest client, appointment, and formula updates.
             </p>
           </div>
-          <Link href="/app/clients" className="text-sm text-emerald-200">
+          <Link href="/app/clients" className="text-sm text-emerald-600 dark:text-emerald-200">
             View clients
           </Link>
         </div>
         <div className="mt-5 space-y-3">
           {recentActivity.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/40 p-4 text-sm text-slate-300">
+            <div className="rounded-xl border border-dashed border-border bg-card/60 p-4 text-sm text-muted-foreground">
               No activity yet. Add your first client to start building history.
             </div>
           ) : (
@@ -173,12 +173,12 @@ export default function AppDashboardPage() {
               <Link
                 key={`${item.id}-${item.label}`}
                 href={item.href}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/70 px-4 py-3 text-sm"
               >
-                <span className="font-semibold text-slate-100">
+                <span className="font-semibold text-foreground">
                   {item.label}
                 </span>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-muted-foreground">
                   {new Date(item.date).toLocaleDateString()}
                 </span>
               </Link>
@@ -187,13 +187,13 @@ export default function AppDashboardPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+      <section className="rounded-2xl border border-border bg-card/70 p-6">
         <div className="space-y-2">
-          <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
+          <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
             This Week
           </p>
           <h3 className="text-xl font-semibold">Upcoming schedule</h3>
-          <p className="text-slate-300">
+          <p className="text-muted-foreground">
             {weekAppointments.length} appointment
             {weekAppointments.length === 1 ? "" : "s"} scheduled in the next 7
             days.
@@ -201,7 +201,7 @@ export default function AppDashboardPage() {
         </div>
         <div className="mt-6 space-y-3">
           {upcomingAppointments.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/40 p-4 text-sm text-slate-300">
+            <div className="rounded-xl border border-dashed border-border bg-card/60 p-4 text-sm text-muted-foreground">
               No upcoming appointments yet. Schedule one to fill your calendar.
             </div>
           ) : (
@@ -210,15 +210,15 @@ export default function AppDashboardPage() {
               return (
                 <div
                   key={appointment.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/70 p-4 text-sm"
                 >
                   <div>
-                    <p className="font-semibold text-slate-100">
+                    <p className="font-semibold text-foreground">
                       {client ? getClientDisplayName(client) : "Unknown client"}
                     </p>
-                    <p className="text-slate-400">{appointment.serviceName}</p>
+                    <p className="text-muted-foreground">{appointment.serviceName}</p>
                   </div>
-                  <div className="text-slate-300">
+                  <div className="text-muted-foreground">
                     {new Date(appointment.startAt).toLocaleString()}
                   </div>
                 </div>
@@ -228,10 +228,10 @@ export default function AppDashboardPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+      <section className="rounded-2xl border border-border bg-card/70 p-6">
         <div className="space-y-2">
           <h3 className="text-xl font-semibold">Local AI Sandbox</h3>
-          <p className="text-slate-300">
+          <p className="text-muted-foreground">
             Run deterministic embedded AI tasks to verify client-side
             integrations before wiring external providers.
           </p>

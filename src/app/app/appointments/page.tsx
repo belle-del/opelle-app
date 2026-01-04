@@ -79,9 +79,9 @@ export default function AppointmentsPage() {
   }, [appointments, clientMap, filter, search]);
 
   const statusTone = (status: AppointmentStatus) => {
-    if (status === "completed") return "text-emerald-200";
-    if (status === "cancelled") return "text-rose-200";
-    return "text-amber-200";
+    if (status === "completed") return "text-emerald-600 dark:text-emerald-200";
+    if (status === "cancelled") return "text-rose-600 dark:text-rose-300";
+    return "text-amber-700 dark:text-amber-200";
   };
 
   return (
@@ -89,13 +89,13 @@ export default function AppointmentsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold">Appointments</h2>
-          <p className="text-slate-300">
+          <p className="text-muted-foreground">
             Schedule sessions and track upcoming vs past visits.
           </p>
         </div>
         <Link
           href="/app/appointments/new"
-          className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
+          className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent transition hover:bg-emerald-300"
         >
           New Appointment
         </Link>
@@ -109,8 +109,8 @@ export default function AppointmentsPage() {
             onClick={() => setFilter(value)}
             className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
               filter === value
-                ? "bg-slate-100 text-slate-950"
-                : "border border-slate-700 text-slate-200"
+                ? "bg-muted text-foreground"
+                : "border border-border text-foreground"
             }`}
           >
             {value === "upcoming"
@@ -125,17 +125,17 @@ export default function AppointmentsPage() {
       <input
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-slate-200"
+        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground"
         placeholder="Search by client or service"
       />
 
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-sm text-slate-300">
+          <div className="rounded-2xl border border-dashed border-border bg-card/70 p-6 text-sm text-muted-foreground">
             <p>No appointments in this view yet. Schedule one to get started.</p>
             <Link
               href="/app/appointments/new"
-              className="mt-4 inline-flex rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-200"
+              className="mt-4 inline-flex rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-200"
             >
               Create first appointment
             </Link>
@@ -150,21 +150,21 @@ export default function AppointmentsPage() {
             return (
               <div
                 key={appointment.id}
-                className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5"
+                className="rounded-2xl border border-border bg-card/70 p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <Link
                       href={`/app/appointments/${appointment.id}`}
-                      className="text-lg font-semibold text-slate-100 transition hover:text-emerald-200"
+                      className="text-lg font-semibold text-foreground transition hover:text-emerald-600 dark:text-emerald-200"
                     >
                       {appointment.serviceName}
                     </Link>
-                    <div className="text-sm text-slate-400">
+                    <div className="text-sm text-muted-foreground">
                       {client ? (
                         <Link
                           href={`/app/clients/${client.id}`}
-                          className="transition hover:text-emerald-200"
+                          className="transition hover:text-emerald-600 dark:text-emerald-200"
                         >
                           {clientName}
                         </Link>
@@ -173,7 +173,7 @@ export default function AppointmentsPage() {
                       )}
                     </div>
                   </div>
-                  <div className="text-right text-sm text-slate-300">
+                  <div className="text-right text-sm text-muted-foreground">
                     <p>{new Date(appointment.startAt).toLocaleString()}</p>
                     <p>{appointment.durationMin} min</p>
                     <p className={statusTone(appointment.status)}>

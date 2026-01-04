@@ -34,7 +34,7 @@ export default function ClientLayout({
       </header>
 
       {!flags.CLIENT_PORTAL_ENABLED ? (
-        <div className="border-b border-amber-500/40 bg-amber-500/10 px-6 py-3 text-sm text-amber-200">
+        <div className="border-b border-amber-300/70 bg-amber-100/60 px-6 py-3 text-sm text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
           Client portal access is currently disabled.
         </div>
       ) : null}

@@ -66,13 +66,13 @@ export default function ClientsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold">Clients</h2>
-          <p className="text-slate-300">
+          <p className="text-muted-foreground">
             Manage client profiles stored locally in this browser.
           </p>
         </div>
         <Link
           href="/app/clients/new"
-          className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
+          className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent transition hover:bg-emerald-300"
         >
           Add Client
         </Link>
@@ -81,17 +81,17 @@ export default function ClientsPage() {
       <input
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-slate-200"
+        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground"
         placeholder="Search by name, phone, or email"
       />
 
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-sm text-slate-300">
+          <div className="rounded-2xl border border-dashed border-border bg-card/70 p-6 text-sm text-muted-foreground">
             <p>No clients yet. Add your first client to get started.</p>
             <Link
               href="/app/clients/new"
-              className="mt-4 inline-flex rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-200"
+              className="mt-4 inline-flex rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-200"
             >
               Create first client
             </Link>
@@ -101,23 +101,23 @@ export default function ClientsPage() {
             <Link
               key={client.id}
               href={`/app/clients/${client.id}`}
-              className="block rounded-2xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-emerald-500/50"
+              className="block rounded-2xl border border-border bg-card/70 p-5 transition hover:border-emerald-500/50"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-lg font-semibold text-slate-100">
+                  <p className="text-lg font-semibold text-foreground">
                     {getClientDisplayName(client)}
                   </p>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-muted-foreground">
                     Updated {new Date(client.updatedAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="text-sm text-slate-300">
+                <div className="text-sm text-muted-foreground">
                   {client.phone ? <p>{client.phone}</p> : null}
                   {client.email ? <p>{client.email}</p> : null}
                 </div>
               </div>
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <button
                   type="button"
                   onClick={(event) => {
@@ -147,7 +147,7 @@ export default function ClientsPage() {
                         }));
                       });
                   }}
-                  className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
+                  className="rounded-full border border-border px-3 py-1 text-xs text-foreground"
                   disabled={!canWrite}
                   title={
                     canWrite ? "Copy invite link" : "Unable to copy invite link"
@@ -156,7 +156,7 @@ export default function ClientsPage() {
                   Invite
                 </button>
                 {copyStatus[client.id] ? (
-                  <span className="text-emerald-200">
+                  <span className="text-emerald-600 dark:text-emerald-200">
                     {copyStatus[client.id]}
                   </span>
                 ) : null}

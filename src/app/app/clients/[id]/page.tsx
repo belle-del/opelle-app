@@ -172,7 +172,7 @@ export default function ClientDetailPage() {
     return (
       <div className="space-y-3">
         <h2 className="text-2xl font-semibold">Client not found</h2>
-        <Link href="/app/clients" className="text-sm text-emerald-200">
+        <Link href="/app/clients" className="text-sm text-emerald-600 dark:text-emerald-200">
           Back to clients
         </Link>
       </div>
@@ -183,13 +183,13 @@ export default function ClientDetailPage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
             Client Hub
           </p>
           <h2 className="text-3xl font-semibold">
             {getClientDisplayName(client)}
           </h2>
-          <div className="mt-2 text-sm text-slate-300">
+          <div className="mt-2 text-sm text-muted-foreground">
             {client.email ? <p>{client.email}</p> : null}
             {client.phone ? <p>{client.phone}</p> : null}
           </div>
@@ -197,21 +197,21 @@ export default function ClientDetailPage() {
         <div className="flex flex-wrap gap-2">
           <Link
             href="/app/clients"
-            className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
+            className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
           >
             Back to clients
           </Link>
           <button
             type="button"
             onClick={() => router.push(`/app/appointments/new?clientId=${client.id}`)}
-            className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-200"
+            className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-200"
           >
             Book appointment
           </button>
           <button
             type="button"
             onClick={() => router.push(`/app/formulas/new?clientId=${client.id}`)}
-            className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
+            className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
           >
             Add formula
           </button>
@@ -226,8 +226,8 @@ export default function ClientDetailPage() {
             onClick={() => setTab(item)}
             className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
               tab === item
-                ? "bg-slate-100 text-slate-950"
-                : "border border-slate-700 text-slate-200"
+                ? "bg-muted text-foreground"
+                : "border border-border text-foreground"
             }`}
           >
             {item[0].toUpperCase() + item.slice(1)}
@@ -237,80 +237,80 @@ export default function ClientDetailPage() {
 
       {tab === "overview" ? (
         <section className="grid gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+          <div className="rounded-2xl border border-border bg-card/70 p-5">
             <h3 className="text-lg font-semibold">Next appointment</h3>
             {nextAppointment ? (
-              <div className="mt-3 text-sm text-slate-300">
-                <p className="text-slate-100">{nextAppointment.serviceName}</p>
+              <div className="mt-3 text-sm text-muted-foreground">
+                <p className="text-foreground">{nextAppointment.serviceName}</p>
                 <p>{new Date(nextAppointment.startAt).toLocaleString()}</p>
                 <Link
                   href={`/app/appointments/${nextAppointment.id}`}
-                  className="mt-3 inline-flex text-xs text-emerald-200"
+                  className="mt-3 inline-flex text-xs text-emerald-600 dark:text-emerald-200"
                 >
                   View appointment
                 </Link>
               </div>
             ) : (
-              <p className="mt-3 text-sm text-slate-400">
+              <p className="mt-3 text-sm text-muted-foreground">
                 No upcoming appointments yet.
               </p>
             )}
           </div>
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+          <div className="rounded-2xl border border-border bg-card/70 p-5">
             <h3 className="text-lg font-semibold">Last formula</h3>
             {lastFormula ? (
-              <div className="mt-3 text-sm text-slate-300">
-                <p className="text-slate-100">{lastFormula.title}</p>
+              <div className="mt-3 text-sm text-muted-foreground">
+                <p className="text-foreground">{lastFormula.title}</p>
                 <p>
                   Updated {new Date(lastFormula.updatedAt).toLocaleDateString()}
                 </p>
                 <Link
                   href={`/app/formulas/${lastFormula.id}`}
-                  className="mt-3 inline-flex text-xs text-emerald-200"
+                  className="mt-3 inline-flex text-xs text-emerald-600 dark:text-emerald-200"
                 >
                   View formula
                 </Link>
               </div>
             ) : (
-              <p className="mt-3 text-sm text-slate-400">
+              <p className="mt-3 text-sm text-muted-foreground">
                 No formulas saved yet.
               </p>
             )}
           </div>
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+          <div className="rounded-2xl border border-border bg-card/70 p-5">
             <h3 className="text-lg font-semibold">Quick actions</h3>
             <div className="mt-3 flex flex-col gap-2 text-sm">
               <button
                 type="button"
                 onClick={() => router.push(`/app/appointments/new?clientId=${client.id}`)}
-                className="rounded-full border border-slate-700 px-4 py-2 text-slate-200"
+                className="rounded-full border border-border px-4 py-2 text-foreground"
               >
                 Book appointment
               </button>
               <button
                 type="button"
                 onClick={() => router.push(`/app/formulas/new?clientId=${client.id}`)}
-                className="rounded-full border border-slate-700 px-4 py-2 text-slate-200"
+                className="rounded-full border border-border px-4 py-2 text-foreground"
               >
                 Add formula
               </button>
               <button
                 type="button"
                 onClick={() => setTab("aftercare")}
-                className="rounded-full border border-slate-700 px-4 py-2 text-slate-200"
+                className="rounded-full border border-border px-4 py-2 text-foreground"
               >
                 Generate aftercare
               </button>
               <button
                 type="button"
                 onClick={handleCopyInvite}
-                className="rounded-full border border-emerald-500/60 px-4 py-2 text-emerald-200"
+                className="rounded-full border border-emerald-500/60 px-4 py-2 text-emerald-600 dark:text-emerald-200"
               >
                 Copy invite link
               </button>
             </div>
             {inviteStatus ? (
-              <p className="mt-3 text-xs text-emerald-200">{inviteStatus}</p>
+              <p className="mt-3 text-xs text-emerald-600 dark:text-emerald-200">{inviteStatus}</p>
             ) : null}
           </div>
         </section>
@@ -322,13 +322,13 @@ export default function ClientDetailPage() {
             <h3 className="text-lg font-semibold">Appointments</h3>
             <Link
               href={`/app/appointments/new?clientId=${client.id}`}
-              className="rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-200"
+              className="rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-200"
             >
               Add appointment
             </Link>
           </div>
           {clientAppointments.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-sm text-slate-300">
+            <div className="rounded-2xl border border-dashed border-border bg-card/70 p-6 text-sm text-muted-foreground">
               No appointments yet. Book the first session for this client.
             </div>
           ) : (
@@ -337,18 +337,18 @@ export default function ClientDetailPage() {
                 <Link
                   key={appointment.id}
                   href={`/app/appointments/${appointment.id}`}
-                  className="block rounded-2xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-emerald-500/50"
+                  className="block rounded-2xl border border-border bg-card/70 p-5 transition hover:border-emerald-500/50"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-lg font-semibold text-slate-100">
+                      <p className="text-lg font-semibold text-foreground">
                         {appointment.serviceName}
                       </p>
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-muted-foreground">
                         {new Date(appointment.startAt).toLocaleString()}
                       </p>
                     </div>
-                    <div className="text-sm text-slate-300">
+                    <div className="text-sm text-muted-foreground">
                       <p>{appointment.durationMin} min</p>
                       <p className="capitalize">{appointment.status}</p>
                     </div>
@@ -366,13 +366,13 @@ export default function ClientDetailPage() {
             <h3 className="text-lg font-semibold">Formulas</h3>
             <Link
               href={`/app/formulas/new?clientId=${client.id}`}
-              className="rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-200"
+              className="rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-200"
             >
               Add formula
             </Link>
           </div>
           {clientFormulas.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-sm text-slate-300">
+            <div className="rounded-2xl border border-dashed border-border bg-card/70 p-6 text-sm text-muted-foreground">
               No formulas yet. Save your first recipe for this client.
             </div>
           ) : (
@@ -381,18 +381,18 @@ export default function ClientDetailPage() {
                 <Link
                   key={formula.id}
                   href={`/app/formulas/${formula.id}`}
-                  className="block rounded-2xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-emerald-500/50"
+                  className="block rounded-2xl border border-border bg-card/70 p-5 transition hover:border-emerald-500/50"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-lg font-semibold text-slate-100">
+                      <p className="text-lg font-semibold text-foreground">
                         {formula.title}
                       </p>
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-muted-foreground">
                         Updated {new Date(formula.updatedAt).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="text-sm text-slate-300 capitalize">
+                    <div className="text-sm text-muted-foreground capitalize">
                       {formula.serviceType}
                     </div>
                   </div>
@@ -406,23 +406,23 @@ export default function ClientDetailPage() {
       {tab === "aftercare" ? (
         <section className="space-y-4">
           <h3 className="text-lg font-semibold">Aftercare draft</h3>
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+          <div className="rounded-2xl border border-border bg-card/70 p-6">
             <div className="grid gap-4 md:grid-cols-2">
-              <label className="block text-sm text-slate-200">
+              <label className="block text-sm text-foreground">
                 Service name
                 <input
                   value={aftercareService}
                   onChange={(event) => setAftercareService(event.target.value)}
                   placeholder={nextAppointment?.serviceName ?? "Signature service"}
-                  className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 />
               </label>
-              <label className="block text-sm text-slate-200 md:col-span-2">
+              <label className="block text-sm text-foreground md:col-span-2">
                 Notes
                 <textarea
                   value={aftercareNotes}
                   onChange={(event) => setAftercareNotes(event.target.value)}
-                  className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                  className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                   rows={4}
                 />
               </label>
@@ -431,7 +431,7 @@ export default function ClientDetailPage() {
               <button
                 type="button"
                 onClick={handleGenerateAftercare}
-                className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
+                className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent"
               >
                 Generate aftercare
               </button>
@@ -442,7 +442,7 @@ export default function ClientDetailPage() {
                   setAftercareNotes("");
                   setAftercareService("");
                 }}
-                className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
+                className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
               >
                 Clear
               </button>
@@ -454,7 +454,7 @@ export default function ClientDetailPage() {
               <p className="mt-2 text-emerald-50">{aftercareDraft.summary}</p>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">
+                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-200">
                     Do
                   </p>
                   <ul className="mt-2 space-y-1">
@@ -464,7 +464,7 @@ export default function ClientDetailPage() {
                   </ul>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">
+                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-200">
                     Don’t
                   </p>
                   <ul className="mt-2 space-y-1">
@@ -474,7 +474,7 @@ export default function ClientDetailPage() {
                   </ul>
                 </div>
               </div>
-              <p className="mt-4 text-xs text-emerald-200">
+              <p className="mt-4 text-xs text-emerald-600 dark:text-emerald-200">
                 {aftercareDraft.rebookRecommendation}
               </p>
               <button
@@ -496,8 +496,8 @@ export default function ClientDetailPage() {
       {tab === "invite" ? (
         <section className="space-y-4">
           <h3 className="text-lg font-semibold">Invite link</h3>
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
-            <label className="block text-xs uppercase tracking-[0.3em] text-slate-500">
+          <div className="rounded-2xl border border-border bg-card/70 p-6">
+            <label className="block text-xs uppercase tracking-[0.3em] text-muted-foreground">
               Invite URL
             </label>
             <input
@@ -507,38 +507,38 @@ export default function ClientDetailPage() {
                   ? `${origin}/client/invite/${inviteToken}`
                   : "Generating invite link..."
               }
-              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
             />
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={handleCopyInvite}
-                className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-200"
+                className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-200"
               >
                 Copy link
               </button>
               <button
                 type="button"
                 onClick={handleRegenerateInvite}
-                className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-200"
+                className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-600 dark:text-rose-300"
               >
                 Regenerate token
               </button>
             </div>
             {inviteUpdatedAt ? (
-              <p className="mt-3 text-xs text-slate-400">
+              <p className="mt-3 text-xs text-muted-foreground">
                 Last generated {new Date(inviteUpdatedAt).toLocaleString()}
               </p>
             ) : null}
             {inviteStatus ? (
-              <p className="mt-3 text-xs text-emerald-200">{inviteStatus}</p>
+              <p className="mt-3 text-xs text-emerald-600 dark:text-emerald-200">{inviteStatus}</p>
             ) : null}
           </div>
         </section>
       ) : null}
 
       {dbError ? (
-        <p className="text-sm text-rose-200">DB error: {dbError}</p>
+        <p className="text-sm text-rose-600 dark:text-rose-300">DB error: {dbError}</p>
       ) : null}
     </div>
   );
