@@ -4,10 +4,11 @@ import { formatDbError } from "@/lib/db/health";
 
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const id = context.params.id;
+    const p = await (context.params as Promise<{ id: string }> | { id: string });
+    const id = p?.id;
     await request.json().catch(() => null);
     const client = await getClient(id);
     if (!client) {
