@@ -2,6 +2,7 @@ import Link from "next/link";
 import { flags } from "@/lib/flags";
 import { ClientAuthProvider } from "@/lib/portal/authContext";
 import { TokenProvider } from "@/lib/portal/tokenContext";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function ClientLayout({
   children,
@@ -9,21 +10,26 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-800 px-5 py-5 sm:px-8">
+    <div className="min-h-screen op-bg">
+      <header className="border-b op-border px-5 py-5 sm:px-8">
         <div className="mx-auto flex w-full max-w-4xl items-center justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            <p className="text-xs uppercase tracking-[0.3em] op-muted">
               Opelle Client
             </p>
-            <h1 className="text-xl font-semibold sm:text-2xl">Client Portal</h1>
+            <h1 className="text-xl font-semibold sm:text-2xl op-title">
+              Client Portal
+            </h1>
           </div>
-          <Link
-            href="/"
-            className="rounded-full border border-slate-800 px-3 py-1 text-xs text-slate-300 transition hover:border-slate-600"
-          >
-            Back to Opelle
-          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link
+              href="/"
+              className="rounded-full border op-border px-3 py-1 text-xs op-muted transition hover:border-[hsl(var(--panel-border)/0.9)]"
+            >
+              Back to Opelle
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -41,7 +47,7 @@ export default function ClientLayout({
         </TokenProvider>
       </ClientAuthProvider>
 
-      <footer className="border-t border-slate-800 px-5 py-6 text-xs text-slate-400 sm:px-8">
+      <footer className="border-t op-border px-5 py-6 text-xs op-muted sm:px-8">
         <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-3">
           <p>For appointment updates, contact your stylist directly.</p>
           <nav className="flex flex-wrap gap-3 text-slate-300">

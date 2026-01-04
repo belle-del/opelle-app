@@ -1,26 +1,80 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: 220 30% 98%;
+  --fg: 222 25% 12%;
+  --muted: 220 10% 45%;
+  --panel: 220 35% 96%;
+  --panel-border: 220 16% 80%;
+  --accent-1: 340 65% 78%;
+  --accent-2: 150 45% 70%;
+  --accent-3: 260 55% 78%;
+  --ring: 340 55% 58%;
+  --shadow: 0 20px 60px rgba(15, 23, 42, 0.15);
+}
+
+.dark {
+  --bg: 222 26% 8%;
+  --fg: 210 30% 96%;
+  --muted: 215 12% 65%;
+  --panel: 222 22% 14%;
+  --panel-border: 220 16% 28%;
+  --accent-1: 340 70% 70%;
+  --accent-2: 155 55% 60%;
+  --accent-3: 260 70% 70%;
+  --ring: 340 70% 60%;
+  --shadow: 0 30px 70px rgba(3, 7, 18, 0.6);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: hsl(var(--bg));
+  --color-foreground: hsl(var(--fg));
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: hsl(var(--bg));
+  color: hsl(var(--fg));
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.op-bg {
+  background: hsl(var(--bg));
+  color: hsl(var(--fg));
+}
+
+.op-panel {
+  background: hsl(var(--panel) / 0.7);
+  border: 1px solid hsl(var(--panel-border) / 0.6);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.op-border {
+  border-color: hsl(var(--panel-border) / 0.6);
+}
+
+.op-muted {
+  color: hsl(var(--muted));
+}
+
+.op-title {
+  color: hsl(var(--fg));
+}
+
+.op-ring {
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.45);
+}
+
+.op-gradient-text {
+  background: linear-gradient(
+    120deg,
+    hsl(var(--accent-1)),
+    hsl(var(--accent-2)),
+    hsl(var(--accent-3))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
