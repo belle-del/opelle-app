@@ -37,21 +37,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 text-center shadow-lg">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top,_#1f2937,_#0b1220_45%,_#05070c_100%)] p-6 text-slate-100">
+      <div className="absolute inset-0 opacity-40" aria-hidden="true">
+        <div className="absolute left-1/2 top-10 h-56 w-56 -translate-x-1/2 rounded-full bg-emerald-500/20 blur-3xl" />
+        <div className="absolute right-12 top-1/3 h-40 w-40 rounded-full bg-cyan-400/10 blur-3xl" />
+      </div>
+
+      <div className="relative w-full max-w-md space-y-6 rounded-2xl border border-white/10 bg-slate-900/70 p-8 shadow-[0_0_30px_rgba(16,185,129,0.12)] backdrop-blur">
+        <div className="space-y-3 text-center">
+          <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">
+            Opelle
+          </p>
+          <h2 className="text-3xl font-semibold tracking-tight text-white">
             Sign in to Opelle
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sovereign Salon Management
-          </p>
+          <p className="text-sm text-slate-300">Student Console (Beta)</p>
         </div>
 
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="flex w-full items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#24292F]"
+          className="flex w-full items-center justify-center gap-3 rounded-full bg-white px-4 py-3 text-sm font-semibold text-slate-950 shadow-sm transition hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-200"
         >
           <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24">
             <path
@@ -75,6 +81,13 @@ export default function LoginPage() {
             {loading ? "Connecting..." : "Sign in with Google"}
           </span>
         </button>
+
+        <div className="space-y-2 text-center text-xs text-slate-400">
+          <p>Only approved students can access Opelle.</p>
+          <p className="text-slate-500">
+            Trouble signing in? Contact support.
+          </p>
+        </div>
       </div>
     </div>
   );
