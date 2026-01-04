@@ -19,6 +19,7 @@ export default function AppDashboardPage() {
     setFormulas(getFormulas());
   }, []);
 
+  const educationModulesCount = 6;
   const now = new Date();
   const nowIso = now.toISOString();
   const weekEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -45,31 +46,72 @@ export default function AppDashboardPage() {
     );
   }, [appointments, nowIso, weekEndIso]);
 
-  const recentClients = useMemo(() => {
-    return clients
-      .slice()
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-      .slice(0, 5);
-  }, [clients]);
-
-  const recentFormulas = useMemo(() => {
-    return formulas
-      .slice()
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-      .slice(0, 5);
-  }, [formulas]);
+  const recentActivity = useMemo(() => {
+    const activity = [
+      ...clients.map((client) => ({
+        id: client.id,
+        label: `Client • ${getClientDisplayName(client)}`,
+        date: client.updatedAt,
+        href: `/app/clients/${client.id}`,
+      })),
+      ...appointments.map((appointment) => ({
+        id: appointment.id,
+        label: `Appointment • ${appointment.serviceName}`,
+        date: appointment.updatedAt,
+        href: `/app/appointments/${appointment.id}`,
+      })),
+      ...formulas.map((formula) => ({
+        id: formula.id,
+        label: `Formula • ${formula.title}`,
+        date: formula.updatedAt,
+        href: `/app/formulas/${formula.id}`,
+      })),
+    ];
+    return activity
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 6);
+  }, [appointments, clients, formulas]);
 
   return (
-    <div className="space-y-10">
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-2">
-            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
-              Today
+    <div className="space-y-8">
+      <header className="space-y-3">
+        <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+          Student Console
+        </p>
+        <h2 className="text-3xl font-semibold">Command Center</h2>
+        <p className="text-slate-300">
+          Track client activity, upcoming appointments, and formulas at a
+          glance.
+        </p>
+      </header>
+
+      <section className="grid gap-4 md:grid-cols-4">
+        {[
+          { label: "Clients", value: clients.length },
+          { label: "Appointments (upcoming)", value: upcomingAppointments.length },
+          { label: "Formulas", value: formulas.length },
+          { label: "Education modules", value: educationModulesCount },
+        ].map((card) => (
+          <div
+            key={card.label}
+            className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5"
+          >
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+              {card.label}
             </p>
-            <h2 className="text-2xl font-semibold">Welcome back</h2>
-            <p className="text-slate-300">
-              Your console is running locally with mock data and local storage.
+            <p className="mt-3 text-2xl font-semibold text-slate-100">
+              {card.value}
+            </p>
+          </div>
+        ))}
+      </section>
+
+      <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-semibold">Quick actions</h3>
+            <p className="text-sm text-slate-400">
+              Create new records in a single click.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -93,28 +135,41 @@ export default function AppDashboardPage() {
             </Link>
           </div>
         </div>
-        <div className="mt-6 grid gap-4 md:grid-cols-4">
-          {[
-            { label: "Clients", value: clients.length },
-            { label: "Appointments", value: appointments.length },
-            {
-              label: "Upcoming",
-              value: upcomingAppointments.length,
-            },
-            { label: "Formulas", value: formulas.length },
-          ].map((card) => (
-            <div
-              key={card.label}
-              className="rounded-xl border border-slate-800 bg-slate-950/60 p-4"
-            >
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                {card.label}
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-slate-100">
-                {card.value}
-              </p>
+      </section>
+
+      <section className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-semibold">Recent activity</h3>
+            <p className="text-sm text-slate-400">
+              The latest client, appointment, and formula updates.
+            </p>
+          </div>
+          <Link href="/app/clients" className="text-sm text-emerald-200">
+            View clients
+          </Link>
+        </div>
+        <div className="mt-5 space-y-3">
+          {recentActivity.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/40 p-4 text-sm text-slate-300">
+              No activity yet. Add your first client to start building history.
             </div>
-          ))}
+          ) : (
+            recentActivity.map((item) => (
+              <Link
+                key={`${item.id}-${item.label}`}
+                href={item.href}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm"
+              >
+                <span className="font-semibold text-slate-100">
+                  {item.label}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {new Date(item.date).toLocaleDateString()}
+                </span>
+              </Link>
+            ))
+          )}
         </div>
       </section>
 
@@ -125,13 +180,15 @@ export default function AppDashboardPage() {
           </p>
           <h3 className="text-xl font-semibold">Upcoming schedule</h3>
           <p className="text-slate-300">
-            {weekAppointments.length} appointment{weekAppointments.length === 1 ? "" : "s"} scheduled in the next 7 days.
+            {weekAppointments.length} appointment
+            {weekAppointments.length === 1 ? "" : "s"} scheduled in the next 7
+            days.
           </p>
         </div>
         <div className="mt-6 space-y-3">
           {upcomingAppointments.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/40 p-4 text-sm text-slate-300">
-              No upcoming appointments yet.
+              No upcoming appointments yet. Schedule one to fill your calendar.
             </div>
           ) : (
             upcomingAppointments.map((appointment) => {
@@ -154,69 +211,6 @@ export default function AppDashboardPage() {
               );
             })
           )}
-        </div>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Recent clients</h3>
-            <Link href="/app/clients" className="text-sm text-emerald-200">
-              View all
-            </Link>
-          </div>
-          <div className="mt-4 space-y-3">
-            {recentClients.length === 0 ? (
-              <p className="text-sm text-slate-400">No clients yet.</p>
-            ) : (
-              recentClients.map((client) => (
-                <Link
-                  key={client.id}
-                  href={`/app/clients/${client.id}`}
-                  className="block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm"
-                >
-                  <p className="font-semibold text-slate-100">
-                    {getClientDisplayName(client)}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    Updated {new Date(client.updatedAt).toLocaleDateString()}
-                  </p>
-                </Link>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Recent formulas</h3>
-            <Link href="/app/formulas" className="text-sm text-emerald-200">
-              View all
-            </Link>
-          </div>
-          <div className="mt-4 space-y-3">
-            {recentFormulas.length === 0 ? (
-              <p className="text-sm text-slate-400">No formulas yet.</p>
-            ) : (
-              recentFormulas.map((formula) => {
-                const client = clientMap.get(formula.clientId);
-                return (
-                  <Link
-                    key={formula.id}
-                    href={`/app/formulas/${formula.id}`}
-                    className="block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm"
-                  >
-                    <p className="font-semibold text-slate-100">
-                      {formula.title}
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      {client ? getClientDisplayName(client) : "Unknown client"} • {formula.serviceType}
-                    </p>
-                  </Link>
-                );
-              })
-            )}
-          </div>
         </div>
       </section>
 

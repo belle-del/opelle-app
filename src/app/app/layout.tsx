@@ -9,6 +9,8 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const authDisabled = process.env.OPPELLE_AUTH_DISABLED === "true";
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <div className="flex min-h-screen">
@@ -36,12 +38,18 @@ export default function AppLayout({
             </div>
             <div className="flex items-center gap-3">
               <NewItemMenu />
-              <Link
-                href="/logout"
-                className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 transition hover:border-slate-500"
-              >
-                Logout
-              </Link>
+              {authDisabled ? (
+                <span className="rounded-full border border-amber-400/50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-amber-200">
+                  Auth Disabled
+                </span>
+              ) : (
+                <Link
+                  href="/logout"
+                  className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 transition hover:border-slate-500"
+                >
+                  Logout
+                </Link>
+              )}
             </div>
           </header>
 
