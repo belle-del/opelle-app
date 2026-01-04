@@ -1,4 +1,5 @@
 import LinkCard from "@/components/LinkCard";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 export default function HomePage() {
   const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7);
@@ -6,41 +7,46 @@ export default function HomePage() {
   const authDisabled = process.env.OPPELLE_AUTH_DISABLED === "true";
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">
+    <main className="relative min-h-screen px-6 py-16">
+      <div className="absolute right-6 top-6">
+        <ThemeToggle />
+      </div>
+
       <div className="mx-auto flex max-w-5xl flex-col gap-12">
-        <header className="space-y-4">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-            Opelle
-          </p>
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-            Your workspace, organized.
+        <header className="space-y-5">
+          <div className="inline-flex items-center gap-3 rounded-full border border-[hsl(var(--panelBorder)/0.6)] bg-[hsl(var(--panel)/0.5)] px-4 py-1 text-[10px] uppercase tracking-[0.3em] op-muted">
+            <span className="op-gradient-text font-semibold">Opelle</span>
+            <span className="rounded-full bg-[hsl(var(--accent-1)/0.2)] px-2 py-0.5 text-[10px] font-semibold text-[hsl(var(--accent-1))]">
+              Beta
+            </span>
+          </div>
+          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl op-title">
+            Soft-beauty systems for modern studios.
           </h1>
-          <p className="max-w-2xl text-base text-slate-300 sm:text-lg">
-            Jump into the Student Console to manage clients or open the Client
-            Portal to preview the experience.
+          <p className="max-w-2xl text-base op-muted sm:text-lg">
+            Access the Student Console to manage clients, or explore the Client
+            Portal experience in a calm, premium workspace.
           </p>
         </header>
 
         <div className="grid gap-6 md:grid-cols-2">
           <LinkCard
-            title="Student"
-            description="Manage clients, appointments, and formulas in the console."
-            href="/app"
+            title="Student Console"
+            description="Run your day: clients, appointments, formulas, and aftercare in one workspace."
+            href="/login?next=/app"
             icon={<span className="text-sm font-semibold">S</span>}
           />
           <LinkCard
-            title="Client"
-            description="Preview the client-facing portal experience."
+            title="Client Portal"
+            description="Preview the client-facing portal experience and invite flow."
             href="/client"
             icon={<span className="text-sm font-semibold">C</span>}
           />
         </div>
 
-        <footer className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+        <footer className="flex flex-wrap items-center justify-between gap-3 text-xs op-muted">
           <span>Environment: {env}</span>
-          <span>
-            {commit ? `Commit: ${commit}` : "Commit: unknown"}
-          </span>
+          <span>{commit ? `Commit: ${commit}` : "Commit: unknown"}</span>
           {authDisabled ? (
             <span className="rounded-full border border-amber-400/50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-amber-200">
               Auth Disabled (dev)

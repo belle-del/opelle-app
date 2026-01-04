@@ -26,9 +26,9 @@ export default function AppNav() {
           <Link
             key={item.href}
             href={item.href}
-            className={`rounded-lg px-3 py-2 transition ${
+            className={`relative rounded-xl px-4 py-2.5 transition ${
               isActive
-                ? "bg-[hsl(var(--panel)/0.9)] text-[hsl(var(--fg))] shadow-[0_10px_30px_hsl(var(--mesh1)/0.15)]"
+                ? "bg-[hsl(var(--panel)/0.9)] text-[hsl(var(--fg))] shadow-[0_12px_28px_hsl(var(--mesh1)/0.18)] before:absolute before:left-2 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-[hsl(var(--accent-1))] before:content-['']"
                 : "op-muted hover:bg-[hsl(var(--panel)/0.6)] hover:text-[hsl(var(--fg))]"
             }`}
           >

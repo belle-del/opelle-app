@@ -1,20 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --bg: 216 30% 98%;
+  color-scheme: light dark;
+  --bg: 24 35% 97%;
   --fg: 222 30% 12%;
-  --muted: 220 10% 45%;
-  --panel: 218 38% 96%;
-  --panelBorder: 220 18% 82%;
-  --ring: 335 58% 58%;
-  --shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
-  --accent-1: 340 65% 78%;
-  --accent-2: 155 45% 70%;
-  --accent-3: 260 60% 78%;
-  --mesh1: 340 65% 84%;
-  --mesh2: 155 45% 76%;
-  --mesh3: 260 60% 84%;
-  --mesh4: 35 65% 88%;
+  --muted: 220 10% 44%;
+  --panel: 24 40% 98%;
+  --panelBorder: 220 16% 86%;
+  --ring: 335 58% 56%;
+  --shadow: 0 16px 42px rgba(30, 41, 59, 0.12);
+  --accent-1: 340 65% 74%;
+  --accent-2: 155 45% 68%;
+  --accent-3: 262 58% 76%;
+  --mesh1: 340 70% 90%;
+  --mesh2: 155 50% 86%;
+  --mesh3: 262 70% 88%;
+  --mesh4: 35 80% 90%;
+  --surface: 24 40% 99%;
+  --surface-2: 24 30% 95%;
+  --text: 222 28% 14%;
+  --border: 220 14% 86%;
 }
 
 .dark {
@@ -32,6 +37,10 @@
   --mesh2: 155 55% 55%;
   --mesh3: 260 70% 60%;
   --mesh4: 35 55% 55%;
+  --surface: 222 22% 16%;
+  --surface-2: 222 18% 12%;
+  --text: 210 30% 96%;
+  --border: 220 16% 28%;
 }
 
 @theme inline {

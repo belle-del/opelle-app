@@ -14,9 +14,17 @@ export default function AppLayout({
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-64 flex-col border-r border-[hsl(var(--panelBorder)/0.6)] bg-[hsl(var(--panel)/0.55)] p-6 lg:flex">
-          <div className="text-lg font-semibold tracking-tight op-title">
-            Student Console
+        <aside className="hidden w-64 flex-col border-r border-[hsl(var(--panelBorder)/0.6)] bg-[hsl(var(--panel)/0.7)] p-6 shadow-[var(--shadow)] backdrop-blur-xl lg:flex">
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.3em] op-muted">
+              Studio
+            </p>
+            <div className="text-lg font-semibold tracking-tight op-title">
+              Student Console
+            </div>
+          </div>
+          <div className="mt-8 text-[10px] uppercase tracking-[0.3em] op-muted">
+            Navigation
           </div>
           <AppNav />
           <Link
