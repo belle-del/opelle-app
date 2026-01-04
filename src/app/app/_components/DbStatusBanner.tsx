@@ -6,6 +6,7 @@ type DbHealth = {
   ok: boolean;
   mode?: string | null;
   dbProbeOk?: boolean;
+  dbProbeDetails?: string;
   error?: string;
 };
 
@@ -34,7 +35,7 @@ export default function DbStatusBanner() {
           setErrorMessage(null);
         } else {
           setStatus("error");
-          setErrorMessage(json.error ?? null);
+          setErrorMessage(json.error ?? json.dbProbeDetails ?? null);
         }
       } catch (error) {
         if (!active) return;

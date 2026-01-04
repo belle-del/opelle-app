@@ -109,6 +109,7 @@ export const getClients = async (): Promise<Client[]> => {
       return data ?? [];
     } catch (error) {
       reportDbError(error);
+      return [];
     }
   }
   ensureSeed();
@@ -126,6 +127,7 @@ export const getClientById = async (id: string): Promise<Client | null> => {
       return data ?? null;
     } catch (error) {
       reportDbError(error);
+      return null;
     }
   }
   ensureSeed();
@@ -157,6 +159,7 @@ export const upsertClient = async (client: Client): Promise<Client> => {
       });
     } catch (error) {
       reportDbError(error);
+      return normalizeClient(client);
     }
   }
 
@@ -192,6 +195,7 @@ export const deleteClient = async (id: string): Promise<void> => {
       return;
     } catch (error) {
       reportDbError(error);
+      return;
     }
   }
   ensureSeed();
@@ -317,6 +321,7 @@ export const getAppointments = async (): Promise<Appointment[]> => {
       return data ?? [];
     } catch (error) {
       reportDbError(error);
+      return [];
     }
   }
   ensureSeed();
@@ -337,6 +342,7 @@ export const getAppointmentById = async (
       return data ?? null;
     } catch (error) {
       reportDbError(error);
+      return null;
     }
   }
   ensureSeed();
@@ -373,6 +379,7 @@ export const upsertAppointment = async (
       });
     } catch (error) {
       reportDbError(error);
+      return normalizeAppointment(appointment);
     }
   }
 
@@ -407,6 +414,7 @@ export const deleteAppointment = async (id: string): Promise<void> => {
       return;
     } catch (error) {
       reportDbError(error);
+      return;
     }
   }
   ensureSeed();
@@ -495,6 +503,7 @@ export const getFormulas = async (): Promise<Formula[]> => {
       return data ?? [];
     } catch (error) {
       reportDbError(error);
+      return [];
     }
   }
   ensureSeed();
@@ -511,6 +520,7 @@ export const getFormulaById = async (id: string): Promise<Formula | null> => {
       return data ?? null;
     } catch (error) {
       reportDbError(error);
+      return null;
     }
   }
   ensureSeed();
@@ -543,6 +553,7 @@ export const upsertFormula = async (formula: Formula): Promise<Formula> => {
       });
     } catch (error) {
       reportDbError(error);
+      return normalizeFormula(formula);
     }
   }
 
@@ -575,6 +586,7 @@ export const deleteFormula = async (id: string): Promise<void> => {
       return;
     } catch (error) {
       reportDbError(error);
+      return;
     }
   }
   ensureSeed();
