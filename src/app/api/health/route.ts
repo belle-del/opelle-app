@@ -10,5 +10,7 @@ export async function GET() {
     time: new Date().toISOString(),
     commit,
     env,
+    deployTag: "deploy-test-1",
   });
 }
+
