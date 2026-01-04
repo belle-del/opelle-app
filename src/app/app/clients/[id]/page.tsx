@@ -10,25 +10,27 @@ import { generateAftercareDraft } from "@/lib/ai/embedded";
 import { formatDbError } from "@/lib/db/health";
 import { useRepo } from "@/lib/repo";
 
+const tabs = ["overview", "appointments", "formulas", "aftercare", "invite"] as const;
+
+type Tab = (typeof tabs)[number];
+
 export default function ClientDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const repo = useRepo();
   const [client, setClient] = useState<Client | null>(null);
-  const [formulas, setFormulas] = useState<Formula[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
+  const [formulas, setFormulas] = useState<Formula[]>([]);
+  const [tab, setTab] = useState<Tab>("overview");
+  const [dbError, setDbError] = useState<string | null>(null);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [inviteUpdatedAt, setInviteUpdatedAt] = useState<string | null>(null);
-  const [inviteOrigin, setInviteOrigin] = useState<string | null>(null);
+  const [origin, setOrigin] = useState<string | null>(null);
   const [inviteStatus, setInviteStatus] = useState<string | null>(null);
-  const [dbError, setDbError] = useState<string | null>(null);
   const [aftercareService, setAftercareService] = useState("");
   const [aftercareNotes, setAftercareNotes] = useState("");
   const [aftercareDraft, setAftercareDraft] =
     useState<AftercareDraftResult | null>(null);
-  const [aftercareStatus, setAftercareStatus] = useState<string | null>(null);
-  const canWrite = !dbError;
-  const repo = useRepo();
 
   useEffect(() => {
     if (!params?.id) return;
@@ -53,14 +55,6 @@ export default function ClientDetailPage() {
             new CustomEvent("opelle:db-error", { detail: message })
           );
         }
-        const [clientData, apptData, formulaData] = await Promise.all([
-          repo.getClientById(params.id),
-          repo.getAppointments(),
-          repo.getFormulas(),
-        ]);
-        setClient(clientData);
-        setAppointments(apptData);
-        setFormulas(formulaData);
       }
     };
     load();
@@ -71,90 +65,108 @@ export default function ClientDetailPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setInviteOrigin(window.location.origin);
+    setOrigin(window.location.origin);
   }, []);
 
   useEffect(() => {
-    if (!client?.id || typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(
-      `opelle:v1:aftercareDraft:${client.id}`
-    );
-    if (!stored) return;
-    try {
-      const parsed = JSON.parse(stored) as {
-        draft?: AftercareDraftResult;
-        serviceName?: string;
-        notes?: string;
-      };
-      if (parsed.draft) {
-        setAftercareDraft(parsed.draft);
-        setAftercareService(parsed.serviceName ?? "");
-        setAftercareNotes(parsed.notes ?? "");
+    if (!client?.id || tab !== "invite") return;
+    let active = true;
+    const loadInvite = async () => {
+      try {
+        const invite = await repo.ensureClientInviteToken(client.id);
+        if (!active) return;
+        setInviteToken(invite.token);
+        setInviteUpdatedAt(invite.updatedAt);
+        setInviteStatus(null);
+      } catch (error) {
+        const message = formatDbError(error);
+        setInviteStatus(message);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("opelle:db-error", { detail: message })
+          );
+        }
       }
-    } catch {
-      // ignore invalid stored drafts
-    }
-  }, [client?.id]);
+    };
+    loadInvite();
+    return () => {
+      active = false;
+    };
+  }, [client?.id, repo, tab]);
 
-  const upcomingAppointments = useMemo(() => {
+  const clientAppointments = useMemo(() => {
     if (!client) return [];
-    const now = new Date().toISOString();
     return appointments
-      .filter(
-        (appointment) =>
-          appointment.clientId === client.id &&
-          appointment.startAt >= now &&
-          appointment.status !== "cancelled"
-      )
-      .sort((a, b) => a.startAt.localeCompare(b.startAt))
-      .slice(0, 3);
+      .filter((appointment) => appointment.clientId === client.id)
+      .sort((a, b) => b.startAt.localeCompare(a.startAt));
   }, [appointments, client]);
 
-  const recentFormulas = useMemo(() => {
+  const clientFormulas = useMemo(() => {
     if (!client) return [];
     return formulas
       .filter((formula) => formula.clientId === client.id)
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-      .slice(0, 3);
-  }, [client, formulas]);
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  }, [formulas, client]);
 
-  const latestAppointment = useMemo(() => {
-    if (!client) return null;
-    return appointments
-      .filter((appointment) => appointment.clientId === client.id)
-      .sort((a, b) => b.startAt.localeCompare(a.startAt))[0] ?? null;
-  }, [appointments, client]);
+  const nextAppointment = useMemo(() => {
+    const now = new Date().toISOString();
+    return clientAppointments
+      .filter((appointment) => appointment.startAt >= now)
+      .sort((a, b) => a.startAt.localeCompare(b.startAt))[0];
+  }, [clientAppointments]);
 
-  useEffect(() => {
-    if (aftercareService.trim()) return;
-    if (latestAppointment?.serviceName) {
-      setAftercareService(latestAppointment.serviceName);
+  const lastFormula = useMemo(() => clientFormulas[0], [clientFormulas]);
+
+  const handleCopyInvite = async () => {
+    if (!client?.id || !origin) return;
+    try {
+      const invite = await repo.ensureClientInviteToken(client.id);
+      setInviteToken(invite.token);
+      setInviteUpdatedAt(invite.updatedAt);
+      const link = `${origin}/client/invite/${invite.token}`;
+      await navigator.clipboard.writeText(link);
+      setInviteStatus("Copied to clipboard.");
+      setTimeout(() => setInviteStatus(null), 2000);
+    } catch (error) {
+      const message = formatDbError(error);
+      setInviteStatus(message);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("opelle:db-error", { detail: message })
+        );
+      }
     }
-  }, [aftercareService, latestAppointment?.serviceName]);
+  };
 
-  const activity = useMemo(() => {
-    if (!client) return [];
-    const appointmentItems = appointments
-      .filter((appt) => appt.clientId === client.id)
-      .map((appt) => ({
-        id: appt.id,
-        label: `Appointment • ${appt.serviceName}`,
-        date: appt.updatedAt,
-        href: `/app/appointments/${appt.id}`,
-      }));
-    const formulaItems = formulas
-      .filter((formula) => formula.clientId === client.id)
-      .map((formula) => ({
-        id: formula.id,
-        label: `Formula • ${formula.title}`,
-        date: formula.updatedAt,
-        href: `/app/formulas/${formula.id}`,
-      }));
+  const handleRegenerateInvite = async () => {
+    if (!client?.id || !origin) return;
+    if (!confirm("Regenerate this invite link?")) return;
+    try {
+      const invite = await repo.regenerateClientInviteToken(client.id);
+      setInviteToken(invite.token);
+      setInviteUpdatedAt(invite.updatedAt);
+      setInviteStatus("Invite link regenerated.");
+    } catch (error) {
+      const message = formatDbError(error);
+      setInviteStatus(message);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("opelle:db-error", { detail: message })
+        );
+      }
+    }
+  };
 
-    return [...appointmentItems, ...formulaItems]
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 5);
-  }, [appointments, client, formulas]);
+  const handleGenerateAftercare = () => {
+    if (!client) return;
+    const name = getClientDisplayName(client);
+    const draft = generateAftercareDraft({
+      clientName: name,
+      serviceName: aftercareService.trim() || "Service",
+      notes: aftercareNotes.trim() || undefined,
+    });
+    setAftercareDraft(draft);
+  };
 
   if (!client) {
     return (
@@ -167,190 +179,20 @@ export default function ClientDetailPage() {
     );
   }
 
-  const handleChange = (field: keyof Client, value: string) => {
-    setClient((prev) => (prev ? { ...prev, [field]: value } : prev));
-  };
-
-  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!client.firstName.trim()) return;
-
-    if (!canWrite) {
-      setInviteStatus("Connect DB to enable saves.");
-      return;
-    }
-
-    try {
-      const saved = await repo.upsertClient(client);
-      setClient(saved);
-      setIsEditing(false);
-    } catch (error) {
-      const message = formatDbError(error);
-      setDbError(message);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
-      }
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!confirm("Delete this client and related appointments?")) return;
-    if (!canWrite) {
-      setInviteStatus("Connect DB to enable deletes.");
-      return;
-    }
-    try {
-      await repo.deleteClient(client.id);
-      router.push("/app/clients");
-    } catch (error) {
-      const message = formatDbError(error);
-      setDbError(message);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
-      }
-    }
-  };
-
-  const handleEnsureInvite = () => {
-    if (!client) return;
-    if (!canWrite) {
-      setInviteStatus("Connect DB to enable invites.");
-      return;
-    }
-    repo.ensureClientInviteToken(client.id)
-      .then((data) => {
-        setInviteToken(data.token);
-        setInviteUpdatedAt(data.updatedAt);
-      })
-      .catch((error) => {
-        const message = formatDbError(error);
-        setDbError(message);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
-        }
-      });
-  };
-
-  const handleCopyInvite = async () => {
-    if (!client || !inviteOrigin) return;
-    if (!canWrite) {
-      setInviteStatus("Connect DB to enable invites.");
-      return;
-    }
-    const token = inviteToken;
-    if (!token) {
-      handleEnsureInvite();
-      return;
-    }
-    const url = `${inviteOrigin}/client/invite/${token}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setInviteStatus("Copied!");
-    } catch {
-      setInviteStatus("Copy failed.");
-    }
-  };
-
-  const handleOpenInvite = () => {
-    if (!client || !inviteOrigin) return;
-    if (!canWrite) {
-      setInviteStatus("Connect DB to enable invites.");
-      return;
-    }
-    const token = inviteToken;
-    if (!token) {
-      handleEnsureInvite();
-      return;
-    }
-    const url = `${inviteOrigin}/client/invite/${token}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
-  const handleRegenerateInvite = () => {
-    if (!client) return;
-    if (!confirm("Regenerate invite link? The previous link will stop working.")) {
-      return;
-    }
-    if (!canWrite) {
-      setInviteStatus("Connect DB to enable invites.");
-      return;
-    }
-    repo.regenerateClientInviteToken(client.id)
-      .then((data) => {
-        setInviteToken(data.token);
-        setInviteUpdatedAt(data.updatedAt);
-        setInviteStatus("Regenerated.");
-      })
-      .catch((error) => {
-        const message = formatDbError(error);
-        setDbError(message);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
-        }
-      });
-  };
-
-  const handleGenerateAftercare = () => {
-    if (!client) return;
-    const draft = generateAftercareDraft({
-      clientName: getClientDisplayName(client),
-      serviceName: aftercareService || "Signature Service",
-      notes: aftercareNotes || undefined,
-    });
-    setAftercareDraft(draft);
-    setAftercareStatus("Draft generated.");
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(
-        `opelle:v1:aftercareDraft:${client.id}`,
-        JSON.stringify({
-          draft,
-          serviceName: aftercareService,
-          notes: aftercareNotes,
-        })
-      );
-    }
-  };
-
-  const handleCopyAftercare = async () => {
-    if (!aftercareDraft) return;
-    const copyText = [
-      aftercareDraft.title,
-      "",
-      aftercareDraft.summary,
-      "",
-      "Do:",
-      ...aftercareDraft.do.map((item) => `- ${item}`),
-      "",
-      "Don't:",
-      ...aftercareDraft.dont.map((item) => `- ${item}`),
-      "",
-      `Rebook: ${aftercareDraft.rebookRecommendation}`,
-    ].join("\n");
-    try {
-      await navigator.clipboard.writeText(copyText);
-      setAftercareStatus("Copied to clipboard.");
-    } catch {
-      setAftercareStatus("Copy failed.");
-    }
-  };
-
-  const handleClearAftercare = () => {
-    if (!client) return;
-    setAftercareDraft(null);
-    setAftercareStatus(null);
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem(`opelle:v1:aftercareDraft:${client.id}`);
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+            Client Hub
+          </p>
+          <h2 className="text-3xl font-semibold">
             {getClientDisplayName(client)}
           </h2>
-          <p className="text-slate-300">Profile stored locally.</p>
+          <div className="mt-2 text-sm text-slate-300">
+            {client.email ? <p>{client.email}</p> : null}
+            {client.phone ? <p>{client.phone}</p> : null}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
@@ -361,222 +203,227 @@ export default function ClientDetailPage() {
           </Link>
           <button
             type="button"
-            onClick={() => setIsEditing((prev) => !prev)}
+            onClick={() => router.push(`/app/appointments/new?clientId=${client.id}`)}
             className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-200"
           >
-            {isEditing ? "Cancel edit" : "Edit"}
+            Book appointment
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push(`/app/formulas/new?clientId=${client.id}`)}
+            className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
+          >
+            Add formula
           </button>
         </div>
+      </header>
+
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => setTab(item)}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              tab === item
+                ? "bg-slate-100 text-slate-950"
+                : "border border-slate-700 text-slate-200"
+            }`}
+          >
+            {item[0].toUpperCase() + item.slice(1)}
+          </button>
+        ))}
       </div>
 
-      {isEditing ? (
-        <form
-          className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6"
-          onSubmit={handleSave}
-        >
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="block text-sm text-slate-200">
-              First name
-              <input
-                value={client.firstName}
-                onChange={(event) =>
-                  handleChange("firstName", event.target.value)
-                }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-                required
-              />
-            </label>
-            <label className="block text-sm text-slate-200">
-              Last name
-              <input
-                value={client.lastName ?? ""}
-                onChange={(event) =>
-                  handleChange("lastName", event.target.value)
-                }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block text-sm text-slate-200">
-              Pronouns
-              <input
-                value={client.pronouns ?? ""}
-                onChange={(event) =>
-                  handleChange("pronouns", event.target.value)
-                }
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block text-sm text-slate-200">
-              Phone
-              <input
-                value={client.phone ?? ""}
-                onChange={(event) => handleChange("phone", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block text-sm text-slate-200">
-              Email
-              <input
-                value={client.email ?? ""}
-                onChange={(event) => handleChange("email", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              />
-            </label>
-          </div>
-          <label className="mt-4 block text-sm text-slate-200">
-            Notes
-            <textarea
-              value={client.notes ?? ""}
-              onChange={(event) => handleChange("notes", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              rows={4}
-            />
-          </label>
-          <div className="mt-6 flex flex-wrap justify-between gap-3">
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-200"
-              disabled={!canWrite}
-              title={
-                canWrite ? "Delete client" : "Connect DB to enable deletes"
-              }
-            >
-              Delete client
-            </button>
-            <button
-              type="submit"
-              className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
-              disabled={!canWrite}
-              title={canWrite ? "Save changes" : "Connect DB to enable saves"}
-            >
-              Save changes
-            </button>
-          </div>
-        </form>
-      ) : (
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
-            <div className="grid gap-3 md:grid-cols-2">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                  Contact
-                </p>
-                <p className="mt-2">{client.phone || "No phone on file"}</p>
-                <p>{client.email || "No email on file"}</p>
+      {tab === "overview" ? (
+        <section className="grid gap-4 lg:grid-cols-3">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+            <h3 className="text-lg font-semibold">Next appointment</h3>
+            {nextAppointment ? (
+              <div className="mt-3 text-sm text-slate-300">
+                <p className="text-slate-100">{nextAppointment.serviceName}</p>
+                <p>{new Date(nextAppointment.startAt).toLocaleString()}</p>
+                <Link
+                  href={`/app/appointments/${nextAppointment.id}`}
+                  className="mt-3 inline-flex text-xs text-emerald-200"
+                >
+                  View appointment
+                </Link>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                  Pronouns
-                </p>
-                <p className="mt-2">{client.pronouns || "Not specified"}</p>
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                Notes
+            ) : (
+              <p className="mt-3 text-sm text-slate-400">
+                No upcoming appointments yet.
               </p>
-              <p className="mt-2 text-slate-300">
-                {client.notes || "No notes yet."}
-              </p>
-            </div>
+            )}
           </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold">Invite link</h3>
-                <p className="text-slate-400">
-                  Share this link with your client to access the portal.
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+            <h3 className="text-lg font-semibold">Last formula</h3>
+            {lastFormula ? (
+              <div className="mt-3 text-sm text-slate-300">
+                <p className="text-slate-100">{lastFormula.title}</p>
+                <p>
+                  Updated {new Date(lastFormula.updatedAt).toLocaleDateString()}
                 </p>
+                <Link
+                  href={`/app/formulas/${lastFormula.id}`}
+                  className="mt-3 inline-flex text-xs text-emerald-200"
+                >
+                  View formula
+                </Link>
               </div>
+            ) : (
+              <p className="mt-3 text-sm text-slate-400">
+                No formulas saved yet.
+              </p>
+            )}
+          </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+            <h3 className="text-lg font-semibold">Quick actions</h3>
+            <div className="mt-3 flex flex-col gap-2 text-sm">
               <button
                 type="button"
-                onClick={handleEnsureInvite}
-                className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
-                disabled={!canWrite}
-                title={canWrite ? "Generate invite" : "Connect DB to enable"}
+                onClick={() => router.push(`/app/appointments/new?clientId=${client.id}`)}
+                className="rounded-full border border-slate-700 px-4 py-2 text-slate-200"
               >
-                {inviteToken ? "Refresh" : "Generate"}
+                Book appointment
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push(`/app/formulas/new?clientId=${client.id}`)}
+                className="rounded-full border border-slate-700 px-4 py-2 text-slate-200"
+              >
+                Add formula
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("aftercare")}
+                className="rounded-full border border-slate-700 px-4 py-2 text-slate-200"
+              >
+                Generate aftercare
+              </button>
+              <button
+                type="button"
+                onClick={handleCopyInvite}
+                className="rounded-full border border-emerald-500/60 px-4 py-2 text-emerald-200"
+              >
+                Copy invite link
               </button>
             </div>
-            <div className="mt-4 space-y-2">
-              <input
-                readOnly
-                value={
-                  inviteOrigin && inviteToken
-                    ? `${inviteOrigin}/client/invite/${inviteToken}`
-                    : "Generate a link to share"
-                }
-                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-200"
-              />
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopyInvite}
-                  className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
-                  disabled={!canWrite}
-                  title={canWrite ? "Copy link" : "Connect DB to enable"}
-                >
-                  Copy link
-                </button>
-                <button
-                  type="button"
-                  onClick={handleOpenInvite}
-                  className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
-                  disabled={!canWrite}
-                  title={canWrite ? "Open link" : "Connect DB to enable"}
-                >
-                  Open link
-                </button>
-                <button
-                  type="button"
-                  onClick={handleRegenerateInvite}
-                  className="rounded-full border border-rose-500/60 px-3 py-1 text-xs text-rose-200"
-                  disabled={!canWrite}
-                  title={canWrite ? "Regenerate link" : "Connect DB to enable"}
-                >
-                  Regenerate
-                </button>
-              </div>
-              <p className="text-xs text-slate-500">
-                {inviteUpdatedAt
-                  ? `Last generated ${new Date(inviteUpdatedAt).toLocaleString()}`
-                  : "Not generated yet"}
-              </p>
-              {inviteStatus ? (
-                <p className="text-xs text-emerald-200">{inviteStatus}</p>
-              ) : null}
-            </div>
+            {inviteStatus ? (
+              <p className="mt-3 text-xs text-emerald-200">{inviteStatus}</p>
+            ) : null}
           </div>
+        </section>
+      ) : null}
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold">Aftercare Draft</h3>
-                <p className="text-slate-400">
-                  Generate a local aftercare plan for this client.
-                </p>
-              </div>
+      {tab === "appointments" ? (
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-lg font-semibold">Appointments</h3>
+            <Link
+              href={`/app/appointments/new?clientId=${client.id}`}
+              className="rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-200"
+            >
+              Add appointment
+            </Link>
+          </div>
+          {clientAppointments.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-sm text-slate-300">
+              No appointments yet. Book the first session for this client.
             </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+          ) : (
+            <div className="space-y-3">
+              {clientAppointments.map((appointment) => (
+                <Link
+                  key={appointment.id}
+                  href={`/app/appointments/${appointment.id}`}
+                  className="block rounded-2xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-emerald-500/50"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-semibold text-slate-100">
+                        {appointment.serviceName}
+                      </p>
+                      <p className="text-sm text-slate-400">
+                        {new Date(appointment.startAt).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-sm text-slate-300">
+                      <p>{appointment.durationMin} min</p>
+                      <p className="capitalize">{appointment.status}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {tab === "formulas" ? (
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-lg font-semibold">Formulas</h3>
+            <Link
+              href={`/app/formulas/new?clientId=${client.id}`}
+              className="rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-200"
+            >
+              Add formula
+            </Link>
+          </div>
+          {clientFormulas.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-sm text-slate-300">
+              No formulas yet. Save your first recipe for this client.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {clientFormulas.map((formula) => (
+                <Link
+                  key={formula.id}
+                  href={`/app/formulas/${formula.id}`}
+                  className="block rounded-2xl border border-slate-800 bg-slate-900/40 p-5 transition hover:border-emerald-500/50"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-semibold text-slate-100">
+                        {formula.title}
+                      </p>
+                      <p className="text-sm text-slate-400">
+                        Updated {new Date(formula.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="text-sm text-slate-300 capitalize">
+                      {formula.serviceType}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {tab === "aftercare" ? (
+        <section className="space-y-4">
+          <h3 className="text-lg font-semibold">Aftercare draft</h3>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+            <div className="grid gap-4 md:grid-cols-2">
               <label className="block text-sm text-slate-200">
                 Service name
                 <input
                   value={aftercareService}
                   onChange={(event) => setAftercareService(event.target.value)}
+                  placeholder={nextAppointment?.serviceName ?? "Signature service"}
                   className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-                  placeholder="Service name"
                 />
               </label>
               <label className="block text-sm text-slate-200 md:col-span-2">
-                Notes (optional)
+                Notes
                 <textarea
                   value={aftercareNotes}
                   onChange={(event) => setAftercareNotes(event.target.value)}
                   className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-                  rows={3}
-                  placeholder="Sensitive areas, product preferences, follow-up tips"
+                  rows={4}
                 />
               </label>
             </div>
@@ -584,173 +431,115 @@ export default function ClientDetailPage() {
               <button
                 type="button"
                 onClick={handleGenerateAftercare}
-                className="rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold text-slate-950"
+                className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950"
               >
-                Generate Aftercare (Local)
+                Generate aftercare
               </button>
               <button
                 type="button"
-                onClick={handleCopyAftercare}
-                className="rounded-full border border-slate-700 px-3 py-2 text-xs text-slate-200"
-                disabled={!aftercareDraft}
+                onClick={() => {
+                  setAftercareDraft(null);
+                  setAftercareNotes("");
+                  setAftercareService("");
+                }}
+                className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200"
               >
-                Copy to clipboard
-              </button>
-              <button
-                type="button"
-                onClick={handleClearAftercare}
-                className="rounded-full border border-slate-700 px-3 py-2 text-xs text-slate-200"
-              >
-                Clear draft
+                Clear
               </button>
             </div>
-            {aftercareStatus ? (
-              <p className="mt-2 text-xs text-emerald-200">
-                {aftercareStatus}
-              </p>
-            ) : null}
-
-            {aftercareDraft ? (
-              <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm text-slate-200">
-                <h4 className="text-lg font-semibold">
-                  {aftercareDraft.title}
-                </h4>
-                <p className="mt-2 text-slate-300">
-                  {aftercareDraft.summary}
-                </p>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                      Do
-                    </p>
-                    <ul className="mt-2 space-y-1 text-slate-300">
-                      {aftercareDraft.do.map((item) => (
-                        <li key={item}>- {item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                      Don&apos;t
-                    </p>
-                    <ul className="mt-2 space-y-1 text-slate-300">
-                      {aftercareDraft.dont.map((item) => (
-                        <li key={item}>- {item}</li>
-                      ))}
-                    </ul>
-                  </div>
+          </div>
+          {aftercareDraft ? (
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-sm text-emerald-100">
+              <h4 className="text-base font-semibold">{aftercareDraft.title}</h4>
+              <p className="mt-2 text-emerald-50">{aftercareDraft.summary}</p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">
+                    Do
+                  </p>
+                  <ul className="mt-2 space-y-1">
+                    {aftercareDraft.do.map((item) => (
+                      <li key={item}>• {item}</li>
+                    ))}
+                  </ul>
                 </div>
-                <p className="mt-4 text-sm text-slate-300">
-                  {aftercareDraft.rebookRecommendation}
-                </p>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">
+                    Don’t
+                  </p>
+                  <ul className="mt-2 space-y-1">
+                    {aftercareDraft.dont.map((item) => (
+                      <li key={item}>• {item}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-            ) : (
-              <div className="mt-4 rounded-xl border border-dashed border-slate-700 bg-slate-950/60 p-4 text-xs text-slate-400">
-                No draft yet. Generate a local aftercare plan to preview it.
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold">Upcoming appointments</h3>
-                <p className="text-slate-400">
-                  Next sessions for {getClientDisplayName(client)}.
-                </p>
-              </div>
-              <Link
-                href={`/app/appointments/new?clientId=${client.id}`}
-                className="rounded-full border border-emerald-500/60 px-3 py-1 text-xs text-emerald-200"
+              <p className="mt-4 text-xs text-emerald-200">
+                {aftercareDraft.rebookRecommendation}
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    `${aftercareDraft.title}\n\n${aftercareDraft.summary}`
+                  )
+                }
+                className="mt-4 rounded-full border border-emerald-300/50 px-4 py-2 text-xs text-emerald-100"
               >
-                New appointment
-              </Link>
-            </div>
-            <div className="mt-4 space-y-2">
-              {upcomingAppointments.length === 0 ? (
-                <p className="text-sm text-slate-400">No upcoming appointments.</p>
-              ) : (
-                upcomingAppointments.map((appointment) => (
-                  <Link
-                    key={appointment.id}
-                    href={`/app/appointments/${appointment.id}`}
-                    className="block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-200"
-                  >
-                    <p className="font-semibold">{appointment.serviceName}</p>
-                    <p className="text-xs text-slate-400">
-                      {new Date(appointment.startAt).toLocaleString()}
-                    </p>
-                  </Link>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold">Formulas</h3>
-                <p className="text-slate-400">
-                  Recent formulas for {getClientDisplayName(client)}.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href={`/app/formulas?clientId=${client.id}`}
-                  className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200"
-                >
-                  View all
-                </Link>
-                <Link
-                  href={`/app/formulas/new?clientId=${client.id}`}
-                  className="rounded-full border border-emerald-500/60 px-3 py-1 text-xs text-emerald-200"
-                >
-                  New formula
-                </Link>
-              </div>
-            </div>
-            <div className="mt-4 space-y-2">
-              {recentFormulas.length === 0 ? (
-                <p className="text-sm text-slate-400">No formulas yet.</p>
-              ) : (
-                recentFormulas.map((formula) => (
-                  <Link
-                    key={formula.id}
-                    href={`/app/formulas/${formula.id}`}
-                    className="block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-200"
-                  >
-                    <p className="font-semibold">{formula.title}</p>
-                    <p className="text-xs text-slate-400">
-                      {formula.colorLine || "No color line"} •{" "}
-                      {new Date(formula.updatedAt).toLocaleDateString()}
-                    </p>
-                  </Link>
-                ))
-              )}
-            </div>
-          </div>
-
-          {activity.length > 0 ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-200">
-              <h3 className="text-lg font-semibold">Activity</h3>
-              <div className="mt-4 space-y-2">
-                {activity.map((item) => (
-                  <Link
-                    key={`${item.label}-${item.id}`}
-                    href={item.href}
-                    className="block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-200"
-                  >
-                    <p className="font-semibold">{item.label}</p>
-                    <p className="text-xs text-slate-400">
-                      {new Date(item.date).toLocaleDateString()}
-                    </p>
-                  </Link>
-                ))}
-              </div>
+                Copy summary
+              </button>
             </div>
           ) : null}
-        </div>
-      )}
+        </section>
+      ) : null}
+
+      {tab === "invite" ? (
+        <section className="space-y-4">
+          <h3 className="text-lg font-semibold">Invite link</h3>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+            <label className="block text-xs uppercase tracking-[0.3em] text-slate-500">
+              Invite URL
+            </label>
+            <input
+              readOnly
+              value={
+                inviteToken && origin
+                  ? `${origin}/client/invite/${inviteToken}`
+                  : "Generating invite link..."
+              }
+              className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+            />
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleCopyInvite}
+                className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-200"
+              >
+                Copy link
+              </button>
+              <button
+                type="button"
+                onClick={handleRegenerateInvite}
+                className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-200"
+              >
+                Regenerate token
+              </button>
+            </div>
+            {inviteUpdatedAt ? (
+              <p className="mt-3 text-xs text-slate-400">
+                Last generated {new Date(inviteUpdatedAt).toLocaleString()}
+              </p>
+            ) : null}
+            {inviteStatus ? (
+              <p className="mt-3 text-xs text-emerald-200">{inviteStatus}</p>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {dbError ? (
+        <p className="text-sm text-rose-200">DB error: {dbError}</p>
+      ) : null}
     </div>
   );
 }
