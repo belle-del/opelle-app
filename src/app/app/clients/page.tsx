@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { Client } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
-import { ensureClientInviteToken, getClients } from "@/lib/storage";
+import { useRepo } from "@/lib/repo";
 import { formatDbError } from "@/lib/db/health";
 
 export default function ClientsPage() {
@@ -13,6 +13,7 @@ export default function ClientsPage() {
   const [copyStatus, setCopyStatus] = useState<Record<string, string>>({});
   const [origin, setOrigin] = useState("");
   const [dbError, setDbError] = useState<string | null>(null);
+  const repo = useRepo();
   const canWrite = !dbError;
 
   useEffect(() => {
@@ -20,7 +21,7 @@ export default function ClientsPage() {
     const load = async () => {
       try {
         if (active) {
-          setClients(await getClients());
+          setClients(await repo.getClients());
         }
       } catch (error) {
         const message = formatDbError(error);
@@ -30,7 +31,7 @@ export default function ClientsPage() {
             new CustomEvent("opelle:db-error", { detail: message })
           );
         }
-        setClients(await getClients());
+        setClients(await repo.getClients());
       }
     };
     load();
@@ -123,7 +124,7 @@ export default function ClientsPage() {
                     event.preventDefault();
                     event.stopPropagation();
                     if (!origin || !canWrite) return;
-                    ensureClientInviteToken(client.id)
+                    repo.ensureClientInviteToken(client.id)
                       .then(async (data) => {
                         const link = `${origin}/client/invite/${data.token}`;
                         await navigator.clipboard.writeText(link);

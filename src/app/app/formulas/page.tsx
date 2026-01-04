@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Formula, FormulaServiceType, Client, Appointment } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
 import { formatDbError } from "@/lib/db/health";
-import { getAppointments, getClients, getFormulas } from "@/lib/storage";
+import { useRepo } from "@/lib/repo";
 
 const filterOptions = ["all", "color", "lighten", "tone", "gloss", "other"] as const;
 
@@ -19,6 +19,7 @@ export default function FormulasPage() {
   const [search, setSearch] = useState("");
   const [clientFilter, setClientFilter] = useState<string | null>(null);
   const [dbError, setDbError] = useState<string | null>(null);
+  const repo = useRepo();
 
   useEffect(() => {
     let active = true;
@@ -27,9 +28,9 @@ export default function FormulasPage() {
         if (active) {
           const [formulasData, clientsData, appointmentsData] =
             await Promise.all([
-              getFormulas(),
-              getClients(),
-              getAppointments(),
+              repo.getFormulas(),
+              repo.getClients(),
+              repo.getAppointments(),
             ]);
           setFormulas(formulasData);
           setClients(clientsData);
@@ -45,9 +46,9 @@ export default function FormulasPage() {
         }
         const [formulasData, clientsData, appointmentsData] =
           await Promise.all([
-            getFormulas(),
-            getClients(),
-            getAppointments(),
+            repo.getFormulas(),
+            repo.getClients(),
+            repo.getAppointments(),
           ]);
         setFormulas(formulasData);
         setClients(clientsData);
@@ -58,7 +59,7 @@ export default function FormulasPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [repo]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

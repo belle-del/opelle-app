@@ -12,13 +12,7 @@ import type {
 } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
 import { formatDbError } from "@/lib/db/health";
-import {
-  deleteFormula,
-  getAppointments,
-  getClients,
-  getFormulaById,
-  upsertFormula,
-} from "@/lib/storage";
+import { useRepo } from "@/lib/repo";
 
 const serviceTypes: FormulaServiceType[] = [
   "color",
@@ -46,6 +40,7 @@ export default function FormulaDetailPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
+  const repo = useRepo();
   const canWrite = !dbError;
 
   useEffect(() => {
@@ -56,9 +51,9 @@ export default function FormulaDetailPage() {
         if (active) {
           const [formulaData, clientsData, appointmentsData] =
             await Promise.all([
-              getFormulaById(params.id),
-              getClients(),
-              getAppointments(),
+              repo.getFormulaById(params.id),
+              repo.getClients(),
+              repo.getAppointments(),
             ]);
           setFormula(formulaData);
           setClients(clientsData);
@@ -72,9 +67,9 @@ export default function FormulaDetailPage() {
         }
         const [formulaData, clientsData, appointmentsData] =
           await Promise.all([
-            getFormulaById(params.id),
-            getClients(),
-            getAppointments(),
+            repo.getFormulaById(params.id),
+            repo.getClients(),
+            repo.getAppointments(),
           ]);
         setFormula(formulaData);
         setClients(clientsData);
@@ -85,7 +80,7 @@ export default function FormulaDetailPage() {
     return () => {
       active = false;
     };
-  }, [params?.id]);
+  }, [params?.id, repo]);
 
   const client = useMemo(() => {
     if (!formula) return null;
@@ -145,7 +140,7 @@ export default function FormulaDetailPage() {
 
     if (!canWrite) return;
     try {
-      const saved = await upsertFormula(formula);
+      const saved = await repo.upsertFormula(formula);
       setFormula(saved);
       setIsEditing(false);
     } catch (error) {
@@ -161,7 +156,7 @@ export default function FormulaDetailPage() {
     if (!confirm("Delete this formula?")) return;
     if (!canWrite) return;
     try {
-      await deleteFormula(formula.id);
+      await repo.deleteFormula(formula.id);
       router.push("/app/formulas");
     } catch (error) {
       const message = formatDbError(error);

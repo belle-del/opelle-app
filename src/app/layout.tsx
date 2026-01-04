@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { DataHealthProvider } from "@/components/DataHealthProvider";
 
 export const metadata: Metadata = {
   title: "Opelle",
@@ -14,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
-        {children}
+        <DataHealthProvider>{children}</DataHealthProvider>
       </body>
     </html>
   );

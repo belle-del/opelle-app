@@ -12,7 +12,7 @@ import type {
 } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
 import { formatDbError } from "@/lib/db/health";
-import { getAppointments, getClients, upsertFormula } from "@/lib/storage";
+import { useRepo } from "@/lib/repo";
 
 const serviceTypes: FormulaServiceType[] = [
   "color",
@@ -50,6 +50,7 @@ export default function NewFormulaPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const repo = useRepo();
 
   useEffect(() => {
     let active = true;
@@ -57,8 +58,8 @@ export default function NewFormulaPage() {
       try {
         if (active) {
           const [clientsData, appointmentsData] = await Promise.all([
-            getClients(),
-            getAppointments(),
+            repo.getClients(),
+            repo.getAppointments(),
           ]);
           setClients(clientsData);
           setAppointments(appointmentsData);
@@ -70,8 +71,8 @@ export default function NewFormulaPage() {
           window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
         }
         const [clientsData, appointmentsData] = await Promise.all([
-          getClients(),
-          getAppointments(),
+          repo.getClients(),
+          repo.getAppointments(),
         ]);
         setClients(clientsData);
         setAppointments(appointmentsData);
@@ -81,7 +82,7 @@ export default function NewFormulaPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [repo]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -140,7 +141,7 @@ export default function NewFormulaPage() {
     if (!form.clientId || !form.title.trim()) return;
 
     try {
-      const saved = await upsertFormula(form);
+      const saved = await repo.upsertFormula(form);
       router.push(`/app/formulas/${saved.id}`);
     } catch (err) {
       const message = formatDbError(err);

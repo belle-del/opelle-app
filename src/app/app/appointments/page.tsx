@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Appointment, AppointmentStatus, Client } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
 import { formatDbError } from "@/lib/db/health";
-import { getAppointments, getClients } from "@/lib/storage";
+import { useRepo } from "@/lib/repo";
 
 const filterOptions = ["upcoming", "past", "all"] as const;
 
@@ -17,6 +17,7 @@ export default function AppointmentsPage() {
   const [filter, setFilter] = useState<Filter>("upcoming");
   const [search, setSearch] = useState("");
   const [dbError, setDbError] = useState<string | null>(null);
+  const repo = useRepo();
 
   useEffect(() => {
     let active = true;
@@ -24,8 +25,8 @@ export default function AppointmentsPage() {
       try {
         if (active) {
           const [appointmentsData, clientsData] = await Promise.all([
-            getAppointments(),
-            getClients(),
+            repo.getAppointments(),
+            repo.getClients(),
           ]);
           setAppointments(appointmentsData);
           setClients(clientsData);
@@ -39,8 +40,8 @@ export default function AppointmentsPage() {
           );
         }
         const [appointmentsData, clientsData] = await Promise.all([
-          getAppointments(),
-          getClients(),
+          repo.getAppointments(),
+          repo.getClients(),
         ]);
         setAppointments(appointmentsData);
         setClients(clientsData);
@@ -50,7 +51,7 @@ export default function AppointmentsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [repo]);
 
   const clientMap = useMemo(() => {
     return new Map(clients.map((client) => [client.id, client]));

@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { flags } from "@/lib/flags";
 import type { OpelleBackupV1 } from "@/lib/models";
-import { exportBackup, importBackup, resetAll } from "@/lib/storage";
+import { useRepo } from "@/lib/repo";
 
 export default function SettingsPage() {
   const supabaseUrlSet = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const supabaseKeySet = Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const repo = useRepo();
   const [backupPreview, setBackupPreview] = useState<OpelleBackupV1 | null>(
     null
   );
@@ -16,7 +17,7 @@ export default function SettingsPage() {
   const [resetConfirm, setResetConfirm] = useState("");
 
   const handleExport = async () => {
-    const backup = await exportBackup();
+    const backup = await repo.exportBackup();
     const date = new Date().toISOString().slice(0, 10);
     const filename = `opelle-backup-v1-${date}.json`;
     const blob = new Blob([JSON.stringify(backup, null, 2)], {
@@ -62,7 +63,7 @@ export default function SettingsPage() {
 
   const handleImport = async () => {
     if (!backupPreview) return;
-    const result = await importBackup(backupPreview, {
+    const result = await repo.importBackup(backupPreview, {
       merge: importMode === "merge",
     });
     setImportStatus(result.ok ? "Import complete." : result.error);
@@ -70,7 +71,7 @@ export default function SettingsPage() {
 
   const handleReset = () => {
     if (resetConfirm !== "RESET") return;
-    resetAll();
+    repo.resetAll();
     setBackupPreview(null);
     setImportStatus("Local data cleared.");
     setResetConfirm("");

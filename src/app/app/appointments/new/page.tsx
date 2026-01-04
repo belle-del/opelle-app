@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import type { Appointment, AppointmentStatus, Client } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
 import { formatDbError } from "@/lib/db/health";
-import { getClients, upsertAppointment } from "@/lib/storage";
+import { useRepo } from "@/lib/repo";
 
 const buildEmptyAppointment = (): Appointment => ({
   id: "",
@@ -31,13 +31,14 @@ export default function NewAppointmentPage() {
   const [form, setForm] = useState<Appointment>(buildEmptyAppointment());
   const [clients, setClients] = useState<Client[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const repo = useRepo();
 
   useEffect(() => {
     let active = true;
     const load = async () => {
       try {
         if (active) {
-          setClients(await getClients());
+          setClients(await repo.getClients());
         }
       } catch (err) {
         const message = formatDbError(err);
@@ -45,14 +46,14 @@ export default function NewAppointmentPage() {
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
         }
-        setClients(await getClients());
+        setClients(await repo.getClients());
       }
     };
     load();
     return () => {
       active = false;
     };
-  }, []);
+  }, [repo]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -83,7 +84,7 @@ export default function NewAppointmentPage() {
     if (!form.clientId || !form.serviceName.trim()) return;
 
     try {
-      const saved = await upsertAppointment(form);
+      const saved = await repo.upsertAppointment(form);
       router.push(`/app/appointments/${saved.id}`);
     } catch (err) {
       const message = formatDbError(err);

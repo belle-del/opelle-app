@@ -8,15 +8,7 @@ import { getClientDisplayName } from "@/lib/models";
 import type { AftercareDraftResult } from "@/lib/ai/types";
 import { generateAftercareDraft } from "@/lib/ai/embedded";
 import { formatDbError } from "@/lib/db/health";
-import {
-  deleteClient,
-  ensureClientInviteToken,
-  getAppointments,
-  getClientById,
-  getFormulas,
-  regenerateClientInviteToken,
-  upsertClient,
-} from "@/lib/storage";
+import { useRepo } from "@/lib/repo";
 
 export default function ClientDetailPage() {
   const params = useParams<{ id: string }>();
@@ -36,6 +28,7 @@ export default function ClientDetailPage() {
     useState<AftercareDraftResult | null>(null);
   const [aftercareStatus, setAftercareStatus] = useState<string | null>(null);
   const canWrite = !dbError;
+  const repo = useRepo();
 
   useEffect(() => {
     if (!params?.id) return;
@@ -44,9 +37,9 @@ export default function ClientDetailPage() {
       try {
         if (active) {
           const [clientData, apptData, formulaData] = await Promise.all([
-            getClientById(params.id),
-            getAppointments(),
-            getFormulas(),
+            repo.getClientById(params.id),
+            repo.getAppointments(),
+            repo.getFormulas(),
           ]);
           setClient(clientData);
           setAppointments(apptData);
@@ -61,9 +54,9 @@ export default function ClientDetailPage() {
           );
         }
         const [clientData, apptData, formulaData] = await Promise.all([
-          getClientById(params.id),
-          getAppointments(),
-          getFormulas(),
+          repo.getClientById(params.id),
+          repo.getAppointments(),
+          repo.getFormulas(),
         ]);
         setClient(clientData);
         setAppointments(apptData);
@@ -74,7 +67,7 @@ export default function ClientDetailPage() {
     return () => {
       active = false;
     };
-  }, [params?.id]);
+  }, [params?.id, repo]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -188,7 +181,7 @@ export default function ClientDetailPage() {
     }
 
     try {
-      const saved = await upsertClient(client);
+      const saved = await repo.upsertClient(client);
       setClient(saved);
       setIsEditing(false);
     } catch (error) {
@@ -207,7 +200,7 @@ export default function ClientDetailPage() {
       return;
     }
     try {
-      await deleteClient(client.id);
+      await repo.deleteClient(client.id);
       router.push("/app/clients");
     } catch (error) {
       const message = formatDbError(error);
@@ -224,7 +217,7 @@ export default function ClientDetailPage() {
       setInviteStatus("Connect DB to enable invites.");
       return;
     }
-    ensureClientInviteToken(client.id)
+    repo.ensureClientInviteToken(client.id)
       .then((data) => {
         setInviteToken(data.token);
         setInviteUpdatedAt(data.updatedAt);
@@ -282,7 +275,7 @@ export default function ClientDetailPage() {
       setInviteStatus("Connect DB to enable invites.");
       return;
     }
-    regenerateClientInviteToken(client.id)
+    repo.regenerateClientInviteToken(client.id)
       .then((data) => {
         setInviteToken(data.token);
         setInviteUpdatedAt(data.updatedAt);

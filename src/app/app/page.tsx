@@ -6,20 +6,21 @@ import EmbeddedAiDemo from "./embedded-ai-demo";
 import { flags } from "@/lib/flags";
 import type { Appointment, Client, Formula } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
-import { getAppointments, getClients, getFormulas } from "@/lib/storage";
+import { useRepo } from "@/lib/repo";
 
 export default function AppDashboardPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [formulas, setFormulas] = useState<Formula[]>([]);
+  const repo = useRepo();
 
   useEffect(() => {
     let active = true;
     const load = async () => {
       const [clientsData, appointmentsData, formulasData] = await Promise.all([
-        getClients(),
-        getAppointments(),
-        getFormulas(),
+        repo.getClients(),
+        repo.getAppointments(),
+        repo.getFormulas(),
       ]);
       if (!active) return;
       setClients(clientsData);
@@ -30,7 +31,7 @@ export default function AppDashboardPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [repo]);
 
   const educationModulesCount = 6;
   const now = new Date();

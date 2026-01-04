@@ -6,12 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Appointment, AppointmentStatus, Client } from "@/lib/models";
 import { getClientDisplayName } from "@/lib/models";
 import { formatDbError } from "@/lib/db/health";
-import {
-  deleteAppointment,
-  getAppointmentById,
-  getClients,
-  upsertAppointment,
-} from "@/lib/storage";
+import { useRepo } from "@/lib/repo";
 
 const toLocalInput = (iso: string) => {
   const date = new Date(iso);
@@ -26,6 +21,7 @@ export default function AppointmentDetailPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
+  const repo = useRepo();
   const canWrite = !dbError;
 
   useEffect(() => {
@@ -35,8 +31,8 @@ export default function AppointmentDetailPage() {
       try {
         if (active) {
           const [appointmentData, clientsData] = await Promise.all([
-            getAppointmentById(params.id),
-            getClients(),
+            repo.getAppointmentById(params.id),
+            repo.getClients(),
           ]);
           setAppointment(appointmentData);
           setClients(clientsData);
@@ -48,8 +44,8 @@ export default function AppointmentDetailPage() {
           window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
         }
         const [appointmentData, clientsData] = await Promise.all([
-          getAppointmentById(params.id),
-          getClients(),
+          repo.getAppointmentById(params.id),
+          repo.getClients(),
         ]);
         setAppointment(appointmentData);
         setClients(clientsData);
@@ -59,7 +55,7 @@ export default function AppointmentDetailPage() {
     return () => {
       active = false;
     };
-  }, [params?.id]);
+  }, [params?.id, repo]);
 
   const client = useMemo(() => {
     if (!appointment) return null;
@@ -90,7 +86,7 @@ export default function AppointmentDetailPage() {
 
     if (!canWrite) return;
     try {
-      const saved = await upsertAppointment(appointment);
+      const saved = await repo.upsertAppointment(appointment);
       setAppointment(saved);
       setIsEditing(false);
     } catch (error) {
@@ -106,7 +102,7 @@ export default function AppointmentDetailPage() {
     if (!confirm("Delete this appointment?")) return;
     if (!canWrite) return;
     try {
-      await deleteAppointment(appointment.id);
+      await repo.deleteAppointment(appointment.id);
       router.push("/app/appointments");
     } catch (error) {
       const message = formatDbError(error);

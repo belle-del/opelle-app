@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Client } from "@/lib/models";
 import { formatDbError } from "@/lib/db/health";
-import { upsertClient } from "@/lib/storage";
+import { useRepo } from "@/lib/repo";
 
 const emptyClient: Client = {
   id: "",
@@ -20,6 +20,7 @@ const emptyClient: Client = {
 
 export default function NewClientPage() {
   const router = useRouter();
+  const repo = useRepo();
   const [form, setForm] = useState<Client>(emptyClient);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +33,7 @@ export default function NewClientPage() {
     if (!form.firstName.trim()) return;
 
     try {
-      const saved = await upsertClient(form);
+      const saved = await repo.upsertClient(form);
       router.push(`/app/clients/${saved.id}`);
     } catch (err) {
       const message = formatDbError(err);
