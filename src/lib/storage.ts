@@ -8,14 +8,14 @@ import type {
   OpelleBackupV1,
 } from "@/lib/models";
 import { getMockSeed } from "@/lib/mockSeed";
-import { formatDbError, isDbConfigured } from "@/lib/db/health";
+import { formatDbError } from "@/lib/db/health";
 
 const KEY_PREFIX = "opelle:v1";
 const CLIENTS_KEY = `${KEY_PREFIX}:clients`;
 const APPOINTMENTS_KEY = `${KEY_PREFIX}:appointments`;
 const FORMULAS_KEY = `${KEY_PREFIX}:formulas`;
 
-const isDbMode = () => isDbConfigured();
+const isDbMode = () => process.env.NEXT_PUBLIC_DATA_MODE === "db";
 
 const reportDbError = (error: unknown) => {
   if (typeof window === "undefined") return;
