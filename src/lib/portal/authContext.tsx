@@ -9,6 +9,7 @@ interface ClientAuthContextValue {
   loading: boolean;
   signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const ClientAuthContext = createContext<ClientAuthContextValue | undefined>(undefined);
@@ -43,8 +44,14 @@ export function ClientAuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const refresh = async () => {
+    const supabase = createSupabaseBrowserClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+  };
+
   return (
-    <ClientAuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <ClientAuthContext.Provider value={{ user, loading, signIn, signOut, refresh }}>
       {children}
     </ClientAuthContext.Provider>
   );
