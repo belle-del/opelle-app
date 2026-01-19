@@ -13,8 +13,6 @@ export async function GET(request: NextRequest) {
   console.log("Auth callback - ANON_KEY present:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   if (code) {
-    const cookieStore = await cookies();
-
     // Create response object first so we can set cookies on it
     const response = NextResponse.redirect(new URL(next, request.url));
 
@@ -26,32 +24,18 @@ export async function GET(request: NextRequest) {
       {
         cookies: {
           getAll() {
-            return cookieStore.getAll();
+            return request.cookies.getAll();
           },
           setAll(cookiesToSet) {
             console.log("Setting cookies, count:", cookiesToSet.length);
             cookiesToSet.forEach(({ name, value, options }) => {
               console.log(`Cookie ${name} options:`, JSON.stringify(options));
 
-              // Set cookie in both the store AND the response
-              try {
-                cookieStore.set(name, value, options);
-              } catch (e) {
-                console.error("cookieStore.set failed:", e);
-              }
-
-              // Ensure proper cookie options for cross-origin
-              const cookieOptions = {
-                ...options,
-                path: options.path || '/',
-                sameSite: (options.sameSite as 'lax' | 'strict' | 'none') || 'lax',
-                secure: options.secure !== false, // Default to true in production
-                httpOnly: options.httpOnly !== false,
-              };
-
-              response.cookies.set(name, value, cookieOptions);
+              // Set ONLY in the response object, not cookieStore
+              // This is the proper way to set cookies in Route Handlers
+              response.cookies.set(name, value, options);
               cookiesSetCount++;
-              console.log(`Set cookie: ${name} with options:`, JSON.stringify(cookieOptions));
+              console.log(`Set cookie: ${name} with options:`, JSON.stringify(options));
             });
           },
         },
