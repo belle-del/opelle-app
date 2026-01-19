@@ -30,9 +30,14 @@ export const createSupabaseAuthServerClient = async () => {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (error) {
+            // Cookie setting might fail in middleware or certain server contexts
+            // This is expected and safe to ignore
+          }
         },
       },
     }
