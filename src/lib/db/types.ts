@@ -2,10 +2,17 @@ import type { Appointment, Client, Formula, FormulaStep } from "@/lib/models";
 
 export type ClientRow = {
   id: string;
-  name: string;
+  stylist_id: string;
+  first_name: string;
+  last_name: string | null;
+  pronouns: string | null;
   email: string | null;
   phone: string | null;
+  notes: string | null;
+  invite_token: string | null;
+  invite_updated_at: string | null;
   created_at: string;
+  updated_at: string;
 };
 
 export type AppointmentRow = {
@@ -26,24 +33,17 @@ export type FormulaRow = {
   created_at: string;
 };
 
-const splitName = (name: string) => {
-  const trimmed = name.trim();
-  if (!trimmed) return { firstName: "", lastName: undefined };
-  const [firstName, ...rest] = trimmed.split(" ");
-  const lastName = rest.join(" ").trim();
-  return { firstName, lastName: lastName || undefined };
-};
-
 export const clientRowToModel = (row: ClientRow): Client => {
-  const { firstName, lastName } = splitName(row.name);
   return {
     id: row.id,
-    firstName,
-    lastName,
+    firstName: row.first_name,
+    lastName: row.last_name ?? undefined,
+    pronouns: row.pronouns ?? undefined,
     phone: row.phone ?? undefined,
     email: row.email ?? undefined,
+    notes: row.notes ?? undefined,
     createdAt: row.created_at,
-    updatedAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 };
 
@@ -70,15 +70,15 @@ export const formulaRowToModel = (row: FormulaRow): Formula => ({
   updatedAt: row.created_at,
 });
 
-export const clientModelToRow = (client: Partial<Client>): Partial<ClientRow> => {
-  const name = [client.firstName, client.lastName]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+export const clientModelToRow = (client: Partial<Client>, stylistId?: string): Partial<ClientRow> => {
   return {
-    name,
+    stylist_id: stylistId,
+    first_name: client.firstName?.trim() ?? "",
+    last_name: client.lastName?.trim() || null,
+    pronouns: client.pronouns?.trim() || null,
     email: client.email?.trim() || null,
     phone: client.phone?.trim() || null,
+    notes: client.notes?.trim() || null,
   };
 };
 
