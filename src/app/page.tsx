@@ -1,10 +1,22 @@
+import { redirect } from "next/navigation";
 import LinkCard from "@/components/LinkCard";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import { createSupabaseAuthServerClient } from "@/lib/supabase/server";
 
-export default function HomePage() {
+export default async function HomePage() {
   const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7);
   const env = process.env.NEXT_PUBLIC_APP_ENV ?? "unknown";
   const authDisabled = process.env.OPPELLE_AUTH_DISABLED === "true";
+
+  // Redirect to login if not authenticated (unless auth is disabled)
+  if (!authDisabled) {
+    const supabase = await createSupabaseAuthServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      redirect("/login");
+    }
+  }
 
   return (
     <main className="relative min-h-screen px-6 py-16">

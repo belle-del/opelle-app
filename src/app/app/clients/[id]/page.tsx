@@ -201,6 +201,12 @@ export default function ClientDetailPage() {
           >
             Back to clients
           </Link>
+          <Link
+            href={`/app/clients/${client.id}/edit`}
+            className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent transition hover:bg-emerald-300"
+          >
+            Edit client
+          </Link>
           <button
             type="button"
             onClick={() => router.push(`/app/appointments/new?clientId=${client.id}`)}
