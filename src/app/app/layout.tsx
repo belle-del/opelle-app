@@ -1,15 +1,27 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import AppNav from "@/app/app/_components/AppNav";
 import NewItemMenu from "@/app/app/_components/NewItemMenu";
 import DbStatusBanner from "@/app/app/_components/DbStatusBanner";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import { createSupabaseAuthServerClient } from "@/lib/supabase/server";
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const authDisabled = process.env.OPPELLE_AUTH_DISABLED === "true";
+
+  // Check authentication unless auth is disabled
+  if (!authDisabled) {
+    const supabase = await createSupabaseAuthServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      redirect("/login");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
