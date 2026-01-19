@@ -9,5 +9,5 @@ export async function GET(request: Request) {
   } catch {
     // ignore sign out errors
   }
-  return NextResponse.redirect(new URL("/", url.origin));
+  return NextResponse.redirect(new URL("/login", url.origin));
 }

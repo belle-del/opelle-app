@@ -8,12 +8,16 @@ export default async function HomePage() {
   const env = process.env.NEXT_PUBLIC_APP_ENV ?? "unknown";
   const authDisabled = process.env.OPPELLE_AUTH_DISABLED === "true";
 
-  // Redirect to login if not authenticated (unless auth is disabled)
+  // Redirect based on authentication status (unless auth is disabled)
   if (!authDisabled) {
     const supabase = await createSupabaseAuthServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (user) {
+      // Authenticated users go straight to the app
+      redirect("/app");
+    } else {
+      // Unauthenticated users go to login
       redirect("/login");
     }
   }
