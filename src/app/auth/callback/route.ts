@@ -31,6 +31,8 @@ export async function GET(request: NextRequest) {
           setAll(cookiesToSet) {
             console.log("Setting cookies, count:", cookiesToSet.length);
             cookiesToSet.forEach(({ name, value, options }) => {
+              console.log(`Cookie ${name} options:`, JSON.stringify(options));
+
               // Set cookie in both the store AND the response
               try {
                 cookieStore.set(name, value, options);
@@ -38,10 +40,18 @@ export async function GET(request: NextRequest) {
                 console.error("cookieStore.set failed:", e);
               }
 
-              // Set in the response - use options from Supabase, don't override
-              response.cookies.set(name, value, options);
+              // Ensure proper cookie options for cross-origin
+              const cookieOptions = {
+                ...options,
+                path: options.path || '/',
+                sameSite: (options.sameSite as 'lax' | 'strict' | 'none') || 'lax',
+                secure: options.secure !== false, // Default to true in production
+                httpOnly: options.httpOnly !== false,
+              };
+
+              response.cookies.set(name, value, cookieOptions);
               cookiesSetCount++;
-              console.log(`Set cookie: ${name}`);
+              console.log(`Set cookie: ${name} with options:`, JSON.stringify(cookieOptions));
             });
           },
         },
