@@ -35,7 +35,7 @@ export async function GET(_request: NextRequest) {
   }
 
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { count, error } = await supabase
       .from("clients")
       .select("id", { count: "exact", head: true });

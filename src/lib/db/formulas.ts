@@ -5,7 +5,7 @@ import { formulaModelToRow, formulaRowToModel, FormulaRow } from "@/lib/db/types
 
 export const listFormulas = async (): Promise<Formula[]> => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("formulas")
     .select("*")
@@ -16,7 +16,7 @@ export const listFormulas = async (): Promise<Formula[]> => {
 
 export const getFormula = async (id: string): Promise<Formula | null> => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("formulas")
     .select("*")
@@ -31,7 +31,7 @@ export const getFormula = async (id: string): Promise<Formula | null> => {
 
 export const createFormula = async (input: Partial<Formula>) => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("formulas")
     .insert(formulaModelToRow(input))
@@ -43,7 +43,7 @@ export const createFormula = async (input: Partial<Formula>) => {
 
 export const updateFormula = async (id: string, input: Partial<Formula>) => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("formulas")
     .update(formulaModelToRow(input))
@@ -56,7 +56,7 @@ export const updateFormula = async (id: string, input: Partial<Formula>) => {
 
 export const deleteFormula = async (id: string) => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("formulas").delete().eq("id", id);
   if (error) throw error;
 };
