@@ -1,11 +1,11 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAuthServerClient } from "@/lib/supabase/server";
 import { isDbConfigured } from "@/lib/db/health";
 import type { Client } from "@/lib/models";
 import { clientModelToRow, clientRowToModel, ClientRow } from "@/lib/db/types";
 
 export const listClients = async (): Promise<Client[]> => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseAuthServerClient();
 
   // Get the authenticated user to filter clients by stylist_id
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -24,7 +24,7 @@ export const listClients = async (): Promise<Client[]> => {
 
 export const getClient = async (id: string): Promise<Client | null> => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseAuthServerClient();
   const { data, error } = await supabase
     .from("clients")
     .select("*")
@@ -39,7 +39,7 @@ export const getClient = async (id: string): Promise<Client | null> => {
 
 export const createClient = async (input: Partial<Client>) => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseAuthServerClient();
 
   // Get the authenticated user to use as stylist_id
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -58,7 +58,7 @@ export const createClient = async (input: Partial<Client>) => {
 
 export const updateClient = async (id: string, input: Partial<Client>) => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseAuthServerClient();
 
   // Get the authenticated user
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -83,7 +83,7 @@ export const updateClient = async (id: string, input: Partial<Client>) => {
 
 export const deleteClient = async (id: string) => {
   if (!isDbConfigured()) throw new Error("DB not configured.");
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseAuthServerClient();
 
   // Get the authenticated user
   const { data: { user }, error: authError } = await supabase.auth.getUser();
