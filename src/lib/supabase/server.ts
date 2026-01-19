@@ -23,3 +23,6 @@ export async function createSupabaseAuthServerClient() {
     }
   );
 }
+
+// Alias for backward compatibility with existing code
+export const createSupabaseServerClient = createSupabaseAuthServerClient;
