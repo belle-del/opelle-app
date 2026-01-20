@@ -1,290 +1,156 @@
-"use client";
-
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import type { Appointment, AppointmentStatus, Client } from "@/lib/models";
-import { getClientDisplayName } from "@/lib/models";
-import { formatDbError } from "@/lib/db/health";
-import { useRepo } from "@/lib/repo";
+import { notFound } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { getAppointment } from "@/lib/db/appointments";
+import { getClient } from "@/lib/db/clients";
+import { getClientDisplayName } from "@/lib/types";
+import { formatDateTime, formatDate } from "@/lib/utils";
+import { ArrowLeft, User, Clock, FileText } from "lucide-react";
+import { AppointmentActions } from "./_components/AppointmentActions";
 
-const toLocalInput = (iso: string) => {
-  const date = new Date(iso);
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-};
+interface AppointmentDetailPageProps {
+  params: Promise<{ id: string }>;
+}
 
-export default function AppointmentDetailPage() {
-  const params = useParams<{ id: string }>();
-  const router = useRouter();
-  const [appointment, setAppointment] = useState<Appointment | null>(null);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [dbError, setDbError] = useState<string | null>(null);
-  const repo = useRepo();
-  const canWrite = !dbError;
-
-  useEffect(() => {
-    if (!params?.id) return;
-    let active = true;
-    const load = async () => {
-      try {
-        if (active) {
-          const [appointmentData, clientsData] = await Promise.all([
-            repo.getAppointmentById(params.id),
-            repo.getClients(),
-          ]);
-          setAppointment(appointmentData);
-          setClients(clientsData);
-        }
-      } catch (error) {
-        const message = formatDbError(error);
-        setDbError(message);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
-        }
-        const [appointmentData, clientsData] = await Promise.all([
-          repo.getAppointmentById(params.id),
-          repo.getClients(),
-        ]);
-        setAppointment(appointmentData);
-        setClients(clientsData);
-      }
-    };
-    load();
-    return () => {
-      active = false;
-    };
-  }, [params?.id, repo]);
-
-  const client = useMemo(() => {
-    if (!appointment) return null;
-    return clients.find((item) => item.id === appointment.clientId) ?? null;
-  }, [appointment, clients]);
+export default async function AppointmentDetailPage({ params }: AppointmentDetailPageProps) {
+  const { id } = await params;
+  const appointment = await getAppointment(id);
 
   if (!appointment) {
-    return (
-      <div className="space-y-3">
-        <h2 className="text-2xl font-semibold">Appointment not found</h2>
-        <Link href="/app/appointments" className="text-sm text-emerald-600 dark:text-emerald-200">
-          Back to appointments
-        </Link>
-      </div>
-    );
+    notFound();
   }
 
-  const handleChange = (
-    field: keyof Appointment,
-    value: string | number | AppointmentStatus
-  ) => {
-    setAppointment((prev) => (prev ? { ...prev, [field]: value } : prev));
-  };
-
-  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!appointment.clientId || !appointment.serviceName.trim()) return;
-
-    if (!canWrite) return;
-    try {
-      const saved = await repo.upsertAppointment(appointment);
-      setAppointment(saved);
-      setIsEditing(false);
-    } catch (error) {
-      const message = formatDbError(error);
-      setDbError(message);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
-      }
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!confirm("Delete this appointment?")) return;
-    if (!canWrite) return;
-    try {
-      await repo.deleteAppointment(appointment.id);
-      router.push("/app/appointments");
-    } catch (error) {
-      const message = formatDbError(error);
-      setDbError(message);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
-      }
-    }
-  };
+  const client = await getClient(appointment.clientId);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-semibold">Appointment</h2>
-          <p className="text-muted-foreground">Details stored locally.</p>
+    <div className="space-y-8">
+      {/* Header */}
+      <header className="space-y-4">
+        <Link
+          href="/app/appointments"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Appointments
+        </Link>
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-3xl font-semibold">{appointment.serviceName}</h2>
+              <Badge
+                variant={
+                  appointment.status === "completed" ? "success" :
+                  appointment.status === "cancelled" ? "danger" : "outline"
+                }
+              >
+                {appointment.status}
+              </Badge>
+            </div>
+            <p className="text-muted-foreground">
+              {formatDateTime(appointment.startAt)}
+            </p>
+          </div>
+          <AppointmentActions appointment={appointment} />
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/app/appointments"
-            className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
-          >
-            Back to appointments
-          </Link>
-          <button
-            type="button"
-            onClick={() => setIsEditing((prev) => !prev)}
-            className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-200"
-          >
-            {isEditing ? "Cancel edit" : "Edit"}
-          </button>
-        </div>
+      </header>
+
+      {/* Info Grid */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Client Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Client
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {client ? (
+              <Link
+                href={`/app/clients/${client.id}`}
+                className="block rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-black font-medium">
+                    {client.firstName[0]}{client.lastName?.[0] || ""}
+                  </div>
+                  <div>
+                    <p className="font-medium">{getClientDisplayName(client)}</p>
+                    {client.email && (
+                      <p className="text-sm text-muted-foreground">{client.email}</p>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <p className="text-sm text-muted-foreground">Client not found</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Appointment Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Date</p>
+              <p>{formatDate(appointment.startAt)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Time</p>
+              <p>{new Date(appointment.startAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Duration</p>
+              <p>{appointment.durationMins} minutes</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {isEditing ? (
-        <form
-          className="rounded-2xl border border-border bg-card/70 p-6"
-          onSubmit={handleSave}
-        >
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="block text-sm text-foreground">
-              Client
-              <select
-                value={appointment.clientId}
-                onChange={(event) =>
-                  handleChange("clientId", event.target.value)
-                }
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                required
-              >
-                <option value="">Select client</option>
-                {clients.map((clientOption) => (
-                  <option key={clientOption.id} value={clientOption.id}>
-                    {getClientDisplayName(clientOption)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm text-foreground">
-              Service name
-              <input
-                value={appointment.serviceName}
-                onChange={(event) =>
-                  handleChange("serviceName", event.target.value)
-                }
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                required
-              />
-            </label>
-            <label className="block text-sm text-foreground">
-              Date & time
-              <input
-                type="datetime-local"
-                value={toLocalInput(appointment.startAt)}
-                onChange={(event) =>
-                  handleChange(
-                    "startAt",
-                    new Date(event.target.value).toISOString()
-                  )
-                }
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block text-sm text-foreground">
-              Duration (min)
-              <input
-                type="number"
-                min={15}
-                value={appointment.durationMin}
-                onChange={(event) =>
-                  handleChange("durationMin", Number(event.target.value))
-                }
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block text-sm text-foreground">
-              Status
-              <select
-                value={appointment.status}
-                onChange={(event) =>
-                  handleChange("status", event.target.value as AppointmentStatus)
-                }
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              >
-                <option value="scheduled">Scheduled</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </label>
-          </div>
-          <label className="mt-4 block text-sm text-foreground">
+      {/* Notes */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
             Notes
-            <textarea
-              value={appointment.notes ?? ""}
-              onChange={(event) => handleChange("notes", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              rows={4}
-            />
-          </label>
-          <div className="mt-6 flex flex-wrap justify-between gap-3">
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-600 dark:text-rose-300"
-              disabled={!canWrite}
-              title={canWrite ? "Delete appointment" : "Connect DB to enable deletes"}
-            >
-              Delete appointment
-            </button>
-            <button
-              type="submit"
-              className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent"
-              disabled={!canWrite}
-              title={canWrite ? "Save changes" : "Connect DB to enable saves"}
-            >
-              Save changes
-            </button>
-          </div>
-        </form>
-      ) : (
-        <div className="rounded-2xl border border-border bg-card/70 p-6 text-sm text-foreground">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                Client
-              </p>
-              <p className="mt-2">
-                {client ? getClientDisplayName(client) : "Unknown client"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                Service
-              </p>
-              <p className="mt-2">{appointment.serviceName}</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                Time
-              </p>
-              <p className="mt-2">
-                {new Date(appointment.startAt).toLocaleString()}
-              </p>
-              <p>{appointment.durationMin} min</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                Status
-              </p>
-              <p className="mt-2 capitalize">{appointment.status}</p>
-            </div>
-          </div>
-          <div className="mt-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-              Notes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {appointment.notes ? (
+            <p className="whitespace-pre-wrap">{appointment.notes}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">No notes for this appointment</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Service Log placeholder */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Service Log</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Document the service details, formulas used, and learnings.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-xl border border-dashed border-white/20 p-8 text-center">
+            <p className="text-muted-foreground mb-4">
+              Service log feature coming soon
             </p>
-            <p className="mt-2 text-muted-foreground">
-              {appointment.notes || "No notes yet."}
+            <p className="text-sm text-muted-foreground">
+              You&apos;ll be able to add consultation notes, formulas, photos, and aftercare instructions here.
             </p>
           </div>
-        </div>
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

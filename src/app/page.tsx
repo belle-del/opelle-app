@@ -1,74 +1,58 @@
-import { redirect } from "next/navigation";
-import LinkCard from "@/components/LinkCard";
-import ThemeToggle from "@/components/ui/ThemeToggle";
-import { createSupabaseAuthServerClient } from "@/lib/supabase/server";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-export default async function HomePage() {
-  const commit = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7);
-  const env = process.env.NEXT_PUBLIC_APP_ENV ?? "unknown";
-  const authDisabled = process.env.OPPELLE_AUTH_DISABLED === "true";
-
-  // Redirect based on authentication status (unless auth is disabled)
-  if (!authDisabled) {
-    const supabase = await createSupabaseAuthServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (user) {
-      // Authenticated users go straight to the app
-      redirect("/app");
-    } else {
-      // Unauthenticated users go to login
-      redirect("/login");
-    }
-  }
-
+export default function LandingPage() {
   return (
-    <main className="relative min-h-screen px-6 py-16">
-      <div className="absolute right-6 top-6">
-        <ThemeToggle />
-      </div>
-
-      <div className="mx-auto flex max-w-5xl flex-col gap-12">
-        <header className="space-y-5">
-          <div className="inline-flex items-center gap-3 rounded-full border border-[hsl(var(--panelBorder)/0.6)] bg-[hsl(var(--panel)/0.5)] px-4 py-1 text-[10px] uppercase tracking-[0.3em] op-muted">
-            <span className="op-gradient-text font-semibold">Opelle</span>
-            <span className="rounded-full bg-[hsl(var(--accent-1)/0.2)] px-2 py-0.5 text-[10px] font-semibold text-[hsl(var(--accent-1))]">
-              Beta
+    <main className="min-h-screen flex flex-col items-center justify-center px-6">
+      <div className="max-w-2xl text-center space-y-8">
+        {/* Logo / Brand */}
+        <div className="space-y-4">
+          <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
+            <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
+              Opelle
             </span>
-          </div>
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl op-title">
-            Soft-beauty systems for modern studios.
           </h1>
-          <p className="max-w-2xl text-base op-muted sm:text-lg">
-            Access the Student Console to manage clients, or explore the Client
-            Portal experience in a calm, premium workspace.
+          <p className="text-xl text-muted-foreground">
+            The operating system for student stylists
           </p>
-        </header>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <LinkCard
-            title="Student Console"
-            description="Run your day: clients, appointments, formulas, and aftercare in one workspace."
-            href="/login?next=/app"
-            icon={<span className="text-sm font-semibold">S</span>}
-          />
-          <LinkCard
-            title="Client Portal"
-            description="Preview the client-facing portal experience and invite flow."
-            href="/client"
-            icon={<span className="text-sm font-semibold">C</span>}
-          />
         </div>
 
-        <footer className="flex flex-wrap items-center justify-between gap-3 text-xs op-muted">
-          <span>Environment: {env}</span>
-          <span>{commit ? `Commit: ${commit}` : "Commit: unknown"}</span>
-          {authDisabled ? (
-            <span className="rounded-full border border-amber-300/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-amber-700 dark:border-amber-400/50 dark:text-amber-200">
-              Auth Disabled (dev)
-            </span>
-          ) : null}
-        </footer>
+        {/* Features */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-8">
+          {[
+            { label: "Clients", icon: "👤" },
+            { label: "Appointments", icon: "📅" },
+            { label: "Formulas", icon: "🧪" },
+            { label: "Education", icon: "📚" },
+          ].map((feature) => (
+            <div
+              key={feature.label}
+              className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-4"
+            >
+              <div className="text-2xl mb-2">{feature.icon}</div>
+              <div className="text-sm text-muted-foreground">{feature.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link href="/login">
+            <Button size="lg">
+              Get Started
+            </Button>
+          </Link>
+          <Link href="/login">
+            <Button variant="secondary" size="lg">
+              Sign In
+            </Button>
+          </Link>
+        </div>
+
+        {/* Footer note */}
+        <p className="text-sm text-muted-foreground pt-8">
+          Track your journey from student to professional
+        </p>
       </div>
     </main>
   );

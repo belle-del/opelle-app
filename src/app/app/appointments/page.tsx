@@ -1,191 +1,177 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import type { Appointment, AppointmentStatus, Client } from "@/lib/models";
-import { getClientDisplayName } from "@/lib/models";
-import { formatDbError } from "@/lib/db/health";
-import { useRepo } from "@/lib/repo";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { listAppointments } from "@/lib/db/appointments";
+import { listClients } from "@/lib/db/clients";
+import { getClientDisplayName } from "@/lib/types";
+import { formatDateTime } from "@/lib/utils";
+import { Plus, Calendar, ChevronRight } from "lucide-react";
 
-const filterOptions = ["upcoming", "past", "all"] as const;
+export default async function AppointmentsPage() {
+  const [appointments, clients] = await Promise.all([
+    listAppointments(),
+    listClients(),
+  ]);
 
-type Filter = (typeof filterOptions)[number];
+  const clientMap = new Map(clients.map((c) => [c.id, c]));
 
-export default function AppointmentsPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [filter, setFilter] = useState<Filter>("upcoming");
-  const [search, setSearch] = useState("");
-  const [dbError, setDbError] = useState<string | null>(null);
-  const repo = useRepo();
-
-  useEffect(() => {
-    let active = true;
-    const load = async () => {
-      try {
-        if (active) {
-          const [appointmentsData, clientsData] = await Promise.all([
-            repo.getAppointments(),
-            repo.getClients(),
-          ]);
-          setAppointments(appointmentsData);
-          setClients(clientsData);
-        }
-      } catch (error) {
-        const message = formatDbError(error);
-        setDbError(message);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("opelle:db-error", { detail: message })
-          );
-        }
-        const [appointmentsData, clientsData] = await Promise.all([
-          repo.getAppointments(),
-          repo.getClients(),
-        ]);
-        setAppointments(appointmentsData);
-        setClients(clientsData);
-      }
-    };
-    load();
-    return () => {
-      active = false;
-    };
-  }, [repo]);
-
-  const clientMap = useMemo(() => {
-    return new Map(clients.map((client) => [client.id, client]));
-  }, [clients]);
-
-  const filtered = useMemo(() => {
-    const now = new Date().toISOString();
-    const term = search.trim().toLowerCase();
-
-    return appointments.filter((appointment) => {
-      if (filter === "upcoming" && appointment.startAt < now) return false;
-      if (filter === "past" && appointment.startAt >= now) return false;
-
-      if (!term) return true;
-
-      const clientName = clientMap.has(appointment.clientId)
-        ? getClientDisplayName(clientMap.get(appointment.clientId)!)
-        : "unknown client";
-
-      return [clientName, appointment.serviceName]
-        .join(" ")
-        .toLowerCase()
-        .includes(term);
-    });
-  }, [appointments, clientMap, filter, search]);
-
-  const statusTone = (status: AppointmentStatus) => {
-    if (status === "completed") return "text-emerald-600 dark:text-emerald-200";
-    if (status === "cancelled") return "text-rose-600 dark:text-rose-300";
-    return "text-amber-700 dark:text-amber-200";
-  };
+  // Group appointments by status
+  const upcoming = appointments.filter((a) => a.status === "scheduled" && new Date(a.startAt) >= new Date());
+  const past = appointments.filter((a) => a.status === "completed" || (a.status === "scheduled" && new Date(a.startAt) < new Date()));
+  const cancelled = appointments.filter((a) => a.status === "cancelled");
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-semibold">Appointments</h2>
+    <div className="space-y-8">
+      {/* Header */}
+      <header className="flex items-center justify-between">
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+            Schedule
+          </p>
+          <h2 className="text-3xl font-semibold">Appointments</h2>
           <p className="text-muted-foreground">
-            Schedule sessions and track upcoming vs past visits.
+            {upcoming.length} upcoming, {past.length} completed
           </p>
         </div>
-        <Link
-          href="/app/appointments/new"
-          className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent transition hover:bg-emerald-300"
-        >
-          New Appointment
+        <Link href="/app/appointments/new">
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            New Appointment
+          </Button>
         </Link>
-      </div>
+      </header>
 
-      <div className="flex flex-wrap gap-2">
-        {filterOptions.map((value) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setFilter(value)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-              filter === value
-                ? "bg-muted text-foreground"
-                : "border border-border text-foreground"
-            }`}
-          >
-            {value === "upcoming"
-              ? "Upcoming"
-              : value === "past"
-              ? "Past"
-              : "All"}
-          </button>
-        ))}
-      </div>
-
-      <input
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground"
-        placeholder="Search by client or service"
-      />
-
-      <div className="space-y-3">
-        {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card/70 p-6 text-sm text-muted-foreground">
-            <p>No appointments in this view yet. Schedule one to get started.</p>
-            <Link
-              href="/app/appointments/new"
-              className="mt-4 inline-flex rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-200"
-            >
-              Create first appointment
+      {appointments.length === 0 ? (
+        <Card>
+          <CardContent className="py-16 text-center">
+            <Calendar className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-medium mb-2">No appointments yet</h3>
+            <p className="text-muted-foreground mb-6">
+              Schedule your first appointment to get started.
+            </p>
+            <Link href="/app/appointments/new">
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Schedule Appointment
+              </Button>
             </Link>
-          </div>
-        ) : (
-          filtered.map((appointment) => {
-            const client = clientMap.get(appointment.clientId);
-            const clientName = client
-              ? getClientDisplayName(client)
-              : "Unknown client";
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-8">
+          {/* Upcoming */}
+          {upcoming.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium">Upcoming</h3>
+              {upcoming.map((appt) => {
+                const client = clientMap.get(appt.clientId);
+                return (
+                  <Link key={appt.id} href={`/app/appointments/${appt.id}`}>
+                    <Card className="hover:bg-white/10 transition-colors cursor-pointer">
+                      <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                              <Calendar className="w-5 h-5 text-emerald-400" />
+                            </div>
+                            <div>
+                              <p className="font-medium">
+                                {client ? getClientDisplayName(client) : "Unknown Client"}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {appt.serviceName}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <p className="text-sm">{formatDateTime(appt.startAt)}</p>
+                              <p className="text-xs text-muted-foreground">{appt.durationMins} min</p>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
 
-            return (
-              <div
-                key={appointment.id}
-                className="rounded-2xl border border-border bg-card/70 p-5"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <Link
-                      href={`/app/appointments/${appointment.id}`}
-                      className="text-lg font-semibold text-foreground transition hover:text-emerald-600 dark:text-emerald-200"
-                    >
-                      {appointment.serviceName}
-                    </Link>
-                    <div className="text-sm text-muted-foreground">
-                      {client ? (
-                        <Link
-                          href={`/app/clients/${client.id}`}
-                          className="transition hover:text-emerald-600 dark:text-emerald-200"
-                        >
-                          {clientName}
-                        </Link>
-                      ) : (
-                        clientName
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right text-sm text-muted-foreground">
-                    <p>{new Date(appointment.startAt).toLocaleString()}</p>
-                    <p>{appointment.durationMin} min</p>
-                    <p className={statusTone(appointment.status)}>
-                      {appointment.status}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+          {/* Past */}
+          {past.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Past</h3>
+              {past.map((appt) => {
+                const client = clientMap.get(appt.clientId);
+                return (
+                  <Link key={appt.id} href={`/app/appointments/${appt.id}`}>
+                    <Card className="hover:bg-white/10 transition-colors cursor-pointer opacity-75">
+                      <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                              <Calendar className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="font-medium">
+                                {client ? getClientDisplayName(client) : "Unknown Client"}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {appt.serviceName}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Badge variant={appt.status === "completed" ? "success" : "outline"}>
+                              {appt.status}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">
+                              {formatDateTime(appt.startAt)}
+                            </span>
+                            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Cancelled */}
+          {cancelled.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-muted-foreground">Cancelled</h3>
+              {cancelled.map((appt) => {
+                const client = clientMap.get(appt.clientId);
+                return (
+                  <Link key={appt.id} href={`/app/appointments/${appt.id}`}>
+                    <Card className="hover:bg-white/10 transition-colors cursor-pointer opacity-50">
+                      <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium line-through">
+                              {client ? getClientDisplayName(client) : "Unknown Client"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {appt.serviceName}
+                            </p>
+                          </div>
+                          <Badge variant="danger">cancelled</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

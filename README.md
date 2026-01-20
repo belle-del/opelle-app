@@ -1,43 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Opelle v2
 
-## Getting Started
+The operating system for student stylists. Track clients, appointments, formulas, and education in one place.
 
-First, run the development server:
+## Quick Start
+
+### 1. Set up Supabase
+
+1. Go to [Supabase Dashboard](https://supabase.com/dashboard/project/qccrfgkfcdcezxzdtfpk)
+2. Navigate to **SQL Editor**
+3. Run the migration in `supabase/migrations/001_fresh_schema.sql`
+
+### 2. Enable Google OAuth
+
+1. Go to **Authentication > Providers > Google**
+2. Enable Google provider
+3. Add your Google OAuth credentials (from Google Cloud Console)
+4. Set redirect URL to: `https://qccrfgkfcdcezxzdtfpk.supabase.co/auth/v1/callback`
+
+### 3. Get your Anon Key
+
+1. Go to **Settings > API**
+2. Copy the `anon` (public) key
+3. Add it to `.env.local` as `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+### 4. Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 5. Deploy to Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Push to GitHub
+2. Import to Vercel
+3. Add environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project Structure
 
-## Supabase Auth Redirect URLs
+```
+/src
+  /app
+    /app          # Student console (protected)
+    /client       # Client portal (coming soon)
+    /api          # API routes
+  /components
+    /ui           # UI components
+  /lib
+    /db           # Database functions
+    /supabase     # Supabase clients
+```
 
-Configure the following redirect URLs in your Supabase project:
+## Features
 
-- https://<your-domain>/auth/callback
-- http://localhost:3000/auth/callback
+### Student Console
+- **Dashboard** - Overview of appointments, clients, tasks
+- **Clients** - Manage client profiles, notes, tags
+- **Appointments** - Schedule and track appointments
+- **Formulas** - Save color formulas with steps
+- **Education** - Track learning tasks and goals
+- **Settings** - Account and workspace settings
 
-## Learn More
+### Coming Soon
+- Client Portal (intake forms, aftercare, rebooking)
+- Photo uploads
+- Service templates
+- Data export
 
-To learn more about Next.js, take a look at the following resources:
+## Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 16 (App Router)
+- React 19
+- Tailwind CSS 4
+- Supabase (Auth + Database)
+- TypeScript
+- Vercel

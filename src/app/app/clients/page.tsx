@@ -1,170 +1,97 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import type { Client } from "@/lib/models";
-import { getClientDisplayName } from "@/lib/models";
-import { useRepo } from "@/lib/repo";
-import { formatDbError } from "@/lib/db/health";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { listClients } from "@/lib/db/clients";
+import { getClientDisplayName } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
+import { Plus, User, ChevronRight } from "lucide-react";
 
-export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [search, setSearch] = useState("");
-  const [copyStatus, setCopyStatus] = useState<Record<string, string>>({});
-  const [origin, setOrigin] = useState("");
-  const [dbError, setDbError] = useState<string | null>(null);
-  const repo = useRepo();
-  const canWrite = !dbError;
-
-  useEffect(() => {
-    let active = true;
-    const load = async () => {
-      try {
-        if (active) {
-          setClients(await repo.getClients());
-        }
-      } catch (error) {
-        const message = formatDbError(error);
-        setDbError(message);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("opelle:db-error", { detail: message })
-          );
-        }
-        setClients(await repo.getClients());
-      }
-    };
-    load();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setOrigin(window.location.origin);
-  }, []);
-
-  const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return clients;
-    return clients.filter((client) => {
-      const haystack = [
-        client.firstName,
-        client.lastName ?? "",
-        client.phone ?? "",
-        client.email ?? "",
-      ]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(term);
-    });
-  }, [clients, search]);
+export default async function ClientsPage() {
+  const clients = await listClients();
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-semibold">Clients</h2>
+    <div className="space-y-8">
+      {/* Header */}
+      <header className="flex items-center justify-between">
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+            Manage
+          </p>
+          <h2 className="text-3xl font-semibold">Clients</h2>
           <p className="text-muted-foreground">
-            Manage client profiles stored locally in this browser.
+            {clients.length} {clients.length === 1 ? "client" : "clients"} in your studio
           </p>
         </div>
-        <Link
-          href="/app/clients/new"
-          className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent transition hover:bg-emerald-300"
-        >
-          Add Client
+        <Link href="/app/clients/new">
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            New Client
+          </Button>
         </Link>
-      </div>
+      </header>
 
-      <input
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground"
-        placeholder="Search by name, phone, or email"
-      />
-
-      <div className="space-y-3">
-        {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card/70 p-6 text-sm text-muted-foreground">
-            <p>No clients yet. Add your first client to get started.</p>
-            <Link
-              href="/app/clients/new"
-              className="mt-4 inline-flex rounded-full border border-emerald-500/60 px-4 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-200"
-            >
-              Create first client
+      {/* Client List */}
+      {clients.length === 0 ? (
+        <Card>
+          <CardContent className="py-16 text-center">
+            <User className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-medium mb-2">No clients yet</h3>
+            <p className="text-muted-foreground mb-6">
+              Add your first client to start tracking their journey.
+            </p>
+            <Link href="/app/clients/new">
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add First Client
+              </Button>
             </Link>
-          </div>
-        ) : (
-          filtered.map((client) => (
-            <Link
-              key={client.id}
-              href={`/app/clients/${client.id}`}
-              className="block rounded-2xl border border-border bg-card/70 p-5 transition hover:border-emerald-500/50"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-lg font-semibold text-foreground">
-                    {getClientDisplayName(client)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Updated {new Date(client.updatedAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {client.phone ? <p>{client.phone}</p> : null}
-                  {client.email ? <p>{client.email}</p> : null}
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (!origin || !canWrite) return;
-                    repo.ensureClientInviteToken(client.id)
-                      .then(async (data) => {
-                        const link = `${origin}/client/invite/${data.token}`;
-                        await navigator.clipboard.writeText(link);
-                        setCopyStatus((prev) => ({
-                          ...prev,
-                          [client.id]: "Copied!",
-                        }));
-                        setTimeout(() => {
-                          setCopyStatus((prev) => {
-                            const next = { ...prev };
-                            delete next[client.id];
-                            return next;
-                          });
-                        }, 2000);
-                      })
-                      .catch(() => {
-                        setCopyStatus((prev) => ({
-                          ...prev,
-                          [client.id]: "Copy failed",
-                        }));
-                      });
-                  }}
-                  className="rounded-full border border-border px-3 py-1 text-xs text-foreground"
-                  disabled={!canWrite}
-                  title={
-                    canWrite ? "Copy invite link" : "Unable to copy invite link"
-                  }
-                >
-                  Invite
-                </button>
-                {copyStatus[client.id] ? (
-                  <span className="text-emerald-600 dark:text-emerald-200">
-                    {copyStatus[client.id]}
-                  </span>
-                ) : null}
-              </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {clients.map((client) => (
+            <Link key={client.id} href={`/app/clients/${client.id}`}>
+              <Card className="hover:bg-white/10 transition-colors cursor-pointer">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-black font-medium">
+                        {client.firstName[0]}
+                        {client.lastName?.[0] || ""}
+                      </div>
+                      <div>
+                        <p className="font-medium">{getClientDisplayName(client)}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          {client.email && <span>{client.email}</span>}
+                          {client.phone && client.email && <span>•</span>}
+                          {client.phone && <span>{client.phone}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {client.tags.length > 0 && (
+                        <div className="hidden md:flex items-center gap-1">
+                          {client.tags.slice(0, 2).map((tag) => (
+                            <Badge key={tag} variant="outline">{tag}</Badge>
+                          ))}
+                          {client.tags.length > 2 && (
+                            <Badge variant="outline">+{client.tags.length - 2}</Badge>
+                          )}
+                        </div>
+                      )}
+                      <span className="text-sm text-muted-foreground hidden sm:block">
+                        Added {formatDate(client.createdAt)}
+                      </span>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </Link>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

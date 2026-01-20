@@ -2,131 +2,173 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Client } from "@/lib/models";
-import { formatDbError } from "@/lib/db/health";
-import { useRepo } from "@/lib/repo";
-
-const emptyClient: Client = {
-  id: "",
-  firstName: "",
-  lastName: "",
-  pronouns: "",
-  phone: "",
-  email: "",
-  notes: "",
-  createdAt: "",
-  updatedAt: "",
-};
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft } from "lucide-react";
 
 export default function NewClientPage() {
   const router = useRouter();
-  const repo = useRepo();
-  const [form, setForm] = useState<Client>(emptyClient);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (field: keyof Client, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!form.firstName.trim()) return;
+    const formData = new FormData(e.currentTarget);
 
     try {
-      const saved = await repo.upsertClient(form);
-      router.push(`/app/clients/${saved.id}`);
-    } catch (err) {
-      const message = formatDbError(err);
-      setError(message);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.get("firstName"),
+          lastName: formData.get("lastName") || undefined,
+          pronouns: formData.get("pronouns") || undefined,
+          email: formData.get("email") || undefined,
+          phone: formData.get("phone") || undefined,
+          notes: formData.get("notes") || undefined,
+          tags: formData.get("tags")
+            ? String(formData.get("tags")).split(",").map((t) => t.trim()).filter(Boolean)
+            : [],
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to create client");
       }
+
+      const client = await res.json();
+      router.push(`/app/clients/${client.id}`);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">New client</h2>
-        <p className="text-muted-foreground">Add a client profile to local storage.</p>
-      </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <header className="space-y-4">
+        <Link
+          href="/app/clients"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Clients
+        </Link>
+        <div>
+          <h2 className="text-3xl font-semibold">New Client</h2>
+          <p className="text-muted-foreground">
+            Add a new client to your studio.
+          </p>
+        </div>
+      </header>
 
-      <form
-        className="rounded-2xl border border-border bg-card/70 p-6"
-        onSubmit={handleSubmit}
-      >
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm text-foreground">
-            First name
-            <input
-              value={form.firstName}
-              onChange={(event) => handleChange("firstName", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              required
-            />
-          </label>
-          <label className="block text-sm text-foreground">
-            Last name
-            <input
-              value={form.lastName}
-              onChange={(event) => handleChange("lastName", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="block text-sm text-foreground">
-            Pronouns
-            <input
-              value={form.pronouns}
-              onChange={(event) => handleChange("pronouns", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="block text-sm text-foreground">
-            Phone
-            <input
-              value={form.phone}
-              onChange={(event) => handleChange("phone", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="block text-sm text-foreground">
-            Email
-            <input
-              value={form.email}
-              onChange={(event) => handleChange("email", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
-          </label>
-        </div>
-        <label className="mt-4 block text-sm text-foreground">
-          Notes
-          <textarea
-            value={form.notes}
-            onChange={(event) => handleChange("notes", event.target.value)}
-            className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            rows={4}
-          />
-        </label>
-        <div className="mt-6 flex flex-wrap justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => router.push("/app/clients")}
-            className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent"
-            title="Save client"
-          >
-            Save client
-          </button>
-        </div>
-        {error ? (
-          <p className="mt-3 text-sm text-rose-600 dark:text-rose-300">{error}</p>
-        ) : null}
-      </form>
+      {/* Form */}
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle>Client Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">
+                {error}
+              </div>
+            )}
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="firstName">First Name *</Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  required
+                  placeholder="Jane"
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  placeholder="Doe"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="pronouns">Pronouns</Label>
+              <Input
+                id="pronouns"
+                name="pronouns"
+                placeholder="she/her"
+              />
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="jane@example.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="tags">Tags</Label>
+              <Input
+                id="tags"
+                name="tags"
+                placeholder="model, color, blonde (comma separated)"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Separate tags with commas
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                placeholder="Hair history, goals, allergies, sensitivities..."
+                rows={4}
+              />
+            </div>
+
+            <div className="flex items-center gap-3 pt-4">
+              <Button type="submit" disabled={loading}>
+                {loading ? "Creating..." : "Create Client"}
+              </Button>
+              <Link href="/app/clients">
+                <Button type="button" variant="ghost">Cancel</Button>
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,235 +1,99 @@
-"use client";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-import { useState } from "react";
-import { flags } from "@/lib/flags";
-import type { OpelleBackupV1 } from "@/lib/models";
-import { useRepo } from "@/lib/repo";
+export default async function SettingsPage() {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-export default function SettingsPage() {
-  const supabaseUrlSet = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
-  const supabaseKeySet = Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  const repo = useRepo();
-  const [backupPreview, setBackupPreview] = useState<OpelleBackupV1 | null>(
-    null
-  );
-  const [importMode, setImportMode] = useState<"replace" | "merge">("replace");
-  const [importStatus, setImportStatus] = useState<string | null>(null);
-  const [resetConfirm, setResetConfirm] = useState("");
-
-  const handleExport = async () => {
-    const backup = await repo.exportBackup();
-    const date = new Date().toISOString().slice(0, 10);
-    const filename = `opelle-backup-v1-${date}.json`;
-    const blob = new Blob([JSON.stringify(backup, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleImportFile = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      setBackupPreview(null);
-      setImportStatus(null);
-      return;
-    }
-    try {
-      const text = await file.text();
-      const parsed = JSON.parse(text) as unknown;
-      if (
-        typeof parsed === "object" &&
-        parsed !== null &&
-        "version" in parsed &&
-        (parsed as { version?: number }).version === 1
-      ) {
-        setBackupPreview(parsed as OpelleBackupV1);
-        setImportStatus(null);
-      } else {
-        setBackupPreview(null);
-        setImportStatus("Invalid backup format.");
-      }
-    } catch {
-      setBackupPreview(null);
-      setImportStatus("Unable to read backup file.");
-    }
-  };
-
-  const handleImport = async () => {
-    if (!backupPreview) return;
-    const result = await repo.importBackup(backupPreview, {
-      merge: importMode === "merge",
-    });
-    setImportStatus(result.ok ? "Import complete." : result.error);
-  };
-
-  const handleReset = () => {
-    if (resetConfirm !== "RESET") return;
-    repo.resetAll();
-    setBackupPreview(null);
-    setImportStatus("Local data cleared.");
-    setResetConfirm("");
-  };
+  const { data: workspace } = await supabase
+    .from("workspaces")
+    .select("*")
+    .eq("owner_id", user?.id)
+    .single();
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">Settings</h2>
+    <div className="space-y-8">
+      {/* Header */}
+      <header className="space-y-2">
+        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+          Account
+        </p>
+        <h2 className="text-3xl font-semibold">Settings</h2>
         <p className="text-muted-foreground">
-          Feature flags and environment status for this local shell.
+          Manage your account and preferences.
         </p>
-      </div>
+      </header>
 
-      <section className="rounded-2xl border border-border bg-card/70 p-6">
-        <h3 className="text-lg font-semibold">Feature flags</h3>
-        <dl className="mt-4 grid gap-4 md:grid-cols-3">
-          <div className="rounded-xl border border-border bg-card/70 p-4">
-            <dt className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-              Embedded AI
-            </dt>
-            <dd className="mt-2 text-sm text-foreground">
-              {flags.EMBEDDED_AI_ENABLED ? "Enabled" : "Disabled"}
-            </dd>
-          </div>
-          <div className="rounded-xl border border-border bg-card/70 p-4">
-            <dt className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-              Metis Assist
-            </dt>
-            <dd className="mt-2 text-sm text-foreground">
-              {flags.METIS_ASSIST_ENABLED ? "Enabled" : "Disabled"}
-            </dd>
-          </div>
-          <div className="rounded-xl border border-border bg-card/70 p-4">
-            <dt className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-              Client Portal
-            </dt>
-            <dd className="mt-2 text-sm text-foreground">
-              {flags.CLIENT_PORTAL_ENABLED ? "Enabled" : "Disabled"}
-            </dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card/70 p-6">
-        <h3 className="text-lg font-semibold">Environment status</h3>
-        <div className="mt-4 space-y-2 text-sm text-foreground">
-          <p>
-            NEXT_PUBLIC_SUPABASE_URL: {supabaseUrlSet ? "set" : "missing"}
-          </p>
-          <p>
-            NEXT_PUBLIC_SUPABASE_ANON_KEY: {supabaseKeySet ? "set" : "missing"}
-          </p>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card/70 p-6">
-        <h3 className="text-lg font-semibold">Backup & Restore</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Export or import your local data as JSON.
-        </p>
-
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-xl border border-border bg-card/70 p-4">
-            <h4 className="text-sm font-semibold text-foreground">Export</h4>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Download a JSON backup of clients, appointments, and formulas.
-            </p>
-            <button
-              type="button"
-              onClick={handleExport}
-              className="mt-3 rounded-full bg-emerald-400 px-4 py-2 text-xs font-semibold op-on-accent"
-            >
-              Export backup
-            </button>
-          </div>
-
-          <div className="rounded-xl border border-border bg-card/70 p-4">
-            <h4 className="text-sm font-semibold text-foreground">Import</h4>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Choose a JSON file to restore or merge data.
-            </p>
-            <input
-              type="file"
-              accept="application/json"
-              onChange={handleImportFile}
-              className="mt-3 block w-full text-xs text-foreground file:mr-4 file:rounded-full file:border-0 file:bg-muted file:px-3 file:py-2 file:text-xs file:text-foreground"
-            />
-            {backupPreview ? (
-              <div className="mt-3 rounded-lg border border-border bg-card/80 p-3 text-xs text-muted-foreground">
-                <p>Clients: {backupPreview.clients.length}</p>
-                <p>Appointments: {backupPreview.appointments.length}</p>
-                <p>Formulas: {backupPreview.formulas.length}</p>
-              </div>
-            ) : null}
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-foreground">
-              <button
-                type="button"
-                onClick={() => setImportMode("replace")}
-                className={`rounded-full px-3 py-1 ${
-                  importMode === "replace"
-                    ? "bg-muted text-foreground"
-                    : "border border-border"
-                }`}
-              >
-                Replace
-              </button>
-              <button
-                type="button"
-                onClick={() => setImportMode("merge")}
-                className={`rounded-full px-3 py-1 ${
-                  importMode === "merge"
-                    ? "bg-muted text-foreground"
-                    : "border border-border"
-                }`}
-              >
-                Merge
-              </button>
+      {/* Profile */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile</CardTitle>
+          <CardDescription>Your account information</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-2xl font-medium text-black">
+              {user?.email?.[0]?.toUpperCase() || "?"}
             </div>
-            <button
-              type="button"
-              onClick={handleImport}
-              disabled={!backupPreview}
-              className="mt-3 rounded-full border border-border px-4 py-2 text-xs text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Import backup
-            </button>
-            {importStatus ? (
-              <p className="mt-2 text-xs text-muted-foreground">{importStatus}</p>
-            ) : null}
+            <div>
+              <p className="font-medium text-lg">
+                {user?.user_metadata?.full_name || user?.email?.split("@")[0]}
+              </p>
+              <p className="text-muted-foreground">{user?.email}</p>
+            </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="mt-4 rounded-xl border border-rose-400/40 bg-rose-100/70 p-4 dark:border-rose-500/40 dark:bg-rose-500/10">
-          <h4 className="text-sm font-semibold text-rose-700 dark:text-rose-100">
-            Reset local data
-          </h4>
-          <p className="mt-1 text-xs text-rose-600 dark:text-rose-300">
-            This clears all saved clients, appointments, and formulas.
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <input
-              value={resetConfirm}
-              onChange={(event) => setResetConfirm(event.target.value)}
-              placeholder="Type RESET to confirm"
-              className="rounded-lg border border-rose-300/60 bg-rose-100/80 px-3 py-2 text-xs text-rose-700 dark:border-rose-400/40 dark:bg-rose-950/30 dark:text-rose-100"
-            />
-            <button
-              type="button"
-              onClick={handleReset}
-              disabled={resetConfirm !== "RESET"}
-              className="rounded-full border border-rose-300/60 px-4 py-2 text-xs text-rose-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-rose-100"
-            >
-              Reset all
-            </button>
+      {/* Workspace */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Workspace</CardTitle>
+          <CardDescription>Your studio settings</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Workspace Name</p>
+            <p className="text-lg">{workspace?.name || "My Studio"}</p>
           </div>
-        </div>
-      </section>
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Workspace ID</p>
+            <p className="text-sm font-mono text-muted-foreground">{workspace?.id}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Data Export Placeholder */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Data Export</CardTitle>
+          <CardDescription>Export your data for backup or transfer</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-xl border border-dashed border-white/20 p-8 text-center">
+            <p className="text-muted-foreground mb-2">Coming Soon</p>
+            <p className="text-sm text-muted-foreground">
+              Export your clients, appointments, and formulas to CSV or JSON.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="border-red-500/20">
+        <CardHeader>
+          <CardTitle className="text-red-400">Danger Zone</CardTitle>
+          <CardDescription>Irreversible actions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-xl border border-dashed border-red-500/20 p-8 text-center">
+            <p className="text-muted-foreground mb-2">Account Deletion</p>
+            <p className="text-sm text-muted-foreground">
+              Contact support to delete your account and all associated data.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

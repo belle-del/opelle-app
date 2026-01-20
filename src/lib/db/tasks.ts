@@ -1,102 +1,89 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Formula, FormulaRow, FormulaServiceType, FormulaStep } from "@/lib/types";
-import { formulaRowToModel } from "@/lib/types";
+import type { Task, TaskRow, TaskStatus } from "@/lib/types";
+import { taskRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
 
-export async function listFormulas(): Promise<Formula[]> {
+export async function listTasks(): Promise<Task[]> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return [];
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
-    .from("formulas")
+    .from("tasks")
     .select("*")
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
-  return (data as FormulaRow[]).map(formulaRowToModel);
+  return (data as TaskRow[]).map(taskRowToModel);
 }
 
-export async function getFormula(id: string): Promise<Formula | null> {
+export async function getTask(id: string): Promise<Task | null> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
-    .from("formulas")
+    .from("tasks")
     .select("*")
     .eq("id", id)
     .eq("workspace_id", workspace.id)
     .single();
 
   if (error || !data) return null;
-  return formulaRowToModel(data as FormulaRow);
+  return taskRowToModel(data as TaskRow);
 }
 
-export async function getFormulasForClient(clientId: string): Promise<Formula[]> {
+export async function getPendingTasks(): Promise<Task[]> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return [];
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
-    .from("formulas")
+    .from("tasks")
     .select("*")
     .eq("workspace_id", workspace.id)
-    .eq("client_id", clientId)
-    .order("created_at", { ascending: false });
+    .neq("status", "completed")
+    .order("due_at", { ascending: true, nullsFirst: false });
 
   if (error || !data) return [];
-  return (data as FormulaRow[]).map(formulaRowToModel);
+  return (data as TaskRow[]).map(taskRowToModel);
 }
 
-export async function createFormula(input: {
+export async function createTask(input: {
   title: string;
-  serviceType: FormulaServiceType;
-  colorLine?: string;
-  steps?: FormulaStep[];
   notes?: string;
-  tags?: string[];
-  clientId?: string;
-  appointmentId?: string;
-}): Promise<Formula | null> {
+  dueAt?: string;
+}): Promise<Task | null> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
-    .from("formulas")
+    .from("tasks")
     .insert({
       workspace_id: workspace.id,
       title: input.title,
-      service_type: input.serviceType,
-      color_line: input.colorLine || null,
-      steps: input.steps || [],
       notes: input.notes || null,
-      tags: input.tags || [],
-      client_id: input.clientId || null,
-      appointment_id: input.appointmentId || null,
+      due_at: input.dueAt || null,
+      status: "pending",
     })
     .select("*")
     .single();
 
   if (error || !data) return null;
-  return formulaRowToModel(data as FormulaRow);
+  return taskRowToModel(data as TaskRow);
 }
 
-export async function updateFormula(
+export async function updateTask(
   id: string,
   input: {
     title?: string;
-    serviceType?: FormulaServiceType;
-    colorLine?: string;
-    steps?: FormulaStep[];
     notes?: string;
-    tags?: string[];
-    clientId?: string;
-    appointmentId?: string;
+    dueAt?: string;
+    status?: TaskStatus;
   }
-): Promise<Formula | null> {
+): Promise<Task | null> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
 
@@ -104,16 +91,12 @@ export async function updateFormula(
 
   const updateData: Record<string, unknown> = {};
   if (input.title !== undefined) updateData.title = input.title;
-  if (input.serviceType !== undefined) updateData.service_type = input.serviceType;
-  if (input.colorLine !== undefined) updateData.color_line = input.colorLine || null;
-  if (input.steps !== undefined) updateData.steps = input.steps;
   if (input.notes !== undefined) updateData.notes = input.notes || null;
-  if (input.tags !== undefined) updateData.tags = input.tags;
-  if (input.clientId !== undefined) updateData.client_id = input.clientId || null;
-  if (input.appointmentId !== undefined) updateData.appointment_id = input.appointmentId || null;
+  if (input.dueAt !== undefined) updateData.due_at = input.dueAt || null;
+  if (input.status !== undefined) updateData.status = input.status;
 
   const { data, error } = await supabase
-    .from("formulas")
+    .from("tasks")
     .update(updateData)
     .eq("id", id)
     .eq("workspace_id", workspace.id)
@@ -121,16 +104,16 @@ export async function updateFormula(
     .single();
 
   if (error || !data) return null;
-  return formulaRowToModel(data as FormulaRow);
+  return taskRowToModel(data as TaskRow);
 }
 
-export async function deleteFormula(id: string): Promise<boolean> {
+export async function deleteTask(id: string): Promise<boolean> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return false;
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase
-    .from("formulas")
+    .from("tasks")
     .delete()
     .eq("id", id)
     .eq("workspace_id", workspace.id);

@@ -1,32 +1,25 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { DataHealthProvider } from "@/components/DataHealthProvider";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import AppBackdrop from "@/components/ui/AppBackdrop";
-import ThemeMarker from "@/components/ui/ThemeMarker";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Opelle",
-  description: "Opelle shell",
+  title: "Opelle - Student Stylist OS",
+  description: "The operating system for student stylists. Track clients, appointments, formulas, and education in one place.",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-[var(--bg)] text-[var(--fg)] antialiased">
-        <ThemeProvider>
-          <DataHealthProvider>
-            <div className="relative min-h-screen">
-              <AppBackdrop />
-              {children}
-              <ThemeMarker />
-            </div>
-          </DataHealthProvider>
-        </ThemeProvider>
+    <html lang="en" className="dark">
+      <body className={inter.className}>
+        <div className="gradient-mesh" />
+        <div className="pattern-overlay" />
+        {children}
       </body>
     </html>
   );

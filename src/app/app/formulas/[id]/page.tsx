@@ -1,482 +1,189 @@
-"use client";
-
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import type {
-  Appointment,
-  Client,
-  Formula,
-  FormulaServiceType,
-  FormulaStep,
-} from "@/lib/models";
-import { getClientDisplayName } from "@/lib/models";
-import { formatDbError } from "@/lib/db/health";
-import { useRepo } from "@/lib/repo";
+import { notFound } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { getFormula } from "@/lib/db/formulas";
+import { getClient } from "@/lib/db/clients";
+import { getClientDisplayName } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
+import { ArrowLeft, Edit, User, Beaker } from "lucide-react";
+import { FormulaActions } from "./_components/FormulaActions";
 
-const serviceTypes: FormulaServiceType[] = [
-  "color",
-  "lighten",
-  "tone",
-  "gloss",
-  "other",
-];
+interface FormulaDetailPageProps {
+  params: Promise<{ id: string }>;
+}
 
-const buildStep = (): FormulaStep => ({
-  stepName: "",
-  product: "",
-  developer: "",
-  ratio: "",
-  grams: undefined,
-  processingMin: undefined,
-  notes: "",
-});
-
-export default function FormulaDetailPage() {
-  const params = useParams<{ id: string }>();
-  const router = useRouter();
-  const [formula, setFormula] = useState<Formula | null>(null);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [dbError, setDbError] = useState<string | null>(null);
-  const repo = useRepo();
-  const canWrite = !dbError;
-
-  useEffect(() => {
-    if (!params?.id) return;
-    let active = true;
-    const load = async () => {
-      try {
-        if (active) {
-          const [formulaData, clientsData, appointmentsData] =
-            await Promise.all([
-              repo.getFormulaById(params.id),
-              repo.getClients(),
-              repo.getAppointments(),
-            ]);
-          setFormula(formulaData);
-          setClients(clientsData);
-          setAppointments(appointmentsData);
-        }
-      } catch (error) {
-        const message = formatDbError(error);
-        setDbError(message);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
-        }
-        const [formulaData, clientsData, appointmentsData] =
-          await Promise.all([
-            repo.getFormulaById(params.id),
-            repo.getClients(),
-            repo.getAppointments(),
-          ]);
-        setFormula(formulaData);
-        setClients(clientsData);
-        setAppointments(appointmentsData);
-      }
-    };
-    load();
-    return () => {
-      active = false;
-    };
-  }, [params?.id, repo]);
-
-  const client = useMemo(() => {
-    if (!formula) return null;
-    return clients.find((item) => item.id === formula.clientId) ?? null;
-  }, [formula, clients]);
-
-  const appointment = useMemo(() => {
-    if (!formula?.appointmentId) return undefined;
-    return appointments.find((appt) => appt.id === formula.appointmentId);
-  }, [appointments, formula]);
+export default async function FormulaDetailPage({ params }: FormulaDetailPageProps) {
+  const { id } = await params;
+  const formula = await getFormula(id);
 
   if (!formula) {
-    return (
-      <div className="space-y-3">
-        <h2 className="text-2xl font-semibold">Formula not found</h2>
-        <Link href="/app/formulas" className="text-sm text-emerald-600 dark:text-emerald-200">
-          Back to formulas
-        </Link>
-      </div>
-    );
+    notFound();
   }
 
-  const handleChange = (
-    field: keyof Formula,
-    value: string | FormulaServiceType
-  ) => {
-    setFormula((prev) => (prev ? { ...prev, [field]: value } : prev));
-  };
+  const client = formula.clientId ? await getClient(formula.clientId) : null;
 
-  const handleStepChange = (
-    index: number,
-    field: keyof FormulaStep,
-    value: string | number | undefined
-  ) => {
-    setFormula((prev) => {
-      if (!prev) return prev;
-      const steps = prev.steps.slice();
-      steps[index] = { ...steps[index], [field]: value };
-      return { ...prev, steps };
-    });
-  };
-
-  const handleAddStep = () => {
-    setFormula((prev) => (prev ? { ...prev, steps: [...prev.steps, buildStep()] } : prev));
-  };
-
-  const handleRemoveStep = (index: number) => {
-    setFormula((prev) => {
-      if (!prev) return prev;
-      return { ...prev, steps: prev.steps.filter((_, idx) => idx !== index) };
-    });
-  };
-
-  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!formula.clientId || !formula.title.trim()) return;
-
-    if (!canWrite) return;
-    try {
-      const saved = await repo.upsertFormula(formula);
-      setFormula(saved);
-      setIsEditing(false);
-    } catch (error) {
-      const message = formatDbError(error);
-      setDbError(message);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
-      }
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!confirm("Delete this formula?")) return;
-    if (!canWrite) return;
-    try {
-      await repo.deleteFormula(formula.id);
-      router.push("/app/formulas");
-    } catch (error) {
-      const message = formatDbError(error);
-      setDbError(message);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
-      }
-    }
+  const serviceTypeLabels: Record<string, string> = {
+    color: "Color",
+    lighten: "Lightener",
+    tone: "Toner",
+    gloss: "Gloss",
+    other: "Other",
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-semibold">{formula.title}</h2>
-          <p className="text-muted-foreground">Formula stored locally.</p>
+    <div className="space-y-8">
+      {/* Header */}
+      <header className="space-y-4">
+        <Link
+          href="/app/formulas"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Formulas
+        </Link>
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-3xl font-semibold">{formula.title}</h2>
+              <Badge variant="outline">
+                {serviceTypeLabels[formula.serviceType] || formula.serviceType}
+              </Badge>
+            </div>
+            {formula.colorLine && (
+              <p className="text-muted-foreground">{formula.colorLine}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href={`/app/formulas/${formula.id}/edit`}>
+              <Button variant="secondary">
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+            </Link>
+            <FormulaActions formula={formula} />
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/app/formulas"
-            className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
-          >
-            Back to formulas
-          </Link>
-          <button
-            type="button"
-            onClick={() => setIsEditing((prev) => !prev)}
-            className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-200"
-          >
-            {isEditing ? "Cancel edit" : "Edit"}
-          </button>
-        </div>
+      </header>
+
+      {/* Info Grid */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Client */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Client
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {client ? (
+              <Link
+                href={`/app/clients/${client.id}`}
+                className="block rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-black font-medium">
+                    {client.firstName[0]}{client.lastName?.[0] || ""}
+                  </div>
+                  <div>
+                    <p className="font-medium">{getClientDisplayName(client)}</p>
+                    <p className="text-sm text-muted-foreground">View profile</p>
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <p className="text-sm text-muted-foreground">No client linked</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Beaker className="w-5 h-5" />
+              Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Created</p>
+              <p>{formatDate(formula.createdAt)}</p>
+            </div>
+            {formula.tags.length > 0 && (
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Tags</p>
+                <div className="flex flex-wrap gap-2">
+                  {formula.tags.map((tag) => (
+                    <Badge key={tag} variant="outline">{tag}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {isEditing ? (
-        <form
-          className="rounded-2xl border border-border bg-card/70 p-6"
-          onSubmit={handleSave}
-        >
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="block text-sm text-foreground">
-              Client
-              <select
-                value={formula.clientId}
-                onChange={(event) => handleChange("clientId", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                required
-              >
-                <option value="">Select client</option>
-                {clients.map((clientOption) => (
-                  <option key={clientOption.id} value={clientOption.id}>
-                    {getClientDisplayName(clientOption)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm text-foreground">
-              Service type
-              <select
-                value={formula.serviceType}
-                onChange={(event) =>
-                  handleChange("serviceType", event.target.value as FormulaServiceType)
-                }
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              >
-                {serviceTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm text-foreground">
-              Title
-              <input
-                value={formula.title}
-                onChange={(event) => handleChange("title", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                required
-              />
-            </label>
-            <label className="block text-sm text-foreground">
-              Color line
-              <input
-                value={formula.colorLine ?? ""}
-                onChange={(event) => handleChange("colorLine", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              />
-            </label>
-            <label className="block text-sm text-foreground">
-              Link to appointment
-              <select
-                value={formula.appointmentId ?? ""}
-                onChange={(event) => handleChange("appointmentId", event.target.value)}
-                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              >
-                <option value="">No appointment</option>
-                {appointments
-                  .filter((appt) => appt.clientId === formula.clientId)
-                  .map((appt) => (
-                    <option key={appt.id} value={appt.id}>
-                      {new Date(appt.startAt).toLocaleDateString()} • {appt.serviceName}
-                    </option>
-                  ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="mt-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Steps</h3>
-              <button
-                type="button"
-                onClick={handleAddStep}
-                className="rounded-full border border-border px-3 py-1 text-xs text-foreground"
-              >
-                Add step
-              </button>
+      {/* Steps */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Formula Steps</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {formula.steps.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/20 p-8 text-center">
+              <p className="text-muted-foreground mb-2">No steps added yet</p>
+              <p className="text-sm text-muted-foreground">
+                Edit this formula to add mixing steps, ratios, and processing times.
+              </p>
             </div>
-
-            {formula.steps.map((step, index) => (
-              <div
-                key={`step-${index}`}
-                className="rounded-xl border border-border bg-card/70 p-4"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-foreground">
-                    Step {index + 1}
-                  </p>
-                  {formula.steps.length > 1 ? (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveStep(index)}
-                      className="text-xs text-rose-600 dark:text-rose-300"
-                    >
-                      Remove
-                    </button>
-                  ) : null}
-                </div>
-                <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  <label className="block text-sm text-foreground">
-                    Step name
-                    <input
-                      value={step.stepName}
-                      onChange={(event) =>
-                        handleStepChange(index, "stepName", event.target.value)
-                      }
-                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="block text-sm text-foreground">
-                    Product
-                    <input
-                      value={step.product}
-                      onChange={(event) =>
-                        handleStepChange(index, "product", event.target.value)
-                      }
-                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                      required
-                    />
-                  </label>
-                  <label className="block text-sm text-foreground">
-                    Developer
-                    <input
-                      value={step.developer ?? ""}
-                      onChange={(event) =>
-                        handleStepChange(index, "developer", event.target.value)
-                      }
-                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="block text-sm text-foreground">
-                    Ratio
-                    <input
-                      value={step.ratio ?? ""}
-                      onChange={(event) =>
-                        handleStepChange(index, "ratio", event.target.value)
-                      }
-                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="block text-sm text-foreground">
-                    Grams
-                    <input
-                      type="number"
-                      min={0}
-                      value={step.grams ?? ""}
-                      onChange={(event) =>
-                        handleStepChange(
-                          index,
-                          "grams",
-                          event.target.value ? Number(event.target.value) : undefined
-                        )
-                      }
-                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
-                  <label className="block text-sm text-foreground">
-                    Processing (min)
-                    <input
-                      type="number"
-                      min={0}
-                      value={step.processingMin ?? ""}
-                      onChange={(event) =>
-                        handleStepChange(
-                          index,
-                          "processingMin",
-                          event.target.value ? Number(event.target.value) : undefined
-                        )
-                      }
-                      className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </label>
-                </div>
-                <label className="mt-3 block text-sm text-foreground">
-                  Notes
-                  <textarea
-                    value={step.notes ?? ""}
-                    onChange={(event) =>
-                      handleStepChange(index, "notes", event.target.value)
-                    }
-                    className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                    rows={2}
-                  />
-                </label>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 flex flex-wrap justify-between gap-3">
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="rounded-full border border-rose-500/60 px-4 py-2 text-sm text-rose-600 dark:text-rose-300"
-              disabled={!canWrite}
-              title={canWrite ? "Delete formula" : "Connect DB to enable deletes"}
-            >
-              Delete formula
-            </button>
-            <button
-              type="submit"
-              className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent"
-              disabled={!canWrite}
-              title={canWrite ? "Save changes" : "Connect DB to enable saves"}
-            >
-              Save changes
-            </button>
-          </div>
-        </form>
-      ) : (
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-border bg-card/70 p-6 text-sm text-foreground">
-            <div className="grid gap-3 md:grid-cols-2">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                  Client
-                </p>
-                <p className="mt-2">
-                  {client ? getClientDisplayName(client) : "Unknown client"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                  Service type
-                </p>
-                <p className="mt-2 capitalize">{formula.serviceType}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                  Color line
-                </p>
-                <p className="mt-2">{formula.colorLine || "Not set"}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                  Appointment
-                </p>
-                <p className="mt-2">
-                  {appointment
-                    ? new Date(appointment.startAt).toLocaleDateString()
-                    : "Not linked"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {formula.steps.map((step, index) => (
-              <div
-                key={`recipe-${index}`}
-                className="rounded-2xl border border-border bg-card/70 p-5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-lg font-semibold text-foreground">
-                      {step.stepName || `Step ${index + 1}`}
-                    </p>
-                    <p className="text-sm text-muted-foreground">{step.product}</p>
-                  </div>
-                  <div className="text-right text-xs text-muted-foreground">
-                    {step.processingMin ? (
-                      <p>{step.processingMin} min</p>
-                    ) : null}
-                    {step.grams ? <p>{step.grams} g</p> : null}
+          ) : (
+            <div className="space-y-4">
+              {formula.steps.map((step, index) => (
+                <div
+                  key={index}
+                  className="rounded-xl border border-white/10 bg-white/5 p-4"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-sm font-medium text-emerald-400">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{step.stepName}</p>
+                      <p className="text-sm text-muted-foreground">{step.product}</p>
+                      <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
+                        {step.developer && <span>Developer: {step.developer}</span>}
+                        {step.ratio && <span>Ratio: {step.ratio}</span>}
+                        {step.grams && <span>{step.grams}g</span>}
+                        {step.processingMins && <span>{step.processingMins} min</span>}
+                      </div>
+                      {step.notes && (
+                        <p className="text-sm mt-2">{step.notes}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
-                  {step.developer ? <p>Developer: {step.developer}</p> : null}
-                  {step.ratio ? <p>Ratio: {step.ratio}</p> : null}
-                </div>
-                {step.notes ? (
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    Notes: {step.notes}
-                  </p>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Notes */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Notes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {formula.notes ? (
+            <p className="whitespace-pre-wrap">{formula.notes}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">No notes</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

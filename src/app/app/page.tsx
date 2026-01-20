@@ -1,245 +1,198 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import EmbeddedAiDemo from "./embedded-ai-demo";
-import { flags } from "@/lib/flags";
-import type { Appointment, Client, Formula } from "@/lib/models";
-import { getClientDisplayName } from "@/lib/models";
-import { useRepo } from "@/lib/repo";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { listClients } from "@/lib/db/clients";
+import { getUpcomingAppointments, listAppointments } from "@/lib/db/appointments";
+import { listFormulas } from "@/lib/db/formulas";
+import { getPendingTasks } from "@/lib/db/tasks";
+import { getClientDisplayName } from "@/lib/types";
+import { formatDateTime, isToday } from "@/lib/utils";
+import { Plus, Users, Calendar, FlaskConical, GraduationCap } from "lucide-react";
 
-export default function AppDashboardPage() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [formulas, setFormulas] = useState<Formula[]>([]);
-  const repo = useRepo();
+export default async function DashboardPage() {
+  const [clients, upcomingAppointments, allAppointments, formulas, tasks] = await Promise.all([
+    listClients(),
+    getUpcomingAppointments(5),
+    listAppointments(),
+    listFormulas(),
+    getPendingTasks(),
+  ]);
 
-  useEffect(() => {
-    let active = true;
-    const load = async () => {
-      const [clientsData, appointmentsData, formulasData] = await Promise.all([
-        repo.getClients(),
-        repo.getAppointments(),
-        repo.getFormulas(),
-      ]);
-      if (!active) return;
-      setClients(clientsData);
-      setAppointments(appointmentsData);
-      setFormulas(formulasData);
-    };
-    load();
-    return () => {
-      active = false;
-    };
-  }, [repo]);
+  // Create client map for lookups
+  const clientMap = new Map(clients.map((c) => [c.id, c]));
 
-  const educationModulesCount = 6;
+  // Count appointments this week
   const now = new Date();
-  const nowIso = now.toISOString();
   const weekEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const weekEndIso = weekEnd.toISOString();
-
-  const clientMap = useMemo(() => {
-    return new Map(clients.map((client) => [client.id, client]));
-  }, [clients]);
-
-  const upcomingAppointments = useMemo(() => {
-    return appointments
-      .filter(
-        (appointment) =>
-          appointment.startAt >= nowIso && appointment.status !== "cancelled"
-      )
-      .sort((a, b) => a.startAt.localeCompare(b.startAt))
-      .slice(0, 5);
-  }, [appointments, nowIso]);
-
-  const weekAppointments = useMemo(() => {
-    return appointments.filter(
-      (appointment) =>
-        appointment.startAt >= nowIso && appointment.startAt <= weekEndIso
-    );
-  }, [appointments, nowIso, weekEndIso]);
-
-  const recentActivity = useMemo(() => {
-    const activity = [
-      ...clients.map((client) => ({
-        id: client.id,
-        label: `Client • ${getClientDisplayName(client)}`,
-        date: client.updatedAt,
-        href: `/app/clients/${client.id}`,
-      })),
-      ...appointments.map((appointment) => ({
-        id: appointment.id,
-        label: `Appointment • ${appointment.serviceName}`,
-        date: appointment.updatedAt,
-        href: `/app/appointments/${appointment.id}`,
-      })),
-      ...formulas.map((formula) => ({
-        id: formula.id,
-        label: `Formula • ${formula.title}`,
-        date: formula.updatedAt,
-        href: `/app/formulas/${formula.id}`,
-      })),
-    ];
-    return activity
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 6);
-  }, [appointments, clients, formulas]);
+  const thisWeekAppointments = allAppointments.filter((a) => {
+    const date = new Date(a.startAt);
+    return date >= now && date <= weekEnd && a.status === "scheduled";
+  });
 
   return (
     <div className="space-y-8">
-      <header className="space-y-3">
+      {/* Header */}
+      <header className="space-y-2">
         <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
           Student Console
         </p>
-        <h2 className="text-3xl font-semibold">Command Center</h2>
+        <h2 className="text-3xl font-semibold">Dashboard</h2>
         <p className="text-muted-foreground">
-          Track client activity, upcoming appointments, and formulas at a
-          glance.
+          Your command center for clients, appointments, and education.
         </p>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-4">
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-4">
         {[
-          { label: "Clients", value: clients.length },
-          { label: "Appointments (upcoming)", value: upcomingAppointments.length },
-          { label: "Formulas", value: formulas.length },
-          { label: "Education modules", value: educationModulesCount },
-        ].map((card) => (
-          <div
-            key={card.label}
-            className="rounded-2xl border border-border bg-card/70 p-5"
-          >
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-              {card.label}
-            </p>
-            <p className="mt-3 text-2xl font-semibold text-foreground">
-              {card.value}
-            </p>
-          </div>
-        ))}
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card/70 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-semibold">Quick actions</h3>
-            <p className="text-sm text-muted-foreground">
-              Create new records in a single click.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/app/clients/new"
-              className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
-            >
-              New Client
-            </Link>
-            <Link
-              href="/app/appointments/new"
-              className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
-            >
-              New Appointment
-            </Link>
-            <Link
-              href="/app/formulas/new"
-              className="rounded-full border border-emerald-500/60 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-200"
-            >
-              New Formula
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card/70 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-semibold">Recent activity</h3>
-            <p className="text-sm text-muted-foreground">
-              The latest client, appointment, and formula updates.
-            </p>
-          </div>
-          <Link href="/app/clients" className="text-sm text-emerald-600 dark:text-emerald-200">
-            View clients
-          </Link>
-        </div>
-        <div className="mt-5 space-y-3">
-          {recentActivity.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card/60 p-4 text-sm text-muted-foreground">
-              No activity yet. Add your first client to start building history.
-            </div>
-          ) : (
-            recentActivity.map((item) => (
-              <Link
-                key={`${item.id}-${item.label}`}
-                href={item.href}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/70 px-4 py-3 text-sm"
-              >
-                <span className="font-semibold text-foreground">
-                  {item.label}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(item.date).toLocaleDateString()}
-                </span>
-              </Link>
-            ))
-          )}
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-border bg-card/70 p-6">
-        <div className="space-y-2">
-          <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
-            This Week
-          </p>
-          <h3 className="text-xl font-semibold">Upcoming schedule</h3>
-          <p className="text-muted-foreground">
-            {weekAppointments.length} appointment
-            {weekAppointments.length === 1 ? "" : "s"} scheduled in the next 7
-            days.
-          </p>
-        </div>
-        <div className="mt-6 space-y-3">
-          {upcomingAppointments.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card/60 p-4 text-sm text-muted-foreground">
-              No upcoming appointments yet. Schedule one to fill your calendar.
-            </div>
-          ) : (
-            upcomingAppointments.map((appointment) => {
-              const client = clientMap.get(appointment.clientId);
-              return (
-                <div
-                  key={appointment.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/70 p-4 text-sm"
-                >
+          { label: "Clients", value: clients.length, icon: Users, href: "/app/clients" },
+          { label: "Upcoming", value: upcomingAppointments.length, icon: Calendar, href: "/app/appointments" },
+          { label: "Formulas", value: formulas.length, icon: FlaskConical, href: "/app/formulas" },
+          { label: "Tasks", value: tasks.length, icon: GraduationCap, href: "/app/education" },
+        ].map((stat) => (
+          <Link key={stat.label} href={stat.href}>
+            <Card className="hover:bg-white/10 transition-colors cursor-pointer">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-foreground">
-                      {client ? getClientDisplayName(client) : "Unknown client"}
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                      {stat.label}
                     </p>
-                    <p className="text-muted-foreground">{appointment.serviceName}</p>
+                    <p className="mt-2 text-2xl font-semibold">{stat.value}</p>
                   </div>
-                  <div className="text-muted-foreground">
-                    {new Date(appointment.startAt).toLocaleString()}
-                  </div>
+                  <stat.icon className="w-8 h-8 text-muted-foreground/50" />
                 </div>
-              );
-            })
-          )}
-        </div>
-      </section>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
 
-      <section className="rounded-2xl border border-border bg-card/70 p-6">
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold">Local AI Sandbox</h3>
-          <p className="text-muted-foreground">
-            Run deterministic embedded AI tasks to verify client-side
-            integrations before wiring external providers.
-          </p>
-        </div>
-        <div className="mt-6">
-          <EmbeddedAiDemo enabled={flags.EMBEDDED_AI_ENABLED} />
-        </div>
-      </section>
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/app/clients/new">
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                New Client
+              </Button>
+            </Link>
+            <Link href="/app/appointments/new">
+              <Button variant="secondary">
+                <Plus className="w-4 h-4 mr-2" />
+                New Appointment
+              </Button>
+            </Link>
+            <Link href="/app/formulas/new">
+              <Button variant="secondary">
+                <Plus className="w-4 h-4 mr-2" />
+                New Formula
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Two Column Layout */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Upcoming Appointments */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Upcoming Appointments</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {thisWeekAppointments.length} scheduled this week
+              </p>
+            </div>
+            <Link href="/app/appointments">
+              <Button variant="ghost" size="sm">View all</Button>
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {upcomingAppointments.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No upcoming appointments
+              </p>
+            ) : (
+              upcomingAppointments.map((appointment) => {
+                const client = clientMap.get(appointment.clientId);
+                return (
+                  <Link
+                    key={appointment.id}
+                    href={`/app/appointments/${appointment.id}`}
+                    className="block rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">
+                          {client ? getClientDisplayName(client) : "Unknown"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {appointment.serviceName}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        {isToday(appointment.startAt) && (
+                          <Badge variant="success" className="mb-1">Today</Badge>
+                        )}
+                        <p className="text-sm text-muted-foreground">
+                          {formatDateTime(appointment.startAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Pending Tasks */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Education Tasks</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {tasks.length} pending
+              </p>
+            </div>
+            <Link href="/app/education">
+              <Button variant="ghost" size="sm">View all</Button>
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {tasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No pending tasks
+              </p>
+            ) : (
+              tasks.slice(0, 5).map((task) => (
+                <div
+                  key={task.id}
+                  className="rounded-xl border border-white/10 bg-white/5 p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium">{task.title}</p>
+                    <Badge variant={task.status === "in_progress" ? "warning" : "outline"}>
+                      {task.status === "in_progress" ? "In Progress" : "Pending"}
+                    </Badge>
+                  </div>
+                  {task.notes && (
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
+                      {task.notes}
+                    </p>
+                  )}
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

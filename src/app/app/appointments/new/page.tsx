@@ -1,223 +1,189 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import type { Appointment, AppointmentStatus, Client } from "@/lib/models";
-import { getClientDisplayName } from "@/lib/models";
-import { formatDbError } from "@/lib/db/health";
-import { useRepo } from "@/lib/repo";
-
-const buildEmptyAppointment = (): Appointment => ({
-  id: "",
-  clientId: "",
-  serviceName: "",
-  startAt: new Date().toISOString(),
-  durationMin: 60,
-  status: "scheduled",
-  notes: "",
-  createdAt: "",
-  updatedAt: "",
-});
-
-const toLocalInput = (iso: string) => {
-  const date = new Date(iso);
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-};
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { ArrowLeft } from "lucide-react";
+import type { Client } from "@/lib/types";
 
 export default function NewAppointmentPage() {
   const router = useRouter();
-  const [form, setForm] = useState<Appointment>(buildEmptyAppointment());
-  const [clients, setClients] = useState<Client[]>([]);
+  const searchParams = useSearchParams();
+  const preselectedClientId = searchParams.get("clientId");
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const repo = useRepo();
+  const [clients, setClients] = useState<Client[]>([]);
 
   useEffect(() => {
-    let active = true;
-    const load = async () => {
-      try {
-        if (active) {
-          setClients(await repo.getClients());
-        }
-      } catch (err) {
-        const message = formatDbError(err);
-        setError(message);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
-        }
-        setClients(await repo.getClients());
-      }
-    };
-    load();
-    return () => {
-      active = false;
-    };
-  }, [repo]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const clientId = params.get("clientId");
-    if (clientId) {
-      setForm((prev) => ({ ...prev, clientId }));
-    }
+    fetch("/api/clients")
+      .then((res) => res.json())
+      .then(setClients)
+      .catch(() => setError("Failed to load clients"));
   }, []);
 
-  useEffect(() => {
-    if (!form.clientId) return;
-    const exists = clients.some((client) => client.id === form.clientId);
-    if (!exists) {
-      setForm((prev) => ({ ...prev, clientId: "" }));
-    }
-  }, [clients, form.clientId]);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-  const handleChange = (
-    field: keyof Appointment,
-    value: string | number | AppointmentStatus
-  ) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!form.clientId || !form.serviceName.trim()) return;
+    const formData = new FormData(e.currentTarget);
 
     try {
-      const saved = await repo.upsertAppointment(form);
-      router.push(`/app/appointments/${saved.id}`);
-    } catch (err) {
-      const message = formatDbError(err);
-      setError(message);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("opelle:db-error", { detail: message }));
+      const res = await fetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: formData.get("clientId"),
+          serviceName: formData.get("serviceName"),
+          startAt: new Date(String(formData.get("startAt"))).toISOString(),
+          durationMins: parseInt(String(formData.get("durationMins"))) || 60,
+          notes: formData.get("notes") || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to create appointment");
       }
+
+      const appointment = await res.json();
+      router.push(`/app/appointments/${appointment.id}`);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Default to now + 1 hour, rounded to nearest 30 min
+  const defaultDateTime = () => {
+    const d = new Date();
+    d.setHours(d.getHours() + 1);
+    d.setMinutes(d.getMinutes() >= 30 ? 30 : 0);
+    d.setSeconds(0);
+    return d.toISOString().slice(0, 16);
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold">New appointment</h2>
-        <p className="text-muted-foreground">Schedule a session locally.</p>
-      </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <header className="space-y-4">
+        <Link
+          href="/app/appointments"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Appointments
+        </Link>
+        <div>
+          <h2 className="text-3xl font-semibold">New Appointment</h2>
+          <p className="text-muted-foreground">
+            Schedule a new appointment with a client.
+          </p>
+        </div>
+      </header>
 
-      {clients.length === 0 ? (
-        <div className="rounded-2xl border border-amber-300/70 bg-amber-100/60 p-6 text-sm text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
-          <p>No clients yet. Add a client before scheduling appointments.</p>
-          <Link
-            href="/app/clients/new"
-            className="mt-3 inline-flex rounded-full border border-amber-300 px-4 py-2 text-xs font-semibold text-amber-700 dark:border-amber-200 dark:text-amber-100"
-          >
-            Add a client
-          </Link>
-        </div>
-      ) : null}
+      {/* Form */}
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle>Appointment Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">
+                {error}
+              </div>
+            )}
 
-      <form
-        className="rounded-2xl border border-border bg-card/70 p-6"
-        onSubmit={handleSubmit}
-      >
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm text-foreground">
-            Client
-            <select
-              value={form.clientId}
-              onChange={(event) => handleChange("clientId", event.target.value)}
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              required
-            >
-              <option value="">Select client</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {getClientDisplayName(client)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm text-foreground">
-            Service name
-            <input
-              value={form.serviceName}
-              onChange={(event) =>
-                handleChange("serviceName", event.target.value)
-              }
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              placeholder="Signature Glow Facial"
-              required
-            />
-          </label>
-          <label className="block text-sm text-foreground">
-            Date & time
-            <input
-              type="datetime-local"
-              value={toLocalInput(form.startAt)}
-              onChange={(event) =>
-                handleChange(
-                  "startAt",
-                  new Date(event.target.value).toISOString()
-                )
-              }
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="block text-sm text-foreground">
-            Duration (min)
-            <input
-              type="number"
-              min={15}
-              value={form.durationMin}
-              onChange={(event) =>
-                handleChange("durationMin", Number(event.target.value))
-              }
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="block text-sm text-foreground">
-            Status
-            <select
-              value={form.status}
-              onChange={(event) =>
-                handleChange("status", event.target.value as AppointmentStatus)
-              }
-              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            >
-              <option value="scheduled">Scheduled</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </label>
-        </div>
-        <label className="mt-4 block text-sm text-foreground">
-          Notes
-          <textarea
-            value={form.notes}
-            onChange={(event) => handleChange("notes", event.target.value)}
-            className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            rows={4}
-          />
-        </label>
-        <div className="mt-6 flex flex-wrap justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => router.push("/app/appointments")}
-            className="rounded-full border border-border px-4 py-2 text-sm text-foreground"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={clients.length === 0}
-            className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-semibold op-on-accent disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
-            title="Save appointment"
-          >
-            Save appointment
-          </button>
-        </div>
-        {error ? (
-          <p className="mt-3 text-sm text-rose-600 dark:text-rose-300">{error}</p>
-        ) : null}
-      </form>
+            <div>
+              <Label htmlFor="clientId">Client *</Label>
+              <Select
+                id="clientId"
+                name="clientId"
+                required
+                defaultValue={preselectedClientId || ""}
+              >
+                <option value="">Select a client</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.firstName} {client.lastName}
+                  </option>
+                ))}
+              </Select>
+              {clients.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  <Link href="/app/clients/new" className="text-emerald-400 hover:underline">
+                    Add a client first
+                  </Link>
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="serviceName">Service *</Label>
+              <Input
+                id="serviceName"
+                name="serviceName"
+                required
+                placeholder="e.g., Balayage, Haircut, Color Touch-up"
+              />
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="startAt">Date & Time *</Label>
+                <Input
+                  id="startAt"
+                  name="startAt"
+                  type="datetime-local"
+                  required
+                  defaultValue={defaultDateTime()}
+                />
+              </div>
+              <div>
+                <Label htmlFor="durationMins">Duration (minutes)</Label>
+                <Select id="durationMins" name="durationMins" defaultValue="60">
+                  <option value="30">30 min</option>
+                  <option value="45">45 min</option>
+                  <option value="60">1 hour</option>
+                  <option value="90">1.5 hours</option>
+                  <option value="120">2 hours</option>
+                  <option value="180">3 hours</option>
+                  <option value="240">4 hours</option>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                placeholder="Any prep notes, special requests..."
+                rows={3}
+              />
+            </div>
+
+            <div className="flex items-center gap-3 pt-4">
+              <Button type="submit" disabled={loading || clients.length === 0}>
+                {loading ? "Scheduling..." : "Schedule Appointment"}
+              </Button>
+              <Link href="/app/appointments">
+                <Button type="button" variant="ghost">Cancel</Button>
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

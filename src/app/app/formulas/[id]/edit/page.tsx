@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,23 +10,31 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
-import type { Client } from "@/lib/types";
+import type { Formula, Client } from "@/lib/types";
 
-export default function NewFormulaPage() {
+interface EditFormulaPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function EditFormulaPage({ params }: EditFormulaPageProps) {
+  const { id } = use(params);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const preselectedClientId = searchParams.get("clientId");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formula, setFormula] = useState<Formula | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
 
   useEffect(() => {
-    fetch("/api/clients")
-      .then((res) => res.json())
-      .then(setClients)
-      .catch(() => {});
-  }, []);
+    Promise.all([
+      fetch(`/api/formulas/${id}`).then((res) => res.json()),
+      fetch("/api/clients").then((res) => res.json()),
+    ])
+      .then(([formulaData, clientsData]) => {
+        setFormula(formulaData);
+        setClients(clientsData);
+      })
+      .catch(() => setError("Failed to load data"));
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,8 +44,8 @@ export default function NewFormulaPage() {
     const formData = new FormData(e.currentTarget);
 
     try {
-      const res = await fetch("/api/formulas", {
-        method: "POST",
+      const res = await fetch(`/api/formulas/${id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: formData.get("title"),
@@ -48,17 +56,15 @@ export default function NewFormulaPage() {
           tags: formData.get("tags")
             ? String(formData.get("tags")).split(",").map((t) => t.trim()).filter(Boolean)
             : [],
-          steps: [], // Start with empty steps, can be edited later
         }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to create formula");
+        throw new Error(data.error || "Failed to update formula");
       }
 
-      const formula = await res.json();
-      router.push(`/app/formulas/${formula.id}`);
+      router.push(`/app/formulas/${id}`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -67,21 +73,29 @@ export default function NewFormulaPage() {
     }
   };
 
+  if (!formula) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <header className="space-y-4">
         <Link
-          href="/app/formulas"
+          href={`/app/formulas/${id}`}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Formulas
+          Back to Formula
         </Link>
         <div>
-          <h2 className="text-3xl font-semibold">New Formula</h2>
+          <h2 className="text-3xl font-semibold">Edit Formula</h2>
           <p className="text-muted-foreground">
-            Save a color formula to your library.
+            Update formula details.
           </p>
         </div>
       </header>
@@ -105,15 +119,14 @@ export default function NewFormulaPage() {
                 id="title"
                 name="title"
                 required
-                placeholder="e.g., Natural Balayage, Root Touch-up"
+                defaultValue={formula.title}
               />
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
                 <Label htmlFor="serviceType">Service Type *</Label>
-                <Select id="serviceType" name="serviceType" required defaultValue="">
-                  <option value="" disabled>Select type</option>
+                <Select id="serviceType" name="serviceType" required defaultValue={formula.serviceType}>
                   <option value="color">Color</option>
                   <option value="lighten">Lightener</option>
                   <option value="tone">Toner</option>
@@ -126,7 +139,7 @@ export default function NewFormulaPage() {
                 <Input
                   id="colorLine"
                   name="colorLine"
-                  placeholder="e.g., Redken Shades EQ, Wella"
+                  defaultValue={formula.colorLine || ""}
                 />
               </div>
             </div>
@@ -136,7 +149,7 @@ export default function NewFormulaPage() {
               <Select
                 id="clientId"
                 name="clientId"
-                defaultValue={preselectedClientId || ""}
+                defaultValue={formula.clientId || ""}
               >
                 <option value="">No client linked</option>
                 {clients.map((client) => (
@@ -152,7 +165,7 @@ export default function NewFormulaPage() {
               <Input
                 id="tags"
                 name="tags"
-                placeholder="blonde, balayage, low-maintenance (comma separated)"
+                defaultValue={formula.tags.join(", ")}
               />
             </div>
 
@@ -161,16 +174,16 @@ export default function NewFormulaPage() {
               <Textarea
                 id="notes"
                 name="notes"
-                placeholder="Application technique, processing time, results..."
+                defaultValue={formula.notes || ""}
                 rows={4}
               />
             </div>
 
             <div className="flex items-center gap-3 pt-4">
               <Button type="submit" disabled={loading}>
-                {loading ? "Creating..." : "Create Formula"}
+                {loading ? "Saving..." : "Save Changes"}
               </Button>
-              <Link href="/app/formulas">
+              <Link href={`/app/formulas/${id}`}>
                 <Button type="button" variant="ghost">Cancel</Button>
               </Link>
             </div>

@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export async function createSupabaseAuthServerClient() {
+export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
   return createServerClient(
@@ -17,12 +17,11 @@ export async function createSupabaseAuthServerClient() {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
             );
-          } catch {}
+          } catch {
+            // Called from Server Component - ignore
+          }
         },
       },
     }
   );
 }
-
-// Alias for backward compatibility with existing code
-export const createSupabaseServerClient = createSupabaseAuthServerClient;
