@@ -3,7 +3,7 @@
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { Appointment, Client } from "@/lib/types";
 import { getClientDisplayName } from "@/lib/types";
@@ -56,7 +56,7 @@ export function CalendarWidget({ appointments, clients }: CalendarWidgetProps) {
 
       return {
         id: appt.id,
-        title: `${clientName} - ${appt.serviceName}`,
+        title: clientName,
         start,
         end,
         resource: {
@@ -66,6 +66,15 @@ export function CalendarWidget({ appointments, clients }: CalendarWidgetProps) {
       };
     });
   }, [appointments, clientMap]);
+
+  const EventComponent = useCallback(({ event }: { event: CalendarEvent }) => {
+    return (
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="font-semibold text-xs leading-tight">{event.title}</div>
+        <div className="text-xs opacity-90 leading-tight mt-0.5">{event.resource.appointment.serviceName}</div>
+      </div>
+    );
+  }, []);
 
   const handleNavigateToCalendar = () => {
     router.push("/app/appointments");
@@ -118,8 +127,11 @@ export function CalendarWidget({ appointments, clients }: CalendarWidgetProps) {
         max={new Date(0, 0, 0, 20, 0, 0)}
         step={30}
         timeslots={2}
+        components={{
+          event: EventComponent,
+        }}
         tooltipAccessor={(event: CalendarEvent) => {
-          return event.title;
+          return `${event.title} - ${event.resource.appointment.serviceName}`;
         }}
       />
       <div className="text-center mt-4">

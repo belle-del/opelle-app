@@ -84,7 +84,7 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
 
       return {
         id: appt.id,
-        title: `${clientName} - ${appt.serviceName}`,
+        title: clientName,
         start,
         end,
         resource: {
@@ -94,6 +94,15 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
       };
     });
   }, [localAppointments, clientMap]);
+
+  const EventComponent = useCallback(({ event }: { event: CalendarEvent }) => {
+    return (
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="font-semibold text-xs leading-tight">{event.title}</div>
+        <div className="text-xs opacity-90 leading-tight mt-0.5">{event.resource.appointment.serviceName}</div>
+      </div>
+    );
+  }, []);
 
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
     setSelectedAppointment({
@@ -256,8 +265,11 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
           max={new Date(0, 0, 0, 20, 0, 0)}
           step={30}
           timeslots={2}
+          components={{
+            event: EventComponent,
+          }}
           tooltipAccessor={(event: CalendarEvent) => {
-            return event.title;
+            return `${event.title} - ${event.resource.appointment.serviceName}`;
           }}
         />
       </div>
