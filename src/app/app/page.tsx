@@ -5,19 +5,20 @@ import { Badge } from "@/components/ui/badge";
 import { listClients } from "@/lib/db/clients";
 import { getUpcomingAppointments, listAppointments } from "@/lib/db/appointments";
 import { listFormulas } from "@/lib/db/formulas";
-import { getPendingTasks } from "@/lib/db/tasks";
+import { getPendingTasks, getUpcomingReminders } from "@/lib/db/tasks";
 import { getClientDisplayName } from "@/lib/types";
 import { formatDateTime, isToday } from "@/lib/utils";
-import { Plus, Users, Calendar, FlaskConical, CheckSquare } from "lucide-react";
+import { Plus, Users, Calendar, FlaskConical, CheckSquare, Bell, Clock } from "lucide-react";
 import { CalendarWidget } from "@/components/CalendarWidget";
 
 export default async function DashboardPage() {
-  const [clients, upcomingAppointments, allAppointments, formulas, tasks] = await Promise.all([
+  const [clients, upcomingAppointments, allAppointments, formulas, tasks, upcomingReminders] = await Promise.all([
     listClients(),
     getUpcomingAppointments(5),
     listAppointments(),
     listFormulas(),
     getPendingTasks(),
+    getUpcomingReminders(),
   ]);
 
   // Create client map for lookups
@@ -80,6 +81,62 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Upcoming Reminders Notification */}
+      {upcomingReminders.length > 0 && (
+        <Card className="border-amber-500/50 bg-amber-500/10">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <Bell className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-amber-100 mb-2 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Upcoming Reminders ({upcomingReminders.length})
+                </h3>
+                <div className="space-y-2">
+                  {upcomingReminders.map((task) => {
+                    const client = task.clientId ? clientMap.get(task.clientId) : undefined;
+                    const reminderTime = task.reminderAt ? new Date(task.reminderAt) : null;
+                    const now = new Date();
+                    const isUrgent = reminderTime && (reminderTime.getTime() - now.getTime()) < 3 * 60 * 60 * 1000; // Less than 3 hours
+
+                    return (
+                      <div
+                        key={task.id}
+                        className={`flex items-center justify-between p-3 rounded-lg ${
+                          isUrgent ? 'bg-red-500/20 border border-red-500/30' : 'bg-white/5'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm">{task.title}</p>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            {reminderTime && (
+                              <span className={isUrgent ? 'text-red-300 font-medium' : ''}>
+                                {formatDateTime(task.reminderAt!)}
+                              </span>
+                            )}
+                            {client && (
+                              <>
+                                <span>•</span>
+                                <span>{getClientDisplayName(client)}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <Link href="/app/tasks">
+                          <Button size="sm" variant="secondary" className="ml-3">
+                            View
+                          </Button>
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Actions */}
       <Card>

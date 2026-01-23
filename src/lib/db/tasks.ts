@@ -50,6 +50,30 @@ export async function getPendingTasks(): Promise<Task[]> {
   return (data as TaskRow[]).map(taskRowToModel);
 }
 
+export async function getUpcomingReminders(): Promise<Task[]> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return [];
+
+  const supabase = await createSupabaseServerClient();
+
+  // Get current time and 24 hours from now
+  const now = new Date();
+  const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("workspace_id", workspace.id)
+    .eq("reminder_enabled", true)
+    .neq("status", "completed")
+    .gte("reminder_at", now.toISOString())
+    .lte("reminder_at", next24Hours.toISOString())
+    .order("reminder_at", { ascending: true });
+
+  if (error || !data) return [];
+  return (data as TaskRow[]).map(taskRowToModel);
+}
+
 export async function createTask(input: {
   title: string;
   notes?: string;
