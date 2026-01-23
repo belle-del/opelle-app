@@ -39,8 +39,13 @@ export default function TasksPage() {
       fetch("/api/clients").then((res) => res.json()),
     ])
       .then(([tasksData, clientsData]) => {
-        setTasks(tasksData);
-        setClients(clientsData);
+        setTasks(Array.isArray(tasksData) ? tasksData : []);
+        setClients(Array.isArray(clientsData) ? clientsData : []);
+      })
+      .catch((error) => {
+        console.error("Failed to load data:", error);
+        setTasks([]);
+        setClients([]);
       })
       .finally(() => setLoading(false));
   }, []);
