@@ -31,6 +31,17 @@ export default async function DashboardPage() {
     return date >= now && date <= weekEnd && a.status === "scheduled";
   });
 
+  // Count today's uncompleted appointments
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+
+  const todaysUncompletedAppointments = allAppointments.filter((a) => {
+    const date = new Date(a.startAt);
+    return date >= startOfToday && date <= endOfToday && a.status !== "completed" && a.status !== "cancelled";
+  });
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -48,7 +59,7 @@ export default async function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-4">
         {[
           { label: "Clients", value: clients.length, icon: Users, href: "/app/clients" },
-          { label: "Upcoming", value: upcomingAppointments.length, icon: Calendar, href: "/app/appointments" },
+          { label: "Upcoming", value: todaysUncompletedAppointments.length, icon: Calendar, href: "/app/appointments" },
           { label: "Formulas", value: formulas.length, icon: FlaskConical, href: "/app/formulas" },
           { label: "Tasks", value: tasks.length, icon: GraduationCap, href: "/app/education" },
         ].map((stat) => (
