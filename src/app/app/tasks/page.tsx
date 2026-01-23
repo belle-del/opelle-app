@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import {
   Plus,
   CheckSquare,
@@ -29,9 +31,19 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newTaskTitle, setNewTaskTitle] = useState("");
   const [adding, setAdding] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+
+  // Form state
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskNotes, setNewTaskNotes] = useState("");
+  const [newTaskClientId, setNewTaskClientId] = useState<string>("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  const [newTaskDueTime, setNewTaskDueTime] = useState("");
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderDate, setReminderDate] = useState("");
+  const [reminderTime, setReminderTime] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -58,14 +70,47 @@ export default function TasksPage() {
 
     setAdding(true);
     try {
+      // Combine date and time for due date
+      let dueAt = undefined;
+      if (newTaskDueDate) {
+        dueAt = newTaskDueTime
+          ? `${newTaskDueDate}T${newTaskDueTime}:00`
+          : `${newTaskDueDate}T12:00:00`;
+      }
+
+      // Combine date and time for reminder
+      let reminderAt = undefined;
+      if (reminderEnabled && reminderDate) {
+        reminderAt = reminderTime
+          ? `${reminderDate}T${reminderTime}:00`
+          : `${reminderDate}T09:00:00`;
+      }
+
       const res = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTaskTitle.trim() }),
+        body: JSON.stringify({
+          title: newTaskTitle.trim(),
+          notes: newTaskNotes.trim() || undefined,
+          clientId: newTaskClientId || undefined,
+          dueAt,
+          reminderAt,
+          reminderEnabled,
+        }),
       });
       const task = await res.json();
       setTasks([task, ...tasks]);
+
+      // Reset form
       setNewTaskTitle("");
+      setNewTaskNotes("");
+      setNewTaskClientId("");
+      setNewTaskDueDate("");
+      setNewTaskDueTime("");
+      setReminderEnabled(false);
+      setReminderDate("");
+      setReminderTime("");
+      setShowAdvanced(false);
     } catch (error) {
       console.error("Failed to add task:", error);
     } finally {
@@ -124,21 +169,159 @@ export default function TasksPage() {
           <CardTitle>Add New Task</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={addTask} className="flex gap-3">
-            <Input
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              placeholder="e.g., Practice balayage technique, Study color theory..."
-              className="flex-1"
-            />
-            <Button type="submit" disabled={adding || !newTaskTitle.trim()}>
-              {adding ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Plus className="w-4 h-4" />
-              )}
-              <span className="ml-2 hidden sm:inline">Add Task</span>
-            </Button>
+          <form onSubmit={addTask} className="space-y-4">
+            {/* Task Title */}
+            <div>
+              <Input
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                placeholder="e.g., Practice balayage technique, Study color theory..."
+                className="w-full"
+              />
+            </div>
+
+            {/* Advanced Options Toggle */}
+            {!showAdvanced && (
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowAdvanced(true)}
+                  className="text-xs"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add Details
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={adding || !newTaskTitle.trim()}
+                  className="ml-auto"
+                >
+                  {adding ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  <span className="ml-2">Add Task</span>
+                </Button>
+              </div>
+            )}
+
+            {/* Advanced Options */}
+            {showAdvanced && (
+              <div className="space-y-4 border-t pt-4">
+                {/* Notes */}
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Description</Label>
+                  <Textarea
+                    id="notes"
+                    value={newTaskNotes}
+                    onChange={(e) => setNewTaskNotes(e.target.value)}
+                    placeholder="Add any additional details..."
+                    rows={3}
+                  />
+                </div>
+
+                {/* Client Selection */}
+                {clients.length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="client">Related Client (Optional)</Label>
+                    <Select
+                      id="client"
+                      value={newTaskClientId}
+                      onChange={(e) => setNewTaskClientId(e.target.value)}
+                    >
+                      <option value="">None</option>
+                      {clients.map((client) => (
+                        <option key={client.id} value={client.id}>
+                          {getClientDisplayName(client)}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                )}
+
+                {/* Due Date */}
+                <div className="space-y-2">
+                  <Label>Due Date (Optional)</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Input
+                        type="date"
+                        value={newTaskDueDate}
+                        onChange={(e) => setNewTaskDueDate(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        type="time"
+                        value={newTaskDueTime}
+                        onChange={(e) => setNewTaskDueTime(e.target.value)}
+                        disabled={!newTaskDueDate}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reminder */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="reminder"
+                      checked={reminderEnabled}
+                      onChange={(e) => setReminderEnabled(e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="reminder" className="cursor-pointer">
+                      Set Reminder
+                    </Label>
+                  </div>
+                  {reminderEnabled && (
+                    <div className="grid grid-cols-2 gap-3 ml-6">
+                      <div>
+                        <Input
+                          type="date"
+                          value={reminderDate}
+                          onChange={(e) => setReminderDate(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Input
+                          type="time"
+                          value={reminderTime}
+                          onChange={(e) => setReminderTime(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowAdvanced(false)}
+                  >
+                    Simple Mode
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={adding || !newTaskTitle.trim()}
+                    className="ml-auto"
+                  >
+                    {adding ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Plus className="w-4 h-4" />
+                    )}
+                    <span className="ml-2">Create Task</span>
+                  </Button>
+                </div>
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>
