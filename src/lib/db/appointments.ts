@@ -102,6 +102,7 @@ export async function createAppointment(input: {
 export async function updateAppointment(
   id: string,
   input: {
+    clientId?: string;
     serviceName?: string;
     startAt?: string;
     durationMins?: number;
@@ -115,6 +116,7 @@ export async function updateAppointment(
   const supabase = await createSupabaseServerClient();
 
   const updateData: Record<string, unknown> = {};
+  if (input.clientId !== undefined) updateData.client_id = input.clientId;
   if (input.serviceName !== undefined) updateData.service_name = input.serviceName;
   if (input.startAt !== undefined) updateData.start_at = input.startAt;
   if (input.durationMins !== undefined) updateData.duration_mins = input.durationMins;

@@ -9,6 +9,7 @@ import { getPendingTasks } from "@/lib/db/tasks";
 import { getClientDisplayName } from "@/lib/types";
 import { formatDateTime, isToday } from "@/lib/utils";
 import { Plus, Users, Calendar, FlaskConical, GraduationCap } from "lucide-react";
+import { CalendarWidget } from "@/components/CalendarWidget";
 
 export default async function DashboardPage() {
   const [clients, upcomingAppointments, allAppointments, formulas, tasks] = await Promise.all([
@@ -95,6 +96,19 @@ export default async function DashboardPage() {
               </Button>
             </Link>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Calendar Widget */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Schedule</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Overview of your appointments
+          </p>
+        </CardHeader>
+        <CardContent>
+          <CalendarWidget appointments={allAppointments} clients={clients} />
         </CardContent>
       </Card>
 

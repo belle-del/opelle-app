@@ -27,6 +27,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const body = await request.json();
 
     const appointment = await updateAppointment(id, {
+      clientId: body.clientId,
       serviceName: body.serviceName,
       startAt: body.startAt,
       durationMins: body.durationMins,
