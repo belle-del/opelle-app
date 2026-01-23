@@ -111,13 +111,26 @@ export type Photo = {
 // Task (education)
 export type TaskStatus = 'pending' | 'in_progress' | 'completed';
 
+export type TaskAttachment = {
+  id: string;
+  name: string;
+  url: string;
+  size: number;
+  type: string;
+  uploadedAt: string;
+};
+
 export type Task = {
   id: string;
   workspaceId: string;
+  clientId?: string;
   title: string;
   notes?: string;
   status: TaskStatus;
   dueAt?: string;
+  reminderAt?: string;
+  reminderEnabled: boolean;
+  attachments: TaskAttachment[];
   createdAt: string;
   updatedAt: string;
 };
@@ -267,10 +280,14 @@ export type PhotoRow = {
 export type TaskRow = {
   id: string;
   workspace_id: string;
+  client_id: string | null;
   title: string;
   notes: string | null;
   status: TaskStatus;
   due_at: string | null;
+  reminder_at: string | null;
+  reminder_enabled: boolean;
+  attachments: TaskAttachment[];
   created_at: string;
   updated_at: string;
 };
@@ -343,10 +360,14 @@ export function taskRowToModel(row: TaskRow): Task {
   return {
     id: row.id,
     workspaceId: row.workspace_id,
+    clientId: row.client_id ?? undefined,
     title: row.title,
     notes: row.notes ?? undefined,
     status: row.status,
     dueAt: row.due_at ?? undefined,
+    reminderAt: row.reminder_at ?? undefined,
+    reminderEnabled: row.reminder_enabled ?? false,
+    attachments: row.attachments ?? [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

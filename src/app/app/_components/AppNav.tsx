@@ -10,7 +10,7 @@ import {
   Users,
   Calendar,
   FlaskConical,
-  GraduationCap,
+  CheckSquare,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -21,7 +21,7 @@ const navItems = [
   { href: "/app/clients", label: "Clients", icon: Users },
   { href: "/app/appointments", label: "Appointments", icon: Calendar },
   { href: "/app/formulas", label: "Formulas", icon: FlaskConical },
-  { href: "/app/education", label: "Education", icon: GraduationCap },
+  { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ];
 

@@ -54,6 +54,9 @@ export async function createTask(input: {
   title: string;
   notes?: string;
   dueAt?: string;
+  clientId?: string;
+  reminderAt?: string;
+  reminderEnabled?: boolean;
 }): Promise<Task | null> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
@@ -66,6 +69,10 @@ export async function createTask(input: {
       title: input.title,
       notes: input.notes || null,
       due_at: input.dueAt || null,
+      client_id: input.clientId || null,
+      reminder_at: input.reminderAt || null,
+      reminder_enabled: input.reminderEnabled || false,
+      attachments: [],
       status: "pending",
     })
     .select("*")
@@ -82,6 +89,10 @@ export async function updateTask(
     notes?: string;
     dueAt?: string;
     status?: TaskStatus;
+    clientId?: string;
+    reminderAt?: string;
+    reminderEnabled?: boolean;
+    attachments?: unknown;
   }
 ): Promise<Task | null> {
   const workspace = await getCurrentWorkspace();
@@ -94,6 +105,10 @@ export async function updateTask(
   if (input.notes !== undefined) updateData.notes = input.notes || null;
   if (input.dueAt !== undefined) updateData.due_at = input.dueAt || null;
   if (input.status !== undefined) updateData.status = input.status;
+  if (input.clientId !== undefined) updateData.client_id = input.clientId || null;
+  if (input.reminderAt !== undefined) updateData.reminder_at = input.reminderAt || null;
+  if (input.reminderEnabled !== undefined) updateData.reminder_enabled = input.reminderEnabled;
+  if (input.attachments !== undefined) updateData.attachments = input.attachments;
 
   const { data, error } = await supabase
     .from("tasks")

@@ -8,7 +8,7 @@ import { listFormulas } from "@/lib/db/formulas";
 import { getPendingTasks } from "@/lib/db/tasks";
 import { getClientDisplayName } from "@/lib/types";
 import { formatDateTime, isToday } from "@/lib/utils";
-import { Plus, Users, Calendar, FlaskConical, GraduationCap } from "lucide-react";
+import { Plus, Users, Calendar, FlaskConical, CheckSquare } from "lucide-react";
 import { CalendarWidget } from "@/components/CalendarWidget";
 
 export default async function DashboardPage() {
@@ -61,7 +61,7 @@ export default async function DashboardPage() {
           { label: "Clients", value: clients.length, icon: Users, href: "/app/clients" },
           { label: "Upcoming", value: todaysUncompletedAppointments.length, icon: Calendar, href: "/app/appointments" },
           { label: "Formulas", value: formulas.length, icon: FlaskConical, href: "/app/formulas" },
-          { label: "Tasks", value: tasks.length, icon: GraduationCap, href: "/app/education" },
+          { label: "Tasks", value: tasks.length, icon: CheckSquare, href: "/app/tasks" },
         ].map((stat) => (
           <Link key={stat.label} href={stat.href}>
             <Card className="hover:bg-white/10 transition-colors cursor-pointer">
@@ -181,12 +181,12 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Education Tasks</CardTitle>
+              <CardTitle>Tasks</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 {tasks.length} pending
               </p>
             </div>
-            <Link href="/app/education">
+            <Link href="/app/tasks">
               <Button variant="ghost" size="sm">View all</Button>
             </Link>
           </CardHeader>
