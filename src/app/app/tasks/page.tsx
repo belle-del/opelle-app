@@ -25,6 +25,7 @@ import type { Task, Client, TaskAttachment } from "@/lib/types";
 import { getClientDisplayName } from "@/lib/types";
 
 export default function TasksPage() {
+  // Task management state
   const [tasks, setTasks] = useState<Task[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
