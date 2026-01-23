@@ -1,6 +1,8 @@
 "use client";
 
 import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
+import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
+import type { EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { useState, useMemo, useCallback } from "react";
@@ -8,7 +10,21 @@ import type { Appointment, Client } from "@/lib/types";
 import { getClientDisplayName } from "@/lib/types";
 import { AppointmentModal } from "./AppointmentModal";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import "./calendar-styles.css";
+
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  resource: {
+    appointment: Appointment;
+    client: Client | undefined;
+  };
+}
+
+const DragAndDropCalendar = withDragAndDrop<CalendarEvent>(Calendar);
 
 const locales = {
   "en-US": enUS,
@@ -21,17 +37,6 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  resource: {
-    appointment: Appointment;
-    client: Client | undefined;
-  };
-}
 
 interface CalendarViewProps {
   appointments: Appointment[];
@@ -54,6 +59,7 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
   const events: CalendarEvent[] = useMemo(() => {
     return appointments.map((appt) => {
       const client = clientMap.get(appt.clientId);
+      const clientName = client ? getClientDisplayName(client) : "Unknown Client";
       const start = new Date(appt.startAt);
       const end = appt.endAt
         ? new Date(appt.endAt)
@@ -61,7 +67,7 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
 
       return {
         id: appt.id,
-        title: client ? getClientDisplayName(client) : "Unknown Client",
+        title: `${clientName} - ${appt.serviceName}`,
         start,
         end,
         resource: {
@@ -85,6 +91,60 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
       onAppointmentUpdate();
     }
   }, [onAppointmentUpdate]);
+
+  const handleEventDrop = useCallback(
+    async (args: EventInteractionArgs<CalendarEvent>) => {
+      const { event, start, end } = args;
+      const startDate = start instanceof Date ? start : new Date(start);
+      const endDate = end instanceof Date ? end : new Date(end);
+
+      try {
+        const response = await fetch(`/api/appointments/${event.resource.appointment.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            startAt: startDate.toISOString(),
+            durationMins: Math.round((endDate.getTime() - startDate.getTime()) / 60000),
+          }),
+        });
+
+        if (response.ok && onAppointmentUpdate) {
+          onAppointmentUpdate();
+        }
+      } catch (error) {
+        console.error("Failed to move appointment:", error);
+        alert("Failed to move appointment");
+      }
+    },
+    [onAppointmentUpdate]
+  );
+
+  const handleEventResize = useCallback(
+    async (args: EventInteractionArgs<CalendarEvent>) => {
+      const { event, start, end } = args;
+      const startDate = start instanceof Date ? start : new Date(start);
+      const endDate = end instanceof Date ? end : new Date(end);
+
+      try {
+        const response = await fetch(`/api/appointments/${event.resource.appointment.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            startAt: startDate.toISOString(),
+            durationMins: Math.round((endDate.getTime() - startDate.getTime()) / 60000),
+          }),
+        });
+
+        if (response.ok && onAppointmentUpdate) {
+          onAppointmentUpdate();
+        }
+      } catch (error) {
+        console.error("Failed to resize appointment:", error);
+        alert("Failed to resize appointment");
+      }
+    },
+    [onAppointmentUpdate]
+  );
 
   const eventStyleGetter = useCallback((event: CalendarEvent) => {
     const { appointment } = event.resource;
@@ -116,7 +176,7 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
   return (
     <>
       <div className="calendar-container">
-        <Calendar
+        <DragAndDropCalendar
           localizer={localizer}
           events={events}
           startAccessor="start"
@@ -127,13 +187,16 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
           date={date}
           onNavigate={setDate}
           onSelectEvent={handleSelectEvent}
+          onEventDrop={handleEventDrop}
+          onEventResize={handleEventResize}
           eventPropGetter={eventStyleGetter}
           views={["month", "week", "day", "agenda"]}
           defaultView="month"
+          resizable
+          draggableAccessor={() => true}
           popup
           tooltipAccessor={(event: CalendarEvent) => {
-            const { appointment } = event.resource;
-            return `${event.title} - ${appointment.serviceName}`;
+            return event.title;
           }}
         />
       </div>

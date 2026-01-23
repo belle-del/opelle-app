@@ -48,6 +48,7 @@ export function CalendarWidget({ appointments, clients }: CalendarWidgetProps) {
   const events: CalendarEvent[] = useMemo(() => {
     return appointments.map((appt) => {
       const client = clientMap.get(appt.clientId);
+      const clientName = client ? getClientDisplayName(client) : "Unknown Client";
       const start = new Date(appt.startAt);
       const end = appt.endAt
         ? new Date(appt.endAt)
@@ -55,7 +56,7 @@ export function CalendarWidget({ appointments, clients }: CalendarWidgetProps) {
 
       return {
         id: appt.id,
-        title: client ? getClientDisplayName(client) : "Unknown Client",
+        title: `${clientName} - ${appt.serviceName}`,
         start,
         end,
         resource: {
@@ -107,15 +108,14 @@ export function CalendarWidget({ appointments, clients }: CalendarWidgetProps) {
         events={events}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: 400 }}
-        view="month"
-        views={["month"]}
+        style={{ height: 500 }}
+        view="day"
+        views={["day"]}
         eventPropGetter={eventStyleGetter}
         toolbar={false}
         popup
         tooltipAccessor={(event: CalendarEvent) => {
-          const { appointment } = event.resource;
-          return `${event.title} - ${appointment.serviceName}`;
+          return event.title;
         }}
       />
       <div className="text-center mt-4">
