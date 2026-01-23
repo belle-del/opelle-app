@@ -47,7 +47,7 @@
   padding: 0.75rem 0.5rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.02);
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
@@ -75,14 +75,14 @@
 .rbc-month-view,
 .rbc-time-view,
 .rbc-agenda-view {
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.02);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .rbc-day-bg,
 .rbc-month-row {
-  border-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.02);
 }
 
 .rbc-event {
@@ -107,7 +107,7 @@
 }
 
 .rbc-time-slot {
-  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.015);
 }
 
 .rbc-current-time-indicator {
@@ -135,11 +135,11 @@
 }
 
 .rbc-time-header-content {
-  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 1px solid rgba(255, 255, 255, 0.02);
 }
 
 .rbc-time-content {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.02);
 }
 
 .rbc-time-gutter {

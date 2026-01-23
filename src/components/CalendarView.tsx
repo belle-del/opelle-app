@@ -5,7 +5,7 @@ import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import type { EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import type { Appointment, Client } from "@/lib/types";
 import { getClientDisplayName } from "@/lib/types";
 import { AppointmentModal } from "./AppointmentModal";
@@ -49,15 +49,32 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
     appointment: Appointment;
     client: Client | undefined;
   } | null>(null);
-  const [view, setView] = useState<View>("month");
+  const [view, setView] = useState<View>(() => {
+    if (typeof window !== "undefined") {
+      const savedView = localStorage.getItem("calendarView");
+      return (savedView as View) || "month";
+    }
+    return "month";
+  });
   const [date, setDate] = useState(new Date());
+  const [localAppointments, setLocalAppointments] = useState<Appointment[]>(appointments);
+
+  useEffect(() => {
+    setLocalAppointments(appointments);
+  }, [appointments]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("calendarView", view);
+    }
+  }, [view]);
 
   const clientMap = useMemo(() => {
     return new Map(clients.map((c) => [c.id, c]));
   }, [clients]);
 
   const events: CalendarEvent[] = useMemo(() => {
-    return appointments.map((appt) => {
+    return localAppointments.map((appt) => {
       const client = clientMap.get(appt.clientId);
       const clientName = client ? getClientDisplayName(client) : "Unknown Client";
       const start = new Date(appt.startAt);
@@ -76,7 +93,7 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
         },
       };
     });
-  }, [appointments, clientMap]);
+  }, [localAppointments, clientMap]);
 
   const handleSelectEvent = useCallback((event: CalendarEvent) => {
     setSelectedAppointment({
@@ -97,6 +114,20 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
       const { event, start, end } = args;
       const startDate = start instanceof Date ? start : new Date(start);
       const endDate = end instanceof Date ? end : new Date(end);
+      const durationMins = Math.round((endDate.getTime() - startDate.getTime()) / 60000);
+
+      // Optimistically update local state
+      setLocalAppointments((prev) =>
+        prev.map((appt) =>
+          appt.id === event.resource.appointment.id
+            ? {
+                ...appt,
+                startAt: startDate.toISOString(),
+                durationMins,
+              }
+            : appt
+        )
+      );
 
       try {
         const response = await fetch(`/api/appointments/${event.resource.appointment.id}`, {
@@ -104,19 +135,25 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             startAt: startDate.toISOString(),
-            durationMins: Math.round((endDate.getTime() - startDate.getTime()) / 60000),
+            durationMins,
           }),
         });
 
-        if (response.ok && onAppointmentUpdate) {
+        if (!response.ok) {
+          throw new Error("Failed to update appointment");
+        }
+
+        if (onAppointmentUpdate) {
           onAppointmentUpdate();
         }
       } catch (error) {
         console.error("Failed to move appointment:", error);
         alert("Failed to move appointment");
+        // Revert on error
+        setLocalAppointments(appointments);
       }
     },
-    [onAppointmentUpdate]
+    [appointments, onAppointmentUpdate]
   );
 
   const handleEventResize = useCallback(
@@ -124,6 +161,20 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
       const { event, start, end } = args;
       const startDate = start instanceof Date ? start : new Date(start);
       const endDate = end instanceof Date ? end : new Date(end);
+      const durationMins = Math.round((endDate.getTime() - startDate.getTime()) / 60000);
+
+      // Optimistically update local state
+      setLocalAppointments((prev) =>
+        prev.map((appt) =>
+          appt.id === event.resource.appointment.id
+            ? {
+                ...appt,
+                startAt: startDate.toISOString(),
+                durationMins,
+              }
+            : appt
+        )
+      );
 
       try {
         const response = await fetch(`/api/appointments/${event.resource.appointment.id}`, {
@@ -131,19 +182,25 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             startAt: startDate.toISOString(),
-            durationMins: Math.round((endDate.getTime() - startDate.getTime()) / 60000),
+            durationMins,
           }),
         });
 
-        if (response.ok && onAppointmentUpdate) {
+        if (!response.ok) {
+          throw new Error("Failed to update appointment");
+        }
+
+        if (onAppointmentUpdate) {
           onAppointmentUpdate();
         }
       } catch (error) {
         console.error("Failed to resize appointment:", error);
         alert("Failed to resize appointment");
+        // Revert on error
+        setLocalAppointments(appointments);
       }
     },
-    [onAppointmentUpdate]
+    [appointments, onAppointmentUpdate]
   );
 
   const eventStyleGetter = useCallback((event: CalendarEvent) => {
