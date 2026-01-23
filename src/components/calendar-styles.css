@@ -106,8 +106,14 @@
   text-overflow: ellipsis;
 }
 
+/* Default time slot - half hour marks (lighter) */
 .rbc-time-slot {
-  border-top: 1px solid rgba(255, 255, 255, 0.015);
+  border-top: 1px solid rgba(255, 255, 255, 0.01);
+}
+
+/* Hour marks - more opaque */
+.rbc-time-slot:nth-child(odd) {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .rbc-current-time-indicator {

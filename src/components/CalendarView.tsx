@@ -252,10 +252,10 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
           resizable
           draggableAccessor={() => true}
           popup
-          min={new Date(0, 0, 0, 9, 0, 0)}
-          max={new Date(0, 0, 0, 15, 0, 0)}
-          step={15}
-          timeslots={4}
+          min={new Date(0, 0, 0, 8, 0, 0)}
+          max={new Date(0, 0, 0, 20, 0, 0)}
+          step={30}
+          timeslots={2}
           tooltipAccessor={(event: CalendarEvent) => {
             return event.title;
           }}
