@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getClient } from "@/lib/db/clients";
 import { getAppointmentsForClient } from "@/lib/db/appointments";
-import { getFormulasForClient } from "@/lib/db/formulas";
+import { getFormulaEntriesForClient } from "@/lib/db/formula-entries";
+import { listServiceTypes } from "@/lib/db/service-types";
+import { FormulaHistory } from "./_components/FormulaHistory";
 import { getClientDisplayName } from "@/lib/types";
 import { formatDate, formatDateTime } from "@/lib/utils";
-import { ArrowLeft, Edit, Calendar, FlaskConical, Plus } from "lucide-react";
+import { ArrowLeft, Edit, Calendar, Plus } from "lucide-react";
 
 interface ClientDetailPageProps {
   params: Promise<{ id: string }>;
@@ -16,10 +18,11 @@ interface ClientDetailPageProps {
 
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
   const { id } = await params;
-  const [client, appointments, formulas] = await Promise.all([
+  const [client, appointments, formulaEntries, serviceTypes] = await Promise.all([
     getClient(id),
     getAppointmentsForClient(id),
-    getFormulasForClient(id),
+    getFormulaEntriesForClient(id),
+    listServiceTypes(),
   ]);
 
   if (!client) {
@@ -175,51 +178,14 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         </CardContent>
       </Card>
 
-      {/* Formulas */}
+      {/* Formula History */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Formulas</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {formulas.length} saved
-            </p>
-          </div>
-          <Link href={`/app/formulas/new?clientId=${client.id}`}>
-            <Button size="sm" variant="secondary">
-              <Plus className="w-4 h-4 mr-2" />
-              New Formula
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {formulas.length === 0 ? (
-            <div className="text-center py-8">
-              <FlaskConical className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
-              <p className="text-sm text-muted-foreground">No formulas yet</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {formulas.slice(0, 5).map((formula) => (
-                <Link
-                  key={formula.id}
-                  href={`/app/formulas/${formula.id}`}
-                  className="block rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{formula.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formula.serviceType} • {formula.colorLine || "No color line"}
-                      </p>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {formatDate(formula.createdAt)}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+        <CardContent className="p-6">
+          <FormulaHistory
+            clientId={client.id}
+            entries={formulaEntries}
+            serviceTypes={serviceTypes}
+          />
         </CardContent>
       </Card>
     </div>

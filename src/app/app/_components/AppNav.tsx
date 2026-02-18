@@ -10,6 +10,7 @@ import {
   Users,
   Calendar,
   FlaskConical,
+  Package,
   CheckSquare,
   Settings,
   LogOut,
@@ -20,7 +21,8 @@ const navItems = [
   { href: "/app", label: "Dashboard", icon: LayoutDashboard },
   { href: "/app/clients", label: "Clients", icon: Users },
   { href: "/app/appointments", label: "Appointments", icon: Calendar },
-  { href: "/app/formulas", label: "Formulas", icon: FlaskConical },
+  { href: "/app/formulas", label: "Log Formula", icon: FlaskConical },
+  { href: "/app/products", label: "Products", icon: Package },
   { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ];

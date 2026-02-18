@@ -66,9 +66,33 @@ export type ServiceLog = {
   updatedAt: string;
 };
 
+// Product (color tube inventory)
+export type ProductCategory = 'permanent' | 'demi-permanent' | 'semi-permanent' | 'lightener' | 'toner' | 'developer' | 'additive' | 'other';
+
+export type Product = {
+  id: string;
+  workspaceId: string;
+  brand: string;
+  line?: string;
+  shade: string;
+  name?: string;
+  category: ProductCategory;
+  sizeOz?: number;
+  sizeGrams?: number;
+  costCents?: number;
+  barcode?: string;
+  quantity: number;
+  lowStockThreshold: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// @deprecated — old formula system, kept for migration compatibility
 // Formula
 export type FormulaServiceType = 'color' | 'lighten' | 'tone' | 'gloss' | 'other';
 
+// @deprecated — old formula system, kept for migration compatibility
 export type FormulaStep = {
   stepName: string;
   product: string;
@@ -79,6 +103,7 @@ export type FormulaStep = {
   notes?: string;
 };
 
+// @deprecated — old formula system, kept for migration compatibility
 export type Formula = {
   id: string;
   workspaceId: string;
@@ -90,6 +115,53 @@ export type Formula = {
   steps: FormulaStep[];
   notes?: string;
   tags: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Service Type (workspace-editable list)
+export type ServiceType = {
+  id: string;
+  workspaceId: string;
+  name: string;
+  sortOrder: number;
+  createdAt: string;
+};
+
+// Parsed formula structures
+export type ParsedProduct = {
+  name: string;
+  amount?: string;
+  brand?: string;
+};
+
+export type ParsedDeveloper = {
+  volume: string;
+  amount?: string;
+};
+
+export type ParsedBowl = {
+  label: string;
+  products: ParsedProduct[];
+  developer?: ParsedDeveloper;
+  processingTime?: string;
+  applicationNotes?: string;
+};
+
+export type ParsedFormula = {
+  bowls: ParsedBowl[];
+};
+
+// Formula Entry (new notepad-based formula)
+export type FormulaEntry = {
+  id: string;
+  workspaceId: string;
+  clientId: string;
+  serviceTypeId: string;
+  rawNotes: string;
+  parsedFormula: ParsedFormula | null;
+  generalNotes?: string;
+  serviceDate: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -251,6 +323,25 @@ export type ServiceLogRow = {
   updated_at: string;
 };
 
+export type ProductRow = {
+  id: string;
+  workspace_id: string;
+  brand: string;
+  line: string | null;
+  shade: string;
+  name: string | null;
+  category: ProductCategory;
+  size_oz: number | null;
+  size_grams: number | null;
+  cost_cents: number | null;
+  barcode: string | null;
+  quantity: number;
+  low_stock_threshold: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type FormulaRow = {
   id: string;
   workspace_id: string;
@@ -262,6 +353,27 @@ export type FormulaRow = {
   steps: FormulaStep[];
   notes: string | null;
   tags: string[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type ServiceTypeRow = {
+  id: string;
+  workspace_id: string;
+  name: string;
+  sort_order: number;
+  created_at: string;
+};
+
+export type FormulaEntryRow = {
+  id: string;
+  workspace_id: string;
+  client_id: string;
+  service_type_id: string;
+  raw_notes: string;
+  parsed_formula: ParsedFormula | null;
+  general_notes: string | null;
+  service_date: string;
   created_at: string;
   updated_at: string;
 };
@@ -339,6 +451,27 @@ export function appointmentRowToModel(row: AppointmentRow): Appointment {
   };
 }
 
+export function productRowToModel(row: ProductRow): Product {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    brand: row.brand,
+    line: row.line ?? undefined,
+    shade: row.shade,
+    name: row.name ?? undefined,
+    category: row.category,
+    sizeOz: row.size_oz ?? undefined,
+    sizeGrams: row.size_grams ?? undefined,
+    costCents: row.cost_cents ?? undefined,
+    barcode: row.barcode ?? undefined,
+    quantity: row.quantity,
+    lowStockThreshold: row.low_stock_threshold ?? 2,
+    notes: row.notes ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 export function formulaRowToModel(row: FormulaRow): Formula {
   return {
     id: row.id,
@@ -351,6 +484,31 @@ export function formulaRowToModel(row: FormulaRow): Formula {
     steps: row.steps ?? [],
     notes: row.notes ?? undefined,
     tags: row.tags ?? [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function serviceTypeRowToModel(row: ServiceTypeRow): ServiceType {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    name: row.name,
+    sortOrder: row.sort_order,
+    createdAt: row.created_at,
+  };
+}
+
+export function formulaEntryRowToModel(row: FormulaEntryRow): FormulaEntry {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    clientId: row.client_id,
+    serviceTypeId: row.service_type_id,
+    rawNotes: row.raw_notes,
+    parsedFormula: row.parsed_formula,
+    generalNotes: row.general_notes ?? undefined,
+    serviceDate: row.service_date,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opelle — Formulas Redesign Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0b;
+    --surface: rgba(255,255,255,0.03);
+    --surface-hover: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.1);
+    --border-light: rgba(255,255,255,0.06);
+    --text: #e8e8e8;
+    --text-muted: #888;
+    --text-dim: #555;
+    --emerald: #34d399;
+    --emerald-bg: rgba(52,211,153,0.12);
+    --emerald-border: rgba(52,211,153,0.25);
+    --purple: #a78bfa;
+    --purple-bg: rgba(167,139,250,0.12);
+    --orange: #fb923c;
+    --orange-bg: rgba(251,146,60,0.12);
+    --cyan: #22d3ee;
+    --cyan-bg: rgba(34,211,238,0.1);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .app-layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 256px;
+    border-right: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(20px);
+    position: fixed;
+    top: 0; left: 0; height: 100vh;
+    display: flex; flex-direction: column;
+    z-index: 50;
+  }
+  .sidebar-logo { padding: 24px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo h1 {
+    font-size: 24px; font-weight: 700;
+    background: linear-gradient(135deg, #34d399, #2dd4bf, #22d3ee);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sidebar-logo .workspace { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .sidebar-nav { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border-radius: 12px;
+    font-size: 14px; font-weight: 500;
+    color: var(--text-muted); text-decoration: none;
+    transition: all 0.2s; cursor: pointer;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .nav-item.active { color: #6ee7b7; background: rgba(52,211,153,0.15); }
+  .nav-icon { width: 20px; height: 20px; opacity: 0.7; }
+
+  /* Main */
+  .main { flex: 1; margin-left: 256px; padding: 40px; }
+  .container { max-width: 800px; margin: 0 auto; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .card-content { padding: 24px; }
+
+  /* Form */
+  .form-group { margin-bottom: 24px; }
+  .form-label {
+    display: block; font-size: 13px; font-weight: 500;
+    color: var(--text-muted); margin-bottom: 8px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 12px 16px; border-radius: 12px;
+    border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+    color: var(--text); font-size: 14px; font-family: inherit;
+    transition: all 0.2s; outline: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: rgba(52,211,153,0.5);
+    box-shadow: 0 0 0 3px rgba(52,211,153,0.1);
+  }
+  .form-input::placeholder, .form-textarea::placeholder { color: var(--text-dim); }
+  .form-select { appearance: none; cursor: pointer; }
+  .form-textarea { resize: vertical; min-height: 160px; line-height: 1.7; }
+  .form-textarea.small { min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* Client selector */
+  .client-selector {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; border-radius: 12px;
+    border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .client-selector:hover { background: var(--surface-hover); }
+  .client-selector.selected { border-color: var(--emerald-border); background: var(--emerald-bg); }
+  .client-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #34d399, #22d3ee);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 14px; color: #000; flex-shrink: 0;
+  }
+  .client-name { font-weight: 500; font-size: 14px; }
+  .client-sub { font-size: 12px; color: var(--text-muted); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 12px;
+    font-size: 14px; font-weight: 500;
+    border: none; cursor: pointer; transition: all 0.2s;
+    text-decoration: none; font-family: inherit;
+  }
+  .btn-primary { background: var(--emerald); color: #000; }
+  .btn-primary:hover { background: #2dd4bf; }
+  .btn-secondary { background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost { background: transparent; color: var(--text-muted); }
+  .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .btn-sm { padding: 6px 14px; font-size: 13px; }
+
+  /* Notepad */
+  .notepad-header { margin-bottom: 32px; }
+  .notepad-header h2 { font-size: 28px; font-weight: 600; margin-bottom: 4px; }
+  .notepad-header p { color: var(--text-muted); font-size: 14px; }
+  .notepad-hint {
+    padding: 14px 18px; border-radius: 12px;
+    background: rgba(52,211,153,0.06);
+    border: 1px solid rgba(52,211,153,0.15);
+    font-size: 13px; color: var(--text-muted);
+    margin-bottom: 24px; line-height: 1.6;
+  }
+  .notepad-hint strong { color: var(--emerald); }
+  .save-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 24px; border-top: 1px solid var(--border-light); margin-top: 8px;
+  }
+  .section-label {
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.3em; color: var(--text-dim); margin-bottom: 16px;
+  }
+
+  /* Client Profile */
+  .client-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+  .client-header-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: linear-gradient(135deg, #34d399, #22d3ee);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 24px; color: #000;
+  }
+  .client-header h2 { font-size: 28px; font-weight: 600; }
+  .client-header .pronouns { font-size: 14px; color: var(--text-muted); }
+
+  /* Accordion */
+  .accordion { display: flex; flex-direction: column; gap: 12px; }
+  .accordion-section { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .accordion-trigger {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; background: var(--surface);
+    cursor: pointer; transition: background 0.2s;
+    width: 100%; border: none; color: var(--text); font-family: inherit;
+  }
+  .accordion-trigger:hover { background: var(--surface-hover); }
+  .accordion-trigger-left { display: flex; align-items: center; gap: 12px; }
+  .accordion-trigger h3 { font-size: 15px; font-weight: 600; }
+  .accordion-count { font-size: 13px; color: var(--text-muted); }
+  .accordion-chevron { width: 20px; height: 20px; color: var(--text-muted); transition: transform 0.2s; }
+  .accordion-section.open .accordion-chevron { transform: rotate(180deg); }
+  .accordion-body { display: none; }
+  .accordion-section.open .accordion-body { display: block; }
+
+  /* Formula entries */
+  .formula-entry { padding: 20px; border-top: 1px solid var(--border-light); }
+  .formula-entry-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+  }
+  .formula-date { font-size: 14px; font-weight: 500; color: var(--text-muted); }
+
+  .bowl {
+    padding: 16px; border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-light); margin-bottom: 12px;
+  }
+  .bowl-label {
+    font-size: 13px; font-weight: 600; color: var(--emerald);
+    margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .bowl-products { display: flex; flex-direction: column; gap: 6px; }
+  .bowl-product { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .bowl-product .amount { color: var(--emerald); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .bowl-product .product-name { color: var(--text); }
+  .bowl-product .brand { color: var(--text-muted); font-size: 12px; }
+  .bowl-detail {
+    display: flex; gap: 16px; margin-top: 10px;
+    padding-top: 10px; border-top: 1px solid var(--border-light);
+    font-size: 13px; color: var(--text-muted);
+  }
+  .bowl-detail span { display: flex; align-items: center; gap: 4px; }
+
+  .general-notes {
+    padding: 12px 16px; border-radius: 10px;
+    background: rgba(251,146,60,0.06);
+    border: 1px solid rgba(251,146,60,0.15);
+    font-size: 13px; color: var(--text-muted);
+    margin-top: 12px; font-style: italic;
+  }
+  .general-notes-label {
+    font-style: normal; font-weight: 600; color: var(--orange);
+  }
+
+  .raw-notes-toggle {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; color: var(--text-dim);
+    cursor: pointer; margin-top: 12px; padding: 4px 0;
+    background: none; border: none; font-family: inherit;
+  }
+  .raw-notes-toggle:hover { color: var(--text-muted); }
+  .raw-notes-box {
+    margin-top: 8px; padding: 12px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-light);
+    font-size: 13px; color: var(--text-dim);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    line-height: 1.6; display: none; white-space: pre-wrap;
+  }
+  .raw-notes-box.show { display: block; }
+
+  /* View Switcher */
+  .view-switcher {
+    display: flex; gap: 4px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 4px; margin-bottom: 32px;
+  }
+  .view-btn {
+    flex: 1; padding: 10px 16px; text-align: center;
+    border-radius: 8px; font-size: 14px; font-weight: 500;
+    color: var(--text-muted); cursor: pointer;
+    transition: all 0.2s; border: none; background: none; font-family: inherit;
+  }
+  .view-btn:hover { color: var(--text); }
+  .view-btn.active { background: var(--emerald); color: #000; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>Opelle</h1>
+      <p class="workspace">Anabelle's Studio</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" data-page="dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" data-page="clients">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Clients
+      </a>
+      <a class="nav-item" data-page="appointments">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Appointments
+      </a>
+      <a class="nav-item active" data-page="notepad">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/></svg>
+        Log Formula
+      </a>
+      <a class="nav-item" data-page="products">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        Products
+      </a>
+      <a class="nav-item" data-page="tasks">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Tasks
+      </a>
+      <a class="nav-item" data-page="settings">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        Settings
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main">
+    <div class="container">
+
+      <!-- View Switcher (for preview only) -->
+      <div class="view-switcher">
+        <button class="view-btn active" id="tab-notepad">Log Formula</button>
+        <button class="view-btn" id="tab-client">Client View (Sarah J.)</button>
+      </div>
+
+      <!-- ========== PAGE 1: LOG FORMULA ========== -->
+      <div class="page active" id="page-notepad">
+        <div class="notepad-header">
+          <p class="section-label">Quick Entry</p>
+          <h2>Log Formula</h2>
+          <p>Jot down what you used — we'll organize it for you.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-content">
+
+            <div class="form-group">
+              <label class="form-label">Client *</label>
+              <div class="client-selector selected">
+                <div class="client-avatar">SJ</div>
+                <div>
+                  <div class="client-name">Sarah Johnson</div>
+                  <div class="client-sub">Last visit: Feb 2, 2026</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-bottom: 24px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Service Type *</label>
+                <select class="form-select">
+                  <option>Select service type...</option>
+                  <option selected>Base Color</option>
+                  <option>All Over Color</option>
+                  <option>Gloss</option>
+                  <option>Partial Highlight</option>
+                  <option>Full Highlight</option>
+                  <option>Partial Balayage</option>
+                  <option>Full Balayage</option>
+                  <option>Mini Highlight</option>
+                  <option disabled>──────────</option>
+                  <option>+ Add new service type</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-input" value="2026-02-16" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Formula Notes *</label>
+              <div class="notepad-hint">
+                <strong>Just write naturally.</strong> List your bowls, products, amounts, developer, and timing however feels natural. Example: "Bowl 1: 2oz 8.6N + 2oz 7.6N with 4oz 10vol, 35 min"
+              </div>
+              <textarea class="form-textarea">Bowl 1 - roots to midshaft
+2oz 8.6N + 2oz 7.6N Shades EQ
+4oz 10vol developer
+35 min processing
+
+Bowl 2 - ends refresh
+1oz 6.0N + 1oz violet additive
+2oz 20vol developer
+30 min
+
+Applied bowl 1 starting at regrowth line, pulled through to mid. Bowl 2 on last 3 inches only.</textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">General Notes (optional)</label>
+              <textarea class="form-textarea small">Wants to go slightly warmer next visit. Sensitive around hairline — use barrier cream. Liked the result, maybe half shade darker next time.</textarea>
+            </div>
+
+            <div class="save-bar">
+              <button class="btn btn-ghost">Cancel</button>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary" id="btn-save-view">Save &amp; View Client</button>
+                <button class="btn btn-primary" id="btn-save">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  Save Formula
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== PAGE 2: CLIENT PROFILE ========== -->
+      <div class="page" id="page-client-profile">
+
+        <div class="client-header">
+          <div class="client-header-avatar">SJ</div>
+          <div>
+            <h2>Sarah Johnson</h2>
+            <p class="pronouns">she/her</p>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+          <div>
+            <p class="section-label">Formula History</p>
+            <p style="color: var(--text-muted); font-size: 14px;">6 entries across 3 service types</p>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btn-add-formula">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Formula
+          </button>
+        </div>
+
+        <div class="accordion">
+
+          <!-- BASE COLOR -->
+          <div class="accordion-section open">
+            <button class="accordion-trigger">
+              <div class="accordion-trigger-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+                <h3>Base Color</h3>
+                <span class="accordion-count">3 entries</span>
+              </div>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+
+              <!-- Entry 1 -->
+              <div class="formula-entry">
+                <div class="formula-entry-header">
+                  <div class="formula-date">Feb 16, 2026</div>
+                  <button class="btn btn-ghost btn-sm">Edit</button>
+                </div>
+
+                <div class="bowl">
+                  <div class="bowl-label">Bowl 1 — Roots to Midshaft</div>
+                  <div class="bowl-products">
+                    <div class="bowl-product">
+                      <span class="amount">2 oz</span>
+                      <span class="product-name">8.6N</span>
+                      <span class="brand">Shades EQ</span>
+                    </div>
+                    <div class="bowl-product">
+                      <span class="amount">2 oz</span>
+                      <span class="product-name">7.6N</span>
+                      <span class="brand">Shades EQ</span>
+                    </div>
+                  </div>
+                  <div class="bowl-detail">
+                    <span>4 oz 10vol developer</span>
+                    <span>35 min</span>
+                  </div>
+                </div>
+
+                <div class="bowl">
+                  <div class="bowl-label">Bowl 2 — Ends Refresh</div>
+                  <div class="bowl-products">
+                    <div class="bowl-product">
+                      <span class="amount">1 oz</span>
+                      <span class="product-name">6.0N</span>
+                    </div>
+                    <div class="bowl-product">
+                      <span class="amount">1 oz</span>
+                      <span class="product-name">Violet Additive</span>
+                    </div>
+                  </div>
+                  <div class="bowl-detail">
+                    <span>2 oz 20vol developer</span>
+                    <span>30 min</span>
+                  </div>
+                </div>
+
+                <div style="font-size: 13px; color: var(--text-muted); margin-top: 8px; padding: 0 4px;">
+                  Bowl 1 starting at regrowth line, pulled through to mid. Bowl 2 on last 3 inches only.
+                </div>
+
+                <div class="general-notes">
+                  <span class="general-notes-label">Note: </span>Wants to go slightly warmer next visit. Sensitive around hairline — use barrier cream. Liked the result, maybe half shade darker next time.
+                </div>
+
+                <button class="raw-notes-toggle" id="toggle-raw-1">Show raw notes</button>
+                <div class="raw-notes-box" id="raw-1">Bowl 1 - roots to midshaft
+2oz 8.6N + 2oz 7.6N Shades EQ
+4oz 10vol developer
+35 min processing
+
+Bowl 2 - ends refresh
+1oz 6.0N + 1oz violet additive
+2oz 20vol developer
+30 min
+
+Applied bowl 1 starting at regrowth line, pulled through to mid. Bowl 2 on last 3 inches only.</div>
+              </div>
+
+              <!-- Entry 2 -->
+              <div class="formula-entry">
+                <div class="formula-entry-header">
+                  <div class="formula-date">Jan 8, 2026</div>
+                  <button class="btn btn-ghost btn-sm">Edit</button>
+                </div>
+                <div class="bowl">
+                  <div class="bowl-label">Bowl 1 — Full Head</div>
+                  <div class="bowl-products">
+                    <div class="bowl-product">
+                      <span class="amount">3 oz</span>
+                      <span class="product-name">8.6N</span>
+                      <span class="brand">Shades EQ</span>
+                    </div>
+                    <div class="bowl-product">
+                      <span class="amount">1 oz</span>
+                      <span class="product-name">8.3G</span>
+                      <span class="brand">Shades EQ</span>
+                    </div>
+                  </div>
+                  <div class="bowl-detail">
+                    <span>4 oz 10vol developer</span>
+                    <span>35 min</span>
+                  </div>
+                </div>
+                <div class="general-notes">
+                  <span class="general-notes-label">Note: </span>Result was slightly too ashy — add warmth next visit.
+                </div>
+              </div>
+
+              <!-- Entry 3 -->
+              <div class="formula-entry" style="opacity: 0.7;">
+                <div class="formula-entry-header">
+                  <div class="formula-date">Dec 3, 2025</div>
+                  <button class="btn btn-ghost btn-sm">Edit</button>
+                </div>
+                <div class="bowl">
+                  <div class="bowl-label">Bowl 1</div>
+                  <div class="bowl-products">
+                    <div class="bowl-product">
+                      <span class="amount">2 oz</span>
+                      <span class="product-name">8.0N</span>
+                      <span class="brand">Shades EQ</span>
+                    </div>
+                    <div class="bowl-product">
+                      <span class="amount">2 oz</span>
+                      <span class="product-name">7.0N</span>
+                      <span class="brand">Shades EQ</span>
+                    </div>
+                  </div>
+                  <div class="bowl-detail">
+                    <span>4 oz 10vol developer</span>
+                    <span>30 min</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- FULL BALAYAGE -->
+          <div class="accordion-section">
+            <button class="accordion-trigger">
+              <div class="accordion-trigger-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><path d="M12 3v18M5.5 8.5l13 7M5.5 15.5l13-7"/></svg>
+                <h3>Full Balayage</h3>
+                <span class="accordion-count">2 entries</span>
+              </div>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+              <div class="formula-entry">
+                <div class="formula-entry-header">
+                  <div class="formula-date">Jan 22, 2026</div>
+                  <button class="btn btn-ghost btn-sm">Edit</button>
+                </div>
+                <div class="bowl">
+                  <div class="bowl-label">Lightener</div>
+                  <div class="bowl-products">
+                    <div class="bowl-product">
+                      <span class="amount">2 scoops</span>
+                      <span class="product-name">Flash Lift</span>
+                      <span class="brand">Redken</span>
+                    </div>
+                  </div>
+                  <div class="bowl-detail">
+                    <span>30vol developer, 1:2 ratio</span>
+                    <span>45 min under heat</span>
+                  </div>
+                </div>
+                <div class="bowl">
+                  <div class="bowl-label">Toner</div>
+                  <div class="bowl-products">
+                    <div class="bowl-product">
+                      <span class="amount">2 oz</span>
+                      <span class="product-name">9P</span>
+                      <span class="brand">Shades EQ</span>
+                    </div>
+                    <div class="bowl-product">
+                      <span class="amount">1 oz</span>
+                      <span class="product-name">9V</span>
+                      <span class="brand">Shades EQ</span>
+                    </div>
+                  </div>
+                  <div class="bowl-detail">
+                    <span>3 oz Shades EQ Processing Solution</span>
+                    <span>20 min</span>
+                  </div>
+                </div>
+                <div class="general-notes">
+                  <span class="general-notes-label">Note: </span>Great lift. Teasy-lights around face, open air mid-shaft to ends. Loves the brightness.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GLOSS -->
+          <div class="accordion-section">
+            <button class="accordion-trigger">
+              <div class="accordion-trigger-left">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                <h3>Gloss</h3>
+                <span class="accordion-count">1 entry</span>
+              </div>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-body">
+              <div class="formula-entry">
+                <div class="formula-entry-header">
+                  <div class="formula-date">Feb 16, 2026</div>
+                  <button class="btn btn-ghost btn-sm">Edit</button>
+                </div>
+                <div class="bowl">
+                  <div class="bowl-label">Gloss</div>
+                  <div class="bowl-products">
+                    <div class="bowl-product">
+                      <span class="amount">2 oz</span>
+                      <span class="product-name">9P</span>
+                      <span class="brand">Shades EQ</span>
+                    </div>
+                    <div class="bowl-product">
+                      <span class="amount">1 oz</span>
+                      <span class="product-name">Clear</span>
+                      <span class="brand">Shades EQ</span>
+                    </div>
+                  </div>
+                  <div class="bowl-detail">
+                    <span>3 oz Processing Solution</span>
+                    <span>20 min</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // View switcher
+  document.getElementById('tab-notepad').addEventListener('click', function() {
+    document.getElementById('page-notepad').classList.add('active');
+    document.getElementById('page-client-profile').classList.remove('active');
+    this.classList.add('active');
+    document.getElementById('tab-client').classList.remove('active');
+  });
+
+  document.getElementById('tab-client').addEventListener('click', function() {
+    document.getElementById('page-client-profile').classList.add('active');
+    document.getElementById('page-notepad').classList.remove('active');
+    this.classList.add('active');
+    document.getElementById('tab-notepad').classList.remove('active');
+  });
+
+  // Accordion toggles
+  document.querySelectorAll('.accordion-trigger').forEach(function(trigger) {
+    trigger.addEventListener('click', function() {
+      this.parentElement.classList.toggle('open');
+    });
+  });
+
+  // Raw notes toggle
+  document.getElementById('toggle-raw-1').addEventListener('click', function() {
+    var box = document.getElementById('raw-1');
+    var isShown = box.classList.contains('show');
+    if (isShown) {
+      box.classList.remove('show');
+      this.textContent = 'Show raw notes';
+    } else {
+      box.classList.add('show');
+      this.textContent = 'Hide raw notes';
+    }
+  });
+
+  // Save buttons
+  document.getElementById('btn-save').addEventListener('click', function() {
+    alert('Formula saved! AI is parsing your notes...');
+  });
+
+  document.getElementById('btn-save-view').addEventListener('click', function() {
+    document.getElementById('page-client-profile').classList.add('active');
+    document.getElementById('page-notepad').classList.remove('active');
+    document.getElementById('tab-client').classList.add('active');
+    document.getElementById('tab-notepad').classList.remove('active');
+  });
+
+  document.getElementById('btn-add-formula').addEventListener('click', function() {
+    document.getElementById('page-notepad').classList.add('active');
+    document.getElementById('page-client-profile').classList.remove('active');
+    document.getElementById('tab-notepad').classList.add('active');
+    document.getElementById('tab-client').classList.remove('active');
+  });
+</script>
+
+</body>
+</html>

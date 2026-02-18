@@ -4,26 +4,26 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import type { Formula } from "@/lib/types";
+import type { Product } from "@/lib/types";
 
-interface FormulaActionsProps {
-  formula: Formula;
+interface ProductActionsProps {
+  product: Product;
 }
 
-export function FormulaActions({ formula }: FormulaActionsProps) {
+export function ProductActions({ product }: ProductActionsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this formula?")) return;
+    if (!confirm("Are you sure you want to delete this product?")) return;
 
     setLoading(true);
     try {
-      await fetch(`/api/formulas/${formula.id}`, { method: "DELETE" });
-      router.push("/app/formulas");
+      await fetch(`/api/products/${product.id}`, { method: "DELETE" });
+      router.push("/app/products");
       router.refresh();
     } catch (error) {
-      console.error("Failed to delete formula:", error);
+      console.error("Failed to delete product:", error);
     } finally {
       setLoading(false);
     }

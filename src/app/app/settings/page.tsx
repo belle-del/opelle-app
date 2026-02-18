@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ServiceTypesManager } from "./_components/ServiceTypesManager";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function SettingsPage() {
@@ -60,6 +61,17 @@ export default async function SettingsPage() {
             <p className="text-xs text-muted-foreground uppercase tracking-wide">Workspace ID</p>
             <p className="text-sm font-mono text-muted-foreground">{workspace?.id}</p>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Service Types */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Service Types</CardTitle>
+          <CardDescription>Manage the service types available when logging formulas</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ServiceTypesManager />
         </CardContent>
       </Card>
 
