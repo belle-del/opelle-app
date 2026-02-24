@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FlaskConical, Check, Loader2 } from "lucide-react";
 import { ClientPicker } from "./_components/ClientPicker";
+import { FormulaSuggestion } from "./_components/FormulaSuggestion";
 import type { ServiceType } from "@/lib/types";
 
 export default function LogFormulaPage() {
@@ -118,12 +119,14 @@ export default function LogFormulaPage() {
   return (
     <div className="space-y-8 max-w-2xl">
       {/* Header */}
-      <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+      <header style={{ marginBottom: "20px" }}>
+        <p style={{ fontSize: "9px", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--text-on-bark-faint)", marginBottom: "4px" }}>
           Notepad
         </p>
-        <h2 className="text-3xl font-semibold">Log Formula</h2>
-        <p className="text-muted-foreground">
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", color: "var(--stone-lightest)", fontWeight: 300 }}>
+          Log Formula
+        </h2>
+        <p style={{ fontSize: "12px", color: "var(--text-on-bark-faint)", marginTop: "4px" }}>
           Jot down what you mixed — AI will format it for you.
         </p>
       </header>
@@ -131,13 +134,13 @@ export default function LogFormulaPage() {
       <Card>
         <CardContent className="p-6 space-y-6">
           {error && (
-            <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">
+            <div style={{ borderRadius: "8px", background: "rgba(184,85,96,0.1)", border: "1px solid rgba(184,85,96,0.2)", padding: "12px", fontSize: "13px", color: "var(--status-low)" }}>
               {error}
             </div>
           )}
 
           {saved && (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-400 flex items-center gap-2">
+            <div className="flex items-center gap-2" style={{ borderRadius: "8px", background: "rgba(74,138,94,0.1)", border: "1px solid rgba(74,138,94,0.2)", padding: "12px", fontSize: "13px", color: "var(--status-confirmed)" }}>
               <Check className="w-4 h-4" />
               Formula saved!
               {parsing && (
@@ -163,7 +166,7 @@ export default function LogFormulaPage() {
                 id="serviceType"
                 value={serviceTypeId}
                 onChange={(e) => setServiceTypeId(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--stone-mid)", background: "rgba(0,0,0,0.04)", padding: "10px 14px", fontSize: "14px", color: "var(--text-on-stone)", outline: "none" }}
               >
                 <option value="">Select service type</option>
                 {serviceTypes.map((st) => (
@@ -183,6 +186,12 @@ export default function LogFormulaPage() {
               />
             </div>
           </div>
+
+          {/* Formula Suggestion (Kernel-powered) */}
+          <FormulaSuggestion
+            clientId={clientId}
+            serviceTypeName={serviceTypes.find((st) => st.id === serviceTypeId)?.name ?? ""}
+          />
 
           {/* Formula Notes */}
           <div>
@@ -222,6 +231,7 @@ export default function LogFormulaPage() {
               onClick={handleSave}
               disabled={saving || saved}
               className="w-full sm:w-auto"
+              style={{ background: "var(--status-confirmed)", border: "1px solid var(--status-confirmed)" }}
             >
               {saving ? (
                 <>

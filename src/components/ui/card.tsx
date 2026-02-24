@@ -3,54 +3,55 @@ import { type HTMLAttributes } from "react";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {}
 
-export function Card({ className, ...props }: CardProps) {
+export function Card({ className, style, ...props }: CardProps) {
   return (
     <div
-      className={cn(
-        "rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm",
-        "shadow-sm transition-all duration-200",
-        className
-      )}
+      className={cn("rounded-lg transition-all duration-200", className)}
+      style={{ background: "var(--stone-card)", boxShadow: "0 3px 14px rgba(0,0,0,0.16)", borderRadius: "8px", ...style }}
       {...props}
     />
   );
 }
 
-export function CardHeader({ className, ...props }: CardProps) {
+export function CardHeader({ className, style, ...props }: CardProps) {
   return (
     <div
-      className={cn("px-6 py-4 border-b border-white/10", className)}
+      className={cn("px-3 py-2", className)}
+      style={{ borderBottom: "1px solid var(--stone-mid)", ...style }}
       {...props}
     />
   );
 }
 
-export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
+export function CardTitle({ className, style, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn("text-lg font-semibold text-foreground", className)}
+      className={cn(className)}
+      style={{ fontFamily: "'Fraunces', serif", fontSize: "12px", color: "var(--text-on-stone)", fontWeight: 400, ...style }}
       {...props}
     />
   );
 }
 
-export function CardDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
+export function CardDescription({ className, style, ...props }: HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={cn("text-sm text-muted-foreground mt-1", className)}
+      className={cn(className)}
+      style={{ fontSize: "10px", color: "var(--text-on-stone-faint)", marginTop: "2px", ...style }}
       {...props}
     />
   );
 }
 
 export function CardContent({ className, ...props }: CardProps) {
-  return <div className={cn("px-6 py-4", className)} {...props} />;
+  return <div className={cn("px-3 py-2.5", className)} {...props} />;
 }
 
-export function CardFooter({ className, ...props }: CardProps) {
+export function CardFooter({ className, style, ...props }: CardProps) {
   return (
     <div
-      className={cn("px-6 py-4 border-t border-white/10 flex items-center gap-3", className)}
+      className={cn("px-3 py-2.5 flex items-center gap-3", className)}
+      style={{ borderTop: "1px solid var(--stone-mid)", ...style }}
       {...props}
     />
   );

@@ -153,12 +153,12 @@ export default function TasksPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+      <header style={{ marginBottom: 8 }}>
+        <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: "0.25em", textTransform: "uppercase", color: "var(--text-on-stone-faint)", fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>
           Productivity
         </p>
-        <h2 className="text-3xl font-semibold">Tasks</h2>
-        <p className="text-muted-foreground">
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 400, color: "var(--text-on-stone)", letterSpacing: "-0.01em" }}>Tasks</h2>
+        <p style={{ fontSize: 12, color: "var(--text-on-stone-faint)", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
           Manage your tasks, reminders, and client follow-ups.
         </p>
       </header>
@@ -346,7 +346,7 @@ export default function TasksPage() {
           {pendingTasks.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-lg font-medium flex items-center gap-2">
-                <Circle className="w-5 h-5 text-amber-400" />
+                <Circle className="w-5 h-5" style={{ color: "var(--status-pending)" }} />
                 To Do ({pendingTasks.length})
               </h3>
               {pendingTasks.map((task) => {
@@ -354,14 +354,14 @@ export default function TasksPage() {
                 const isExpanded = expandedTaskId === task.id;
 
                 return (
-                  <Card key={task.id} className="hover:bg-white/10 transition-colors">
+                  <Card key={task.id} className="transition-colors" style={{ cursor: "pointer" }}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-4">
                         <button
                           onClick={() => toggleTask(task)}
                           className="flex items-start gap-3 flex-1 text-left"
                         >
-                          <div className="w-6 h-6 rounded-full border-2 border-white/30 flex items-center justify-center hover:border-emerald-400 transition-colors mt-0.5 flex-shrink-0">
+                          <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors mt-0.5 flex-shrink-0" style={{ borderColor: "var(--stone-warm)" }}>
                             {/* Empty circle */}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -403,7 +403,7 @@ export default function TasksPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => deleteTask(task.id)}
-                            className="text-muted-foreground hover:text-red-400"
+                            style={{ color: "var(--text-on-stone-faint)" }}
                           >
                             &times;
                           </Button>
@@ -412,7 +412,7 @@ export default function TasksPage() {
 
                       {/* Expanded Details */}
                       {isExpanded && (
-                        <div className="mt-4 ml-9 pt-4 border-t border-white/10 space-y-3">
+                        <div className="mt-4 ml-9 pt-4 space-y-3" style={{ borderTop: "1px solid var(--stone-mid)" }}>
                           {task.notes && (
                             <div>
                               <p className="text-sm font-medium mb-1">Description:</p>
@@ -431,7 +431,8 @@ export default function TasksPage() {
                                 {task.attachments.map((attachment) => (
                                   <div
                                     key={attachment.id}
-                                    className="flex items-center gap-2 text-sm bg-white/5 rounded px-3 py-2"
+                                    className="flex items-center gap-2 text-sm rounded px-3 py-2"
+                                    style={{ background: "var(--stone-card)" }}
                                   >
                                     <Paperclip className="w-4 h-4 text-muted-foreground" />
                                     <a
@@ -463,7 +464,7 @@ export default function TasksPage() {
           {completedTasks.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-lg font-medium flex items-center gap-2 text-muted-foreground">
-                <Check className="w-5 h-5 text-emerald-400" />
+                <Check className="w-5 h-5" style={{ color: "var(--status-confirmed)" }} />
                 Completed ({completedTasks.length})
               </h3>
               {completedTasks.map((task) => {
@@ -477,8 +478,8 @@ export default function TasksPage() {
                           onClick={() => toggleTask(task)}
                           className="flex items-center gap-3 flex-1 text-left"
                         >
-                          <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                            <Check className="w-4 h-4 text-emerald-400" />
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(110,40,48,0.2)" }}>
+                            <Check className="w-4 h-4" style={{ color: "var(--garnet-ruby)" }} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -496,7 +497,7 @@ export default function TasksPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => deleteTask(task.id)}
-                          className="text-muted-foreground hover:text-red-400"
+                          style={{ color: "var(--text-on-stone-faint)" }}
                         >
                           &times;
                         </Button>

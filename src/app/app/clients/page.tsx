@@ -14,12 +14,14 @@ export default async function ClientsPage() {
     <div className="space-y-8">
       {/* Header */}
       <header className="flex items-center justify-between">
-        <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+        <div>
+          <p style={{ fontSize: "9px", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--text-on-bark-faint)", marginBottom: "4px" }}>
             Manage
           </p>
-          <h2 className="text-3xl font-semibold">Clients</h2>
-          <p className="text-muted-foreground">
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", color: "var(--stone-lightest)", fontWeight: 300 }}>
+            Clients
+          </h2>
+          <p style={{ fontSize: "12px", color: "var(--text-on-bark-faint)", marginTop: "4px" }}>
             {clients.length} {clients.length === 1 ? "client" : "clients"} in your studio
           </p>
         </div>
@@ -35,9 +37,9 @@ export default async function ClientsPage() {
       {clients.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <User className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-medium mb-2">No clients yet</h3>
-            <p className="text-muted-foreground mb-6">
+            <User className="w-12 h-12 mx-auto mb-4" style={{ color: "var(--text-on-stone-ghost)" }} />
+            <h3 style={{ fontSize: "14px", fontFamily: "'Fraunces', serif", color: "var(--text-on-stone)", fontWeight: 400, marginBottom: "8px" }}>No clients yet</h3>
+            <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", marginBottom: "16px" }}>
               Add your first client to start tracking their journey.
             </p>
             <Link href="/app/clients/new">
@@ -52,19 +54,26 @@ export default async function ClientsPage() {
         <div className="space-y-3">
           {clients.map((client) => (
             <Link key={client.id} href={`/app/clients/${client.id}`}>
-              <Card className="hover:bg-white/10 transition-colors cursor-pointer">
-                <CardContent className="p-5">
+              <Card className="cursor-pointer" style={{ marginBottom: "8px" }}>
+                <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-black font-medium">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex items-center justify-center font-medium"
+                        style={{
+                          width: "30px", height: "30px", borderRadius: "50%",
+                          background: "var(--garnet-deep)", color: "var(--garnet-blush)",
+                          fontSize: "11px",
+                        }}
+                      >
                         {client.firstName[0]}
                         {client.lastName?.[0] || ""}
                       </div>
                       <div>
-                        <p className="font-medium">{getClientDisplayName(client)}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <p style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-on-stone)" }}>{getClientDisplayName(client)}</p>
+                        <div className="flex items-center gap-2" style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>
                           {client.email && <span>{client.email}</span>}
-                          {client.phone && client.email && <span>•</span>}
+                          {client.phone && client.email && <span>·</span>}
                           {client.phone && <span>{client.phone}</span>}
                         </div>
                       </div>
@@ -80,10 +89,10 @@ export default async function ClientsPage() {
                           )}
                         </div>
                       )}
-                      <span className="text-sm text-muted-foreground hidden sm:block">
-                        Added {formatDate(client.createdAt)}
+                      <span className="hidden sm:block" style={{ fontSize: "9px", color: "var(--brass)" }}>
+                        {formatDate(client.createdAt)}
                       </span>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                      <ChevronRight className="w-4 h-4" style={{ color: "var(--text-on-stone-ghost)" }} />
                     </div>
                   </div>
                 </CardContent>

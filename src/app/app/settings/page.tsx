@@ -15,12 +15,12 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+      <header style={{ marginBottom: 8 }}>
+        <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: "0.25em", textTransform: "uppercase", color: "var(--text-on-stone-faint)", fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>
           Account
         </p>
-        <h2 className="text-3xl font-semibold">Settings</h2>
-        <p className="text-muted-foreground">
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 400, color: "var(--text-on-stone)", letterSpacing: "-0.01em" }}>Settings</h2>
+        <p style={{ fontSize: 12, color: "var(--text-on-stone-faint)", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
           Manage your account and preferences.
         </p>
       </header>
@@ -33,7 +33,7 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-2xl font-medium text-black">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-medium" style={{ background: "var(--garnet-deep)", color: "var(--garnet-blush)", fontFamily: "'Fraunces', serif" }}>
               {user?.email?.[0]?.toUpperCase() || "?"}
             </div>
             <div>
@@ -82,9 +82,9 @@ export default async function SettingsPage() {
           <CardDescription>Export your data for backup or transfer</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-xl border border-dashed border-white/20 p-8 text-center">
-            <p className="text-muted-foreground mb-2">Coming Soon</p>
-            <p className="text-sm text-muted-foreground">
+          <div className="rounded-xl border border-dashed p-8 text-center" style={{ borderColor: "var(--stone-mid)" }}>
+            <p style={{ color: "var(--text-on-stone-faint)", marginBottom: 8, fontSize: 12 }}>Coming Soon</p>
+            <p style={{ fontSize: 11, color: "var(--text-on-stone-faint)" }}>
               Export your clients, appointments, and formulas to CSV or JSON.
             </p>
           </div>
@@ -92,15 +92,15 @@ export default async function SettingsPage() {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="border-red-500/20">
+      <Card style={{ borderColor: "rgba(184,85,96,0.2)" }}>
         <CardHeader>
-          <CardTitle className="text-red-400">Danger Zone</CardTitle>
+          <CardTitle style={{ color: "var(--status-low)" }}>Danger Zone</CardTitle>
           <CardDescription>Irreversible actions</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-xl border border-dashed border-red-500/20 p-8 text-center">
-            <p className="text-muted-foreground mb-2">Account Deletion</p>
-            <p className="text-sm text-muted-foreground">
+          <div className="rounded-xl border border-dashed p-8 text-center" style={{ borderColor: "rgba(184,85,96,0.2)" }}>
+            <p style={{ color: "var(--text-on-stone-faint)", marginBottom: 8, fontSize: 12 }}>Account Deletion</p>
+            <p style={{ fontSize: 11, color: "var(--text-on-stone-faint)" }}>
               Contact support to delete your account and all associated data.
             </p>
           </div>

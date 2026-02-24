@@ -1,29 +1,34 @@
 "use client";
-
 import { cn } from "@/lib/utils";
-import { forwardRef, type InputHTMLAttributes } from "react";
+import { forwardRef, useState, type InputHTMLAttributes } from "react";
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {}
-
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
+  ({ className, type, style, onFocus, onBlur, ...props }, ref) => {
+    const [focused, setFocused] = useState(false);
     return (
       <input
         type={type}
-        className={cn(
-          "w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm",
-          "px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground",
-          "focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent",
-          "transition-all duration-200",
-          className
-        )}
+        className={cn("w-full transition-all duration-200", className)}
+        style={{
+          padding: "10px 14px",
+          border: `1px solid ${focused ? "var(--brass)" : "var(--stone-mid)"}`,
+          borderRadius: "8px",
+          background: "rgba(0,0,0,0.04)",
+          color: "var(--text-on-stone)",
+          fontSize: "14px",
+          fontFamily: "'DM Sans', sans-serif",
+          outline: "none",
+          boxShadow: focused ? "0 0 0 2px rgba(181,154,91,0.1)" : "none",
+          ...style,
+        }}
+        onFocus={(e) => { setFocused(true); onFocus?.(e); }}
+        onBlur={(e) => { setFocused(false); onBlur?.(e); }}
         ref={ref}
         {...props}
       />
     );
   }
 );
-
 Input.displayName = "Input";
-
 export { Input };
+export type InputProps = InputHTMLAttributes<HTMLInputElement>;

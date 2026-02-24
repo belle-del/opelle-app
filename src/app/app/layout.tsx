@@ -27,7 +27,7 @@ export default async function AppLayout({
       <AppNav user={user} workspaceName={workspace?.name} />
 
       {/* Main content */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-[170px] p-6">
         <div className="max-w-6xl mx-auto">
           {children}
         </div>

@@ -14,17 +14,33 @@ import {
   CheckSquare,
   Settings,
   LogOut,
+  Clock,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
-const navItems = [
-  { href: "/app", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/app/clients", label: "Clients", icon: Users },
-  { href: "/app/appointments", label: "Appointments", icon: Calendar },
-  { href: "/app/formulas", label: "Log Formula", icon: FlaskConical },
-  { href: "/app/products", label: "Products", icon: Package },
-  { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/app/settings", label: "Settings", icon: Settings },
+const NAV_SECTIONS = [
+  {
+    label: "Main",
+    items: [
+      { href: "/app", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/app/appointments", label: "Appointments", icon: Calendar },
+      { href: "/app/clients", label: "Clients", icon: Users },
+    ],
+  },
+  {
+    label: "Practice",
+    items: [
+      { href: "/app/formulas", label: "Formulas", icon: FlaskConical },
+      { href: "/app/products", label: "Products", icon: Package },
+      { href: "/app/tasks", label: "History", icon: Clock },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { href: "/app/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
 
 interface AppNavProps {
@@ -43,69 +59,160 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
     router.refresh();
   };
 
+  const initial = (user.user_metadata?.full_name?.[0] || user.email?.[0] || "?").toUpperCase();
+  const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Practitioner";
+
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 border-r border-white/10 bg-black/20 backdrop-blur-xl flex flex-col">
-      {/* Logo */}
-      <div className="p-6 border-b border-white/10">
+    <aside
+      className="fixed left-0 top-0 h-full flex flex-col"
+      style={{
+        width: "170px",
+        background: "#1A1E14",
+        borderRight: "1px solid rgba(181,154,91,0.08)",
+      }}
+    >
+      {/* Brand */}
+      <div className="px-4 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(181,154,91,0.08)" }}>
         <Link href="/app">
-          <h1 className="text-2xl font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-              Opelle
-            </span>
+          <h1
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "15px",
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              color: "#D8D0C1",
+              fontWeight: 400,
+              lineHeight: 1.2,
+            }}
+          >
+            OPELLE
           </h1>
+          <span
+            style={{
+              display: "block",
+              fontSize: "7px",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "#9E8750",
+              marginTop: "2px",
+            }}
+          >
+            Practitioner Suite
+          </span>
         </Link>
-        {workspaceName && (
-          <p className="text-xs text-muted-foreground mt-1 truncate">
-            {workspaceName}
-          </p>
-        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href ||
-            (item.href !== "/app" && pathname.startsWith(item.href));
-          const Icon = item.icon;
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                isActive
-                  ? "bg-emerald-500/20 text-emerald-300"
-                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-              )}
+      <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
+        {NAV_SECTIONS.map((section) => (
+          <div key={section.label}>
+            <p
+              style={{
+                fontSize: "7px",
+                letterSpacing: "0.3em",
+                textTransform: "uppercase",
+                color: "rgba(237,232,222,0.35)",
+                marginBottom: "4px",
+                paddingLeft: "8px",
+              }}
             >
-              <Icon className="w-5 h-5" />
-              {item.label}
-            </Link>
-          );
-        })}
+              {section.label}
+            </p>
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/app" && pathname.startsWith(item.href));
+                const Icon = item.icon;
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn("flex items-center gap-2 px-2 py-1.5 rounded transition-all duration-150")}
+                    style={{
+                      fontSize: "10px",
+                      color: isActive ? "#D8D0C1" : "rgba(237,232,222,0.55)",
+                      background: isActive ? "rgba(181,154,91,0.07)" : "transparent",
+                      borderLeft: isActive ? "2px solid #B59A5B" : "2px solid transparent",
+                    }}
+                  >
+                    <Icon
+                      style={{
+                        width: "12px",
+                        height: "12px",
+                        opacity: isActive ? 0.8 : 0.5,
+                        flexShrink: 0,
+                      }}
+                    />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      {/* User section */}
-      <div className="p-4 border-t border-white/10">
-        <div className="flex items-center gap-3 px-4 py-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-sm font-medium text-black">
-            {user.email?.[0]?.toUpperCase() || "?"}
+      {/* Log Formula CTA */}
+      <div className="px-3 pb-3">
+        <Link href="/app/formulas">
+          <button
+            className="w-full flex items-center justify-center gap-1.5"
+            style={{
+              padding: "8px 12px",
+              borderRadius: "6px",
+              background: "#6E2830",
+              border: "1px solid #8B353E",
+              color: "#E0D9CC",
+              fontSize: "9px",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 500,
+            }}
+          >
+            <FlaskConical style={{ width: "11px", height: "11px" }} />
+            Log Formula
+          </button>
+        </Link>
+      </div>
+
+      {/* User profile */}
+      <div
+        className="px-3 py-3"
+        style={{ borderTop: "1px solid rgba(181,154,91,0.08)" }}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <div
+            className="flex items-center justify-center flex-shrink-0"
+            style={{
+              width: "26px",
+              height: "26px",
+              borderRadius: "50%",
+              background: "#3A1219",
+              color: "#C4868F",
+              fontSize: "10px",
+              fontWeight: 600,
+            }}
+          >
+            {initial}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">
-              {user.user_metadata?.full_name || user.email?.split("@")[0]}
+          <div className="min-w-0">
+            <p className="truncate" style={{ fontSize: "10px", color: "rgba(237,232,222,0.7)" }}>
+              {displayName}
             </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {user.email}
+            <p className="truncate" style={{ fontSize: "8px", color: "rgba(237,232,222,0.4)" }}>
+              Practitioner
             </p>
           </div>
         </div>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all duration-200 mt-2"
+          className="flex items-center gap-2 w-full px-2 py-1.5 rounded transition-all duration-150"
+          style={{ fontSize: "9px", color: "rgba(237,232,222,0.4)" }}
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut style={{ width: "11px", height: "11px" }} />
           Sign out
         </button>
       </div>

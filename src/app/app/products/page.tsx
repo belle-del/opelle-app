@@ -24,12 +24,14 @@ export default async function ProductsPage() {
     <div className="space-y-8">
       {/* Header */}
       <header className="flex items-center justify-between">
-        <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+        <div>
+          <p style={{ fontSize: "9px", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--text-on-bark-faint)", marginBottom: "4px" }}>
             Inventory
           </p>
-          <h2 className="text-3xl font-semibold">Products</h2>
-          <p className="text-muted-foreground">
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", color: "var(--stone-lightest)", fontWeight: 300 }}>
+            Products
+          </h2>
+          <p style={{ fontSize: "12px", color: "var(--text-on-bark-faint)", marginTop: "4px" }}>
             {products.length} {products.length === 1 ? "product" : "products"} in inventory
           </p>
         </div>
@@ -44,9 +46,9 @@ export default async function ProductsPage() {
       {products.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <Package className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-medium mb-2">No products yet</h3>
-            <p className="text-muted-foreground mb-6">
+            <Package className="w-12 h-12 mx-auto mb-4" style={{ color: "var(--text-on-stone-ghost)" }} />
+            <h3 style={{ fontSize: "14px", fontFamily: "'Fraunces', serif", color: "var(--text-on-stone)", fontWeight: 400, marginBottom: "8px" }}>No products yet</h3>
+            <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", marginBottom: "16px" }}>
               Add your color tubes and products to build formulas faster.
             </p>
             <Link href="/app/products/new">
@@ -59,51 +61,53 @@ export default async function ProductsPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {products.map((product) => (
-            <Link key={product.id} href={`/app/products/${product.id}`}>
-              <Card className="hover:bg-white/10 transition-colors cursor-pointer">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                        <Package className="w-5 h-5 text-orange-400" />
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {product.brand} {product.shade}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {product.line || product.name || categoryLabels[product.category]}
-                          {product.name && product.line ? ` - ${product.name}` : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline">
-                        {categoryLabels[product.category] || product.category}
-                      </Badge>
-                      {product.quantity > 0 && (
-                        <Badge
-                          variant="outline"
-                          className={
-                            product.quantity <= product.lowStockThreshold
-                              ? "border-amber-500/50 text-amber-400"
-                              : "border-emerald-500/50 text-emerald-400"
-                          }
+          {products.map((product) => {
+            const isLow = product.quantity <= product.lowStockThreshold;
+            return (
+              <Link key={product.id} href={`/app/products/${product.id}`}>
+                <Card className="cursor-pointer" style={{ marginBottom: "8px" }}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="flex items-center justify-center"
+                          style={{
+                            width: "30px", height: "30px", borderRadius: "50%",
+                            background: "var(--brass-glow)",
+                          }}
                         >
-                          Qty: {product.quantity}
-                        </Badge>
-                      )}
-                      <span className="text-sm text-muted-foreground hidden sm:block">
-                        {formatDate(product.createdAt)}
-                      </span>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                          <Package className="w-4 h-4" style={{ color: "var(--brass-warm)" }} />
+                        </div>
+                        <div>
+                          <p style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-on-stone)" }}>
+                            {product.brand} {product.shade}
+                          </p>
+                          <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>
+                            {product.line || product.name || categoryLabels[product.category]}
+                            {product.name && product.line ? ` - ${product.name}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span style={{ fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--brass)" }}>
+                          {categoryLabels[product.category] || product.category}
+                        </span>
+                        {product.quantity > 0 && (
+                          <Badge variant={isLow ? "danger" : "success"}>
+                            Qty: {product.quantity}
+                          </Badge>
+                        )}
+                        <span className="hidden sm:block" style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>
+                          {formatDate(product.createdAt)}
+                        </span>
+                        <ChevronRight className="w-4 h-4" style={{ color: "var(--text-on-stone-ghost)" }} />
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

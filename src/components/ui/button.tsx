@@ -9,36 +9,39 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "md", ...props }, ref) => {
+  ({ className, variant = "default", size = "md", style, ...props }, ref) => {
+    const variantStyles: Record<string, React.CSSProperties> = {
+      default: { background: "var(--garnet)", border: "1px solid var(--garnet-vivid)", color: "var(--stone-lightest)" },
+      secondary: { background: "var(--stone-mid)", border: "1px solid var(--stone-warm)", color: "var(--text-on-stone)" },
+      ghost: { background: "transparent", color: "var(--text-on-bark-dim)" },
+      danger: { background: "var(--status-low)", border: "1px solid var(--garnet-ruby)", color: "white" },
+    };
+    const sizeStyles: Record<string, React.CSSProperties> = {
+      sm: { padding: "4px 10px", fontSize: "10px" },
+      md: { padding: "7px 16px", fontSize: "11px" },
+      lg: { padding: "10px 24px", fontSize: "13px" },
+    };
+
     return (
       <button
         className={cn(
-          // Base styles
-          "inline-flex items-center justify-center rounded-full font-medium transition-all duration-200",
-          "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500/50",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          // Variants
-          variant === "default" &&
-            "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm",
-          variant === "secondary" &&
-            "bg-white/10 backdrop-blur-sm border border-white/20 text-foreground hover:bg-white/20",
-          variant === "ghost" &&
-            "text-foreground hover:bg-white/10",
-          variant === "danger" &&
-            "bg-red-600 text-white hover:bg-red-700",
-          // Sizes
-          size === "sm" && "px-3 py-1.5 text-sm",
-          size === "md" && "px-4 py-2 text-sm",
-          size === "lg" && "px-6 py-3 text-base",
+          "inline-flex items-center justify-center font-medium transition-all duration-150",
+          "focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed",
           className
         )}
+        style={{
+          borderRadius: "6px",
+          letterSpacing: "0.04em",
+          fontFamily: "'DM Sans', sans-serif",
+          ...variantStyles[variant],
+          ...sizeStyles[size],
+          ...style,
+        }}
         ref={ref}
         {...props}
       />
     );
   }
 );
-
 Button.displayName = "Button";
-
 export { Button };

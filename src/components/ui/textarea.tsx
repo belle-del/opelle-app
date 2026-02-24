@@ -1,28 +1,35 @@
 "use client";
-
 import { cn } from "@/lib/utils";
-import { forwardRef, type TextareaHTMLAttributes } from "react";
+import { forwardRef, useState, type TextareaHTMLAttributes } from "react";
 
-export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {}
-
-const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, ...props }, ref) => {
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(
+  ({ className, style, onFocus, onBlur, ...props }, ref) => {
+    const [focused, setFocused] = useState(false);
     return (
       <textarea
-        className={cn(
-          "w-full rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm",
-          "px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground",
-          "focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent",
-          "transition-all duration-200 resize-none min-h-[100px]",
-          className
-        )}
+        className={cn("w-full transition-all duration-200 resize-none", className)}
+        style={{
+          padding: "12px 14px",
+          border: `1px solid ${focused ? "var(--brass)" : "var(--stone-mid)"}`,
+          borderRadius: "8px",
+          background: "rgba(0,0,0,0.04)",
+          color: "var(--text-on-stone)",
+          fontSize: "14px",
+          lineHeight: "1.8",
+          fontFamily: "'DM Sans', sans-serif",
+          minHeight: "100px",
+          outline: "none",
+          boxShadow: focused ? "0 0 0 2px rgba(181,154,91,0.1)" : "none",
+          ...style,
+        }}
+        onFocus={(e) => { setFocused(true); onFocus?.(e); }}
+        onBlur={(e) => { setFocused(false); onBlur?.(e); }}
         ref={ref}
         {...props}
       />
     );
   }
 );
-
 Textarea.displayName = "Textarea";
-
 export { Textarea };
+export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement>;

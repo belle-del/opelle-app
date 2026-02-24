@@ -63,7 +63,8 @@ export function ServiceTypesManager() {
       {types.map((st) => (
         <div
           key={st.id}
-          className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5"
+          className="flex items-center gap-3 rounded-lg px-4 py-2.5"
+          style={{ border: "1px solid var(--stone-mid)", background: "var(--stone-card)" }}
         >
           <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0" />
           <input
@@ -74,12 +75,14 @@ export function ServiceTypesManager() {
                 handleRename(st.id, e.target.value);
               }
             }}
-            className="flex-1 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1"
+            className="flex-1 bg-transparent text-sm focus:outline-none rounded px-1"
+            style={{ color: "var(--text-on-stone)", fontFamily: "'DM Sans', sans-serif" }}
           />
           <button
             type="button"
             onClick={() => handleDelete(st.id)}
-            className="text-red-400 hover:text-red-300 p-1"
+            className="p-1"
+            style={{ color: "var(--status-low)" }}
           >
             <Trash2 className="w-4 h-4" />
           </button>
