@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
-import { createFormulaEntry, getFormulaEntriesForClient } from "@/lib/db/formula-entries";
+import { createFormulaEntry, listAllFormulaEntries } from "@/lib/db/formula-entries";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const clientId = searchParams.get("clientId");
+    const clientId = searchParams.get("clientId") || undefined;
+    const serviceTypeId = searchParams.get("serviceTypeId") || undefined;
+    const dateFrom = searchParams.get("dateFrom") || undefined;
+    const dateTo = searchParams.get("dateTo") || undefined;
+    const search = searchParams.get("search") || undefined;
 
-    if (!clientId) {
-      return NextResponse.json({ error: "clientId is required" }, { status: 400 });
-    }
-
-    const entries = await getFormulaEntriesForClient(clientId);
+    const entries = await listAllFormulaEntries({ clientId, serviceTypeId, dateFrom, dateTo, search });
     return NextResponse.json(entries);
   } catch (error) {
     console.error("Failed to list formula entries:", error);

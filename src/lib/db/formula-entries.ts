@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { FormulaEntry, FormulaEntryRow, ParsedFormula } from "@/lib/types";
 import { formulaEntryRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
+import { publishEvent } from "@/lib/kernel";
 
 export async function getFormulaEntriesForClient(
   clientId: string
@@ -17,6 +18,45 @@ export async function getFormulaEntriesForClient(
     .eq("client_id", clientId)
     .order("service_date", { ascending: false });
 
+  if (error || !data) return [];
+  return (data as FormulaEntryRow[]).map(formulaEntryRowToModel);
+}
+
+export async function listAllFormulaEntries(filters?: {
+  clientId?: string;
+  serviceTypeId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}): Promise<FormulaEntry[]> {
+  const workspace = await getCurrentWorkspace();
+  if (!workspace) return [];
+
+  const supabase = await createSupabaseServerClient();
+  let query = supabase
+    .from("formula_entries")
+    .select("*")
+    .eq("workspace_id", workspace.id)
+    .order("service_date", { ascending: false })
+    .limit(300);
+
+  if (filters?.clientId) {
+    query = query.eq("client_id", filters.clientId);
+  }
+  if (filters?.serviceTypeId) {
+    query = query.eq("service_type_id", filters.serviceTypeId);
+  }
+  if (filters?.dateFrom) {
+    query = query.gte("service_date", filters.dateFrom);
+  }
+  if (filters?.dateTo) {
+    query = query.lte("service_date", filters.dateTo);
+  }
+  if (filters?.search) {
+    query = query.ilike("raw_notes", `%${filters.search}%`);
+  }
+
+  const { data, error } = await query;
   if (error || !data) return [];
   return (data as FormulaEntryRow[]).map(formulaEntryRowToModel);
 }
@@ -62,7 +102,25 @@ export async function createFormulaEntry(input: {
     .single();
 
   if (error || !data) return null;
-  return formulaEntryRowToModel(data as FormulaEntryRow);
+
+  const entry = formulaEntryRowToModel(data as FormulaEntryRow);
+
+  // Fire kernel event (non-blocking)
+  publishEvent({
+    event_type: "formula_saved",
+    workspace_id: workspace.id,
+    timestamp: new Date().toISOString(),
+    payload: {
+      formula_entry_id: entry.id,
+      client_id: input.clientId,
+      service_type_id: input.serviceTypeId,
+      service_date: entry.serviceDate,
+      raw_notes: input.rawNotes,
+      parsed_formula: entry.parsedFormula,
+    },
+  });
+
+  return entry;
 }
 
 export async function updateFormulaEntry(
