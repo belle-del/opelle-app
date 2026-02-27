@@ -8,8 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FlaskConical, Check, Loader2 } from "lucide-react";
-import { ClientPicker } from "./_components/ClientPicker";
-import { FormulaSuggestion } from "./_components/FormulaSuggestion";
+import { ClientPicker } from "../_components/ClientPicker";
+import { FormulaSuggestion } from "../_components/FormulaSuggestion";
 import type { ServiceType } from "@/lib/types";
 
 export default function LogFormulaPage() {
