@@ -4,7 +4,7 @@
   /* Background — olive-bark */
   --bark-deepest:    #1A1510;
   --bark:            #2C2418;
-  --bark-mid:        #474033;
+  --bark-mid:        #52504A;
   --bark-warm:       #504536;
   --bark-light:      #5E5344;
   --bark-pale:       #6D6153;
@@ -46,8 +46,8 @@
   /* Text on dark backgrounds */
   --text-on-bark:       #EDE8DE;
   --text-on-bark-dim:   rgba(237,232,222,0.75);
-  --text-on-bark-faint: rgba(237,232,222,0.52);
-  --text-on-bark-ghost: rgba(237,232,222,0.3);
+  --text-on-bark-faint: rgba(237,232,222,0.65);
+  --text-on-bark-ghost: rgba(237,232,222,0.42);
 
   /* Text on light card backgrounds */
   --text-on-stone:       #1E1A14;
