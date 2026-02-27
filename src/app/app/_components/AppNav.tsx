@@ -69,12 +69,12 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
       className="fixed left-0 top-0 h-full flex flex-col"
       style={{
         width: "170px",
-        background: "#1A1E14",
-        borderRight: "1px solid rgba(181,154,91,0.08)",
+        background: "#0E213B",
+        borderRight: "1px solid rgba(196,171,112,0.08)",
       }}
     >
       {/* Brand */}
-      <div className="px-4 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(181,154,91,0.08)" }}>
+      <div className="px-4 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(196,171,112,0.08)" }}>
         <Link href="/app">
           <h1
             style={{
@@ -82,7 +82,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
               fontSize: "15px",
               letterSpacing: "0.3em",
               textTransform: "uppercase",
-              color: "#D8D0C1",
+              color: "#F1EFE0",
               fontWeight: 400,
               lineHeight: 1.2,
             }}
@@ -95,7 +95,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
               fontSize: "7px",
               letterSpacing: "0.2em",
               textTransform: "uppercase",
-              color: "#9E8750",
+              color: "#C4AB70",
               marginTop: "2px",
             }}
           >
@@ -113,7 +113,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
                 fontSize: "7px",
                 letterSpacing: "0.3em",
                 textTransform: "uppercase",
-                color: "rgba(237,232,222,0.35)",
+                color: "rgba(241,239,224,0.35)",
                 marginBottom: "4px",
                 paddingLeft: "8px",
               }}
@@ -134,9 +134,9 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
                     className={cn("flex items-center gap-2 px-2 py-1.5 rounded transition-all duration-150")}
                     style={{
                       fontSize: "10px",
-                      color: isActive ? "#D8D0C1" : "rgba(237,232,222,0.55)",
-                      background: isActive ? "rgba(181,154,91,0.07)" : "transparent",
-                      borderLeft: isActive ? "2px solid #B59A5B" : "2px solid transparent",
+                      color: isActive ? "#F1EFE0" : "rgba(241,239,224,0.55)",
+                      background: isActive ? "rgba(196,171,112,0.07)" : "transparent",
+                      borderLeft: isActive ? "2px solid #C4AB70" : "2px solid transparent",
                     }}
                   >
                     <Icon
@@ -164,9 +164,9 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
             style={{
               padding: "8px 12px",
               borderRadius: "6px",
-              background: "#6E2830",
-              border: "1px solid #8B353E",
-              color: "#E0D9CC",
+              background: "#440606",
+              border: "1px solid #5C0B0B",
+              color: "#F1EFE0",
               fontSize: "9px",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
@@ -183,7 +183,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
       {/* User profile */}
       <div
         className="px-3 py-3"
-        style={{ borderTop: "1px solid rgba(181,154,91,0.08)" }}
+        style={{ borderTop: "1px solid rgba(196,171,112,0.08)" }}
       >
         <div className="flex items-center gap-2 mb-2">
           <div
@@ -192,8 +192,9 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
               width: "26px",
               height: "26px",
               borderRadius: "50%",
-              background: "#3A1219",
-              color: "#C4868F",
+              background: "#0E213B",
+              border: "1px solid rgba(196,171,112,0.2)",
+              color: "#8FADC8",
               fontSize: "10px",
               fontWeight: 600,
             }}
@@ -201,10 +202,10 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
             {initial}
           </div>
           <div className="min-w-0">
-            <p className="truncate" style={{ fontSize: "10px", color: "rgba(237,232,222,0.7)" }}>
+            <p className="truncate" style={{ fontSize: "10px", color: "rgba(241,239,224,0.7)" }}>
               {displayName}
             </p>
-            <p className="truncate" style={{ fontSize: "8px", color: "rgba(237,232,222,0.4)" }}>
+            <p className="truncate" style={{ fontSize: "8px", color: "rgba(241,239,224,0.4)" }}>
               Practitioner
             </p>
           </div>
@@ -212,7 +213,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         <button
           onClick={handleSignOut}
           className="flex items-center gap-2 w-full px-2 py-1.5 rounded transition-all duration-150"
-          style={{ fontSize: "9px", color: "rgba(237,232,222,0.4)" }}
+          style={{ fontSize: "9px", color: "rgba(241,239,224,0.4)" }}
         >
           <LogOut style={{ width: "11px", height: "11px" }} />
           Sign out

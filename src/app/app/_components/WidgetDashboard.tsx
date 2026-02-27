@@ -270,7 +270,7 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
               {products.slice(0, 8).map((p) => {
                 const isLow = p.quantity !== undefined && p.lowStockThreshold !== undefined && p.quantity <= p.lowStockThreshold;
                 return (
-                  <span key={p.id} style={{ padding: "3px 8px", borderRadius: "100px", fontSize: "9px", background: isLow ? "rgba(184,85,96,0.15)" : "var(--stone-mid)", color: isLow ? "var(--status-low)" : "var(--text-on-stone)", border: isLow ? "1px solid rgba(184,85,96,0.3)" : "none" }}>
+                  <span key={p.id} style={{ padding: "3px 8px", borderRadius: "100px", fontSize: "9px", background: isLow ? "rgba(117,18,18,0.15)" : "var(--stone-mid)", color: isLow ? "var(--status-low)" : "var(--text-on-stone)", border: isLow ? "1px solid rgba(117,18,18,0.3)" : "none" }}>
                     {isLow ? "⚠ " : ""}{p.brand}{p.shade ? ` ${p.shade}` : ""}
                   </span>
                 );

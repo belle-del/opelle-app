@@ -214,15 +214,15 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
 
   const eventStyleGetter = useCallback((event: CalendarEvent) => {
     const { appointment } = event.resource;
-    let backgroundColor = "#10b981"; // emerald-500
-    let borderColor = "#059669"; // emerald-600
+    let backgroundColor = "#8FADC8";
+    let borderColor = "#6A90AE";
 
     if (appointment.status === "cancelled") {
-      backgroundColor = "#ef4444"; // red-500
-      borderColor = "#dc2626"; // red-600
+      backgroundColor = "#751212";
+      borderColor = "#5C0B0B";
     } else if (appointment.status === "completed") {
-      backgroundColor = "#6366f1"; // indigo-500
-      borderColor = "#4f46e5"; // indigo-600
+      backgroundColor = "#C4AB70";
+      borderColor = "#A89050";
     }
 
     return {

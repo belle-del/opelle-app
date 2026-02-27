@@ -134,13 +134,13 @@ export default function LogFormulaPage() {
       <Card>
         <CardContent className="p-6 space-y-6">
           {error && (
-            <div style={{ borderRadius: "8px", background: "rgba(184,85,96,0.1)", border: "1px solid rgba(184,85,96,0.2)", padding: "12px", fontSize: "13px", color: "var(--status-low)" }}>
+            <div style={{ borderRadius: "8px", background: "rgba(117,18,18,0.1)", border: "1px solid rgba(117,18,18,0.2)", padding: "12px", fontSize: "13px", color: "var(--status-low)" }}>
               {error}
             </div>
           )}
 
           {saved && (
-            <div className="flex items-center gap-2" style={{ borderRadius: "8px", background: "rgba(74,138,94,0.1)", border: "1px solid rgba(74,138,94,0.2)", padding: "12px", fontSize: "13px", color: "var(--status-confirmed)" }}>
+            <div className="flex items-center gap-2" style={{ borderRadius: "8px", background: "rgba(143,173,200,0.1)", border: "1px solid rgba(143,173,200,0.2)", padding: "12px", fontSize: "13px", color: "var(--status-confirmed)" }}>
               <Check className="w-4 h-4" />
               Formula saved!
               {parsing && (

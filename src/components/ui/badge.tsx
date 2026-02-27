@@ -8,9 +8,9 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 export function Badge({ className, variant = "default", style, ...props }: BadgeProps) {
   const variantStyles: Record<string, React.CSSProperties> = {
     default: { background: "var(--stone-mid)", color: "var(--text-on-stone)" },
-    success: { background: "rgba(74,138,94,0.2)", color: "var(--status-confirmed)" },
-    warning: { background: "rgba(181,154,61,0.2)", color: "var(--status-pending)" },
-    danger: { background: "rgba(184,85,96,0.2)", color: "var(--status-low)" },
+    success: { background: "rgba(143,173,200,0.12)", color: "var(--status-confirmed)" },
+    warning: { background: "rgba(196,171,112,0.12)", color: "var(--status-pending)" },
+    danger: { background: "rgba(117,18,18,0.15)", color: "var(--status-low)" },
     outline: { border: "1px solid var(--stone-mid)", color: "var(--text-on-stone-faint)", background: "transparent" },
   };
   return (

@@ -18,7 +18,7 @@ const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>
           fontSize: "14px",
           fontFamily: "'DM Sans', sans-serif",
           outline: "none",
-          boxShadow: focused ? "0 0 0 2px rgba(181,154,91,0.1)" : "none",
+          boxShadow: focused ? "0 0 0 2px rgba(196,171,112,0.1)" : "none",
           ...style,
         }}
         onFocus={(e) => { setFocused(true); onFocus?.(e); }}

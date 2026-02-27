@@ -92,13 +92,13 @@ export default async function SettingsPage() {
       </Card>
 
       {/* Danger Zone */}
-      <Card style={{ borderColor: "rgba(184,85,96,0.2)" }}>
+      <Card style={{ borderColor: "rgba(117,18,18,0.2)" }}>
         <CardHeader>
           <CardTitle style={{ color: "var(--status-low)" }}>Danger Zone</CardTitle>
           <CardDescription>Irreversible actions</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-xl border border-dashed p-8 text-center" style={{ borderColor: "rgba(184,85,96,0.2)" }}>
+          <div className="rounded-xl border border-dashed p-8 text-center" style={{ borderColor: "rgba(117,18,18,0.2)" }}>
             <p style={{ color: "var(--text-on-stone-faint)", marginBottom: 8, fontSize: 12 }}>Account Deletion</p>
             <p style={{ fontSize: 11, color: "var(--text-on-stone-faint)" }}>
               Contact support to delete your account and all associated data.

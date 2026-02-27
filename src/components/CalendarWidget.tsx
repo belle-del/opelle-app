@@ -82,15 +82,15 @@ export function CalendarWidget({ appointments, clients }: CalendarWidgetProps) {
 
   const eventStyleGetter = (event: CalendarEvent) => {
     const { appointment } = event.resource;
-    let backgroundColor = "#10b981";
-    let borderColor = "#059669";
+    let backgroundColor = "#8FADC8";
+    let borderColor = "#6A90AE";
 
     if (appointment.status === "cancelled") {
-      backgroundColor = "#ef4444";
-      borderColor = "#dc2626";
+      backgroundColor = "#751212";
+      borderColor = "#5C0B0B";
     } else if (appointment.status === "completed") {
-      backgroundColor = "#6366f1";
-      borderColor = "#4f46e5";
+      backgroundColor = "#C4AB70";
+      borderColor = "#A89050";
     }
 
     return {

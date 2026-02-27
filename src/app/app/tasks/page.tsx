@@ -478,7 +478,7 @@ export default function TasksPage() {
                           onClick={() => toggleTask(task)}
                           className="flex items-center gap-3 flex-1 text-left"
                         >
-                          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(110,40,48,0.2)" }}>
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(68,6,6,0.2)" }}>
                             <Check className="w-4 h-4" style={{ color: "var(--garnet-ruby)" }} />
                           </div>
                           <div className="flex-1 min-w-0">

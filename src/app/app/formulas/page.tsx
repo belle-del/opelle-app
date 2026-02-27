@@ -14,7 +14,7 @@ function highlightMatch(text: string, search: string): React.ReactNode[] {
   const parts = text.split(new RegExp(`(${escaped})`, "gi"));
   return parts.map((part, i) =>
     i % 2 === 1
-      ? <mark key={i} style={{ background: "rgba(181,154,91,0.3)", color: "inherit", borderRadius: "2px", padding: "0 1px" }}>{part}</mark>
+      ? <mark key={i} style={{ background: "rgba(196,171,112,0.3)", color: "inherit", borderRadius: "2px", padding: "0 1px" }}>{part}</mark>
       : <span key={i}>{part}</span>
   );
 }

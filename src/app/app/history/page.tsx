@@ -104,7 +104,7 @@ export default function HistoryPage() {
               fontWeight: 500,
               border: "1px solid",
               borderColor: filter === f.value ? "var(--brass-warm)" : "var(--brass-line)",
-              background: filter === f.value ? "rgba(181,154,91,0.12)" : "transparent",
+              background: filter === f.value ? "rgba(196,171,112,0.12)" : "transparent",
               color: filter === f.value ? "var(--brass-warm)" : "var(--text-on-bark-faint)",
               transition: "all 0.15s",
             }}
@@ -137,7 +137,7 @@ export default function HistoryPage() {
               <CardContent style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: "12px" }}>
                 <div style={{
                   width: "32px", height: "32px", borderRadius: "50%", flexShrink: 0,
-                  background: "rgba(181,154,91,0.1)", display: "flex", alignItems: "center",
+                  background: "rgba(196,171,112,0.1)", display: "flex", alignItems: "center",
                   justifyContent: "center", color: "var(--brass-warm)",
                 }}>
                   {ENTITY_ICONS[entry.entityType] ?? <History style={{ width: "14px", height: "14px" }} />}

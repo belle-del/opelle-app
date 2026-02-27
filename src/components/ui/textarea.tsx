@@ -19,7 +19,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLText
           fontFamily: "'DM Sans', sans-serif",
           minHeight: "100px",
           outline: "none",
-          boxShadow: focused ? "0 0 0 2px rgba(181,154,91,0.1)" : "none",
+          boxShadow: focused ? "0 0 0 2px rgba(196,171,112,0.1)" : "none",
           ...style,
         }}
         onFocus={(e) => { setFocused(true); onFocus?.(e); }}
