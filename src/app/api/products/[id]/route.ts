@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getProduct, updateProduct, deleteProduct } from "@/lib/db/products";
+import { logActivity } from "@/lib/db/activity-log";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -45,6 +46,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
     }
 
+    await logActivity("product.updated", "product", id, body.name || id, { after: body });
     return NextResponse.json(product);
   } catch (error) {
     console.error("Failed to update product:", error);
@@ -61,6 +63,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
     }
 
+    await logActivity("product.deleted", "product", id, id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete product:", error);

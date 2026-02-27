@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createTask, listTasks } from "@/lib/db/tasks";
+import { logActivity } from "@/lib/db/activity-log";
 
 export async function GET() {
   try {
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to create task" }, { status: 500 });
     }
 
+    await logActivity("task.created", "task", task.id, task.title || task.id);
     return NextResponse.json(task);
   } catch (error) {
     console.error("Failed to create task:", error);

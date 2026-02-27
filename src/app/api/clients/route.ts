@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, listClients } from "@/lib/db/clients";
+import { logActivity } from "@/lib/db/activity-log";
 
 export async function GET() {
   try {
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to create client" }, { status: 500 });
     }
 
+    await logActivity("client.created", "client", client.id, [client.firstName, client.lastName].filter(Boolean).join(" "));
     return NextResponse.json(client);
   } catch (error) {
     console.error("Failed to create client:", error);

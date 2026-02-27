@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAppointment, listAppointments } from "@/lib/db/appointments";
+import { logActivity } from "@/lib/db/activity-log";
 
 export async function GET() {
   try {
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to create appointment" }, { status: 500 });
     }
 
+    await logActivity("appointment.created", "appointment", appointment.id, appointment.serviceName || appointment.startAt || appointment.id);
     return NextResponse.json(appointment);
   } catch (error) {
     console.error("Failed to create appointment:", error);

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAppointment, updateAppointment, deleteAppointment } from "@/lib/db/appointments";
+import { logActivity } from "@/lib/db/activity-log";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -39,6 +40,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Failed to update appointment" }, { status: 500 });
     }
 
+    await logActivity("appointment.updated", "appointment", id, body.serviceName || id, { after: body });
     return NextResponse.json(appointment);
   } catch (error) {
     console.error("Failed to update appointment:", error);
@@ -55,6 +57,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Failed to delete appointment" }, { status: 500 });
     }
 
+    await logActivity("appointment.deleted", "appointment", id, id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete appointment:", error);

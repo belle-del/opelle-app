@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getClient, updateClient, deleteClient } from "@/lib/db/clients";
+import { logActivity } from "@/lib/db/activity-log";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -40,6 +41,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Failed to update client" }, { status: 500 });
     }
 
+    await logActivity("client.updated", "client", id, body.firstName || id, { after: body });
     return NextResponse.json(client);
   } catch (error) {
     console.error("Failed to update client:", error);
@@ -56,6 +58,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Failed to delete client" }, { status: 500 });
     }
 
+    await logActivity("client.deleted", "client", id, id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete client:", error);

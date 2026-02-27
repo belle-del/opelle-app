@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createProduct, listProducts, searchProducts } from "@/lib/db/products";
+import { logActivity } from "@/lib/db/activity-log";
 
 export async function GET(request: Request) {
   try {
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
     }
 
+    await logActivity("product.created", "product", product.id, product.name || product.id);
     return NextResponse.json(product);
   } catch (error) {
     console.error("Failed to create product:", error);

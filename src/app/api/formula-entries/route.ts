@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createFormulaEntry, listAllFormulaEntries } from "@/lib/db/formula-entries";
+import { logActivity } from "@/lib/db/activity-log";
 
 export async function GET(request: Request) {
   try {
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to create" }, { status: 500 });
     }
 
+    await logActivity("formula.created", "formula", entry.id, entry.serviceDate);
     return NextResponse.json(entry);
   } catch (error) {
     console.error("Failed to create formula entry:", error);

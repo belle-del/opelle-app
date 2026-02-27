@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getTask, updateTask, deleteTask } from "@/lib/db/tasks";
+import { logActivity } from "@/lib/db/activity-log";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -37,6 +38,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
     }
 
+    await logActivity("task.updated", "task", id, body.title || id, { after: body });
     return NextResponse.json(task);
   } catch (error) {
     console.error("Failed to update task:", error);
@@ -53,6 +55,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Failed to delete task" }, { status: 500 });
     }
 
+    await logActivity("task.deleted", "task", id, id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete task:", error);
