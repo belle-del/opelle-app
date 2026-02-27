@@ -129,7 +129,7 @@ export function FormulaHistory({ clientId, entries, serviceTypes }: FormulaHisto
           <h3 className="text-lg font-semibold">Formula History</h3>
           <p className="text-sm text-muted-foreground">{entries.length} entries</p>
         </div>
-        <Link href={`/app/formulas?clientId=${clientId}`}>
+        <Link href={`/app/formulas/log?clientId=${clientId}`}>
           <Button size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Log Formula
@@ -140,7 +140,7 @@ export function FormulaHistory({ clientId, entries, serviceTypes }: FormulaHisto
       {entries.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-sm text-muted-foreground mb-4">No formulas logged yet</p>
-          <Link href={`/app/formulas?clientId=${clientId}`}>
+          <Link href={`/app/formulas/log?clientId=${clientId}`}>
             <Button size="sm" variant="secondary">
               <Plus className="w-4 h-4 mr-2" />
               Log First Formula

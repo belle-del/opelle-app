@@ -156,7 +156,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
 
       {/* Log Formula CTA */}
       <div className="px-3 pb-3">
-        <Link href="/app/formulas">
+        <Link href="/app/formulas/log">
           <button
             className="w-full flex items-center justify-center gap-1.5"
             style={{
