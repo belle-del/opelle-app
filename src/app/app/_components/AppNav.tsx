@@ -121,11 +121,11 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           <div key={section.label}>
             <p
               style={{
-                fontSize: "7px",
-                letterSpacing: "0.3em",
+                fontSize: "8px",
+                letterSpacing: "0.25em",
                 textTransform: "uppercase",
                 color: "rgba(241,239,224,0.35)",
-                marginBottom: "4px",
+                marginBottom: "6px",
                 paddingLeft: "8px",
               }}
             >
@@ -142,9 +142,9 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={cn("flex items-center gap-2 px-2 py-1.5 rounded transition-all duration-150")}
+                    className={cn("flex items-center gap-2.5 px-2 py-2 rounded transition-all duration-150")}
                     style={{
-                      fontSize: "10px",
+                      fontSize: "11px",
                       color: isActive ? "#F1EFE0" : "rgba(241,239,224,0.55)",
                       background: isActive ? "rgba(143,173,200,0.08)" : "transparent",
                       borderLeft: isActive ? "2px solid #8FADC8" : "2px solid transparent",
@@ -152,9 +152,9 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
                   >
                     <Icon
                       style={{
-                        width: "12px",
-                        height: "12px",
-                        opacity: isActive ? 0.8 : 0.5,
+                        width: "16px",
+                        height: "16px",
+                        opacity: isActive ? 0.85 : 0.55,
                         flexShrink: 0,
                       }}
                     />
@@ -178,14 +178,14 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
               background: "#440606",
               border: "1px solid #5C0B0B",
               color: "#F1EFE0",
-              fontSize: "9px",
+              fontSize: "10px",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               fontFamily: "'DM Sans', sans-serif",
               fontWeight: 500,
             }}
           >
-            <FlaskConical style={{ width: "11px", height: "11px" }} />
+            <FlaskConical style={{ width: "14px", height: "14px" }} />
             Log Formula
           </button>
         </Link>
@@ -200,32 +200,32 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           <div
             className="flex items-center justify-center flex-shrink-0"
             style={{
-              width: "26px",
-              height: "26px",
+              width: "30px",
+              height: "30px",
               borderRadius: "50%",
               background: "rgba(143,173,200,0.12)",
               color: "#8FADC8",
-              fontSize: "10px",
+              fontSize: "12px",
               fontWeight: 600,
             }}
           >
             {initial}
           </div>
           <div className="min-w-0">
-            <p className="truncate" style={{ fontSize: "10px", color: "rgba(241,239,224,0.7)" }}>
+            <p className="truncate" style={{ fontSize: "11px", color: "rgba(241,239,224,0.7)" }}>
               {displayName}
             </p>
-            <p className="truncate" style={{ fontSize: "8px", color: "rgba(241,239,224,0.4)" }}>
+            <p className="truncate" style={{ fontSize: "9px", color: "rgba(241,239,224,0.4)" }}>
               Practitioner
             </p>
           </div>
         </div>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-2 w-full px-2 py-1.5 rounded transition-all duration-150"
-          style={{ fontSize: "9px", color: "rgba(241,239,224,0.4)" }}
+          className="flex items-center gap-2.5 w-full px-2 py-2 rounded transition-all duration-150"
+          style={{ fontSize: "10px", color: "rgba(241,239,224,0.4)" }}
         >
-          <LogOut style={{ width: "11px", height: "11px" }} />
+          <LogOut style={{ width: "14px", height: "14px" }} />
           Sign out
         </button>
       </div>
