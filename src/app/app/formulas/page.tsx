@@ -1,258 +1,210 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { FlaskConical } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { FlaskConical, Check, Loader2 } from "lucide-react";
-import { ClientPicker } from "./_components/ClientPicker";
-import { FormulaSuggestion } from "./_components/FormulaSuggestion";
-import type { ServiceType } from "@/lib/types";
+import { FormulaSearchBar } from "./_components/FormulaSearchBar";
+import type { FormulaEntry, ServiceType } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
-export default function LogFormulaPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const preselectedClientId = searchParams.get("clientId") || "";
-
-  const [clientId, setClientId] = useState(preselectedClientId);
-  const [serviceTypeId, setServiceTypeId] = useState("");
-  const [serviceDate, setServiceDate] = useState(
-    new Date().toISOString().split("T")[0]
+function highlightMatch(text: string, search: string): React.ReactNode[] {
+  if (!search.trim()) return [<span key="0">{text}</span>];
+  const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const parts = text.split(new RegExp(`(${escaped})`, "gi"));
+  return parts.map((part, i) =>
+    i % 2 === 1
+      ? <mark key={i} style={{ background: "rgba(181,154,91,0.3)", color: "inherit", borderRadius: "2px", padding: "0 1px" }}>{part}</mark>
+      : <span key={i}>{part}</span>
   );
-  const [rawNotes, setRawNotes] = useState("");
-  const [generalNotes, setGeneralNotes] = useState("");
-  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [parsing, setParsing] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+}
 
-  // Load service types (seed if empty)
-  useEffect(() => {
-    async function loadServiceTypes() {
-      let res = await fetch("/api/service-types");
-      let types = await res.json();
-
-      if (Array.isArray(types) && types.length === 0) {
-        // Seed defaults
-        res = await fetch("/api/service-types/seed", { method: "POST" });
-        types = await res.json();
-      }
-
-      if (Array.isArray(types)) {
-        setServiceTypes(types);
-      }
-    }
-    loadServiceTypes().catch(() => {});
-  }, []);
-
-  const handleSave = async () => {
-    if (!clientId || !serviceTypeId || !rawNotes.trim()) {
-      setError("Please fill in client, service type, and formula notes.");
-      return;
-    }
-
-    setSaving(true);
-    setError(null);
-
-    try {
-      // 1. Save the formula entry
-      const res = await fetch("/api/formula-entries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientId,
-          serviceTypeId,
-          rawNotes: rawNotes.trim(),
-          generalNotes: generalNotes.trim() || undefined,
-          serviceDate,
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save formula");
-      }
-
-      const entry = await res.json();
-      setSaved(true);
-
-      // 2. Trigger AI parsing in background
-      setParsing(true);
-      try {
-        const parseRes = await fetch("/api/formulas/parse", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ rawNotes: rawNotes.trim() }),
-        });
-
-        if (parseRes.ok) {
-          const parsed = await parseRes.json();
-          // Update the entry with parsed formula
-          await fetch(`/api/formula-entries/${entry.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ parsedFormula: parsed }),
-          });
-        }
-      } catch {
-        // AI parsing failed — that's OK, raw notes are saved
-        console.error("AI parsing failed, raw notes saved");
-      } finally {
-        setParsing(false);
-      }
-
-      // 3. Redirect to client profile after short delay
-      setTimeout(() => {
-        router.push(`/app/clients/${clientId}`);
-        router.refresh();
-      }, 1500);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-      setSaving(false);
-    }
-  };
+function FormulaCard({ entry, search, clientNames, serviceTypeNames }: {
+  entry: FormulaEntry;
+  search: string;
+  clientNames: Map<string, string>;
+  serviceTypeNames: Map<string, string>;
+}) {
+  const clientName = clientNames.get(entry.clientId) || "Unknown client";
+  const serviceTypeName = serviceTypeNames.get(entry.serviceTypeId) || "";
+  const preview = entry.rawNotes.slice(0, 220);
 
   return (
-    <div className="space-y-8 max-w-2xl">
-      {/* Header */}
-      <header style={{ marginBottom: "20px" }}>
-        <p style={{ fontSize: "9px", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--text-on-bark-faint)", marginBottom: "4px" }}>
-          Notepad
+    <Card>
+      <CardContent className="p-4">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px", flexWrap: "wrap", gap: "6px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <Link
+              href={`/app/clients/${entry.clientId}`}
+              style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-on-stone)", textDecoration: "none" }}
+            >
+              {clientName}
+            </Link>
+            {serviceTypeName && (
+              <span style={{
+                fontSize: "10px", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase",
+                color: "var(--text-on-stone-faint)", padding: "2px 8px", borderRadius: "100px",
+                border: "1px solid var(--stone-mid)",
+              }}>
+                {serviceTypeName}
+              </span>
+            )}
+          </div>
+          <span style={{ fontSize: "12px", color: "var(--text-on-stone-ghost)" }}>
+            {formatDate(entry.serviceDate)}
+          </span>
+        </div>
+        <p style={{ fontSize: "13px", color: "var(--text-on-stone-dim)", fontFamily: "monospace", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+          {highlightMatch(preview, search)}
+          {entry.rawNotes.length > 220 && <span style={{ color: "var(--text-on-stone-ghost)" }}>…</span>}
         </p>
-        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", color: "var(--stone-lightest)", fontWeight: 300 }}>
-          Log Formula
-        </h2>
-        <p style={{ fontSize: "12px", color: "var(--text-on-bark-faint)", marginTop: "4px" }}>
-          Jot down what you mixed — AI will format it for you.
-        </p>
+        {entry.generalNotes && (
+          <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", marginTop: "8px", fontStyle: "italic", borderTop: "1px solid var(--stone-mid)", paddingTop: "8px" }}>
+            {entry.generalNotes}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function FormulasPage() {
+  const [entries, setEntries] = useState<FormulaEntry[]>([]);
+  const [clientNames, setClientNames] = useState<Map<string, string>>(new Map());
+  const [serviceTypeNames, setServiceTypeNames] = useState<Map<string, string>>(new Map());
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [search, setSearch] = useState("");
+  const [serviceTypeId, setServiceTypeId] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/service-types").then((r) => r.json()),
+      fetch("/api/clients").then((r) => r.json()),
+    ]).then(([types, clients]) => {
+      if (Array.isArray(types)) {
+        setServiceTypes(types);
+        const stMap = new Map<string, string>();
+        for (const st of types) stMap.set(st.id, st.name);
+        setServiceTypeNames(stMap);
+      }
+      if (Array.isArray(clients)) {
+        const map = new Map<string, string>();
+        for (const c of clients) {
+          map.set(c.id, [c.firstName, c.lastName].filter(Boolean).join(" "));
+        }
+        setClientNames(map);
+      }
+    }).catch(() => {});
+  }, []);
+
+  const fetchEntries = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (serviceTypeId) params.set("serviceTypeId", serviceTypeId);
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
+    if (debouncedSearch) params.set("search", debouncedSearch);
+
+    try {
+      const res = await fetch(`/api/formula-entries?${params}`);
+      const data = await res.json();
+      setEntries(Array.isArray(data) ? data : []);
+    } catch {
+      setEntries([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [serviceTypeId, dateFrom, dateTo, debouncedSearch]);
+
+  useEffect(() => { fetchEntries(); }, [fetchEntries]);
+
+  const hasFilters = !!(debouncedSearch || serviceTypeId || dateFrom || dateTo);
+
+  return (
+    <div className="space-y-6">
+      <header style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div>
+          <p style={{ fontSize: "9px", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--text-on-bark-faint)", marginBottom: "4px" }}>
+            Practice
+          </p>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", color: "var(--stone-lightest)", fontWeight: 300 }}>
+            Formulas
+          </h2>
+          <p style={{ fontSize: "12px", color: "var(--text-on-bark-faint)", marginTop: "4px" }}>
+            {loading ? "Loading…" : `${entries.length} formula${entries.length !== 1 ? "s" : ""}${hasFilters ? " matching filters" : ""}`}
+          </p>
+        </div>
+        <Link href="/app/formulas/log">
+          <button style={{
+            display: "flex", alignItems: "center", gap: "6px",
+            padding: "8px 14px", borderRadius: "6px",
+            background: "var(--garnet)", border: "1px solid var(--garnet-vivid)",
+            color: "var(--stone-lightest)", fontSize: "12px", fontWeight: 500,
+            letterSpacing: "0.05em",
+          }}>
+            <FlaskConical style={{ width: "13px", height: "13px" }} />
+            Log Formula
+          </button>
+        </Link>
       </header>
 
       <Card>
-        <CardContent className="p-6 space-y-6">
-          {error && (
-            <div style={{ borderRadius: "8px", background: "rgba(184,85,96,0.1)", border: "1px solid rgba(184,85,96,0.2)", padding: "12px", fontSize: "13px", color: "var(--status-low)" }}>
-              {error}
-            </div>
-          )}
-
-          {saved && (
-            <div className="flex items-center gap-2" style={{ borderRadius: "8px", background: "rgba(74,138,94,0.1)", border: "1px solid rgba(74,138,94,0.2)", padding: "12px", fontSize: "13px", color: "var(--status-confirmed)" }}>
-              <Check className="w-4 h-4" />
-              Formula saved!
-              {parsing && (
-                <span className="flex items-center gap-1 ml-2 text-muted-foreground">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  AI formatting...
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Client Picker */}
-          <div>
-            <Label className="mb-2 block">Client *</Label>
-            <ClientPicker value={clientId} onChange={setClientId} />
-          </div>
-
-          {/* Service Type + Date */}
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="serviceType" className="mb-2 block">Service Type *</Label>
-              <select
-                id="serviceType"
-                value={serviceTypeId}
-                onChange={(e) => setServiceTypeId(e.target.value)}
-                style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--stone-mid)", background: "rgba(0,0,0,0.04)", padding: "10px 14px", fontSize: "14px", color: "var(--text-on-stone)", outline: "none" }}
-              >
-                <option value="">Select service type</option>
-                {serviceTypes.map((st) => (
-                  <option key={st.id} value={st.id}>
-                    {st.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label htmlFor="serviceDate" className="mb-2 block">Date</Label>
-              <Input
-                id="serviceDate"
-                type="date"
-                value={serviceDate}
-                onChange={(e) => setServiceDate(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Formula Suggestion (Kernel-powered) */}
-          <FormulaSuggestion
-            clientId={clientId}
-            serviceTypeName={serviceTypes.find((st) => st.id === serviceTypeId)?.name ?? ""}
+        <CardContent className="p-4">
+          <FormulaSearchBar
+            search={search} onSearchChange={setSearch}
+            serviceTypeId={serviceTypeId} onServiceTypeChange={setServiceTypeId}
+            dateFrom={dateFrom} onDateFromChange={setDateFrom}
+            dateTo={dateTo} onDateToChange={setDateTo}
+            serviceTypes={serviceTypes}
           />
-
-          {/* Formula Notes */}
-          <div>
-            <Label htmlFor="rawNotes" className="mb-2 block">
-              Formula Notes *
-            </Label>
-            <Textarea
-              id="rawNotes"
-              value={rawNotes}
-              onChange={(e) => setRawNotes(e.target.value)}
-              placeholder={"e.g., Bowl 1: 2 oz of 8.6N and 2 of 7.6N with 4 oz of 10 vol. 35 min at roots to midshaft.\n\nBowl 2: Redken Flash Lift + 30vol 1:2 in foils on crown..."}
-              rows={8}
-              className="font-mono text-sm"
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              Write naturally — AI will parse your bowls, products, amounts, and timing.
-            </p>
-          </div>
-
-          {/* General Notes */}
-          <div>
-            <Label htmlFor="generalNotes" className="mb-2 block">
-              General Notes
-            </Label>
-            <Textarea
-              id="generalNotes"
-              value={generalNotes}
-              onChange={(e) => setGeneralNotes(e.target.value)}
-              placeholder="Client preferences, plans for next visit, observations..."
-              rows={3}
-            />
-          </div>
-
-          {/* Save */}
-          <div className="pt-2">
-            <Button
-              onClick={handleSave}
-              disabled={saving || saved}
-              className="w-full sm:w-auto"
-              style={{ background: "var(--status-confirmed)", border: "1px solid var(--status-confirmed)" }}
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : saved ? (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Saved
-                </>
-              ) : (
-                <>
-                  <FlaskConical className="w-4 h-4 mr-2" />
-                  Save Formula
-                </>
-              )}
-            </Button>
-          </div>
         </CardContent>
       </Card>
+
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "48px", color: "var(--text-on-bark-faint)", fontSize: "14px" }}>
+          Loading formulas…
+        </div>
+      ) : entries.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "48px" }}>
+          <FlaskConical style={{ width: "32px", height: "32px", margin: "0 auto 12px", color: "var(--text-on-bark-ghost)" }} />
+          <p style={{ fontSize: "14px", color: "var(--text-on-bark-faint)", marginBottom: "16px" }}>
+            {hasFilters ? "No formulas match your filters" : "No formulas logged yet"}
+          </p>
+          {!hasFilters && (
+            <Link href="/app/formulas/log">
+              <button style={{
+                padding: "8px 16px", borderRadius: "6px",
+                background: "var(--garnet)", border: "1px solid var(--garnet-vivid)",
+                color: "var(--stone-lightest)", fontSize: "12px",
+              }}>
+                Log your first formula
+              </button>
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {entries.map((entry) => (
+            <FormulaCard
+              key={entry.id}
+              entry={entry}
+              search={debouncedSearch}
+              clientNames={clientNames}
+              serviceTypeNames={serviceTypeNames}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
