@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
 type View = "day" | "week" | "month";
@@ -64,17 +65,52 @@ function formatHour(h: number) {
   return h > 12 ? `${h - 12}PM` : `${h}AM`;
 }
 
+function getSavedView(): View {
+  if (typeof window === "undefined") return "week";
+  const saved = localStorage.getItem("opelle-calendar-view");
+  if (saved === "day" || saved === "week" || saved === "month") return saved;
+  return "week";
+}
+
+function getSavedDate(): Date {
+  if (typeof window === "undefined") return new Date();
+  const saved = localStorage.getItem("opelle-calendar-date");
+  if (saved) {
+    const d = new Date(saved);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return new Date();
+}
+
+function makeNewApptUrl(date: Date, hour: number): string {
+  const d = new Date(date);
+  d.setHours(hour, 0, 0, 0);
+  return `/app/appointments/new?startAt=${d.toISOString().slice(0, 16)}`;
+}
+
 export function V7Calendar({ appointments, clients }: V7CalendarProps) {
-  const [view, setView] = useState<View>("week");
-  const [current, setCurrent] = useState(new Date());
+  const router = useRouter();
+  const [view, setView] = useState<View>(getSavedView);
+  const [current, setCurrent] = useState<Date>(getSavedDate);
   const today = new Date();
+
+  // Persist view and date to localStorage
+  const updateView = (v: View) => {
+    setView(v);
+    localStorage.setItem("opelle-calendar-view", v);
+  };
+
+  const updateCurrent = (d: Date) => {
+    setCurrent(d);
+    localStorage.setItem("opelle-calendar-date", d.toISOString());
+  };
 
   const navigate = (dir: -1 | 1) => {
     const d = new Date(current);
     if (view === "day") d.setDate(d.getDate() + dir);
     else if (view === "week") d.setDate(d.getDate() + 7 * dir);
     else d.setMonth(d.getMonth() + dir);
-    setCurrent(d);
+    updateCurrent(d);
   };
 
   const headerLabel = () => {
@@ -99,7 +135,13 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
               <div style={{ padding: "10px 8px 8px 0", textAlign: "right", fontSize: "9px", color: "var(--text-on-stone-faint)" }}>
                 {formatHour(hour)}
               </div>
-              <div style={{ borderTop: "1px solid var(--stone-mid)", padding: "4px 0 4px 8px", minHeight: "52px" }}>
+              <div
+                onClick={() => { if (slotAppts.length === 0) router.push(makeNewApptUrl(current, hour)); }}
+                style={{ borderTop: "1px solid var(--stone-mid)", padding: "4px 0 4px 8px", minHeight: "52px", cursor: slotAppts.length === 0 ? "pointer" : "default", transition: "background 0.15s" }}
+                onMouseEnter={(e) => { if (slotAppts.length === 0) e.currentTarget.style.background = "rgba(143,173,200,0.06)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                title={slotAppts.length === 0 ? "Click to add appointment" : undefined}
+              >
                 {slotAppts.map((appt) => (
                   <Link key={appt.id} href={`/app/appointments/${appt.id}`}>
                     <div style={{ padding: "6px 10px", borderRadius: "6px", marginBottom: "4px", background: "rgba(0,0,0,0.04)", borderLeft: `3px solid ${statusColor(appt.status)}` }}>
@@ -126,7 +168,7 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
           {days.map((day) => {
             const isToday = isSameDay(day, today);
             return (
-              <button key={day.toISOString()} onClick={() => { setCurrent(day); setView("day"); }}
+              <button key={day.toISOString()} onClick={() => { updateCurrent(day); updateView("day"); }}
                 style={{ textAlign: "center", padding: "6px 2px", borderRadius: "6px", background: isToday ? "var(--garnet-wash)" : "transparent", border: "none" }}>
                 <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{DAY_NAMES[day.getDay()]}</p>
                 <p style={{ fontSize: "16px", fontFamily: "'Fraunces', serif", color: isToday ? "var(--garnet-ruby)" : "var(--text-on-stone)", fontWeight: 300 }}>{day.getDate()}</p>
@@ -140,7 +182,14 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
             {days.map((day) => {
               const slotAppts = appointments.filter((a) => isSameDay(new Date(a.startAt), day) && new Date(a.startAt).getHours() === hour);
               return (
-                <div key={day.toISOString()} style={{ borderTop: "1px solid var(--stone-mid)", borderLeft: "1px solid var(--stone-mid)", padding: "3px", minHeight: "44px" }}>
+                <div
+                  key={day.toISOString()}
+                  onClick={() => { if (slotAppts.length === 0) router.push(makeNewApptUrl(day, hour)); }}
+                  style={{ borderTop: "1px solid var(--stone-mid)", borderLeft: "1px solid var(--stone-mid)", padding: "3px", minHeight: "44px", cursor: slotAppts.length === 0 ? "pointer" : "default", transition: "background 0.15s" }}
+                  onMouseEnter={(e) => { if (slotAppts.length === 0) e.currentTarget.style.background = "rgba(143,173,200,0.06)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                  title={slotAppts.length === 0 ? "Click to add appointment" : undefined}
+                >
                   {slotAppts.map((appt) => (
                     <Link key={appt.id} href={`/app/appointments/${appt.id}`}>
                       <div style={{ padding: "2px 5px", borderRadius: "4px", marginBottom: "2px", background: "rgba(0,0,0,0.04)", borderLeft: `2px solid ${statusColor(appt.status)}`, fontSize: "9px", color: "var(--text-on-stone)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -180,7 +229,7 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
             const isToday = isSameDay(day, today);
             const dayAppts = appointments.filter((a) => isSameDay(new Date(a.startAt), day));
             return (
-              <button key={i} onClick={() => { setCurrent(day); setView("day"); }}
+              <button key={i} onClick={() => { updateCurrent(day); updateView("day"); }}
                 style={{ minHeight: "72px", padding: "4px 6px", textAlign: "left", borderRadius: "6px", background: isToday ? "var(--garnet-wash)" : "transparent", border: "1px solid var(--stone-mid)", opacity: inMonth ? 1 : 0.35 }}>
                 <p style={{ fontSize: "11px", fontFamily: "'Fraunces', serif", color: isToday ? "var(--garnet-ruby)" : "var(--text-on-stone)", fontWeight: 300 }}>{day.getDate()}</p>
                 <div style={{ display: "flex", gap: "2px", flexWrap: "wrap", marginTop: "4px" }}>
@@ -205,13 +254,13 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <button onClick={() => navigate(-1)} style={{ ...btnBase, width: "28px", height: "28px" }}><ChevronLeft size={14} style={{ color: "var(--text-on-stone)" }} /></button>
           <button onClick={() => navigate(1)} style={{ ...btnBase, width: "28px", height: "28px" }}><ChevronRight size={14} style={{ color: "var(--text-on-stone)" }} /></button>
-          <button onClick={() => setCurrent(new Date())} style={{ ...btnBase, padding: "4px 10px", fontSize: "10px", color: "var(--text-on-stone)" }}>Today</button>
+          <button onClick={() => updateCurrent(new Date())} style={{ ...btnBase, padding: "4px 10px", fontSize: "10px", color: "var(--text-on-stone)" }}>Today</button>
           <p style={{ fontFamily: "'Fraunces', serif", fontSize: "16px", color: "var(--text-on-stone)", fontWeight: 300, marginLeft: "4px" }}>{headerLabel()}</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <div style={{ display: "flex", background: "var(--stone-mid)", borderRadius: "100px", padding: "2px", border: "1px solid var(--stone-warm)" }}>
             {(["day", "week", "month"] as View[]).map((v) => (
-              <button key={v} onClick={() => setView(v)}
+              <button key={v} onClick={() => updateView(v)}
                 style={{ padding: "4px 10px", borderRadius: "100px", fontSize: "10px", background: view === v ? "var(--garnet)" : "transparent", color: view === v ? "var(--stone-lightest)" : "var(--text-on-stone)", border: "none", textTransform: "capitalize" }}>
                 {v}
               </button>

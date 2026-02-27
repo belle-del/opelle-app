@@ -205,25 +205,47 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
 
   const renderContent = (widget: Widget) => {
     switch (widget.type) {
-      case "schedule":
+      case "schedule": {
+        const SCHED_HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8AM–7PM
+        const fmtHr = (h: number) => h === 12 ? "12p" : h > 12 ? `${h - 12}p` : `${h}a`;
+        const currentHour = now.getHours();
         return (
           <>
             <WidgetHead title="Today's Schedule" link="/app/appointments" />
-            <div style={{ padding: "10px 12px", overflow: "auto", height: "calc(100% - 37px)" }}>
-              {todayAppts.length === 0 ? (
-                <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)", textAlign: "center", paddingTop: "20px" }}>No appointments today</p>
-              ) : todayAppts.map((appt) => {
-                const isPast = new Date(appt.startAt) < now;
-                return (
-                  <div key={appt.id} style={{ padding: "6px 8px", borderRadius: "6px", marginBottom: "6px", background: isPast ? "rgba(0,0,0,0.05)" : "var(--garnet-wash)", opacity: isPast ? 0.55 : 1, borderLeft: `2px solid ${appt.status === "completed" ? "var(--status-confirmed)" : "var(--garnet-vivid)"}` }}>
-                    <p style={{ fontSize: "10px", fontWeight: 500, color: "var(--text-on-stone)" }}>{getClientName(clients, appt.clientId)}</p>
-                    <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>{appt.serviceName} · {new Date(appt.startAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</p>
-                  </div>
-                );
-              })}
+            <div style={{ overflow: "auto", height: "calc(100% - 37px)", position: "relative" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "32px 1fr", minHeight: "100%" }}>
+                {SCHED_HOURS.map((hour) => {
+                  const slotAppts = todayAppts.filter((a) => new Date(a.startAt).getHours() === hour);
+                  const isCurrentHour = hour === currentHour;
+                  return (
+                    <div key={hour} style={{ display: "contents" }}>
+                      <div style={{ padding: "4px 4px 0 0", textAlign: "right", fontSize: "8px", fontWeight: isCurrentHour ? 600 : 400, color: isCurrentHour ? "var(--garnet)" : "var(--text-on-stone-ghost)", lineHeight: 1 }}>
+                        {fmtHr(hour)}
+                      </div>
+                      <div style={{ borderTop: "1px solid var(--stone-mid)", padding: "2px 4px", minHeight: "36px", position: "relative", background: isCurrentHour ? "rgba(68,6,6,0.03)" : "transparent" }}>
+                        {slotAppts.map((appt) => {
+                          const isPast = new Date(appt.startAt) < now;
+                          const statusClr = appt.status === "completed" ? "var(--status-confirmed)" : appt.status === "cancelled" ? "var(--status-low)" : "var(--garnet-vivid)";
+                          return (
+                            <Link key={appt.id} href={`/app/appointments/${appt.id}`}>
+                              <div style={{ padding: "3px 6px", borderRadius: "4px", marginBottom: "2px", background: isPast ? "rgba(0,0,0,0.04)" : "var(--garnet-wash)", opacity: isPast ? 0.55 : 1, borderLeft: `2px solid ${statusClr}` }}>
+                                <p style={{ fontSize: "9px", fontWeight: 500, color: "var(--text-on-stone)", lineHeight: 1.3 }}>{getClientName(clients, appt.clientId)}</p>
+                                <p style={{ fontSize: "8px", color: "var(--text-on-stone-faint)", lineHeight: 1.2 }}>
+                                  {appt.serviceName} · {new Date(appt.startAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                                </p>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </>
         );
+      }
       case "revenue":
         return <StatWidget value="—" label="Earned Today" change="See appointments" changePositive={true} link="/app/appointments" />;
       case "formulas":

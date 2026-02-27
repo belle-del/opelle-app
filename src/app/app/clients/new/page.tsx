@@ -9,11 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft } from "lucide-react";
+import { useAutoFormat } from "@/lib/use-auto-format";
 
 export default function NewClientPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoFormat = useAutoFormat();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -94,6 +96,7 @@ export default function NewClientPage() {
                   name="firstName"
                   required
                   placeholder="Jane"
+                  onBlur={autoFormat("name")}
                 />
               </div>
               <div>
@@ -102,6 +105,7 @@ export default function NewClientPage() {
                   id="lastName"
                   name="lastName"
                   placeholder="Doe"
+                  onBlur={autoFormat("name")}
                 />
               </div>
             </div>
@@ -112,7 +116,11 @@ export default function NewClientPage() {
                 id="pronouns"
                 name="pronouns"
                 placeholder="she/her"
+                onBlur={autoFormat("pronouns")}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Auto-formats: &quot;he him&quot; → &quot;He/Him&quot;
+              </p>
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
@@ -131,8 +139,12 @@ export default function NewClientPage() {
                   id="phone"
                   name="phone"
                   type="tel"
-                  placeholder="(555) 123-4567"
+                  placeholder="(505) 123-4567"
+                  onBlur={autoFormat("phone")}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Auto-formats: &quot;5051234567&quot; → &quot;(505) 123-4567&quot;
+                </p>
               </div>
             </div>
 
@@ -141,7 +153,8 @@ export default function NewClientPage() {
               <Input
                 id="tags"
                 name="tags"
-                placeholder="model, color, blonde (comma separated)"
+                placeholder="Model, Color, Blonde (comma separated)"
+                onBlur={autoFormat("tags")}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Separate tags with commas

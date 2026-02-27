@@ -37,6 +37,7 @@ export async function getServiceType(id: string): Promise<ServiceType | null> {
 export async function createServiceType(input: {
   name: string;
   sortOrder?: number;
+  defaultDurationMins?: number;
 }): Promise<ServiceType | null> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
@@ -56,13 +57,18 @@ export async function createServiceType(input: {
     sortOrder = (maxRow?.sort_order ?? -1) + 1;
   }
 
+  const insertData: Record<string, unknown> = {
+    workspace_id: workspace.id,
+    name: input.name,
+    sort_order: sortOrder,
+  };
+  if (input.defaultDurationMins !== undefined) {
+    insertData.default_duration_mins = input.defaultDurationMins;
+  }
+
   const { data, error } = await supabase
     .from("service_types")
-    .insert({
-      workspace_id: workspace.id,
-      name: input.name,
-      sort_order: sortOrder,
-    })
+    .insert(insertData)
     .select("*")
     .single();
 
@@ -72,7 +78,7 @@ export async function createServiceType(input: {
 
 export async function updateServiceType(
   id: string,
-  input: { name?: string; sortOrder?: number }
+  input: { name?: string; sortOrder?: number; defaultDurationMins?: number | null }
 ): Promise<ServiceType | null> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
@@ -81,6 +87,7 @@ export async function updateServiceType(
   const updateData: Record<string, unknown> = {};
   if (input.name !== undefined) updateData.name = input.name;
   if (input.sortOrder !== undefined) updateData.sort_order = input.sortOrder;
+  if (input.defaultDurationMins !== undefined) updateData.default_duration_mins = input.defaultDurationMins;
 
   const { data, error } = await supabase
     .from("service_types")

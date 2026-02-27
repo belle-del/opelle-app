@@ -13,6 +13,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const serviceType = await updateServiceType(id, {
       name: body.name,
       sortOrder: body.sortOrder,
+      defaultDurationMins: body.defaultDurationMins,
     });
 
     if (!serviceType) {

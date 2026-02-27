@@ -155,6 +155,7 @@ export type ServiceType = {
   workspaceId: string;
   name: string;
   sortOrder: number;
+  defaultDurationMins?: number;
   createdAt: string;
 };
 
@@ -396,6 +397,7 @@ export type ServiceTypeRow = {
   workspace_id: string;
   name: string;
   sort_order: number;
+  default_duration_mins: number | null;
   created_at: string;
 };
 
@@ -533,6 +535,7 @@ export function serviceTypeRowToModel(row: ServiceTypeRow): ServiceType {
     workspaceId: row.workspace_id,
     name: row.name,
     sortOrder: row.sort_order,
+    defaultDurationMins: row.default_duration_mins ?? undefined,
     createdAt: row.created_at,
   };
 }

@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import type { Client } from "@/lib/types";
+import { useAutoFormat } from "@/lib/use-auto-format";
 
 interface EditClientPageProps {
   params: Promise<{ id: string }>;
@@ -22,6 +23,7 @@ export default function EditClientPage({ params }: EditClientPageProps) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [client, setClient] = useState<Client | null>(null);
+  const autoFormat = useAutoFormat();
 
   useEffect(() => {
     fetch(`/api/clients/${id}`)
@@ -133,6 +135,7 @@ export default function EditClientPage({ params }: EditClientPageProps) {
                   name="firstName"
                   required
                   defaultValue={client.firstName}
+                  onBlur={autoFormat("name")}
                 />
               </div>
               <div>
@@ -141,6 +144,7 @@ export default function EditClientPage({ params }: EditClientPageProps) {
                   id="lastName"
                   name="lastName"
                   defaultValue={client.lastName || ""}
+                  onBlur={autoFormat("name")}
                 />
               </div>
             </div>
@@ -151,7 +155,11 @@ export default function EditClientPage({ params }: EditClientPageProps) {
                 id="pronouns"
                 name="pronouns"
                 defaultValue={client.pronouns || ""}
+                onBlur={autoFormat("pronouns")}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Auto-formats: &quot;he him&quot; → &quot;He/Him&quot;
+              </p>
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
@@ -171,7 +179,11 @@ export default function EditClientPage({ params }: EditClientPageProps) {
                   name="phone"
                   type="tel"
                   defaultValue={client.phone || ""}
+                  onBlur={autoFormat("phone")}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Auto-formats: &quot;5051234567&quot; → &quot;(505) 123-4567&quot;
+                </p>
               </div>
             </div>
 
@@ -181,6 +193,7 @@ export default function EditClientPage({ params }: EditClientPageProps) {
                 id="tags"
                 name="tags"
                 defaultValue={client.tags.join(", ")}
+                onBlur={autoFormat("tags")}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Separate tags with commas

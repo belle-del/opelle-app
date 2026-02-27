@@ -21,6 +21,7 @@ export async function POST(request: Request) {
     const serviceType = await createServiceType({
       name: body.name.trim(),
       sortOrder: body.sortOrder,
+      defaultDurationMins: body.defaultDurationMins,
     });
 
     if (!serviceType) {
