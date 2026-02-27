@@ -103,19 +103,66 @@
 }
 
 body {
-  background: var(--bark-mid);
+  background-color: var(--bark-mid);
+  /* Layered woodgrain — organic flowing grain on top of base color */
+  background-image:
+    /* Fine grain lines — tight, slightly angled */
+    repeating-linear-gradient(
+      93deg,
+      transparent,
+      transparent 2px,
+      rgba(141,136,125,0.25) 2px,
+      rgba(141,136,125,0.25) 3px,
+      transparent 3px,
+      transparent 8px
+    ),
+    /* Medium grain — wider spacing, opposite lean */
+    repeating-linear-gradient(
+      87deg,
+      transparent,
+      transparent 14px,
+      rgba(172,166,155,0.15) 14px,
+      rgba(172,166,155,0.15) 16px,
+      transparent 16px,
+      transparent 30px
+    ),
+    /* Wide grain bands — broad warm/cool variation */
+    repeating-linear-gradient(
+      91deg,
+      transparent,
+      transparent 50px,
+      rgba(141,136,125,0.12) 50px,
+      rgba(141,136,125,0.12) 70px,
+      transparent 70px,
+      transparent 120px
+    ),
+    /* Soft figure/curl — large organic sway */
+    repeating-linear-gradient(
+      95deg,
+      transparent,
+      transparent 80px,
+      rgba(196,171,112,0.04) 80px,
+      rgba(196,171,112,0.04) 110px,
+      transparent 110px,
+      transparent 200px
+    ),
+    /* Wood figure — radial warm spots (like burl/olive knots) */
+    radial-gradient(ellipse 250px 120px at 15% 30%, rgba(196,171,112,0.06) 0%, transparent 100%),
+    radial-gradient(ellipse 200px 100px at 75% 60%, rgba(141,136,125,0.08) 0%, transparent 100%),
+    radial-gradient(ellipse 180px 90px at 40% 80%, rgba(196,171,112,0.05) 0%, transparent 100%),
+    radial-gradient(ellipse 300px 80px at 60% 15%, rgba(141,136,125,0.06) 0%, transparent 100%);
   color: var(--text-on-bark);
   font-family: 'DM Sans', sans-serif;
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
-/* Grain texture overlay */
+/* Micro grain-noise overlay — adds organic micro-texture like real wood fiber */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='wood'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='5' stitchTiles='stitch' seed='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23wood)'/%3E%3C/svg%3E");
+  opacity: 0.035;
   pointer-events: none;
   z-index: 99990;
   mix-blend-mode: overlay;
