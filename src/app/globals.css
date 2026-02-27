@@ -2,30 +2,30 @@
 
 :root {
   /* ──────────────────────────────────────────
-     MOMPRENEUR DREAM PALETTE
+     MOMPRENEUR DREAM PALETTE — CORRECTED
      #440606  garnet       #8FADC8  blue
-     #9B988F  stone        #C4AB70  gold/brass
-     #3B3C23  dark olive   #CAC7B5  sage
+     #9B988F  stone/bg     #C4AB70  gold/brass
+     #1f231a  dark green   #CAC7B5  sage
      #0E213B  navy         #F1EFE0  cream
      + black
      ────────────────────────────────────────── */
 
-  /* Background — dark olive */
-  --bark-deepest:    #000000;
-  --bark:            #1E1F12;
-  --bark-mid:        #3B3C23;
-  --bark-warm:       #2D2E1B;
-  --bark-light:      #4A4B31;
-  --bark-pale:       #585A3F;
+  /* Background — warm stone gray */
+  --bark-deepest:    #1f231a;
+  --bark:            #6B6862;
+  --bark-mid:        #9B988F;
+  --bark-warm:       #8A877E;
+  --bark-light:      #AAA79F;
+  --bark-pale:       #B5B2AA;
 
-  /* Cards — sage / cream */
+  /* Cards — cream / sage */
   --stone-lightest:  #F1EFE0;
   --stone-light:     #E5E3D3;
   --stone-mid:       #D7D5C5;
   --stone-warm:      #CAC7B5;
   --stone-deep:      #B5B2A2;
   --stone-shadow:    #9B988F;
-  --stone-card:      #CAC7B5;
+  --stone-card:      #F1EFE0;
 
   /* Garnet accent — #440606 base */
   --garnet-black:    #000000;
@@ -34,23 +34,23 @@
   --garnet-vivid:    #5C0B0B;
   --garnet-ruby:     #751212;
   --garnet-blush:    #9B4545;
-  --garnet-wash:     rgba(68,6,6,0.12);
+  --garnet-wash:     rgba(68,6,6,0.10);
 
   /* Brass / Gold accent — #C4AB70 base */
   --brass:           #C4AB70;
   --brass-warm:      #D0BA82;
   --brass-bright:    #DCC994;
   --brass-soft:      rgba(196,171,112,0.45);
-  --brass-line:      rgba(196,171,112,0.15);
+  --brass-line:      rgba(31,35,26,0.10);
   --brass-glow:      rgba(196,171,112,0.08);
 
-  /* Olive accent — #3B3C23 base */
-  --olive-black:     #1A1B10;
-  --olive-dark:      #2A2B1A;
-  --olive:           #3B3C23;
-  --olive-mid:       #555744;
-  --olive-sage:      #707362;
-  --olive-wash:      rgba(59,60,35,0.1);
+  /* Olive / Dark Green — #1f231a base */
+  --olive-black:     #0E1008;
+  --olive-dark:      #161A10;
+  --olive:           #1f231a;
+  --olive-mid:       #3B3C23;
+  --olive-sage:      #555744;
+  --olive-wash:      rgba(31,35,26,0.08);
 
   /* Navy accent — #0E213B base */
   --navy-deep:       #060F1C;
@@ -63,11 +63,11 @@
   --blue-dim:        rgba(143,173,200,0.6);
   --blue-wash:       rgba(143,173,200,0.12);
 
-  /* Text on dark backgrounds (cream-based) */
-  --text-on-bark:       #F1EFE0;
-  --text-on-bark-dim:   rgba(241,239,224,0.75);
-  --text-on-bark-faint: rgba(241,239,224,0.6);
-  --text-on-bark-ghost: rgba(241,239,224,0.38);
+  /* Text on main background (dark on gray) */
+  --text-on-bark:       #1f231a;
+  --text-on-bark-dim:   rgba(31,35,26,0.72);
+  --text-on-bark-faint: rgba(31,35,26,0.50);
+  --text-on-bark-ghost: rgba(31,35,26,0.30);
 
   /* Text on light card backgrounds (black-based) */
   --text-on-stone:       #000000;
@@ -75,10 +75,10 @@
   --text-on-stone-faint: #3B3C23;
   --text-on-stone-ghost: #9B988F;
 
-  /* Status colors — palette-derived */
+  /* Status colors */
   --status-confirmed: #8FADC8;
   --status-pending:   #C4AB70;
-  --status-low:       #751212;
+  --status-low:       #440606;
 
   /* Radii */
   --radius-sm:  4px;
@@ -149,8 +149,8 @@ body::after {
   left: -100px;
   top: -100px;
 }
-.cursor-dot.hovering { width: 14px; height: 14px; background: var(--garnet-vivid); }
-.cursor-ring.hovering { width: 52px; height: 52px; border-color: rgba(92,11,11,0.3); }
+.cursor-dot.hovering { width: 14px; height: 14px; background: var(--garnet); }
+.cursor-ring.hovering { width: 52px; height: 52px; border-color: rgba(68,6,6,0.3); }
 
 /* Widget wiggle animation (dashboard edit mode) */
 @keyframes wiggle {
@@ -163,12 +163,12 @@ body::after {
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bark-light); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--bark-pale); }
+::-webkit-scrollbar-thumb { background: var(--bark-warm); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bark); }
 
 /* Focus styles */
 :focus-visible {
-  outline: 2px solid rgba(196,171,112,0.5);
+  outline: 2px solid rgba(143,173,200,0.5);
   outline-offset: 2px;
 }
 

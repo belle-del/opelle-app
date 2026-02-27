@@ -69,7 +69,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
       className="fixed left-0 top-0 h-full flex flex-col"
       style={{
         width: "170px",
-        background: "#0E213B",
+        background: "#1f231a",
         borderRight: "1px solid rgba(196,171,112,0.08)",
       }}
     >
@@ -135,8 +135,8 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
                     style={{
                       fontSize: "10px",
                       color: isActive ? "#F1EFE0" : "rgba(241,239,224,0.55)",
-                      background: isActive ? "rgba(196,171,112,0.07)" : "transparent",
-                      borderLeft: isActive ? "2px solid #C4AB70" : "2px solid transparent",
+                      background: isActive ? "rgba(143,173,200,0.08)" : "transparent",
+                      borderLeft: isActive ? "2px solid #8FADC8" : "2px solid transparent",
                     }}
                   >
                     <Icon
@@ -192,8 +192,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
               width: "26px",
               height: "26px",
               borderRadius: "50%",
-              background: "#0E213B",
-              border: "1px solid rgba(196,171,112,0.2)",
+              background: "rgba(143,173,200,0.12)",
               color: "#8FADC8",
               fontSize: "10px",
               fontWeight: 600,

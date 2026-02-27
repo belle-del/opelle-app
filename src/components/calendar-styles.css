@@ -1,26 +1,25 @@
-/* Calendar custom styles — Mompreneur Dream palette */
+/* Calendar custom styles — Mompreneur Dream palette (card context = light bg) */
 .calendar-container {
-  background: rgba(241, 239, 224, 0.05);
-  backdrop-filter: blur(12px);
+  background: var(--stone-card);
   border-radius: 12px;
   padding: 1.5rem;
-  border: 1px solid rgba(241, 239, 224, 0.1);
+  border: 1px solid var(--brass-line);
 }
 
 .rbc-calendar {
-  color: rgba(241, 239, 224, 0.9);
+  color: var(--text-on-stone);
 }
 
 .rbc-toolbar {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(241, 239, 224, 0.1);
+  border-bottom: 1px solid var(--brass-line);
 }
 
 .rbc-toolbar button {
-  color: rgba(241, 239, 224, 0.9);
-  border: 1px solid rgba(241, 239, 224, 0.2);
-  background: rgba(241, 239, 224, 0.05);
+  color: var(--text-on-stone);
+  border: 1px solid var(--stone-mid);
+  background: rgba(0,0,0,0.03);
   padding: 0.5rem 1rem;
   border-radius: 6px;
   font-weight: 500;
@@ -28,43 +27,43 @@
 }
 
 .rbc-toolbar button:hover {
-  background: rgba(241, 239, 224, 0.1);
-  border-color: rgba(143, 173, 200, 0.5);
+  background: rgba(143,173,200,0.08);
+  border-color: rgba(143,173,200,0.4);
 }
 
 .rbc-toolbar button.rbc-active {
-  background: rgba(143, 173, 200, 0.2);
+  background: rgba(143,173,200,0.15);
   border-color: #8FADC8;
-  color: #8FADC8;
+  color: #0E213B;
 }
 
 .rbc-toolbar button:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(143, 173, 200, 0.2);
+  box-shadow: 0 0 0 3px rgba(143,173,200,0.2);
 }
 
 .rbc-header {
   padding: 0.75rem 0.5rem;
   font-weight: 600;
-  color: rgba(241, 239, 224, 0.7);
-  border-bottom: 2px solid rgba(241, 239, 224, 0.02);
+  color: var(--text-on-stone-faint);
+  border-bottom: 2px solid var(--stone-mid);
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
 }
 
 .rbc-today {
-  background: rgba(143, 173, 200, 0.1);
+  background: rgba(143,173,200,0.08);
 }
 
 .rbc-off-range-bg {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0,0,0,0.04);
 }
 
 .rbc-date-cell {
   padding: 0.5rem;
   text-align: right;
-  color: rgba(241, 239, 224, 0.6);
+  color: var(--text-on-stone-faint);
 }
 
 .rbc-date-cell.rbc-now {
@@ -75,14 +74,14 @@
 .rbc-month-view,
 .rbc-time-view,
 .rbc-agenda-view {
-  border: 1px solid rgba(241, 239, 224, 0.02);
+  border: 1px solid var(--stone-mid);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .rbc-day-bg,
 .rbc-month-row {
-  border-color: rgba(241, 239, 224, 0.02);
+  border-color: var(--stone-mid);
 }
 
 .rbc-event {
@@ -106,18 +105,18 @@
   text-overflow: ellipsis;
 }
 
-/* Default time slot - half hour marks (lighter) */
+/* Default time slot - half hour marks */
 .rbc-time-slot {
-  border-top: 1px solid rgba(241, 239, 224, 0.03);
+  border-top: 1px solid rgba(0,0,0,0.04);
 }
 
 /* Hour marks - more opaque */
 .rbc-time-slot:nth-child(odd) {
-  border-top: 1px solid rgba(241, 239, 224, 0.15);
+  border-top: 1px solid rgba(0,0,0,0.1);
 }
 
 .rbc-current-time-indicator {
-  background-color: #8FADC8;
+  background-color: #440606;
   height: 2px;
 }
 
@@ -127,39 +126,39 @@
 
 .rbc-agenda-table tbody > tr > td {
   padding: 0.75rem;
-  border-color: rgba(241, 239, 224, 0.1);
-  color: rgba(241, 239, 224, 0.9);
+  border-color: var(--stone-mid);
+  color: var(--text-on-stone);
 }
 
 .rbc-agenda-date-cell,
 .rbc-agenda-time-cell {
-  color: rgba(241, 239, 224, 0.7);
+  color: var(--text-on-stone-faint);
 }
 
 .rbc-agenda-event-cell {
-  color: rgba(241, 239, 224, 0.9);
+  color: var(--text-on-stone);
 }
 
 .rbc-time-header-content {
-  border-left: 1px solid rgba(241, 239, 224, 0.02);
+  border-left: 1px solid var(--stone-mid);
 }
 
 .rbc-time-content {
-  border-top: 1px solid rgba(241, 239, 224, 0.02);
+  border-top: 1px solid var(--stone-mid);
 }
 
 .rbc-time-gutter {
-  color: rgba(241, 239, 224, 0.6);
+  color: var(--text-on-stone-faint);
   font-size: 0.75rem;
 }
 
 .rbc-allday-cell {
-  border-color: rgba(241, 239, 224, 0.1);
+  border-color: var(--stone-mid);
 }
 
 .rbc-show-more {
-  background: rgba(143, 173, 200, 0.2);
-  color: #8FADC8;
+  background: rgba(143,173,200,0.15);
+  color: #0E213B;
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -167,17 +166,17 @@
 }
 
 .rbc-overlay {
-  background: rgba(0, 0, 0, 0.95);
-  border: 1px solid rgba(241, 239, 224, 0.2);
+  background: #F1EFE0;
+  border: 1px solid var(--stone-mid);
   border-radius: 8px;
   padding: 0.5rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
 }
 
 .rbc-overlay-header {
-  border-bottom: 1px solid rgba(241, 239, 224, 0.1);
+  border-bottom: 1px solid var(--stone-mid);
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: rgba(241, 239, 224, 0.9);
+  color: var(--text-on-stone);
 }
