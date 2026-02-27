@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -14,8 +15,9 @@ import {
   CheckSquare,
   Settings,
   LogOut,
-  Clock,
   History,
+  Menu,
+  X,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
@@ -53,6 +55,22 @@ interface AppNavProps {
 export function AppNav({ user, workspaceName }: AppNavProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  // Prevent body scroll when mobile nav is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   const handleSignOut = async () => {
     const supabase = createSupabaseBrowserClient();
@@ -64,18 +82,11 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
   const initial = (user.user_metadata?.full_name?.[0] || user.email?.[0] || "?").toUpperCase();
   const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Practitioner";
 
-  return (
-    <aside
-      className="fixed left-0 top-0 h-full flex flex-col"
-      style={{
-        width: "170px",
-        background: "#1f231a",
-        borderRight: "1px solid rgba(196,171,112,0.08)",
-      }}
-    >
+  const sidebarContent = (
+    <>
       {/* Brand */}
       <div className="px-4 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(196,171,112,0.08)" }}>
-        <Link href="/app">
+        <Link href="/app" className="block">
           <h1
             style={{
               fontFamily: "'Cormorant Garamond', serif",
@@ -218,6 +229,109 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           Sign out
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* ── Mobile top bar ───────────────────────────────────────── */}
+      <div
+        className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4"
+        style={{
+          height: "52px",
+          background: "#1f231a",
+          borderBottom: "1px solid rgba(196,171,112,0.08)",
+        }}
+      >
+        <Link href="/app" className="flex items-center gap-2">
+          <h1
+            style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "14px",
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              color: "#F1EFE0",
+              fontWeight: 400,
+            }}
+          >
+            OPELLE
+          </h1>
+        </Link>
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="flex items-center justify-center"
+          style={{
+            width: "36px",
+            height: "36px",
+            borderRadius: "8px",
+            background: mobileOpen ? "rgba(143,173,200,0.12)" : "transparent",
+            border: "none",
+            color: "#F1EFE0",
+            transition: "background 0.15s",
+          }}
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+        >
+          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+        </button>
+      </div>
+
+      {/* ── Mobile overlay backdrop ──────────────────────────────── */}
+      <div
+        className="md:hidden fixed inset-0 z-40"
+        style={{
+          background: "rgba(0,0,0,0.5)",
+          opacity: mobileOpen ? 1 : 0,
+          pointerEvents: mobileOpen ? "auto" : "none",
+          transition: "opacity 0.25s ease",
+        }}
+        onClick={() => setMobileOpen(false)}
+      />
+
+      {/* ── Mobile sidebar (slides in) ───────────────────────────── */}
+      <aside
+        className="md:hidden fixed left-0 top-0 h-full flex flex-col z-50"
+        style={{
+          width: "220px",
+          background: "#1f231a",
+          borderRight: "1px solid rgba(196,171,112,0.08)",
+          transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          boxShadow: mobileOpen ? "8px 0 32px rgba(0,0,0,0.3)" : "none",
+        }}
+      >
+        {/* Close button inside sidebar */}
+        <div className="absolute top-3 right-3 z-10">
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center justify-center"
+            style={{
+              width: "30px",
+              height: "30px",
+              borderRadius: "6px",
+              background: "rgba(241,239,224,0.06)",
+              border: "none",
+              color: "rgba(241,239,224,0.5)",
+              transition: "background 0.15s",
+            }}
+            aria-label="Close menu"
+          >
+            <X size={14} />
+          </button>
+        </div>
+        {sidebarContent}
+      </aside>
+
+      {/* ── Desktop sidebar (always visible) ─────────────────────── */}
+      <aside
+        className="hidden md:flex fixed left-0 top-0 h-full flex-col"
+        style={{
+          width: "170px",
+          background: "#1f231a",
+          borderRight: "1px solid rgba(196,171,112,0.08)",
+        }}
+      >
+        {sidebarContent}
+      </aside>
+    </>
   );
 }
