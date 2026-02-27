@@ -103,69 +103,52 @@
 }
 
 body {
-  background-color: var(--bark-mid);
-  /* Layered woodgrain — organic flowing grain on top of base color */
-  background-image:
-    /* Fine grain lines — tight, slightly angled */
-    repeating-linear-gradient(
-      93deg,
-      transparent,
-      transparent 2px,
-      rgba(141,136,125,0.25) 2px,
-      rgba(141,136,125,0.25) 3px,
-      transparent 3px,
-      transparent 8px
-    ),
-    /* Medium grain — wider spacing, opposite lean */
-    repeating-linear-gradient(
-      87deg,
-      transparent,
-      transparent 14px,
-      rgba(172,166,155,0.15) 14px,
-      rgba(172,166,155,0.15) 16px,
-      transparent 16px,
-      transparent 30px
-    ),
-    /* Wide grain bands — broad warm/cool variation */
-    repeating-linear-gradient(
-      91deg,
-      transparent,
-      transparent 50px,
-      rgba(141,136,125,0.12) 50px,
-      rgba(141,136,125,0.12) 70px,
-      transparent 70px,
-      transparent 120px
-    ),
-    /* Soft figure/curl — large organic sway */
-    repeating-linear-gradient(
-      95deg,
-      transparent,
-      transparent 80px,
-      rgba(196,171,112,0.04) 80px,
-      rgba(196,171,112,0.04) 110px,
-      transparent 110px,
-      transparent 200px
-    ),
-    /* Wood figure — radial warm spots (like burl/olive knots) */
-    radial-gradient(ellipse 250px 120px at 15% 30%, rgba(196,171,112,0.06) 0%, transparent 100%),
-    radial-gradient(ellipse 200px 100px at 75% 60%, rgba(141,136,125,0.08) 0%, transparent 100%),
-    radial-gradient(ellipse 180px 90px at 40% 80%, rgba(196,171,112,0.05) 0%, transparent 100%),
-    radial-gradient(ellipse 300px 80px at 60% 15%, rgba(141,136,125,0.06) 0%, transparent 100%);
+  background-color: #A29A8B;
   color: var(--text-on-bark);
   font-family: 'DM Sans', sans-serif;
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
-/* Micro grain-noise overlay — adds organic micro-texture like real wood fiber */
+/*
+  Wood grain texture — uses SVG feTurbulence stretched horizontally
+  to create real organic flowing grain, not repeating CSS lines.
+  Two layers: coarse grain structure + fine fiber detail.
+*/
+
+/* Layer 1: Main wood grain — large flowing organic pattern */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  /* SVG turbulence: low X freq (0.012) + high Y freq (0.15) = horizontal grain streaks
+     numOctaves=5 for organic complexity, seed=8 for a nice pattern
+     feColorMatrix maps noise into warm amber-brown tones matching #A29A8B palette */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.012 0.15' numOctaves='5' seed='8' stitchTiles='stitch' result='t'/%3E%3CfeColorMatrix type='matrix' in='t' values='0.15 0.1 0 0 0.56 0.12 0.08 0 0 0.52 0.08 0.05 0 0 0.46 0 0 0 0.14 0' result='c'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 800px 800px;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: multiply;
+}
+
+/* Layer 2: Fine wood fiber noise — micro-texture for tactile realism */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='wood'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='5' stitchTiles='stitch' seed='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23wood)'/%3E%3C/svg%3E");
-  opacity: 0.035;
+  /* Higher frequency fractalNoise = tight fiber detail
+     Slightly stretched (0.4 x, 0.7 y) so fibers follow grain direction */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.4 0.7' numOctaves='3' seed='12' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  background-size: 400px 400px;
+  opacity: 0.03;
   pointer-events: none;
   z-index: 99990;
   mix-blend-mode: overlay;
+}
+
+/* Ensure all page content sits above the wood-grain ::before layer */
+body > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Custom cursor elements */
