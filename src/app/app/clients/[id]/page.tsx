@@ -7,10 +7,11 @@ import { getClient } from "@/lib/db/clients";
 import { getAppointmentsForClient } from "@/lib/db/appointments";
 import { getFormulaEntriesForClient } from "@/lib/db/formula-entries";
 import { listServiceTypes } from "@/lib/db/service-types";
+import { getClientProfile, getClientRebook } from "@/lib/kernel";
 import { FormulaHistory } from "./_components/FormulaHistory";
 import { getClientDisplayName } from "@/lib/types";
 import { formatDate, formatDateTime } from "@/lib/utils";
-import { ArrowLeft, Edit, Calendar, Plus } from "lucide-react";
+import { ArrowLeft, Edit, Calendar, Plus, Sparkles } from "lucide-react";
 
 interface ClientDetailPageProps {
   params: Promise<{ id: string }>;
@@ -18,11 +19,13 @@ interface ClientDetailPageProps {
 
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
   const { id } = await params;
-  const [client, appointments, formulaEntries, serviceTypes] = await Promise.all([
+  const [client, appointments, formulaEntries, serviceTypes, kernelProfile, rebookData] = await Promise.all([
     getClient(id),
     getAppointmentsForClient(id),
     getFormulaEntriesForClient(id),
     listServiceTypes(),
+    getClientProfile(id),
+    getClientRebook(id),
   ]);
 
   if (!client) {
@@ -124,6 +127,80 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           </CardContent>
         </Card>
       </div>
+
+      {/* Stylist Intelligence (Kernel-powered — only shows when data exists) */}
+      {kernelProfile && (
+        <Card className="border-emerald-500/20 bg-emerald-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-emerald-400">
+              <Sparkles className="w-5 h-5" />
+              Stylist Intelligence
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Color Direction</p>
+                <p className="mt-1">{kernelProfile.colorDirection}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Preferred Developer</p>
+                <p className="mt-1">{kernelProfile.preferredDeveloper}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Maintenance Level</p>
+                <p className="mt-1">{kernelProfile.maintenanceLevel}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Visit Cadence</p>
+                <p className="mt-1">
+                  Every ~{kernelProfile.visitCadenceDays} days ({kernelProfile.totalVisits} visits total)
+                </p>
+              </div>
+            </div>
+            {kernelProfile.styleNotes && (
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Style Notes</p>
+                <p className="mt-1">{kernelProfile.styleNotes}</p>
+              </div>
+            )}
+            {kernelProfile.nextVisitSuggestion && (
+              <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3">
+                <p className="text-xs text-emerald-400 uppercase tracking-wide font-medium">Next Visit Suggestion</p>
+                <p className="mt-1">{kernelProfile.nextVisitSuggestion}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Rebook Intelligence (Kernel-powered) */}
+      {rebookData && (
+        <Card className="border-cyan-500/20 bg-cyan-500/5">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-cyan-400">Rebooking Window</p>
+                <p className="text-sm text-muted-foreground">
+                  {rebookData.days_since_last_visit} days since last visit
+                  (avg: {rebookData.avg_days_between_visits} days)
+                </p>
+              </div>
+              <Badge variant={
+                rebookData.urgency === "overdue" ? "danger" :
+                rebookData.urgency === "approaching" ? "warning" : "outline"
+              }>
+                {rebookData.urgency}
+              </Badge>
+            </div>
+            {rebookData.suggested_message && (
+              <p className="mt-3 text-sm text-muted-foreground italic">
+                &ldquo;{rebookData.suggested_message}&rdquo;
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Appointments */}
       <Card>

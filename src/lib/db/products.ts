@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Product, ProductRow, ProductCategory } from "@/lib/types";
 import { productRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
+import { publishEvent } from "@/lib/kernel";
 
 export async function listProducts(): Promise<Product[]> {
   const workspace = await getCurrentWorkspace();
@@ -109,7 +110,27 @@ export async function createProduct(input: {
     .single();
 
   if (error || !data) return null;
-  return productRowToModel(data as ProductRow);
+
+  const product = productRowToModel(data as ProductRow);
+
+  // Fire kernel event (non-blocking)
+  publishEvent({
+    event_type: "product_added",
+    workspace_id: workspace.id,
+    timestamp: new Date().toISOString(),
+    payload: {
+      product_id: product.id,
+      brand: product.brand,
+      line: product.line ?? null,
+      shade: product.shade,
+      category: product.category,
+      barcode: product.barcode ?? null,
+      quantity: product.quantity,
+      cost_cents: product.costCents ?? null,
+    },
+  });
+
+  return product;
 }
 
 export async function updateProduct(
@@ -179,5 +200,23 @@ export async function adjustProductQuantity(id: string, delta: number): Promise<
   if (!product) return null;
 
   const newQuantity = Math.max(0, product.quantity + delta);
-  return updateProduct(id, { quantity: newQuantity });
+  const updated = await updateProduct(id, { quantity: newQuantity });
+
+  // Fire inventory_low event if quantity dropped to or below threshold
+  if (updated && newQuantity <= product.lowStockThreshold && delta < 0) {
+    publishEvent({
+      event_type: "inventory_low",
+      workspace_id: product.workspaceId,
+      timestamp: new Date().toISOString(),
+      payload: {
+        product_id: product.id,
+        brand: product.brand,
+        shade: product.shade,
+        quantity: newQuantity,
+        low_stock_threshold: product.lowStockThreshold,
+      },
+    });
+  }
+
+  return updated;
 }

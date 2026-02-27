@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Appointment, AppointmentRow, AppointmentStatus } from "@/lib/types";
 import { appointmentRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
+import { publishEvent } from "@/lib/kernel";
 
 export async function listAppointments(): Promise<Appointment[]> {
   const workspace = await getCurrentWorkspace();
@@ -96,7 +97,24 @@ export async function createAppointment(input: {
     .single();
 
   if (error || !data) return null;
-  return appointmentRowToModel(data as AppointmentRow);
+
+  const appointment = appointmentRowToModel(data as AppointmentRow);
+
+  // Fire kernel event (non-blocking)
+  publishEvent({
+    event_type: "appointment_scheduled",
+    workspace_id: workspace.id,
+    timestamp: new Date().toISOString(),
+    payload: {
+      appointment_id: appointment.id,
+      client_id: input.clientId,
+      service_name: input.serviceName,
+      start_at: input.startAt,
+      duration_mins: appointment.durationMins,
+    },
+  });
+
+  return appointment;
 }
 
 export async function updateAppointment(
@@ -132,7 +150,28 @@ export async function updateAppointment(
     .single();
 
   if (error || !data) return null;
-  return appointmentRowToModel(data as AppointmentRow);
+
+  const appointment = appointmentRowToModel(data as AppointmentRow);
+
+  // Fire kernel event when appointment is completed (non-blocking)
+  if (input.status === "completed") {
+    publishEvent({
+      event_type: "appointment_completed",
+      workspace_id: workspace.id,
+      timestamp: new Date().toISOString(),
+      payload: {
+        appointment_id: appointment.id,
+        client_id: appointment.clientId,
+        service_name: appointment.serviceName,
+        start_at: appointment.startAt,
+        duration_mins: appointment.durationMins,
+        service_log: null,
+        formula_entry_ids: [],
+      },
+    });
+  }
+
+  return appointment;
 }
 
 export async function deleteAppointment(id: string): Promise<boolean> {

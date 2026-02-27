@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Client, ClientRow } from "@/lib/types";
 import { clientRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
+import { publishEvent } from "@/lib/kernel";
 
 export async function listClients(): Promise<Client[]> {
   const workspace = await getCurrentWorkspace();
@@ -63,7 +64,24 @@ export async function createClient(input: {
     .single();
 
   if (error || !data) return null;
-  return clientRowToModel(data as ClientRow);
+
+  const client = clientRowToModel(data as ClientRow);
+
+  // Fire kernel event (non-blocking)
+  publishEvent({
+    event_type: "client_updated",
+    workspace_id: workspace.id,
+    timestamp: new Date().toISOString(),
+    payload: {
+      client_id: client.id,
+      first_name: client.firstName,
+      last_name: client.lastName ?? null,
+      tags: client.tags,
+      notes: client.notes ?? null,
+    },
+  });
+
+  return client;
 }
 
 export async function updateClient(
@@ -101,7 +119,24 @@ export async function updateClient(
     .single();
 
   if (error || !data) return null;
-  return clientRowToModel(data as ClientRow);
+
+  const client = clientRowToModel(data as ClientRow);
+
+  // Fire kernel event (non-blocking)
+  publishEvent({
+    event_type: "client_updated",
+    workspace_id: workspace.id,
+    timestamp: new Date().toISOString(),
+    payload: {
+      client_id: client.id,
+      first_name: client.firstName,
+      last_name: client.lastName ?? null,
+      tags: client.tags,
+      notes: client.notes ?? null,
+    },
+  });
+
+  return client;
 }
 
 export async function deleteClient(id: string): Promise<boolean> {

@@ -22,8 +22,22 @@ export type Client = {
   email?: string;
   notes?: string;
   tags: string[];
+  preferenceProfile?: ClientPreferenceProfile | null;
+  kernelRef?: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+// Kernel-generated client preference profile
+export type ClientPreferenceProfile = {
+  colorDirection: string;
+  preferredDeveloper: string;
+  processingPreferences: string;
+  maintenanceLevel: string;
+  styleNotes: string;
+  nextVisitSuggestion: string;
+  visitCadenceDays: number;
+  totalVisits: number;
 };
 
 // Service (appointment template)
@@ -84,8 +98,24 @@ export type Product = {
   quantity: number;
   lowStockThreshold: number;
   notes?: string;
+  enrichment?: ProductEnrichment | null;
+  kernelRef?: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+// Kernel-generated product enrichment (MKL-sourced)
+export type ProductEnrichment = {
+  brandFamily: string;
+  lineType: string;
+  shadeFamily: string;
+  level: number;
+  tone: string;
+  commonlyMixedWith: string[];
+  typicalDeveloper: string;
+  typicalRatio: string;
+  avgUsageOzPerAppointment: number;
+  notes: string;
 };
 
 // @deprecated — old formula system, kept for migration compatibility
@@ -293,6 +323,8 @@ export type ClientRow = {
   email: string | null;
   notes: string | null;
   tags: string[];
+  preference_profile: ClientPreferenceProfile | null;
+  kernel_ref: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -338,6 +370,8 @@ export type ProductRow = {
   quantity: number;
   low_stock_threshold: number;
   notes: string | null;
+  enrichment: ProductEnrichment | null;
+  kernel_ref: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -429,6 +463,8 @@ export function clientRowToModel(row: ClientRow): Client {
     email: row.email ?? undefined,
     notes: row.notes ?? undefined,
     tags: row.tags ?? [],
+    preferenceProfile: row.preference_profile ?? undefined,
+    kernelRef: row.kernel_ref ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -467,6 +503,8 @@ export function productRowToModel(row: ProductRow): Product {
     quantity: row.quantity,
     lowStockThreshold: row.low_stock_threshold ?? 2,
     notes: row.notes ?? undefined,
+    enrichment: row.enrichment ?? undefined,
+    kernelRef: row.kernel_ref ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

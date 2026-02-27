@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getProduct } from "@/lib/db/products";
+import { getProductEnrichment } from "@/lib/kernel";
 import { formatDate } from "@/lib/utils";
-import { ArrowLeft, Edit, Package, Barcode, DollarSign } from "lucide-react";
+import { ArrowLeft, Edit, Package, Barcode, DollarSign, Sparkles } from "lucide-react";
 import { ProductActions } from "./_components/ProductActions";
 
 interface ProductDetailPageProps {
@@ -25,11 +26,17 @@ const categoryLabels: Record<string, string> = {
 
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { id } = await params;
-  const product = await getProduct(id);
+  const [product, kernelEnrichment] = await Promise.all([
+    getProduct(id),
+    getProductEnrichment(id),
+  ]);
 
   if (!product) {
     notFound();
   }
+
+  // Use DB-stored enrichment first, fall back to live Kernel query
+  const enrichment = product.enrichment ?? kernelEnrichment;
 
   return (
     <div className="space-y-8">
@@ -181,6 +188,54 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           </CardHeader>
           <CardContent>
             <p className="font-mono text-lg">{product.barcode}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Product Intelligence (Kernel-powered — only shows when data exists) */}
+      {enrichment && (
+        <Card className="border-emerald-500/20 bg-emerald-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-emerald-400">
+              <Sparkles className="w-5 h-5" />
+              Product Intelligence
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Shade Family</p>
+                <p className="mt-1">{enrichment.shadeFamily}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Level / Tone</p>
+                <p className="mt-1">Level {enrichment.level} — {enrichment.tone}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Typical Developer</p>
+                <p className="mt-1">{enrichment.typicalDeveloper} ({enrichment.typicalRatio})</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Avg Usage</p>
+                <p className="mt-1">{enrichment.avgUsageOzPerAppointment}oz per appointment</p>
+              </div>
+            </div>
+            {enrichment.commonlyMixedWith?.length > 0 && (
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Commonly Mixed With</p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {enrichment.commonlyMixedWith.map((shade) => (
+                    <Badge key={shade} variant="outline">{shade}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {enrichment.notes && (
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Notes</p>
+                <p className="mt-1 text-muted-foreground">{enrichment.notes}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
