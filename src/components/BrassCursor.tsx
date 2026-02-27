@@ -11,11 +11,23 @@ export function BrassCursor() {
     const ring = ringRef.current;
     if (!dot || !ring) return;
 
+    let cursorX = -100, cursorY = -100;
+    let ringX = -100, ringY = -100;
+    let rafId: number;
+
     const onMove = (e: MouseEvent) => {
-      dot.style.left = e.clientX + "px";
-      dot.style.top = e.clientY + "px";
-      ring.style.left = e.clientX + "px";
-      ring.style.top = e.clientY + "px";
+      cursorX = e.clientX;
+      cursorY = e.clientY;
+      dot.style.left = cursorX + "px";
+      dot.style.top = cursorY + "px";
+    };
+
+    const animate = () => {
+      ringX += (cursorX - ringX) * 0.12;
+      ringY += (cursorY - ringY) * 0.12;
+      ring.style.left = ringX + "px";
+      ring.style.top = ringY + "px";
+      rafId = requestAnimationFrame(animate);
     };
 
     const bindHover = () => {
@@ -34,6 +46,7 @@ export function BrassCursor() {
     };
 
     document.addEventListener("mousemove", onMove);
+    rafId = requestAnimationFrame(animate);
     bindHover();
 
     const observer = new MutationObserver(bindHover);
@@ -41,6 +54,7 @@ export function BrassCursor() {
 
     return () => {
       document.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(rafId);
       observer.disconnect();
     };
   }, []);
