@@ -88,10 +88,13 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
       {/* Olive tree background */}
       <div
         aria-hidden="true"
-        className="pointer-events-none select-none absolute bottom-0 left-0 right-0"
+        className="pointer-events-none select-none absolute"
         style={{
           opacity: 0.45,
-          height: "75%",
+          bottom: "-2px",
+          left: "-2px",
+          right: "-2px",
+          height: "76%",
           backgroundImage: "url(/textures/olive-tree-cropped.png)",
           backgroundSize: "cover",
           backgroundPosition: "bottom center",
