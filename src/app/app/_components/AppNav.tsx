@@ -19,6 +19,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
 
 const NAV_SECTIONS = [
@@ -189,6 +190,23 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
             Log Formula
           </button>
         </Link>
+      </div>
+
+      {/* Olive tree decorative icon */}
+      <div className="flex justify-center py-2 px-3">
+        <Image
+          src="/textures/olive-tree.jpg"
+          alt=""
+          width={80}
+          height={80}
+          className="pointer-events-none select-none"
+          style={{
+            opacity: 0.35,
+            filter: "brightness(1.3) saturate(0.5)",
+            borderRadius: "8px",
+          }}
+          aria-hidden="true"
+        />
       </div>
 
       {/* User profile */}
