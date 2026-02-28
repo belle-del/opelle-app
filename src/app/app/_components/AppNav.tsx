@@ -86,18 +86,16 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
   const sidebarContent = (
     <div className="flex flex-col flex-1 relative">
       {/* Olive tree background */}
-      <img
-        src="/textures/olive-tree-cropped.png"
-        alt=""
+      <div
         aria-hidden="true"
-        className="pointer-events-none select-none absolute bottom-0 left-1/2"
+        className="pointer-events-none select-none absolute bottom-0 left-0 right-0"
         style={{
           opacity: 0.45,
-          objectFit: "cover",
-          objectPosition: "bottom center",
           height: "75%",
-          width: "110%",
-          transform: "translateX(-50%)",
+          backgroundImage: "url(/textures/olive-tree-cropped.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "bottom center",
+          backgroundRepeat: "no-repeat",
           maskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
           WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
         }}
