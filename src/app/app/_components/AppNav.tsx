@@ -301,21 +301,20 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           boxShadow: mobileOpen ? "8px 0 32px rgba(0,0,0,0.3)" : "none",
         }}
       >
-        {/* Olive tree background — fills bottom half of mobile sidebar */}
+        {/* Olive tree background — fills bottom portion of mobile sidebar */}
         <Image
-          src="/textures/olive-tree.jpg"
+          src="/textures/olive-tree.png"
           alt=""
-          width={400}
-          height={400}
+          width={540}
+          height={675}
           className="pointer-events-none select-none"
           style={{
             position: "absolute",
-            bottom: "-20px",
-            left: "-90px",
-            width: "400px",
+            bottom: "-40px",
+            left: "-30px",
+            width: "280px",
             height: "auto",
-            opacity: 0.45,
-            filter: "brightness(1.2) saturate(0.6)",
+            opacity: 0.55,
           }}
           aria-hidden="true"
           priority={false}
@@ -352,21 +351,20 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           overflow: "hidden",
         }}
       >
-        {/* Olive tree background — fills bottom half of sidebar */}
+        {/* Olive tree background — fills bottom portion of sidebar */}
         <Image
-          src="/textures/olive-tree.jpg"
+          src="/textures/olive-tree.png"
           alt=""
-          width={340}
-          height={340}
+          width={540}
+          height={675}
           className="pointer-events-none select-none"
           style={{
             position: "absolute",
-            bottom: "-20px",
-            left: "-85px",
-            width: "340px",
+            bottom: "-30px",
+            left: "-40px",
+            width: "240px",
             height: "auto",
-            opacity: 0.45,
-            filter: "brightness(1.2) saturate(0.6)",
+            opacity: 0.55,
           }}
           aria-hidden="true"
           priority={false}

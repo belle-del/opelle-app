@@ -117,9 +117,8 @@ body {
 body::before {
   content: '';
   position: fixed;
-  /* Extend past viewport edges so the painting's frame/border is never visible */
-  inset: -40px;
-  background-image: url('/textures/olive-painting.png');
+  inset: 0;
+  background-image: url('/textures/olive-branch.svg');
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
