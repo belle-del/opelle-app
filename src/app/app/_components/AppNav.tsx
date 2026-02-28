@@ -62,12 +62,12 @@ function TreeBackground() {
       aria-hidden="true"
       style={{
         position: "absolute",
-        bottom: "60px",
-        left: "-20%",
-        width: "130%",
+        bottom: "40px",
+        left: "-35%",
+        width: "180%",
         height: "auto",
         pointerEvents: "none",
-        opacity: 0.55,
+        opacity: 0.35,
         zIndex: 0,
       }}
     />
