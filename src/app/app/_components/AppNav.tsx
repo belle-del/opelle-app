@@ -57,17 +57,17 @@ function TreeBackground() {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/textures/olive-tree-banner.svg"
+      src="/textures/olive-tree-final.png"
       alt=""
       aria-hidden="true"
       style={{
         position: "absolute",
-        bottom: 0,
-        left: "50%",
-        transform: "translateX(-50%)",
-        height: "65%",
-        width: "auto",
+        bottom: "60px",
+        left: "-20%",
+        width: "130%",
+        height: "auto",
         pointerEvents: "none",
+        opacity: 0.55,
         zIndex: 0,
       }}
     />
