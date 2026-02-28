@@ -117,10 +117,11 @@ body {
 body::before {
   content: '';
   position: fixed;
-  inset: 0;
+  /* Extend past viewport edges so the painting's frame/border is never visible */
+  inset: -40px;
   background-image: url('/textures/olive-painting.png');
   background-size: cover;
-  background-position: center;
+  background-position: center top;
   background-repeat: no-repeat;
   opacity: 0.35;
   pointer-events: none;

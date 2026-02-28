@@ -84,7 +84,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
   const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Practitioner";
 
   const sidebarContent = (
-    <>
+    <div className="flex flex-col flex-1" style={{ position: "relative", zIndex: 2 }}>
       {/* Brand */}
       <div className="px-4 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(196,171,112,0.08)" }}>
         <Link href="/app" className="block">
@@ -192,23 +192,6 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         </Link>
       </div>
 
-      {/* Olive branch decorative icon */}
-      <div className="flex justify-center py-3 px-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/textures/olive-branch.svg"
-          alt=""
-          width={100}
-          height={100}
-          className="pointer-events-none select-none"
-          style={{
-            opacity: 0.25,
-            filter: "brightness(1.4) saturate(0.4)",
-          }}
-          aria-hidden="true"
-        />
-      </div>
-
       {/* User profile */}
       <div
         className="px-3 py-3"
@@ -247,7 +230,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           Sign out
         </button>
       </div>
-    </>
+    </div>
   );
 
   return (
@@ -312,11 +295,31 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           width: "220px",
           background: "#1f231a",
           borderRight: "1px solid rgba(196,171,112,0.08)",
+          overflow: "hidden",
           transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
           boxShadow: mobileOpen ? "8px 0 32px rgba(0,0,0,0.3)" : "none",
         }}
       >
+        {/* Olive tree background — fills bottom half of mobile sidebar */}
+        <Image
+          src="/textures/olive-tree.jpg"
+          alt=""
+          width={400}
+          height={400}
+          className="pointer-events-none select-none"
+          style={{
+            position: "absolute",
+            bottom: "-20px",
+            left: "-90px",
+            width: "400px",
+            height: "auto",
+            opacity: 0.45,
+            filter: "brightness(1.2) saturate(0.6)",
+          }}
+          aria-hidden="true"
+          priority={false}
+        />
         {/* Close button inside sidebar */}
         <div className="absolute top-3 right-3 z-10">
           <button
@@ -346,8 +349,28 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           width: "170px",
           background: "#1f231a",
           borderRight: "1px solid rgba(196,171,112,0.08)",
+          overflow: "hidden",
         }}
       >
+        {/* Olive tree background — fills bottom half of sidebar */}
+        <Image
+          src="/textures/olive-tree.jpg"
+          alt=""
+          width={340}
+          height={340}
+          className="pointer-events-none select-none"
+          style={{
+            position: "absolute",
+            bottom: "-20px",
+            left: "-85px",
+            width: "340px",
+            height: "auto",
+            opacity: 0.45,
+            filter: "brightness(1.2) saturate(0.6)",
+          }}
+          aria-hidden="true"
+          priority={false}
+        />
         {sidebarContent}
       </aside>
     </>
