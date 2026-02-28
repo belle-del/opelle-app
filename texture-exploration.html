@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opelle — Texture Exploration</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset ────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 14px; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+    transition: background 0.6s ease;
+  }
+
+  /* ── Palette ──────────────────────────────────────────────── */
+  :root {
+    --garnet: #440606;
+    --garnet-vivid: #6B1010;
+    --blue: #8FADC8;
+    --stone: #9F9A8E;
+    --gold: #C4AB70;
+    --olive: #1f231a;
+    --sage: #CAC7B5;
+    --navy: #0E213B;
+    --cream: #F1EFE0;
+    --black: #000000;
+  }
+
+  /* ── SVG Texture Filters (hidden) ─────────────────────────── */
+  .svg-filters { position: absolute; width: 0; height: 0; }
+
+  /* ══════════════════════════════════════════════════════════════
+     TEXTURE TOGGLE BAR
+     ══════════════════════════════════════════════════════════════ */
+  .texture-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 20px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    transition: background 0.5s ease;
+  }
+  .texture-bar .bar-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    margin-right: 16px;
+    opacity: 0.5;
+    transition: color 0.4s;
+  }
+  .texture-bar button {
+    position: relative;
+    padding: 8px 20px;
+    border-radius: 100px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+  }
+  .texture-bar button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .texture-bar button:hover::before { opacity: 1; }
+  .texture-bar button.active {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  }
+
+  /* ── Woodgrain bar ── */
+  body.woodgrain .texture-bar { background: rgba(31,35,26,0.85); }
+  body.woodgrain .texture-bar .bar-label { color: var(--cream); }
+  body.woodgrain .texture-bar button { background: rgba(196,171,112,0.1); color: var(--cream); }
+  body.woodgrain .texture-bar button.active { background: var(--gold); color: var(--olive); border-color: var(--gold); }
+
+  /* ── Glossy bar ── */
+  body.glossy .texture-bar { background: rgba(14,33,59,0.7); }
+  body.glossy .texture-bar .bar-label { color: var(--blue); }
+  body.glossy .texture-bar button { background: rgba(143,173,200,0.08); color: rgba(255,255,255,0.7); }
+  body.glossy .texture-bar button.active { background: rgba(143,173,200,0.25); color: #fff; border-color: var(--blue); box-shadow: 0 0 30px rgba(143,173,200,0.25), inset 0 1px 0 rgba(255,255,255,0.2); }
+
+  /* ── Velvet bar ── */
+  body.velvet .texture-bar { background: rgba(68,6,6,0.6); }
+  body.velvet .texture-bar .bar-label { color: var(--sage); }
+  body.velvet .texture-bar button { background: rgba(202,199,181,0.06); color: var(--sage); }
+  body.velvet .texture-bar button.active { background: var(--garnet); color: var(--cream); border-color: var(--garnet-vivid); }
+
+  /* ══════════════════════════════════════════════════════════════
+     LAYOUT SHELL
+     ══════════════════════════════════════════════════════════════ */
+  .app-shell {
+    display: flex;
+    min-height: 100vh;
+    padding-top: 52px;
+  }
+  .sidebar {
+    width: 180px;
+    flex-shrink: 0;
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 52px;
+    left: 0;
+    bottom: 0;
+    transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+    z-index: 10;
+  }
+  .main {
+    flex: 1;
+    margin-left: 180px;
+    padding: 24px;
+    transition: background 0.5s ease;
+  }
+  .brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    font-weight: 400;
+    margin-bottom: 4px;
+    transition: color 0.4s;
+  }
+  .brand-sub {
+    font-size: 7px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: color 0.4s;
+    margin-bottom: 24px;
+    display: block;
+  }
+  .nav-section-label {
+    font-size: 8px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding-left: 8px;
+    transition: color 0.4s;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 400;
+    margin-bottom: 2px;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+  }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; transition: opacity 0.3s; }
+  .nav-item:hover { transform: translateX(2px); }
+  .nav-section { margin-bottom: 20px; }
+  .nav-cta {
+    margin-top: auto;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .nav-cta svg { width: 14px; height: 14px; }
+  .nav-cta:hover { transform: translateY(-1px); }
+
+  /* ── Cards ── */
+  .card {
+    border-radius: 10px;
+    padding: 16px;
+    transition: all 0.5s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-weight: 400;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    transition: color 0.4s, border-color 0.4s;
+  }
+  .stat-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 300;
+    line-height: 1;
+    transition: color 0.4s;
+  }
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 6px;
+    transition: color 0.4s;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    margin-bottom: 16px;
+    transition: color 0.4s;
+  }
+  .page-super {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    transition: color 0.4s;
+  }
+
+  /* ── Appointment row ── */
+  .appt-row {
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .appt-row:hover { transform: translateX(3px); }
+  .appt-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background 0.4s;
+  }
+  .appt-name { font-size: 11px; font-weight: 500; transition: color 0.4s; }
+  .appt-detail { font-size: 9px; transition: color 0.4s; }
+  .appt-time { font-size: 9px; margin-left: auto; transition: color 0.4s; }
+
+  /* ── Inventory chips ── */
+  .chip {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    margin: 3px;
+    transition: all 0.4s ease;
+    cursor: default;
+  }
+  .chip:hover { transform: scale(1.05); }
+  .chip.low { font-weight: 500; }
+
+  /* ── Hour grid for schedule ── */
+  .hour-grid { display: grid; grid-template-columns: 36px 1fr; }
+  .hour-label {
+    font-size: 9px;
+    text-align: right;
+    padding: 6px 6px 0 0;
+    transition: color 0.4s;
+  }
+  .hour-slot {
+    min-height: 32px;
+    padding: 3px 6px;
+    transition: border-color 0.4s;
+  }
+  .hour-appt {
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-bottom: 3px;
+    font-size: 10px;
+    transition: all 0.4s;
+    border-left: 3px solid;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     1. WOODGRAIN TEXTURE
+     ══════════════════════════════════════════════════════════════ */
+  body.woodgrain {
+    background: #2a2418;
+    /* Layered wood grain using repeating gradients */
+    background-image:
+      /* fine grain lines */
+      repeating-linear-gradient(
+        92deg,
+        transparent,
+        transparent 3px,
+        rgba(196,171,112,0.03) 3px,
+        rgba(196,171,112,0.03) 4px
+      ),
+      /* medium grain */
+      repeating-linear-gradient(
+        88deg,
+        transparent,
+        transparent 11px,
+        rgba(196,171,112,0.04) 11px,
+        rgba(196,171,112,0.04) 13px
+      ),
+      /* wide grain bands */
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 40px,
+        rgba(196,171,112,0.025) 40px,
+        rgba(196,171,112,0.025) 55px
+      ),
+      /* warm base gradient */
+      linear-gradient(180deg, #2a2418 0%, #332c1e 50%, #2a2418 100%);
+  }
+
+  body.woodgrain .sidebar {
+    background:
+      repeating-linear-gradient(
+        91deg,
+        transparent, transparent 5px,
+        rgba(196,171,112,0.02) 5px,
+        rgba(196,171,112,0.02) 6px
+      ),
+      linear-gradient(180deg, #1f231a, #1a1e14);
+    border-right: 1px solid rgba(196,171,112,0.12);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+  }
+  body.woodgrain .brand { color: var(--cream); }
+  body.woodgrain .brand-sub { color: var(--gold); }
+  body.woodgrain .nav-section-label { color: rgba(196,171,112,0.4); }
+  body.woodgrain .nav-item { color: rgba(241,239,224,0.5); }
+  body.woodgrain .nav-item.active {
+    color: var(--cream);
+    background: rgba(196,171,112,0.08);
+    border-left-color: var(--gold);
+  }
+  body.woodgrain .nav-item.active svg { opacity: 0.9; }
+  body.woodgrain .nav-item svg { opacity: 0.45; }
+  body.woodgrain .nav-cta {
+    background: linear-gradient(135deg, #440606, #5C0B0B);
+    color: var(--cream);
+    border: 1px solid rgba(196,171,112,0.15);
+    box-shadow: 0 2px 12px rgba(68,6,6,0.4);
+  }
+
+  body.woodgrain .card {
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent, transparent 7px,
+        rgba(196,171,112,0.015) 7px,
+        rgba(196,171,112,0.015) 8px
+      ),
+      linear-gradient(135deg, rgba(241,239,224,0.95), rgba(241,239,224,0.88));
+    box-shadow:
+      0 4px 20px rgba(0,0,0,0.2),
+      0 1px 0 rgba(196,171,112,0.1),
+      inset 0 1px 0 rgba(255,255,255,0.5);
+    border: 1px solid rgba(196,171,112,0.15);
+  }
+  body.woodgrain .card-title { color: var(--olive); border-bottom: 1px solid rgba(196,171,112,0.2); }
+  body.woodgrain .stat-value { color: var(--olive); }
+  body.woodgrain .stat-label { color: rgba(31,35,26,0.45); }
+  body.woodgrain .page-super { color: rgba(196,171,112,0.7); }
+  body.woodgrain .section-title { color: var(--cream); }
+
+  body.woodgrain .appt-row {
+    background: rgba(31,35,26,0.04);
+    border-left: 2px solid transparent;
+  }
+  body.woodgrain .appt-row:hover { background: rgba(196,171,112,0.08); }
+  body.woodgrain .appt-dot { background: var(--garnet-vivid); }
+  body.woodgrain .appt-name { color: var(--olive); }
+  body.woodgrain .appt-detail { color: rgba(31,35,26,0.5); }
+  body.woodgrain .appt-time { color: rgba(31,35,26,0.4); }
+
+  body.woodgrain .chip { background: rgba(196,171,112,0.12); color: var(--olive); }
+  body.woodgrain .chip.low { background: rgba(68,6,6,0.1); color: var(--garnet); border: 1px solid rgba(68,6,6,0.15); }
+
+  body.woodgrain .hour-label { color: rgba(31,35,26,0.35); }
+  body.woodgrain .hour-slot { border-top: 1px solid rgba(196,171,112,0.12); }
+  body.woodgrain .hour-appt { background: rgba(196,171,112,0.08); color: var(--olive); border-color: var(--garnet); }
+
+  /* Woodgrain knot effect on sidebar */
+  body.woodgrain .sidebar::after {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    bottom: 120px;
+    left: 30px;
+    background: radial-gradient(ellipse, rgba(196,171,112,0.06) 0%, transparent 70%);
+    border: 1px solid rgba(196,171,112,0.04);
+    pointer-events: none;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     2. GLOSSY / GLASS TEXTURE
+     ══════════════════════════════════════════════════════════════ */
+  body.glossy {
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(143,173,200,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(68,6,6,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(14,33,59,0.3) 0%, transparent 80%),
+      linear-gradient(160deg, #0a1628 0%, #0E213B 40%, #0d1a30 100%);
+  }
+
+  body.glossy .sidebar {
+    background: rgba(14,33,59,0.4);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-right: 1px solid rgba(143,173,200,0.1);
+    box-shadow:
+      4px 0 40px rgba(0,0,0,0.2),
+      inset -1px 0 0 rgba(143,173,200,0.05);
+  }
+  body.glossy .brand { color: #fff; text-shadow: 0 0 40px rgba(143,173,200,0.3); }
+  body.glossy .brand-sub { color: var(--blue); }
+  body.glossy .nav-section-label { color: rgba(143,173,200,0.35); }
+  body.glossy .nav-item { color: rgba(255,255,255,0.4); }
+  body.glossy .nav-item.active {
+    color: #fff;
+    background: rgba(143,173,200,0.1);
+    border-left-color: var(--blue);
+    box-shadow: inset 0 0 20px rgba(143,173,200,0.05);
+  }
+  body.glossy .nav-item.active svg { opacity: 0.9; }
+  body.glossy .nav-item svg { opacity: 0.35; }
+  body.glossy .nav-cta {
+    background: linear-gradient(135deg, rgba(143,173,200,0.2), rgba(143,173,200,0.08));
+    color: var(--blue);
+    border: 1px solid rgba(143,173,200,0.2);
+    box-shadow: 0 0 20px rgba(143,173,200,0.1), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  body.glossy .card {
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(143,173,200,0.1);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.2),
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      inset 0 -1px 0 rgba(0,0,0,0.1);
+  }
+  /* Glass reflection stripe */
+  body.glossy .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 40%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%);
+    border-radius: 10px 10px 0 0;
+    pointer-events: none;
+  }
+  body.glossy .card:hover {
+    border-color: rgba(143,173,200,0.2);
+    box-shadow:
+      0 12px 40px rgba(0,0,0,0.25),
+      0 0 30px rgba(143,173,200,0.05),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  body.glossy .card-title { color: rgba(255,255,255,0.8); border-bottom: 1px solid rgba(143,173,200,0.1); }
+  body.glossy .stat-value { color: #fff; text-shadow: 0 0 30px rgba(143,173,200,0.2); }
+  body.glossy .stat-label { color: rgba(143,173,200,0.4); }
+  body.glossy .page-super { color: rgba(143,173,200,0.4); }
+  body.glossy .section-title { color: rgba(255,255,255,0.85); text-shadow: 0 0 40px rgba(143,173,200,0.15); }
+
+  body.glossy .appt-row {
+    background: rgba(143,173,200,0.04);
+    border-radius: 8px;
+    border: 1px solid rgba(143,173,200,0.05);
+  }
+  body.glossy .appt-row:hover { background: rgba(143,173,200,0.08); border-color: rgba(143,173,200,0.1); }
+  body.glossy .appt-dot { background: var(--blue); box-shadow: 0 0 8px rgba(143,173,200,0.4); }
+  body.glossy .appt-name { color: rgba(255,255,255,0.85); }
+  body.glossy .appt-detail { color: rgba(143,173,200,0.45); }
+  body.glossy .appt-time { color: rgba(143,173,200,0.35); }
+
+  body.glossy .chip {
+    background: rgba(143,173,200,0.08);
+    color: rgba(255,255,255,0.6);
+    border: 1px solid rgba(143,173,200,0.1);
+  }
+  body.glossy .chip.low {
+    background: rgba(68,6,6,0.2);
+    color: #e06060;
+    border-color: rgba(68,6,6,0.3);
+    box-shadow: 0 0 12px rgba(68,6,6,0.15);
+  }
+
+  body.glossy .hour-label { color: rgba(143,173,200,0.3); }
+  body.glossy .hour-slot { border-top: 1px solid rgba(143,173,200,0.06); }
+  body.glossy .hour-appt {
+    background: rgba(143,173,200,0.06);
+    color: rgba(255,255,255,0.75);
+    border-color: var(--blue);
+    box-shadow: 0 0 12px rgba(143,173,200,0.08);
+  }
+
+  /* Glossy ambient orbs */
+  body.glossy::before {
+    content: '';
+    position: fixed;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    top: -100px; right: -100px;
+    background: radial-gradient(circle, rgba(143,173,200,0.08), transparent 70%);
+    pointer-events: none;
+    animation: float-orb 8s ease-in-out infinite;
+  }
+  body.glossy::after {
+    content: '';
+    position: fixed;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    bottom: -50px; left: 200px;
+    background: radial-gradient(circle, rgba(68,6,6,0.06), transparent 70%);
+    pointer-events: none;
+    animation: float-orb 10s ease-in-out infinite reverse;
+  }
+  @keyframes float-orb {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(20px, 15px) scale(1.05); }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     3. VELVET / MATTE TEXTURE
+     ══════════════════════════════════════════════════════════════ */
+  body.velvet {
+    background: #1a1214;
+    /* Noise grain overlay via SVG filter reference */
+  }
+  /* Velvet noise overlay */
+  body.velvet::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+  body.velvet::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 40%, rgba(68,6,6,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 70%, rgba(196,171,112,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body.velvet > * { position: relative; z-index: 1; }
+
+  body.velvet .sidebar {
+    background: linear-gradient(180deg, rgba(68,6,6,0.5), rgba(31,35,26,0.6));
+    border-right: 1px solid rgba(196,171,112,0.06);
+    box-shadow: 4px 0 30px rgba(0,0,0,0.4);
+  }
+  /* Velvet sidebar fabric texture */
+  body.velvet .sidebar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='v'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23v)' opacity='0.06'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+  }
+  body.velvet .brand { color: var(--cream); }
+  body.velvet .brand-sub { color: rgba(196,171,112,0.6); }
+  body.velvet .nav-section-label { color: rgba(202,199,181,0.3); }
+  body.velvet .nav-item { color: rgba(202,199,181,0.45); }
+  body.velvet .nav-item.active {
+    color: var(--cream);
+    background: rgba(68,6,6,0.3);
+    border-left-color: var(--garnet-vivid);
+  }
+  body.velvet .nav-item.active svg { opacity: 0.85; }
+  body.velvet .nav-item svg { opacity: 0.35; }
+  body.velvet .nav-cta {
+    background: linear-gradient(135deg, var(--garnet), #5C0B0B);
+    color: var(--cream);
+    border: 1px solid rgba(196,171,112,0.1);
+    box-shadow: 0 4px 20px rgba(68,6,6,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  body.velvet .card {
+    background: rgba(241,239,224,0.04);
+    border: 1px solid rgba(202,199,181,0.06);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  }
+  /* Matte fabric texture on cards */
+  body.velvet .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: 10px;
+  }
+  body.velvet .card:hover {
+    border-color: rgba(202,199,181,0.1);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  }
+  body.velvet .card-title { color: var(--sage); border-bottom: 1px solid rgba(202,199,181,0.08); }
+  body.velvet .stat-value { color: var(--cream); }
+  body.velvet .stat-label { color: rgba(202,199,181,0.35); }
+  body.velvet .page-super { color: rgba(196,171,112,0.4); }
+  body.velvet .section-title { color: var(--cream); }
+
+  body.velvet .appt-row {
+    background: rgba(202,199,181,0.04);
+    border: 1px solid rgba(202,199,181,0.04);
+  }
+  body.velvet .appt-row:hover { background: rgba(68,6,6,0.08); border-color: rgba(68,6,6,0.1); }
+  body.velvet .appt-dot { background: var(--garnet-vivid); }
+  body.velvet .appt-name { color: var(--cream); }
+  body.velvet .appt-detail { color: rgba(202,199,181,0.4); }
+  body.velvet .appt-time { color: rgba(202,199,181,0.3); }
+
+  body.velvet .chip { background: rgba(202,199,181,0.06); color: rgba(202,199,181,0.6); border: 1px solid rgba(202,199,181,0.06); }
+  body.velvet .chip.low { background: rgba(68,6,6,0.15); color: #c06060; border-color: rgba(68,6,6,0.2); }
+
+  body.velvet .hour-label { color: rgba(202,199,181,0.25); }
+  body.velvet .hour-slot { border-top: 1px solid rgba(202,199,181,0.05); }
+  body.velvet .hour-appt { background: rgba(68,6,6,0.12); color: var(--cream); border-color: var(--garnet-vivid); }
+
+  /* ══════════════════════════════════════════════════════════════
+     ANIMATIONS
+     ══════════════════════════════════════════════════════════════ */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-in {
+    animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .d1 { animation-delay: 0.05s; }
+  .d2 { animation-delay: 0.1s; }
+  .d3 { animation-delay: 0.15s; }
+  .d4 { animation-delay: 0.2s; }
+  .d5 { animation-delay: 0.25s; }
+  .d6 { animation-delay: 0.3s; }
+
+  /* Texture label badge */
+  .texture-label {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 500;
+    z-index: 100;
+    transition: all 0.5s ease;
+    pointer-events: none;
+  }
+  body.woodgrain .texture-label { background: rgba(196,171,112,0.15); color: var(--gold); border: 1px solid rgba(196,171,112,0.2); }
+  body.glossy .texture-label { background: rgba(143,173,200,0.1); color: var(--blue); border: 1px solid rgba(143,173,200,0.15); box-shadow: 0 0 20px rgba(143,173,200,0.1); }
+  body.velvet .texture-label { background: rgba(68,6,6,0.2); color: rgba(202,199,181,0.6); border: 1px solid rgba(68,6,6,0.2); }
+</style>
+</head>
+<body class="woodgrain">
+
+<!-- ── Toggle Bar ───────────────────────────────────────────── -->
+<div class="texture-bar">
+  <span class="bar-label">Texture</span>
+  <button class="active" onclick="setTexture('woodgrain')">Woodgrain</button>
+  <button onclick="setTexture('glossy')">Glossy Glass</button>
+  <button onclick="setTexture('velvet')">Matte Velvet</button>
+</div>
+
+<!-- ── App Shell ────────────────────────────────────────────── -->
+<div class="app-shell">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="brand">OPELLE</div>
+    <span class="brand-sub">Practitioner Suite</span>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Main</div>
+      <a class="nav-item active">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Appointments
+      </a>
+      <a class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Clients
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Practice</div>
+      <a class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v8L8 14h8l-2-4V2"/><path d="M8.5 2h7"/><path d="M14 22H10c-2 0-3-1-3-2.5S8 17 10 17h4c2 0 3 .5 3 2.5S16 22 14 22Z"/></svg>
+        Formulas
+      </a>
+      <a class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Products
+      </a>
+      <a class="nav-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Tasks
+      </a>
+    </div>
+
+    <div class="nav-cta">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v8L8 14h8l-2-4V2"/><path d="M8.5 2h7"/></svg>
+      Log Formula
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <div class="page-super animate-in">Practitioner Suite</div>
+    <div class="section-title animate-in d1">Dashboard</div>
+
+    <!-- Stats Row -->
+    <div class="grid-3 animate-in d2" style="margin-bottom: 16px;">
+      <div class="card" style="text-align: center; padding: 20px;">
+        <div class="stat-value">7</div>
+        <div class="stat-label">Today's Clients</div>
+      </div>
+      <div class="card" style="text-align: center; padding: 20px;">
+        <div class="stat-value">42</div>
+        <div class="stat-label">Active Formulas</div>
+      </div>
+      <div class="card" style="text-align: center; padding: 20px;">
+        <div class="stat-value">3</div>
+        <div class="stat-label">Pending Tasks</div>
+      </div>
+    </div>
+
+    <!-- Schedule + Inventory -->
+    <div class="grid-2 animate-in d3" style="margin-bottom: 16px;">
+      <!-- Today's Schedule -->
+      <div class="card">
+        <div class="card-title">Today's Schedule</div>
+        <div class="hour-grid">
+          <div class="hour-label">9a</div>
+          <div class="hour-slot">
+            <div class="hour-appt">Mika L. — Balayage</div>
+          </div>
+          <div class="hour-label">10a</div>
+          <div class="hour-slot">
+            <div class="hour-appt">Tanya R. — Root Touch-up</div>
+          </div>
+          <div class="hour-label">11a</div>
+          <div class="hour-slot"></div>
+          <div class="hour-label">12p</div>
+          <div class="hour-slot">
+            <div class="hour-appt">Sam K. — Partial Highlight</div>
+          </div>
+          <div class="hour-label">1p</div>
+          <div class="hour-slot"></div>
+          <div class="hour-label">2p</div>
+          <div class="hour-slot">
+            <div class="hour-appt">Cora D. — Full Color + Gloss</div>
+          </div>
+          <div class="hour-label">3p</div>
+          <div class="hour-slot">
+            <div class="hour-appt">Nina J. — Haircut + Style</div>
+          </div>
+          <div class="hour-label">4p</div>
+          <div class="hour-slot">
+            <div class="hour-appt">Val M. — Color Correction</div>
+          </div>
+          <div class="hour-label">5p</div>
+          <div class="hour-slot">
+            <div class="hour-appt">Lexi T. — Toner Refresh</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Appointments -->
+      <div class="card">
+        <div class="card-title">Upcoming</div>
+        <div class="appt-row">
+          <div class="appt-dot"></div>
+          <div>
+            <div class="appt-name">Mika Lassiter</div>
+            <div class="appt-detail">Balayage + Tone</div>
+          </div>
+          <div class="appt-time">9:00 AM</div>
+        </div>
+        <div class="appt-row">
+          <div class="appt-dot"></div>
+          <div>
+            <div class="appt-name">Tanya Richards</div>
+            <div class="appt-detail">Root Touch-up</div>
+          </div>
+          <div class="appt-time">10:00 AM</div>
+        </div>
+        <div class="appt-row">
+          <div class="appt-dot"></div>
+          <div>
+            <div class="appt-name">Sam Kwon</div>
+            <div class="appt-detail">Partial Highlight</div>
+          </div>
+          <div class="appt-time">12:00 PM</div>
+        </div>
+        <div class="appt-row">
+          <div class="appt-dot"></div>
+          <div>
+            <div class="appt-name">Cora Delgado</div>
+            <div class="appt-detail">Full Color + Gloss</div>
+          </div>
+          <div class="appt-time">2:00 PM</div>
+        </div>
+        <div class="appt-row">
+          <div class="appt-dot"></div>
+          <div>
+            <div class="appt-name">Nina Johari</div>
+            <div class="appt-detail">Haircut + Style</div>
+          </div>
+          <div class="appt-time">3:00 PM</div>
+        </div>
+        <div class="appt-row">
+          <div class="appt-dot"></div>
+          <div>
+            <div class="appt-name">Valentina Mora</div>
+            <div class="appt-detail">Color Correction</div>
+          </div>
+          <div class="appt-time">4:00 PM</div>
+        </div>
+        <div class="appt-row">
+          <div class="appt-dot"></div>
+          <div>
+            <div class="appt-name">Lexi Torres</div>
+            <div class="appt-detail">Toner Refresh</div>
+          </div>
+          <div class="appt-time">5:00 PM</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory + Tasks -->
+    <div class="grid-2 animate-in d4">
+      <div class="card">
+        <div class="card-title">Inventory</div>
+        <div>
+          <span class="chip">Redken Shades EQ 6N</span>
+          <span class="chip">Wella T18</span>
+          <span class="chip low">Olaplex No.2</span>
+          <span class="chip">Schwarzkopf 9.5-1</span>
+          <span class="chip low">Joico Lumishine 7N</span>
+          <span class="chip">Matrix SoColor 5N</span>
+          <span class="chip">Paul Mitchell 8A</span>
+          <span class="chip low">20 Vol Developer</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Tasks</div>
+        <div class="appt-row">
+          <div style="width:14px;height:14px;border-radius:3px;border:1.5px solid;opacity:0.3;flex-shrink:0"></div>
+          <div class="appt-name">Order Olaplex No.2 restock</div>
+        </div>
+        <div class="appt-row">
+          <div style="width:14px;height:14px;border-radius:3px;border:1.5px solid;opacity:0.3;flex-shrink:0"></div>
+          <div class="appt-name">Update Mika's formula notes</div>
+        </div>
+        <div class="appt-row">
+          <div style="width:14px;height:14px;border-radius:3px;border:1.5px solid;opacity:0.3;flex-shrink:0"></div>
+          <div class="appt-name">Schedule continuing ed class</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Texture label badge -->
+<div class="texture-label" id="texLabel">Woodgrain</div>
+
+<script>
+  const LABELS = {
+    woodgrain: 'Woodgrain — Warm Organic',
+    glossy: 'Glossy Glass — Cool Luxury',
+    velvet: 'Matte Velvet — Deep Tactile'
+  };
+
+  function setTexture(name) {
+    document.body.className = name;
+    document.getElementById('texLabel').textContent = LABELS[name];
+
+    // Update active button
+    document.querySelectorAll('.texture-bar button').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.toLowerCase().includes(name.slice(0, 4)));
+    });
+
+    // Re-trigger card animations
+    document.querySelectorAll('.animate-in').forEach(el => {
+      el.style.animation = 'none';
+      el.offsetHeight; // force reflow
+      el.style.animation = '';
+    });
+  }
+</script>
+</body>
+</html>

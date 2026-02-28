@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opelle — Full Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400&display=swap" rel="stylesheet">
+<style>
+/* ── PALETTE ─────────────────────────────────────────── */
+:root {
+  --bark-deepest:    #1f231a;
+  --bark:            #6E6960;
+  --bark-mid:        #9F9A8E;
+  --bark-warm:       #8D887D;
+  --bark-light:      #ACA69B;
+  --bark-pale:       #B8B2A7;
+
+  --stone-lightest:  #F1EFE0;
+  --stone-light:     #E5E3D3;
+  --stone-mid:       #D7D5C5;
+  --stone-warm:      #CAC7B5;
+  --stone-card:      #F1EFE0;
+
+  --garnet:          #440606;
+  --garnet-vivid:    #5C0B0B;
+  --garnet-ruby:     #751212;
+  --garnet-blush:    #9B4545;
+  --garnet-wash:     rgba(68,6,6,0.10);
+
+  --brass:           #C4AB70;
+  --brass-warm:      #D0BA82;
+  --brass-line:      rgba(31,35,26,0.10);
+
+  --olive:           #1f231a;
+  --navy:            #0E213B;
+  --blue:            #8FADC8;
+  --blue-wash:       rgba(143,173,200,0.12);
+
+  --text-on-bark:       #1f231a;
+  --text-on-bark-dim:   rgba(31,35,26,0.72);
+  --text-on-bark-faint: rgba(31,35,26,0.50);
+  --text-on-bark-ghost: rgba(31,35,26,0.30);
+
+  --text-on-stone:       #000000;
+  --text-on-stone-dim:   #1A1A1A;
+  --text-on-stone-faint: #3B3C23;
+  --text-on-stone-ghost: #9B988F;
+
+  --status-confirmed: #8FADC8;
+  --status-pending:   #C4AB70;
+  --status-low:       #440606;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bark-mid);
+  color: var(--text-on-bark);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grain overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03; pointer-events: none; z-index: 99990; mix-blend-mode: overlay;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────── */
+.sidebar {
+  position: fixed; left: 0; top: 0; height: 100%; width: 170px;
+  background: #1f231a;
+  border-right: 1px solid rgba(196,171,112,0.08);
+  display: flex; flex-direction: column;
+  z-index: 100;
+}
+.sidebar .brand { padding: 20px 16px 16px; border-bottom: 1px solid rgba(196,171,112,0.08); }
+.sidebar .brand h1 {
+  font-family: 'Cormorant Garamond', serif; font-size: 15px;
+  letter-spacing: 0.3em; text-transform: uppercase; color: #F1EFE0;
+  font-weight: 400; line-height: 1.2;
+}
+.sidebar .brand span {
+  display: block; font-size: 7px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: #C4AB70; margin-top: 2px;
+}
+.sidebar nav { flex: 1; padding: 12px; overflow-y: auto; }
+.nav-section { margin-bottom: 16px; }
+.nav-label {
+  font-size: 7px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: rgba(241,239,224,0.35); margin-bottom: 4px; padding-left: 8px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+  border-radius: 4px; font-size: 10px; text-decoration: none;
+  color: rgba(241,239,224,0.55); border-left: 2px solid transparent;
+  transition: all 0.15s;
+}
+.nav-item:hover { color: rgba(241,239,224,0.75); background: rgba(143,173,200,0.04); }
+.nav-item.active {
+  color: #F1EFE0; background: rgba(143,173,200,0.08);
+  border-left-color: #8FADC8;
+}
+.nav-item svg { width: 12px; height: 12px; opacity: 0.5; flex-shrink: 0; }
+.nav-item.active svg { opacity: 0.8; }
+
+.sidebar .cta {
+  margin: 0 12px 12px; padding: 8px 12px; border-radius: 6px;
+  background: #440606; border: 1px solid #5C0B0B; color: #F1EFE0;
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: 'DM Sans', sans-serif; font-weight: 500;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; transition: background 0.15s;
+}
+.cta:hover { background: #5C0B0B; }
+
+.sidebar .user-block {
+  padding: 12px; border-top: 1px solid rgba(196,171,112,0.08);
+  display: flex; align-items: center; gap: 8px;
+}
+.avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(143,173,200,0.12); color: #8FADC8;
+  font-size: 10px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.user-name { font-size: 10px; color: rgba(241,239,224,0.7); }
+.user-role { font-size: 8px; color: rgba(241,239,224,0.4); }
+
+/* ── MAIN CONTENT ────────────────────────────────────── */
+.main { margin-left: 170px; padding: 28px 32px 48px; }
+
+.page-header { margin-bottom: 24px; }
+.page-label {
+  font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--text-on-bark-faint); margin-bottom: 4px;
+}
+.page-title {
+  font-family: 'Fraunces', serif; font-size: 24px;
+  color: var(--text-on-bark); font-weight: 300;
+}
+.page-sub { font-size: 12px; color: var(--text-on-bark-faint); margin-top: 4px; }
+
+/* ── CARDS ───────────────────────────────────────────── */
+.card {
+  background: var(--stone-card); border-radius: 8px;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.10);
+}
+.card-head {
+  padding: 8px 12px; border-bottom: 1px solid var(--stone-mid);
+  font-family: 'Fraunces', serif; font-size: 12px;
+  color: var(--text-on-stone); font-weight: 400;
+}
+.card-body { padding: 12px; }
+
+/* ── STAT WIDGETS ────────────────────────────────────── */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin-bottom: 16px;
+}
+.stat-card { text-align: center; }
+.stat-card .card-body { padding: 14px 12px; }
+.stat-value {
+  font-family: 'Fraunces', serif; font-size: 28px;
+  color: var(--text-on-stone); font-weight: 300; line-height: 1;
+}
+.stat-label {
+  font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--text-on-stone-faint); margin-top: 6px;
+}
+.stat-change { font-size: 9px; margin-top: 4px; }
+.stat-change.up { color: var(--status-confirmed); }
+.stat-change.down { color: var(--status-low); }
+
+/* ── DASHBOARD GRID ──────────────────────────────────── */
+.dash-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  margin-bottom: 16px;
+}
+.dash-grid .wide { grid-column: span 2; }
+
+/* ── APPOINTMENTS LIST ───────────────────────────────── */
+.appt-row {
+  padding: 6px 8px; border-radius: 6px; margin-bottom: 6px;
+  border-left: 2px solid; display: flex; justify-content: space-between;
+  align-items: center;
+}
+.appt-row.upcoming { background: var(--garnet-wash); border-color: var(--garnet-vivid); }
+.appt-row.confirmed { background: var(--blue-wash); border-color: var(--blue); }
+.appt-row.completed { background: rgba(196,171,112,0.08); border-color: var(--brass); opacity: 0.6; }
+.appt-name { font-size: 10px; font-weight: 500; color: var(--text-on-stone); }
+.appt-detail { font-size: 9px; color: var(--text-on-stone-faint); }
+.appt-time { font-size: 9px; color: var(--text-on-stone-ghost); white-space: nowrap; }
+
+/* ── PRODUCTS LIST ───────────────────────────────────── */
+.product-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.product-chip {
+  padding: 3px 8px; border-radius: 100px; font-size: 9px;
+  background: var(--stone-mid); color: var(--text-on-stone);
+}
+.product-chip.low {
+  background: rgba(68,6,6,0.08); color: var(--status-low);
+  border: 1px solid rgba(68,6,6,0.15);
+}
+
+/* ── FORMULA ENTRIES ─────────────────────────────────── */
+.formula-card { margin-bottom: 10px; }
+.formula-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 8px; flex-wrap: wrap; gap: 6px;
+}
+.formula-client { font-size: 14px; font-weight: 500; color: var(--text-on-stone); }
+.formula-badge {
+  font-size: 10px; font-weight: 500; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-on-stone-faint);
+  padding: 2px 8px; border-radius: 100px; border: 1px solid var(--stone-mid);
+}
+.formula-date { font-size: 12px; color: var(--text-on-stone-ghost); }
+.formula-notes {
+  font-size: 13px; color: var(--text-on-stone-dim); font-family: monospace;
+  line-height: 1.6; white-space: pre-wrap;
+}
+.formula-general {
+  font-size: 12px; color: var(--text-on-stone-faint); margin-top: 8px;
+  font-style: italic; border-top: 1px solid var(--stone-mid); padding-top: 8px;
+}
+
+/* ── CLIENTS LIST ────────────────────────────────────── */
+.client-row {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  border-bottom: 1px solid var(--stone-mid);
+}
+.client-row:last-child { border-bottom: none; }
+.client-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(143,173,200,0.12); color: var(--blue);
+  font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.client-name { font-size: 13px; font-weight: 500; color: var(--text-on-stone); }
+.client-meta { font-size: 10px; color: var(--text-on-stone-faint); }
+.client-tag {
+  font-size: 8px; padding: 1px 6px; border-radius: 100px;
+  background: rgba(196,171,112,0.12); color: var(--brass);
+  font-weight: 500; letter-spacing: 0.05em;
+}
+
+/* ── TASKS ───────────────────────────────────────────── */
+.task-row {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  border-bottom: 1px solid var(--stone-mid);
+}
+.task-row:last-child { border-bottom: none; }
+.task-check {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 1.5px solid var(--stone-mid); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.task-check.done { background: rgba(68,6,6,0.15); border-color: var(--garnet-ruby); }
+.task-check.done::after { content: '✓'; font-size: 10px; color: var(--garnet-ruby); }
+.task-text { font-size: 12px; color: var(--text-on-stone); flex: 1; }
+.task-text.done { text-decoration: line-through; color: var(--text-on-stone-ghost); }
+.task-due { font-size: 9px; color: var(--text-on-stone-ghost); }
+
+/* ── HISTORY FEED ────────────────────────────────────── */
+.history-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+}
+.history-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(196,171,112,0.1); color: var(--brass-warm);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  font-size: 14px;
+}
+.history-label { font-size: 13px; color: var(--text-on-stone); font-weight: 500; }
+.history-entity { font-size: 12px; color: var(--text-on-stone-faint); margin-top: 1px; }
+.history-time { font-size: 11px; color: var(--text-on-stone-ghost); flex-shrink: 0; margin-left: auto; }
+
+/* ── FILTER CHIPS ────────────────────────────────────── */
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.chip {
+  padding: 5px 14px; border-radius: 100px; font-size: 11px; font-weight: 500;
+  border: 1px solid var(--brass-line); background: transparent;
+  color: var(--text-on-bark-faint); cursor: pointer; transition: all 0.15s;
+}
+.chip.active {
+  border-color: var(--brass-warm); background: rgba(196,171,112,0.12);
+  color: var(--brass-warm);
+}
+
+/* ── BADGE ───────────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; padding: 2px 8px;
+  border-radius: 100px; font-size: 9px; font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.badge.confirmed { background: rgba(143,173,200,0.12); color: var(--status-confirmed); }
+.badge.pending { background: rgba(196,171,112,0.12); color: var(--status-pending); }
+.badge.low { background: rgba(68,6,6,0.10); color: var(--status-low); }
+.badge.default { background: var(--stone-mid); color: var(--text-on-stone); }
+
+/* ── BUTTON ──────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
+  letter-spacing: 0.05em; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+}
+.btn-garnet { background: var(--garnet); border: 1px solid var(--garnet-vivid); color: #F1EFE0; }
+.btn-garnet:hover { background: var(--garnet-vivid); }
+.btn-blue { background: var(--blue); color: #000; border: 1px solid #6A90AE; }
+
+/* ── TAB PAGES (hidden by default) ───────────────────── */
+.tab-page { display: none; }
+.tab-page.visible { display: block; }
+
+/* ── CALENDAR MINI ───────────────────────────────────── */
+.cal-grid {
+  display: grid; grid-template-columns: 50px 1fr; font-size: 10px;
+}
+.cal-hour {
+  text-align: right; padding: 8px 8px 8px 0; color: var(--text-on-stone-faint);
+  font-size: 9px;
+}
+.cal-slot {
+  border-top: 1px solid var(--stone-mid); min-height: 44px; padding: 4px 0 4px 8px;
+}
+.cal-event {
+  padding: 4px 8px; border-radius: 4px; margin-bottom: 3px;
+  border-left: 3px solid; font-size: 10px;
+}
+.cal-event.blue { background: rgba(143,173,200,0.10); border-color: var(--blue); }
+.cal-event.garnet { background: var(--garnet-wash); border-color: var(--garnet-ruby); }
+.cal-event.gold { background: rgba(196,171,112,0.08); border-color: var(--brass); }
+.cal-event .ev-name { font-weight: 500; color: var(--text-on-stone); }
+.cal-event .ev-svc { color: var(--text-on-stone-faint); font-size: 9px; }
+
+/* ── SCROLLBAR ───────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bark-warm); border-radius: 4px; }
+
+/* ── ANIMATIONS ──────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate { animation: fadeUp 0.5s cubic-bezier(0.19,1,0.22,1) both; }
+.d1 { animation-delay: 0.05s; } .d2 { animation-delay: 0.10s; }
+.d3 { animation-delay: 0.15s; } .d4 { animation-delay: 0.20s; }
+.d5 { animation-delay: 0.25s; } .d6 { animation-delay: 0.30s; }
+.d7 { animation-delay: 0.35s; } .d8 { animation-delay: 0.40s; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<div class="sidebar">
+  <div class="brand">
+    <h1>OPELLE</h1>
+    <span>Practitioner Suite</span>
+  </div>
+  <nav>
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <a class="nav-item active" href="#" onclick="showTab('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="#" onclick="showTab('appointments')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Appointments
+      </a>
+      <a class="nav-item" href="#" onclick="showTab('clients')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Clients
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Practice</div>
+      <a class="nav-item" href="#" onclick="showTab('formulas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6v4l4 8H5l4-8V3z"/><line x1="7" y1="21" x2="17" y2="21"/><line x1="12" y1="15" x2="12" y2="21"/></svg>
+        Formulas
+      </a>
+      <a class="nav-item" href="#" onclick="showTab('products')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Products
+      </a>
+      <a class="nav-item" href="#" onclick="showTab('tasks')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Tasks
+      </a>
+      <a class="nav-item" href="#" onclick="showTab('history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        History
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Account</div>
+      <a class="nav-item" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+    </div>
+  </nav>
+  <button class="cta">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6v4l4 8H5l4-8V3z"/><line x1="7" y1="21" x2="17" y2="21"/><line x1="12" y1="15" x2="12" y2="21"/></svg>
+    Log Formula
+  </button>
+  <div class="user-block">
+    <div class="avatar">B</div>
+    <div>
+      <div class="user-name">Belle Lord</div>
+      <div class="user-role">Practitioner</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MAIN CONTENT ═══════════ -->
+<div class="main">
+
+  <!-- ─── DASHBOARD ─── -->
+  <div id="tab-dashboard" class="tab-page visible">
+    <div class="page-header animate d1">
+      <div class="page-label">Overview</div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Thursday, February 27, 2026</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="card stat-card animate d2">
+        <div class="card-head">Clients</div>
+        <div class="card-body">
+          <div class="stat-value">24</div>
+          <div class="stat-label">Total Clients</div>
+          <div class="stat-change up">+3 this month</div>
+        </div>
+      </div>
+      <div class="card stat-card animate d3">
+        <div class="card-head">Appointments</div>
+        <div class="card-body">
+          <div class="stat-value">8</div>
+          <div class="stat-label">This Week</div>
+          <div class="stat-change up">+2 vs last week</div>
+        </div>
+      </div>
+      <div class="card stat-card animate d4">
+        <div class="card-head">Formulas</div>
+        <div class="card-body">
+          <div class="stat-value">67</div>
+          <div class="stat-label">Total Logged</div>
+          <div class="stat-change up">+12 this month</div>
+        </div>
+      </div>
+      <div class="card stat-card animate d5">
+        <div class="card-head">Products</div>
+        <div class="card-body">
+          <div class="stat-value">18</div>
+          <div class="stat-label">In Inventory</div>
+          <div class="stat-change down">3 low stock</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="card animate d6">
+        <div class="card-head">Today's Appointments</div>
+        <div class="card-body">
+          <div class="appt-row completed">
+            <div><div class="appt-name">Sarah Mitchell</div><div class="appt-detail">Full Color &middot; 9:00 AM</div></div>
+            <div class="appt-time">completed</div>
+          </div>
+          <div class="appt-row confirmed">
+            <div><div class="appt-name">Rachel Kim</div><div class="appt-detail">Balayage &middot; 11:30 AM</div></div>
+            <div class="appt-time">confirmed</div>
+          </div>
+          <div class="appt-row upcoming">
+            <div><div class="appt-name">Megan Torres</div><div class="appt-detail">Gloss + Tone &middot; 2:00 PM</div></div>
+            <div class="appt-time">upcoming</div>
+          </div>
+          <div class="appt-row upcoming">
+            <div><div class="appt-name">Lindsay Park</div><div class="appt-detail">Root Touch-up &middot; 4:15 PM</div></div>
+            <div class="appt-time">upcoming</div>
+          </div>
+          <div class="appt-row upcoming">
+            <div><div class="appt-name">Jen Alvarez</div><div class="appt-detail">Corrective Color &middot; 5:30 PM</div></div>
+            <div class="appt-time">upcoming</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card animate d7">
+        <div class="card-head">Inventory Snapshot</div>
+        <div class="card-body">
+          <div class="product-chips">
+            <span class="product-chip low">⚠ Redken Shades EQ 6N</span>
+            <span class="product-chip low">⚠ Olaplex No.2</span>
+            <span class="product-chip low">⚠ Schwarzkopf IGORA 7-1</span>
+            <span class="product-chip">r+co 6.66n</span>
+            <span class="product-chip">Wella Koleston 8/03</span>
+            <span class="product-chip">Redken Shades EQ 9T</span>
+            <span class="product-chip">L'Oreal Dialight 7.13</span>
+            <span class="product-chip">Goldwell Topchic 6RR</span>
+            <span class="product-chip">Matrix SoColor 5N</span>
+            <span class="product-chip">Joico LumiShine 8NWB</span>
+            <span class="product-chip">Guy Tang #mydentity 7RG</span>
+            <span class="product-chip">Pulp Riot Lilac</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card animate d8">
+        <div class="card-head">Recent Formulas</div>
+        <div class="card-body">
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:500;color:var(--text-on-stone);">Rachel Kim</span>
+              <span class="badge confirmed">BALAYAGE</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-on-stone-faint);font-family:monospace;line-height:1.5;">Lightener: Redken Flash Lift + 30vol (1:2)&#10;Toner: Shades EQ 9T + 9P equal parts, 6vol</div>
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:500;color:var(--text-on-stone);">Megan Torres</span>
+              <span class="badge pending">GLOSS</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-on-stone-faint);font-family:monospace;line-height:1.5;">Redken Shades EQ 7N + 7T (3:1) with processing solution</div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <span style="font-size:12px;font-weight:500;color:var(--text-on-stone);">Sarah Mitchell</span>
+              <span class="badge default">COLOR</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-on-stone-faint);font-family:monospace;line-height:1.5;">Wella Koleston 6/73 + 7/03 (1:1), 20vol, 35min</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card animate d8">
+        <div class="card-head">Tasks</div>
+        <div class="card-body">
+          <div class="task-row">
+            <div class="task-check done"></div>
+            <span class="task-text done">Order Olaplex No.2 refill</span>
+            <span class="task-due">today</span>
+          </div>
+          <div class="task-row">
+            <div class="task-check"></div>
+            <span class="task-text">Confirm Rachel Kim for Thursday</span>
+            <span class="task-due">today</span>
+          </div>
+          <div class="task-row">
+            <div class="task-check"></div>
+            <span class="task-text">Call Megan re: allergy patch test</span>
+            <span class="task-due">tomorrow</span>
+          </div>
+          <div class="task-row">
+            <div class="task-check"></div>
+            <span class="task-text">Restock Schwarzkopf IGORA 7-1</span>
+            <span class="task-due">Mar 1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── APPOINTMENTS ─── -->
+  <div id="tab-appointments" class="tab-page">
+    <div class="page-header animate d1">
+      <div class="page-label">Calendar</div>
+      <div class="page-title">Appointments</div>
+      <div class="page-sub">5 appointments today</div>
+    </div>
+    <div class="card animate d2">
+      <div class="card-head" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Thursday, Feb 27</span>
+        <button class="btn btn-garnet" style="font-size:10px;padding:5px 10px;">+ New Appointment</button>
+      </div>
+      <div class="card-body">
+        <div class="cal-grid">
+          <div class="cal-hour">9 AM</div>
+          <div class="cal-slot">
+            <div class="cal-event gold"><span class="ev-name">Sarah Mitchell</span><br><span class="ev-svc">Full Color — completed</span></div>
+          </div>
+          <div class="cal-hour">10 AM</div><div class="cal-slot"></div>
+          <div class="cal-hour">11 AM</div>
+          <div class="cal-slot">
+            <div class="cal-event blue"><span class="ev-name">Rachel Kim</span><br><span class="ev-svc">Balayage — confirmed</span></div>
+          </div>
+          <div class="cal-hour">12 PM</div><div class="cal-slot"></div>
+          <div class="cal-hour">1 PM</div><div class="cal-slot"></div>
+          <div class="cal-hour">2 PM</div>
+          <div class="cal-slot">
+            <div class="cal-event garnet"><span class="ev-name">Megan Torres</span><br><span class="ev-svc">Gloss + Tone — upcoming</span></div>
+          </div>
+          <div class="cal-hour">3 PM</div><div class="cal-slot"></div>
+          <div class="cal-hour">4 PM</div>
+          <div class="cal-slot">
+            <div class="cal-event garnet"><span class="ev-name">Lindsay Park</span><br><span class="ev-svc">Root Touch-up — upcoming</span></div>
+          </div>
+          <div class="cal-hour">5 PM</div>
+          <div class="cal-slot">
+            <div class="cal-event garnet"><span class="ev-name">Jen Alvarez</span><br><span class="ev-svc">Corrective Color — upcoming</span></div>
+          </div>
+          <div class="cal-hour">6 PM</div><div class="cal-slot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── CLIENTS ─── -->
+  <div id="tab-clients" class="tab-page">
+    <div class="page-header animate d1" style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div class="page-label">Practice</div>
+        <div class="page-title">Clients</div>
+        <div class="page-sub">24 clients</div>
+      </div>
+      <button class="btn btn-blue" style="margin-top:8px;">+ Add Client</button>
+    </div>
+    <div class="card animate d2">
+      <div class="card-body">
+        <div class="client-row">
+          <div class="client-avatar">SM</div>
+          <div style="flex:1;min-width:0;">
+            <div class="client-name">Sarah Mitchell</div>
+            <div class="client-meta">Last visit: Feb 27 &middot; Full Color &middot; 12 formulas logged</div>
+          </div>
+          <span class="client-tag">REGULAR</span>
+        </div>
+        <div class="client-row">
+          <div class="client-avatar">RK</div>
+          <div style="flex:1;min-width:0;">
+            <div class="client-name">Rachel Kim</div>
+            <div class="client-meta">Last visit: Feb 27 &middot; Balayage &middot; 8 formulas logged</div>
+          </div>
+          <span class="client-tag">REGULAR</span>
+        </div>
+        <div class="client-row">
+          <div class="client-avatar">MT</div>
+          <div style="flex:1;min-width:0;">
+            <div class="client-name">Megan Torres</div>
+            <div class="client-meta">Last visit: Feb 20 &middot; Gloss &middot; 5 formulas logged</div>
+          </div>
+          <span class="client-tag">REGULAR</span>
+        </div>
+        <div class="client-row">
+          <div class="client-avatar">LP</div>
+          <div style="flex:1;min-width:0;">
+            <div class="client-name">Lindsay Park</div>
+            <div class="client-meta">Last visit: Feb 13 &middot; Root Touch-up &middot; 4 formulas logged</div>
+          </div>
+        </div>
+        <div class="client-row">
+          <div class="client-avatar">JA</div>
+          <div style="flex:1;min-width:0;">
+            <div class="client-name">Jen Alvarez</div>
+            <div class="client-meta">Last visit: Feb 6 &middot; Corrective Color &middot; 3 formulas logged</div>
+          </div>
+          <span class="client-tag">NEW</span>
+        </div>
+        <div class="client-row">
+          <div class="client-avatar">AW</div>
+          <div style="flex:1;min-width:0;">
+            <div class="client-name">Amy Whitfield</div>
+            <div class="client-meta">Last visit: Jan 30 &middot; Highlights &middot; 9 formulas logged</div>
+          </div>
+          <span class="client-tag">REGULAR</span>
+        </div>
+        <div class="client-row">
+          <div class="client-avatar">DP</div>
+          <div style="flex:1;min-width:0;">
+            <div class="client-name">Diana Patel</div>
+            <div class="client-meta">Last visit: Jan 22 &middot; Toner &middot; 6 formulas logged</div>
+          </div>
+        </div>
+        <div class="client-row">
+          <div class="client-avatar">NC</div>
+          <div style="flex:1;min-width:0;">
+            <div class="client-name">Natalie Chen</div>
+            <div class="client-meta">Last visit: Jan 15 &middot; Balayage &middot; 7 formulas logged</div>
+          </div>
+          <span class="client-tag">REGULAR</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── FORMULAS ─── -->
+  <div id="tab-formulas" class="tab-page">
+    <div class="page-header animate d1" style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div class="page-label">Practice</div>
+        <div class="page-title">Formulas</div>
+        <div class="page-sub">67 formulas logged</div>
+      </div>
+      <button class="btn btn-garnet">Log Formula</button>
+    </div>
+
+    <div class="card animate d2" style="margin-bottom:16px;">
+      <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <div style="position:relative;flex:1 1 220px;min-width:180px;">
+          <input type="text" placeholder="Search formulas — bleach, level 6, RR..." style="width:100%;padding:8px 12px 8px 32px;border-radius:8px;border:1px solid var(--stone-mid);background:rgba(0,0,0,0.04);font-size:13px;color:var(--text-on-stone);outline:none;font-family:'DM Sans',sans-serif;">
+          <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-on-stone-ghost);pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <select style="padding:8px 12px;border-radius:8px;border:1px solid var(--stone-mid);background:rgba(0,0,0,0.04);font-size:13px;color:var(--text-on-stone);outline:none;font-family:'DM Sans',sans-serif;">
+          <option>All service types</option><option>Color</option><option>Balayage</option><option>Gloss</option><option>Lightening</option><option>Toner</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card formula-card animate d3">
+      <div class="card-body">
+        <div class="formula-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="formula-client">Rachel Kim</span>
+            <span class="formula-badge">BALAYAGE</span>
+          </div>
+          <span class="formula-date">Feb 27, 2026</span>
+        </div>
+        <div class="formula-notes">Lightener: Redken Flash Lift + 30vol (1:2), foils
+Toner: Shades EQ 9T + 9P equal parts, processing solution
+Process: 35min under heat, toner 20min at sink</div>
+        <div class="formula-general">Client prefers cooler tones. Allergic to PPD — always do patch test 48h prior.</div>
+      </div>
+    </div>
+
+    <div class="card formula-card animate d4">
+      <div class="card-body">
+        <div class="formula-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="formula-client">Sarah Mitchell</span>
+            <span class="formula-badge">COLOR</span>
+          </div>
+          <span class="formula-date">Feb 27, 2026</span>
+        </div>
+        <div class="formula-notes">Wella Koleston 6/73 + 7/03 (1:1), 20vol developer
+Apply root to ends, process 35min
+Gray coverage: 60% — great result, client happy</div>
+      </div>
+    </div>
+
+    <div class="card formula-card animate d5">
+      <div class="card-body">
+        <div class="formula-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="formula-client">Megan Torres</span>
+            <span class="formula-badge">GLOSS</span>
+          </div>
+          <span class="formula-date">Feb 20, 2026</span>
+        </div>
+        <div class="formula-notes">Redken Shades EQ 7N + 7T (3:1) with processing solution
+Bowl application, 20min process, no heat</div>
+        <div class="formula-general">Wants to go slightly warmer next visit. Schedule toner refresh in 6 weeks.</div>
+      </div>
+    </div>
+
+    <div class="card formula-card animate d6">
+      <div class="card-body">
+        <div class="formula-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="formula-client">Amy Whitfield</span>
+            <span class="formula-badge">LIGHTENING</span>
+          </div>
+          <span class="formula-date">Feb 15, 2026</span>
+        </div>
+        <div class="formula-notes">Schwarzkopf BlondMe Bond Enforcing + 20vol (1:1.5)
+Full head foils, babylights around face
+Process: 40min, check every 10
+Toner: IGORA 9.5-4 + 9.5-1 (2:1), 10vol, 15min</div>
+      </div>
+    </div>
+
+    <div class="card formula-card animate d7">
+      <div class="card-body">
+        <div class="formula-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="formula-client">Natalie Chen</span>
+            <span class="formula-badge">BALAYAGE</span>
+          </div>
+          <span class="formula-date">Feb 8, 2026</span>
+        </div>
+        <div class="formula-notes">L'Oreal Blond Studio + 30vol, hand-painted
+Toner: Dialight 9.13 + 10.12 equal parts
+Process: open air 45min, toner 20min</div>
+        <div class="formula-general">Level 4 natural. Going for a soft caramel — very happy with dimension.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── PRODUCTS ─── -->
+  <div id="tab-products" class="tab-page">
+    <div class="page-header animate d1" style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div class="page-label">Inventory</div>
+        <div class="page-title">Products</div>
+        <div class="page-sub">18 products in inventory</div>
+      </div>
+      <button class="btn btn-blue">+ Add Product</button>
+    </div>
+
+    <div class="card animate d2" style="margin-bottom:10px;">
+      <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:6px;background:rgba(68,6,6,0.08);display:flex;align-items:center;justify-content:center;font-size:16px;">⚠</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text-on-stone);">Redken Shades EQ 6N</div>
+            <div style="font-size:10px;color:var(--text-on-stone-faint);">permanent &middot; color</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="badge low">Qty: 1</span>
+          <span style="font-size:11px;color:var(--text-on-stone-ghost);">Feb 18, 2026</span>
+        </div>
+      </div>
+    </div>
+    <div class="card animate d3" style="margin-bottom:10px;">
+      <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:6px;background:rgba(68,6,6,0.08);display:flex;align-items:center;justify-content:center;font-size:16px;">⚠</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text-on-stone);">Olaplex No.2 Bond Perfector</div>
+            <div style="font-size:10px;color:var(--text-on-stone-faint);">treatment &middot; additive</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="badge low">Qty: 0</span>
+          <span style="font-size:11px;color:var(--text-on-stone-ghost);">Feb 10, 2026</span>
+        </div>
+      </div>
+    </div>
+    <div class="card animate d4" style="margin-bottom:10px;">
+      <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:6px;background:var(--blue-wash);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--blue);">◆</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text-on-stone);">r+co 6.66n omnipresent</div>
+            <div style="font-size:10px;color:var(--text-on-stone-faint);">permanent &middot; tea leaves</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="badge confirmed">Qty: 2</span>
+          <span style="font-size:11px;color:var(--text-on-stone-ghost);">Feb 20, 2026</span>
+        </div>
+      </div>
+    </div>
+    <div class="card animate d5" style="margin-bottom:10px;">
+      <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:6px;background:var(--blue-wash);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--blue);">◆</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text-on-stone);">Wella Koleston 8/03</div>
+            <div style="font-size:10px;color:var(--text-on-stone-faint);">permanent &middot; warm blonde</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="badge confirmed">Qty: 4</span>
+          <span style="font-size:11px;color:var(--text-on-stone-ghost);">Feb 22, 2026</span>
+        </div>
+      </div>
+    </div>
+    <div class="card animate d6" style="margin-bottom:10px;">
+      <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:6px;background:var(--blue-wash);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--blue);">◆</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text-on-stone);">Redken Shades EQ 9T</div>
+            <div style="font-size:10px;color:var(--text-on-stone-faint);">demi-permanent &middot; chrome</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="badge confirmed">Qty: 6</span>
+          <span style="font-size:11px;color:var(--text-on-stone-ghost);">Feb 24, 2026</span>
+        </div>
+      </div>
+    </div>
+    <div class="card animate d7" style="margin-bottom:10px;">
+      <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:6px;background:var(--blue-wash);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--blue);">◆</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text-on-stone);">Goldwell Topchic 6RR</div>
+            <div style="font-size:10px;color:var(--text-on-stone-faint);">permanent &middot; dramatic red</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="badge confirmed">Qty: 3</span>
+          <span style="font-size:11px;color:var(--text-on-stone-ghost);">Feb 15, 2026</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── TASKS ─── -->
+  <div id="tab-tasks" class="tab-page">
+    <div class="page-header animate d1">
+      <div class="page-label">Practice</div>
+      <div class="page-title">Tasks</div>
+      <div class="page-sub">4 active &middot; 6 completed</div>
+    </div>
+    <div class="card animate d2">
+      <div class="card-body">
+        <div class="task-row">
+          <div class="task-check"></div>
+          <span class="task-text">Confirm Rachel Kim for Thursday balayage</span>
+          <span class="task-due">today</span>
+        </div>
+        <div class="task-row">
+          <div class="task-check"></div>
+          <span class="task-text">Call Megan re: allergy patch test before corrective</span>
+          <span class="task-due">tomorrow</span>
+        </div>
+        <div class="task-row">
+          <div class="task-check"></div>
+          <span class="task-text">Restock Schwarzkopf IGORA 7-1 (out of stock)</span>
+          <span class="task-due">Mar 1</span>
+        </div>
+        <div class="task-row">
+          <div class="task-check"></div>
+          <span class="task-text">Update Amy Whitfield's formula notes with toner adjustment</span>
+          <span class="task-due">Mar 2</span>
+        </div>
+        <div class="task-row">
+          <div class="task-check done"></div>
+          <span class="task-text done">Order Olaplex No.2 refill</span>
+          <span class="task-due">Feb 27</span>
+        </div>
+        <div class="task-row">
+          <div class="task-check done"></div>
+          <span class="task-text done">Send Natalie Chen her formula summary</span>
+          <span class="task-due">Feb 26</span>
+        </div>
+        <div class="task-row">
+          <div class="task-check done"></div>
+          <span class="task-text done">Reschedule Diana Patel to Jan 30</span>
+          <span class="task-due">Feb 25</span>
+        </div>
+        <div class="task-row">
+          <div class="task-check done"></div>
+          <span class="task-text done">Log Sarah Mitchell's new gray coverage formula</span>
+          <span class="task-due">Feb 24</span>
+        </div>
+        <div class="task-row">
+          <div class="task-check done"></div>
+          <span class="task-text done">Inventory check — monthly count</span>
+          <span class="task-due">Feb 22</span>
+        </div>
+        <div class="task-row">
+          <div class="task-check done"></div>
+          <span class="task-text done">Update pricing for balayage services</span>
+          <span class="task-due">Feb 20</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── HISTORY ─── -->
+  <div id="tab-history" class="tab-page">
+    <div class="page-header animate d1">
+      <div class="page-label">Practice</div>
+      <div class="page-title">History</div>
+      <div class="page-sub">Every action taken in your workspace.</div>
+    </div>
+    <div class="chips animate d2">
+      <span class="chip active">All</span>
+      <span class="chip">Formulas</span>
+      <span class="chip">Clients</span>
+      <span class="chip">Products</span>
+      <span class="chip">Appointments</span>
+      <span class="chip">Tasks</span>
+    </div>
+    <div class="card animate d3" style="margin-bottom:8px;">
+      <div class="history-row">
+        <div class="history-icon">🧪</div>
+        <div style="flex:1;min-width:0;"><div class="history-label">Formula logged</div><div class="history-entity">Rachel Kim — Balayage</div></div>
+        <span class="history-time">2m ago</span>
+      </div>
+    </div>
+    <div class="card animate d4" style="margin-bottom:8px;">
+      <div class="history-row">
+        <div class="history-icon">📅</div>
+        <div style="flex:1;min-width:0;"><div class="history-label">Appointment completed</div><div class="history-entity">Sarah Mitchell — Full Color</div></div>
+        <span class="history-time">1h ago</span>
+      </div>
+    </div>
+    <div class="card animate d5" style="margin-bottom:8px;">
+      <div class="history-row">
+        <div class="history-icon">🧪</div>
+        <div style="flex:1;min-width:0;"><div class="history-label">Formula logged</div><div class="history-entity">Sarah Mitchell — Full Color</div></div>
+        <span class="history-time">1h ago</span>
+      </div>
+    </div>
+    <div class="card animate d6" style="margin-bottom:8px;">
+      <div class="history-row">
+        <div class="history-icon">✅</div>
+        <div style="flex:1;min-width:0;"><div class="history-label">Task completed</div><div class="history-entity">Order Olaplex No.2 refill</div></div>
+        <span class="history-time">3h ago</span>
+      </div>
+    </div>
+    <div class="card animate d7" style="margin-bottom:8px;">
+      <div class="history-row">
+        <div class="history-icon">📦</div>
+        <div style="flex:1;min-width:0;"><div class="history-label">Product updated</div><div class="history-entity">Olaplex No.2 — quantity changed to 0</div></div>
+        <span class="history-time">5h ago</span>
+      </div>
+    </div>
+    <div class="card animate d8" style="margin-bottom:8px;">
+      <div class="history-row">
+        <div class="history-icon">👤</div>
+        <div style="flex:1;min-width:0;"><div class="history-label">Client added</div><div class="history-entity">Jen Alvarez</div></div>
+        <span class="history-time">yesterday</span>
+      </div>
+    </div>
+    <div class="card animate d8" style="margin-bottom:8px;">
+      <div class="history-row">
+        <div class="history-icon">📅</div>
+        <div style="flex:1;min-width:0;"><div class="history-label">Appointment created</div><div class="history-entity">Jen Alvarez — Corrective Color, Feb 27</div></div>
+        <span class="history-time">yesterday</span>
+      </div>
+    </div>
+    <div class="card animate d8" style="margin-bottom:8px;">
+      <div class="history-row">
+        <div class="history-icon">🧪</div>
+        <div style="flex:1;min-width:0;"><div class="history-label">Formula logged</div><div class="history-entity">Megan Torres — Gloss</div></div>
+        <span class="history-time">7d ago</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('visible');
+  event.currentTarget.classList.add('active');
+  // Re-trigger animations
+  document.getElementById('tab-' + name).querySelectorAll('.animate').forEach((el, i) => {
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = '';
+  });
+}
+</script>
+</body>
+</html>

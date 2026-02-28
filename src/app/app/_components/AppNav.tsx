@@ -52,21 +52,19 @@ interface AppNavProps {
   workspaceName?: string;
 }
 
-/* Shared tree background image used in both mobile + desktop sidebars */
+/* Shared tree background — decorative, bottom-left, height-clamped */
 function TreeBackground() {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/textures/olive-tree-final.png"
+      src="/assets/olive-tree-cutout.png"
       alt=""
       aria-hidden="true"
+      className="absolute bottom-0 left-0 pointer-events-none select-none"
       style={{
-        position: "absolute",
-        bottom: "40px",
-        left: "-20%",
-        width: "600px",
-        height: "auto",
-        pointerEvents: "none",
+        height: "clamp(160px, 22vh, 260px)",
+        width: "auto",
+        objectFit: "contain",
         opacity: 0.35,
         zIndex: 0,
       }}
@@ -316,12 +314,11 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
 
       {/* ── Mobile sidebar (slides in) ───────────────────────────── */}
       <aside
-        className="md:hidden fixed left-0 top-0 h-full flex flex-col z-50"
+        className="md:hidden fixed left-0 top-0 h-full flex flex-col z-50 relative overflow-hidden"
         style={{
           width: "220px",
           background: "#1f231a",
           borderRight: "1px solid rgba(196,171,112,0.08)",
-          overflow: "hidden",
           transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
           boxShadow: mobileOpen ? "8px 0 32px rgba(0,0,0,0.3)" : "none",
@@ -352,12 +349,11 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
 
       {/* ── Desktop sidebar (always visible) ─────────────────────── */}
       <aside
-        className="hidden md:flex fixed left-0 top-0 h-full flex-col"
+        className="hidden md:flex fixed left-0 top-0 h-full flex-col relative overflow-hidden"
         style={{
           width: "170px",
           background: "#1f231a",
           borderRight: "1px solid rgba(196,171,112,0.08)",
-          overflow: "hidden",
         }}
       >
         <TreeBackground />
