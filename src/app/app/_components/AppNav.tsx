@@ -84,9 +84,24 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
   const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Practitioner";
 
   const sidebarContent = (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col flex-1 relative">
+      {/* Olive tree background */}
+      <img
+        src="/textures/olive-tree-cropped.png"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute bottom-0 left-0 w-full"
+        style={{
+          opacity: 0.45,
+          objectFit: "cover",
+          objectPosition: "bottom center",
+          height: "75%",
+          maskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
+        }}
+      />
       {/* Brand */}
-      <div className="px-4 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(196,171,112,0.08)" }}>
+      <div className="px-4 pt-5 pb-4 relative z-10" style={{ borderBottom: "1px solid rgba(196,171,112,0.08)" }}>
         <Link href="/app" className="block">
           <h1
             style={{
@@ -117,7 +132,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
+      <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4 relative z-10">
         {NAV_SECTIONS.map((section) => (
           <div key={section.label}>
             <p
@@ -169,7 +184,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
       </nav>
 
       {/* Log Formula CTA */}
-      <div className="px-3 pb-3">
+      <div className="px-3 pb-3 relative z-10">
         <Link href="/app/formulas/log">
           <button
             className="w-full flex items-center justify-center gap-1.5"
@@ -193,7 +208,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
       </div>
 
       {/* User profile */}
-      <div className="mx-2 mb-2 px-2 py-3 rounded-lg">
+      <div className="mx-2 mb-2 px-2 py-3 rounded-lg relative z-10">
         <div className="flex items-center gap-2 mb-2">
           <div
             className="flex items-center justify-center flex-shrink-0"
