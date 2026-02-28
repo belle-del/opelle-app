@@ -93,7 +93,8 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
       url(/textures/olive-tree-cropped.png) bottom center / cover no-repeat,
       #1f231a
     `,
-  };
+    backgroundOrigin: "border-box",
+  } as React.CSSProperties;
 
   const sidebarContent = (
     <div className="flex flex-col flex-1 relative">
@@ -303,11 +304,12 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         style={{
           width: "220px",
           ...treeBackgroundStyle,
-          borderRight: "1px solid rgba(196,171,112,0.08)",
           overflow: "hidden",
           transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-          boxShadow: mobileOpen ? "8px 0 32px rgba(0,0,0,0.3)" : "none",
+          boxShadow: mobileOpen
+            ? "inset -1px 0 0 rgba(196,171,112,0.08), 8px 0 32px rgba(0,0,0,0.3)"
+            : "inset -1px 0 0 rgba(196,171,112,0.08)",
         }}
       >
         {/* Close button inside sidebar */}
@@ -338,7 +340,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         style={{
           width: "170px",
           ...treeBackgroundStyle,
-          borderRight: "1px solid rgba(196,171,112,0.08)",
+          boxShadow: "inset -1px 0 0 rgba(196,171,112,0.08)",
           overflow: "hidden",
         }}
       >
