@@ -122,10 +122,9 @@ body::before {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.18;
+  opacity: 0.35;
   pointer-events: none;
   z-index: 0;
-  mix-blend-mode: multiply;
 }
 
 /* Ensure all page content sits above the wood-grain ::before layer */

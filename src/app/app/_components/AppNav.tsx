@@ -192,18 +192,18 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         </Link>
       </div>
 
-      {/* Olive tree decorative icon */}
-      <div className="flex justify-center py-2 px-3">
-        <Image
-          src="/textures/olive-tree.jpg"
+      {/* Olive branch decorative icon */}
+      <div className="flex justify-center py-3 px-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/textures/olive-branch.svg"
           alt=""
-          width={80}
-          height={80}
+          width={100}
+          height={100}
           className="pointer-events-none select-none"
           style={{
-            opacity: 0.35,
-            filter: "brightness(1.3) saturate(0.5)",
-            borderRadius: "8px",
+            opacity: 0.25,
+            filter: "brightness(1.4) saturate(0.4)",
           }}
           aria-hidden="true"
         />

@@ -27,7 +27,7 @@ export default async function AppLayout({
       <AppNav user={user} workspaceName={workspace?.name} />
 
       {/* Main content — offset for sidebar on desktop, top bar on mobile */}
-      <main className="flex-1 ml-0 md:ml-[170px] pt-[60px] md:pt-0 p-4 md:p-6">
+      <main className="flex-1 ml-0 md:ml-[170px] pt-[60px] md:pt-6 p-4 md:p-6">
         <div className="max-w-6xl mx-auto">
           {children}
         </div>

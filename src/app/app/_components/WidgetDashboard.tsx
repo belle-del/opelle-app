@@ -309,7 +309,7 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
   return (
     <DndProvider backend={HTML5Backend}>
       {/* Topbar */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", marginTop: "24px" }}>
         <div>
           <p style={{ fontSize: "9px", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--text-on-bark-faint)" }}>Practitioner Suite</p>
           <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", color: "var(--text-on-bark)", fontWeight: 300, marginTop: "2px" }}>Dashboard</h1>
