@@ -52,25 +52,6 @@ interface AppNavProps {
   workspaceName?: string;
 }
 
-/* Shared tree background — decorative, bottom-left, height-clamped */
-function TreeBackground() {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src="/assets/olive-tree-cutout.png"
-      alt=""
-      aria-hidden="true"
-      className="absolute bottom-0 left-0 pointer-events-none select-none"
-      style={{
-        height: "clamp(160px, 22vh, 260px)",
-        width: "auto",
-        objectFit: "contain",
-        opacity: 0.35,
-        zIndex: 0,
-      }}
-    />
-  );
-}
 
 export function AppNav({ user, workspaceName }: AppNavProps) {
   const pathname = usePathname();
@@ -103,7 +84,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
   const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Practitioner";
 
   const sidebarContent = (
-    <div className="flex flex-col flex-1" style={{ position: "relative", zIndex: 2 }}>
+    <div className="flex flex-col flex-1">
       {/* Brand */}
       <div className="px-4 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(196,171,112,0.08)" }}>
         <Link href="/app" className="block">
@@ -211,16 +192,8 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         </Link>
       </div>
 
-      {/* User profile — frosted container so text reads over tree */}
-      <div
-        className="mx-2 mb-2 px-2 py-3 rounded-lg"
-        style={{
-          background: "rgba(31,35,26,0.75)",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-          border: "1px solid rgba(196,171,112,0.08)",
-        }}
-      >
+      {/* User profile */}
+      <div className="mx-2 mb-2 px-2 py-3 rounded-lg">
         <div className="flex items-center gap-2 mb-2">
           <div
             className="flex items-center justify-center flex-shrink-0"
@@ -314,17 +287,17 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
 
       {/* ── Mobile sidebar (slides in) ───────────────────────────── */}
       <aside
-        className="md:hidden fixed left-0 top-0 h-full flex flex-col z-50 relative overflow-hidden"
+        className="md:hidden fixed left-0 top-0 h-full flex flex-col z-50"
         style={{
           width: "220px",
           background: "#1f231a",
           borderRight: "1px solid rgba(196,171,112,0.08)",
+          overflow: "hidden",
           transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
           boxShadow: mobileOpen ? "8px 0 32px rgba(0,0,0,0.3)" : "none",
         }}
       >
-        <TreeBackground />
         {/* Close button inside sidebar */}
         <div className="absolute top-3 right-3 z-10">
           <button
@@ -349,14 +322,14 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
 
       {/* ── Desktop sidebar (always visible) ─────────────────────── */}
       <aside
-        className="hidden md:flex fixed left-0 top-0 h-full flex-col relative overflow-hidden"
+        className="hidden md:flex fixed left-0 top-0 h-full flex-col"
         style={{
           width: "170px",
           background: "#1f231a",
           borderRight: "1px solid rgba(196,171,112,0.08)",
+          overflow: "hidden",
         }}
       >
-        <TreeBackground />
         {sidebarContent}
       </aside>
     </>
