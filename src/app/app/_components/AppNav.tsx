@@ -351,7 +351,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           overflow: "hidden",
         }}
       >
-        {/* Olive tree background — fills bottom portion of sidebar */}
+        {/* Olive tree background — fills bottom of sidebar */}
         <Image
           src="/textures/olive-tree.png"
           alt=""
@@ -361,8 +361,8 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           style={{
             position: "absolute",
             bottom: "-30px",
-            left: "-40px",
-            width: "240px",
+            left: "-50px",
+            width: "320px",
             height: "auto",
             opacity: 0.55,
           }}
