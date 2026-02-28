@@ -90,12 +90,14 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         src="/textures/olive-tree-cropped.png"
         alt=""
         aria-hidden="true"
-        className="pointer-events-none select-none absolute bottom-0 left-0 w-full"
+        className="pointer-events-none select-none absolute bottom-0 left-1/2"
         style={{
           opacity: 0.45,
           objectFit: "cover",
           objectPosition: "bottom center",
           height: "75%",
+          width: "110%",
+          transform: "translateX(-50%)",
           maskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
           WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
         }}
