@@ -19,7 +19,6 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
 
 const NAV_SECTIONS = [
@@ -192,10 +191,15 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         </Link>
       </div>
 
-      {/* User profile */}
+      {/* User profile — frosted container so text reads over tree */}
       <div
-        className="px-3 py-3"
-        style={{ borderTop: "1px solid rgba(196,171,112,0.08)" }}
+        className="mx-2 mb-2 px-2 py-3 rounded-lg"
+        style={{
+          background: "rgba(31,35,26,0.75)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          border: "1px solid rgba(196,171,112,0.08)",
+        }}
       >
         <div className="flex items-center gap-2 mb-2">
           <div
@@ -294,6 +298,10 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         style={{
           width: "220px",
           background: "#1f231a",
+          backgroundImage: "url('/textures/olive-tree-banner.svg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center bottom",
+          backgroundRepeat: "no-repeat",
           borderRight: "1px solid rgba(196,171,112,0.08)",
           overflow: "hidden",
           transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
@@ -301,24 +309,6 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           boxShadow: mobileOpen ? "8px 0 32px rgba(0,0,0,0.3)" : "none",
         }}
       >
-        {/* Olive tree background — fills bottom portion of mobile sidebar */}
-        <Image
-          src="/textures/olive-tree.png"
-          alt=""
-          width={540}
-          height={675}
-          className="pointer-events-none select-none"
-          style={{
-            position: "absolute",
-            bottom: "-40px",
-            left: "-30px",
-            width: "280px",
-            height: "auto",
-            opacity: 0.55,
-          }}
-          aria-hidden="true"
-          priority={false}
-        />
         {/* Close button inside sidebar */}
         <div className="absolute top-3 right-3 z-10">
           <button
@@ -347,28 +337,14 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         style={{
           width: "170px",
           background: "#1f231a",
+          backgroundImage: "url('/textures/olive-tree-banner.svg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center bottom",
+          backgroundRepeat: "no-repeat",
           borderRight: "1px solid rgba(196,171,112,0.08)",
           overflow: "hidden",
         }}
       >
-        {/* Olive tree background — fills bottom of sidebar */}
-        <Image
-          src="/textures/olive-tree.png"
-          alt=""
-          width={540}
-          height={675}
-          className="pointer-events-none select-none"
-          style={{
-            position: "absolute",
-            bottom: "-30px",
-            left: "-50px",
-            width: "320px",
-            height: "auto",
-            opacity: 0.55,
-          }}
-          aria-hidden="true"
-          priority={false}
-        />
         {sidebarContent}
       </aside>
     </>
