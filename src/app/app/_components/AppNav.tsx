@@ -83,26 +83,25 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
   const initial = (user.user_metadata?.full_name?.[0] || user.email?.[0] || "?").toUpperCase();
   const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Practitioner";
 
+  const treeBackground = (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none select-none absolute bottom-0 left-0 w-full"
+      style={{
+        opacity: 0.45,
+        height: "75%",
+        backgroundImage: "url(/textures/olive-tree-cropped.png)",
+        backgroundSize: "cover",
+        backgroundPosition: "bottom center",
+        backgroundRepeat: "no-repeat",
+        maskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
+        WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
+      }}
+    />
+  );
+
   const sidebarContent = (
     <div className="flex flex-col flex-1 relative">
-      {/* Olive tree background */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none select-none absolute"
-        style={{
-          opacity: 0.45,
-          bottom: "-2px",
-          left: "-2px",
-          right: "-2px",
-          height: "76%",
-          backgroundImage: "url(/textures/olive-tree-cropped.png)",
-          backgroundSize: "cover",
-          backgroundPosition: "bottom center",
-          backgroundRepeat: "no-repeat",
-          maskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
-          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
-        }}
-      />
       {/* Brand */}
       <div className="px-4 pt-5 pb-4 relative z-10" style={{ borderBottom: "1px solid rgba(196,171,112,0.08)" }}>
         <Link href="/app" className="block">
@@ -316,6 +315,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           boxShadow: mobileOpen ? "8px 0 32px rgba(0,0,0,0.3)" : "none",
         }}
       >
+        {treeBackground}
         {/* Close button inside sidebar */}
         <div className="absolute top-3 right-3 z-10">
           <button
@@ -348,6 +348,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           overflow: "hidden",
         }}
       >
+        {treeBackground}
         {sidebarContent}
       </aside>
     </>
