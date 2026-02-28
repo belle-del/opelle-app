@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import Link from "next/link";
@@ -60,11 +60,12 @@ function getClientName(clients: Client[], id: string) {
 
 // ── Draggable Widget Shell ─────────────────────────────────────────────
 function DraggableWidget({
-  widget, editMode, onDelete, onResize, gridRef, children,
+  widget, editMode, onDelete, onResize, onMove, gridRef, children,
 }: {
   widget: Widget; editMode: boolean;
   onDelete: (id: string) => void;
   onResize: (id: string, cols: number, rows: number) => void;
+  onMove: (dragId: string, hoverId: string) => void;
   gridRef: React.RefObject<HTMLDivElement | null>;
   children: React.ReactNode;
 }) {
@@ -81,7 +82,14 @@ function DraggableWidget({
     canDrag: () => editMode,
   });
 
-  const [, drop] = useDrop({ accept: "WIDGET" });
+  const [, drop] = useDrop({
+    accept: "WIDGET",
+    hover: (item: { id: string }) => {
+      if (item.id !== widget.id) {
+        onMove(item.id, widget.id);
+      }
+    },
+  });
 
   drag(drop(ref));
 
@@ -136,9 +144,10 @@ function DraggableWidget({
         borderRadius: "8px",
         boxShadow: "0 3px 14px rgba(0,0,0,0.16)",
         opacity: isDragging ? 0.5 : 1,
+        cursor: editMode ? (isDragging ? "grabbing" : "grab") : "default",
         position: "relative",
         overflow: "visible",
-        minHeight: `${Math.max(widget.rows * 48, 80)}px`,
+        transition: isDragging ? "none" : "transform 0.2s ease",
       }}
     >
       {editMode && (
@@ -261,10 +270,38 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
   const pendingTasks = tasks.filter((t) => t.status !== "completed");
 
   const gridRef = useRef<HTMLDivElement>(null);
+  const [cellSize, setCellSize] = useState(48);
+
+  // Measure grid column width so rows can match → square cells
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const measure = () => {
+      const gap = 10; // matches gap in grid style
+      const w = el.getBoundingClientRect().width;
+      const colW = (w - gap * 15) / 16;
+      if (colW > 0) setCellSize(Math.round(colW));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const deleteWidget = useCallback((id: string) => setWidgets((p) => p.filter((w) => w.id !== id)), []);
   const resizeWidget = useCallback((id: string, cols: number, rows: number) =>
     setWidgets((p) => p.map((w) => w.id === id ? { ...w, cols: clampGrid(cols), rows: clampGrid(rows) } : w)), []);
+  const moveWidget = useCallback((dragId: string, hoverId: string) => {
+    setWidgets((prev) => {
+      const dragIdx = prev.findIndex((w) => w.id === dragId);
+      const hoverIdx = prev.findIndex((w) => w.id === hoverId);
+      if (dragIdx === -1 || hoverIdx === -1 || dragIdx === hoverIdx) return prev;
+      const next = [...prev];
+      const [dragged] = next.splice(dragIdx, 1);
+      next.splice(hoverIdx, 0, dragged);
+      return next;
+    });
+  }, []);
   const addWidget = (type: WidgetType) => {
     const def = ALL_WIDGET_TYPES.find((t) => t.type === type);
     if (!def) return;
@@ -407,9 +444,9 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
       )}
 
       {/* Widget Grid — 16x16 freeform */}
-      <div ref={gridRef} style={{ display: "grid", gridTemplateColumns: "repeat(16, 1fr)", gridAutoRows: "minmax(48px, 1fr)", gap: "10px" }}>
+      <div ref={gridRef} style={{ display: "grid", gridTemplateColumns: "repeat(16, 1fr)", gridAutoRows: `${cellSize}px`, gap: "10px" }}>
         {widgets.map((widget) => (
-          <DraggableWidget key={widget.id} widget={widget} editMode={editMode} onDelete={deleteWidget} onResize={resizeWidget} gridRef={gridRef}>
+          <DraggableWidget key={widget.id} widget={widget} editMode={editMode} onDelete={deleteWidget} onResize={resizeWidget} onMove={moveWidget} gridRef={gridRef}>
             {renderContent(widget)}
           </DraggableWidget>
         ))}
