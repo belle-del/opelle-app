@@ -63,8 +63,8 @@ function TreeBackground() {
       style={{
         position: "absolute",
         bottom: "20px",
-        left: "-60%",
-        width: "280%",
+        left: "-130px",
+        width: "500px",
         height: "auto",
         pointerEvents: "none",
         opacity: 0.35,
