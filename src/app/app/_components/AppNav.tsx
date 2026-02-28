@@ -88,12 +88,16 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
   // Layer 2: the tree image
   // Layer 3 (bottom): solid fallback color
   const treeBackgroundStyle = {
-    background: `
+    backgroundColor: "#1f231a",
+    backgroundImage: `
       linear-gradient(to bottom, #1f231a 0%, #1f231a 25%, rgba(31,35,26,0.55) 40%, rgba(31,35,26,0.55) 100%),
-      url(/textures/olive-tree-cropped.png) bottom center / cover no-repeat,
-      #1f231a
+      url(/textures/olive-tree-cropped.png)
     `,
-    backgroundOrigin: "border-box",
+    backgroundSize: "100% 100%, 110% auto",
+    backgroundPosition: "top left, bottom center",
+    backgroundRepeat: "no-repeat, no-repeat",
+    backgroundOrigin: "border-box, border-box" as string,
+    backgroundClip: "border-box, border-box" as string,
   } as React.CSSProperties;
 
   const sidebarContent = (
