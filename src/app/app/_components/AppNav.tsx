@@ -83,22 +83,17 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
   const initial = (user.user_metadata?.full_name?.[0] || user.email?.[0] || "?").toUpperCase();
   const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Practitioner";
 
-  const treeBackground = (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none select-none absolute bottom-0 left-0 w-full"
-      style={{
-        opacity: 0.45,
-        height: "75%",
-        backgroundImage: "url(/textures/olive-tree-cropped.png)",
-        backgroundSize: "cover",
-        backgroundPosition: "bottom center",
-        backgroundRepeat: "no-repeat",
-        maskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
-        WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 40%)",
-      }}
-    />
-  );
+  // Tree background layered directly on the aside via CSS backgrounds:
+  // Layer 1 (top): gradient overlay that fades from solid bg to semi-transparent
+  // Layer 2: the tree image
+  // Layer 3 (bottom): solid fallback color
+  const treeBackgroundStyle = {
+    background: `
+      linear-gradient(to bottom, #1f231a 0%, #1f231a 25%, rgba(31,35,26,0.55) 40%, rgba(31,35,26,0.55) 100%),
+      url(/textures/olive-tree-cropped.png) bottom center / cover no-repeat,
+      #1f231a
+    `,
+  };
 
   const sidebarContent = (
     <div className="flex flex-col flex-1 relative">
@@ -307,7 +302,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         className="md:hidden fixed left-0 top-0 h-full flex flex-col z-50"
         style={{
           width: "220px",
-          background: "#1f231a",
+          ...treeBackgroundStyle,
           borderRight: "1px solid rgba(196,171,112,0.08)",
           overflow: "hidden",
           transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
@@ -315,7 +310,6 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           boxShadow: mobileOpen ? "8px 0 32px rgba(0,0,0,0.3)" : "none",
         }}
       >
-        {treeBackground}
         {/* Close button inside sidebar */}
         <div className="absolute top-3 right-3 z-10">
           <button
@@ -343,12 +337,11 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         className="hidden md:flex fixed left-0 top-0 h-full flex-col"
         style={{
           width: "170px",
-          background: "#1f231a",
+          ...treeBackgroundStyle,
           borderRight: "1px solid rgba(196,171,112,0.08)",
           overflow: "hidden",
         }}
       >
-        {treeBackground}
         {sidebarContent}
       </aside>
     </>
