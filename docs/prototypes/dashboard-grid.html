@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opelle Dashboard — 16x16 Grid Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=DM+Sans:wght@400;500;600&family=Cormorant+Garamond:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Design Tokens ──────────────────────────────────────────────── */
+:root {
+  --stone-lightest: #F1EFE0;
+  --stone-light: #E5E3D3;
+  --stone-mid: #D7D5C5;
+  --stone-warm: #CAC7B5;
+  --stone-deep: #B5B2A2;
+  --stone-shadow: #9B988F;
+  --stone-card: #F1EFE0;
+
+  --garnet: #440606;
+  --garnet-vivid: #5C0B0B;
+  --garnet-wash: rgba(68,6,6,0.10);
+
+  --brass: #C4AB70;
+  --brass-warm: #D0BA82;
+  --brass-soft: rgba(196,171,112,0.45);
+  --brass-line: rgba(31,35,26,0.10);
+
+  --olive: #1f231a;
+  --olive-mid: #3B3C23;
+  --olive-sage: #555744;
+
+  --text-on-bark: #1f231a;
+  --text-on-bark-faint: rgba(31,35,26,0.50);
+  --text-on-stone: #000000;
+  --text-on-stone-faint: #3B3C23;
+  --text-on-stone-ghost: #9B988F;
+
+  --status-confirmed: #8FADC8;
+  --status-low: #440606;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--stone-warm);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-on-bark);
+  min-height: 100vh;
+  padding: 24px 32px;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.topbar-sub {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-on-bark-faint);
+}
+.topbar h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--text-on-bark);
+  margin-top: 2px;
+}
+.topbar-actions { display: flex; gap: 8px; }
+.btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  border: 1px solid var(--stone-warm);
+  background: var(--stone-mid);
+  color: var(--text-on-stone);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn:hover { background: var(--stone-deep); }
+.btn-primary {
+  background: var(--garnet);
+  color: var(--stone-lightest);
+  border-color: var(--garnet-vivid);
+}
+.btn-primary:hover { background: var(--garnet-vivid); }
+.btn-add {
+  background: var(--status-confirmed);
+  color: white;
+  border-color: var(--status-confirmed);
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* ── 16x16 Grid ─────────────────────────────────────────────────── */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  grid-auto-rows: minmax(48px, 1fr);
+  gap: 10px;
+  min-height: calc(16 * 48px + 15 * 10px);
+}
+
+/* ── Vine Border SVG ────────────────────────────────────────────── */
+.widget-card {
+  position: relative;
+  background: var(--stone-card);
+  border-radius: 8px;
+  overflow: visible;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.10);
+  transition: box-shadow 0.2s;
+  border: 12px solid transparent;
+  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cstyle%3E.vine%7Bfill:none;stroke:%23C4AB70;stroke-width:1.2;stroke-linecap:round;opacity:0.35%7D.leaf%7Bfill:%23555744;opacity:0.22%7D%3C/style%3E%3C/defs%3E%3Cpath class='vine' d='M0,6 C8,3 16,8 24,5 S40,2 50,6 S66,10 76,5 S90,2 100,6'/%3E%3Cellipse class='leaf' cx='12' cy='4' rx='4' ry='2' transform='rotate(-25 12 4)'/%3E%3Cellipse class='leaf' cx='38' cy='7' rx='3.5' ry='1.8' transform='rotate(15 38 7)'/%3E%3Cellipse class='leaf' cx='62' cy='4' rx='4' ry='2' transform='rotate(-20 62 4)'/%3E%3Cellipse class='leaf' cx='88' cy='6' rx='3.5' ry='1.8' transform='rotate(10 88 6)'/%3E%3Cpath class='vine' d='M0,94 C10,97 20,92 30,95 S46,98 56,94 S72,90 82,95 S94,98 100,94'/%3E%3Cellipse class='leaf' cx='18' cy='96' rx='4' ry='2' transform='rotate(20 18 96)'/%3E%3Cellipse class='leaf' cx='48' cy='93' rx='3.5' ry='1.8' transform='rotate(-15 48 93)'/%3E%3Cellipse class='leaf' cx='75' cy='96' rx='4' ry='2' transform='rotate(25 75 96)'/%3E%3Cpath class='vine' d='M6,0 C3,10 8,20 5,30 S2,46 6,56 S10,72 5,82 S2,94 6,100'/%3E%3Cellipse class='leaf' cx='4' cy='18' rx='2' ry='4' transform='rotate(-15 4 18)'/%3E%3Cellipse class='leaf' cx='7' cy='45' rx='1.8' ry='3.5' transform='rotate(20 7 45)'/%3E%3Cellipse class='leaf' cx='4' cy='72' rx='2' ry='4' transform='rotate(-10 4 72)'/%3E%3Cpath class='vine' d='M94,0 C97,8 92,18 95,28 S98,44 94,54 S90,68 95,78 S98,92 94,100'/%3E%3Cellipse class='leaf' cx='96' cy='15' rx='2' ry='4' transform='rotate(15 96 15)'/%3E%3Cellipse class='leaf' cx='93' cy='42' rx='1.8' ry='3.5' transform='rotate(-20 93 42)'/%3E%3Cellipse class='leaf' cx='96' cy='68' rx='2' ry='4' transform='rotate(10 96 68)'/%3E%3Cellipse class='leaf' cx='93' cy='90' rx='1.8' ry='3.5' transform='rotate(-12 93 90)'/%3E%3C/svg%3E") 12 round;
+}
+.widget-card:hover {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.14);
+}
+
+/* ── Widget Header ──────────────────────────────────────────────── */
+.widget-head {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--stone-mid);
+}
+.widget-head a {
+  font-family: 'Fraunces', serif;
+  font-size: 12px;
+  color: var(--text-on-stone);
+  font-weight: 400;
+  text-decoration: none;
+}
+
+/* ── Widget Body ────────────────────────────────────────────────── */
+.widget-body {
+  padding: 8px 12px;
+  overflow: auto;
+  height: calc(100% - 37px);
+}
+
+/* ── Stat Widget ────────────────────────────────────────────────── */
+.stat-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 37px);
+  padding: 10px 12px;
+}
+.stat-value {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  color: var(--text-on-stone);
+  font-weight: 300;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-on-stone-faint);
+  margin-top: 6px;
+}
+
+/* ── Schedule slots ─────────────────────────────────────────────── */
+.sched-grid {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+}
+.sched-hour {
+  padding: 4px 4px 0 0;
+  text-align: right;
+  font-size: 8px;
+  color: var(--text-on-stone-ghost);
+  line-height: 1;
+}
+.sched-hour.now { font-weight: 600; color: var(--garnet); }
+.sched-slot {
+  border-top: 1px solid var(--stone-mid);
+  padding: 2px 4px;
+  min-height: 32px;
+}
+.sched-slot.now-bg { background: rgba(68,6,6,0.03); }
+.sched-appt {
+  padding: 3px 6px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  background: var(--garnet-wash);
+  border-left: 2px solid var(--garnet-vivid);
+}
+.sched-appt-name {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-on-stone);
+  line-height: 1.3;
+}
+.sched-appt-detail {
+  font-size: 8px;
+  color: var(--text-on-stone-faint);
+  line-height: 1.2;
+}
+
+/* ── Task items ─────────────────────────────────────────────────── */
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--stone-mid);
+}
+.task-check {
+  width: 14px; height: 14px;
+  border-radius: 3px;
+  border: 1px solid var(--stone-warm);
+  flex-shrink: 0;
+}
+.task-label {
+  font-size: 10px;
+  color: var(--text-on-stone);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Activity items ─────────────────────────────────────────────── */
+.activity-item {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--stone-mid);
+}
+.activity-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--garnet);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.activity-name { font-size: 10px; color: var(--text-on-stone); }
+.activity-time { font-size: 9px; color: var(--text-on-stone-faint); }
+
+/* ── Inventory pills ────────────────────────────────────────────── */
+.inv-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.inv-pill {
+  padding: 3px 8px;
+  border-radius: 100px;
+  font-size: 9px;
+  background: var(--stone-mid);
+  color: var(--text-on-stone);
+}
+.inv-pill.low {
+  background: rgba(117,18,18,0.15);
+  color: var(--status-low);
+  border: 1px solid rgba(117,18,18,0.3);
+}
+
+/* ── Edit Mode ──────────────────────────────────────────────────── */
+.widget-card.editing {
+  animation: wiggle 0.3s ease-in-out infinite alternate;
+}
+@keyframes wiggle {
+  0% { transform: rotate(-0.3deg); }
+  100% { transform: rotate(0.3deg); }
+}
+
+/* ── Resize Handles ─────────────────────────────────────────────── */
+.resize-handle-corner {
+  position: absolute;
+  bottom: -4px; right: -4px;
+  width: 14px; height: 14px;
+  background: var(--brass);
+  border: 2px solid var(--stone-card);
+  border-radius: 3px;
+  cursor: nwse-resize;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.resize-handle-right {
+  position: absolute;
+  top: 20%; right: -4px;
+  width: 6px; height: 60%;
+  background: var(--brass-soft);
+  border-radius: 3px;
+  cursor: ew-resize;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.resize-handle-bottom {
+  position: absolute;
+  left: 20%; bottom: -4px;
+  width: 60%; height: 6px;
+  background: var(--brass-soft);
+  border-radius: 3px;
+  cursor: ns-resize;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.widget-card.editing .resize-handle-corner,
+.widget-card.editing .resize-handle-right,
+.widget-card.editing .resize-handle-bottom { opacity: 1; }
+
+/* ── Edit Controls ──────────────────────────────────────────────── */
+.edit-controls {
+  position: absolute;
+  top: 4px; right: 4px;
+  z-index: 25;
+  display: none;
+  gap: 4px;
+}
+.widget-card.editing .edit-controls { display: flex; }
+.edit-btn {
+  width: 22px; height: 22px;
+  border-radius: 4px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  transition: transform 0.1s;
+}
+.edit-btn:hover { transform: scale(1.1); }
+.edit-btn-resize { background: var(--brass-warm); color: white; }
+.edit-btn-delete { background: var(--status-low); color: white; }
+
+/* ── Size Popover ───────────────────────────────────────────────── */
+.size-popover {
+  position: absolute;
+  top: 28px; right: 0;
+  background: var(--stone-card);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  border: 1px solid var(--stone-mid);
+  z-index: 40;
+  display: none;
+  min-width: 140px;
+}
+.size-popover.open { display: block; }
+.size-popover label {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-on-stone-faint);
+  display: block;
+  margin-bottom: 4px;
+}
+.size-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.size-input {
+  width: 44px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--stone-warm);
+  background: var(--stone-light);
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  text-align: center;
+  color: var(--text-on-stone);
+}
+.size-input:focus { outline: 2px solid var(--brass); border-color: var(--brass); }
+.size-x {
+  font-size: 11px;
+  color: var(--text-on-stone-ghost);
+  font-weight: 500;
+}
+.size-apply {
+  width: 100%;
+  padding: 5px;
+  border-radius: 4px;
+  border: none;
+  background: var(--garnet);
+  color: var(--stone-lightest);
+  font-size: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+}
+.size-apply:hover { background: var(--garnet-vivid); }
+
+/* ── Add Widget Menu ────────────────────────────────────────────── */
+.add-menu {
+  background: var(--stone-card);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 1px solid var(--stone-mid);
+}
+.add-menu.open { display: flex; }
+.add-menu-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 10px;
+  background: var(--stone-mid);
+  color: var(--text-on-stone);
+  border: 1px solid var(--stone-warm);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+.add-menu-btn:hover { background: var(--stone-deep); }
+
+/* ── Grid lines (edit mode visual aid) ──────────────────────────── */
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  grid-template-rows: repeat(16, 1fr);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 0;
+}
+.grid-overlay.visible { opacity: 1; }
+.grid-cell { border: 1px dashed rgba(196,171,112,0.15); }
+
+.grid-wrapper { position: relative; }
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div>
+    <p class="topbar-sub">Practitioner Suite</p>
+    <h1>Dashboard</h1>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-add" id="addBtn" style="display:none">+ Add Widget</button>
+    <button class="btn" id="editBtn">Edit Widgets</button>
+  </div>
+</div>
+
+<!-- Add Widget Menu -->
+<div class="add-menu" id="addMenu"></div>
+
+<!-- Grid -->
+<div class="grid-wrapper">
+  <div class="grid-overlay" id="gridOverlay"></div>
+  <div class="grid-container" id="grid"></div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────
+let editMode = false;
+let widgets = [
+  { id: 'w1', type: 'schedule',  cols: 6, rows: 10 },
+  { id: 'w2', type: 'revenue',   cols: 4, rows: 4  },
+  { id: 'w3', type: 'formulas',  cols: 4, rows: 4  },
+  { id: 'w4', type: 'tasks',     cols: 6, rows: 6  },
+  { id: 'w5', type: 'activity',  cols: 4, rows: 5  },
+  { id: 'w6', type: 'inventory', cols: 10, rows: 4 },
+];
+
+const WIDGET_TYPES = [
+  { type: 'schedule',  label: 'Schedule',  defCols: 6, defRows: 8 },
+  { type: 'revenue',   label: 'Revenue',   defCols: 4, defRows: 4 },
+  { type: 'formulas',  label: 'Formulas',  defCols: 4, defRows: 4 },
+  { type: 'tasks',     label: 'Tasks',     defCols: 6, defRows: 5 },
+  { type: 'activity',  label: 'Activity',  defCols: 4, defRows: 5 },
+  { type: 'inventory', label: 'Inventory', defCols: 8, defRows: 4 },
+];
+
+// ── Helpers ───────────────────────────────────────────────────────
+function el(tag, attrs, children) {
+  const e = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k, v]) => {
+    if (k === 'className') e.className = v;
+    else if (k === 'textContent') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
+    else e.setAttribute(k, v);
+  });
+  if (children) {
+    if (typeof children === 'string') e.textContent = children;
+    else if (Array.isArray(children)) children.forEach(c => { if (c) e.appendChild(c); });
+    else e.appendChild(children);
+  }
+  return e;
+}
+
+function widgetHead(title) {
+  return el('div', { className: 'widget-head' }, [
+    el('a', { href: '#', textContent: title })
+  ]);
+}
+
+// ── Build grid overlay ────────────────────────────────────────────
+function buildOverlay() {
+  const ol = document.getElementById('gridOverlay');
+  ol.replaceChildren();
+  for (let i = 0; i < 256; i++) {
+    ol.appendChild(el('div', { className: 'grid-cell' }));
+  }
+}
+buildOverlay();
+
+// ── Widget Content Builders ───────────────────────────────────────
+function buildSchedule() {
+  const hours = [8,9,10,11,12,13,14,15,16,17,18,19];
+  const fmtHr = h => h === 12 ? '12p' : h > 12 ? (h-12)+'p' : h+'a';
+  const appts = { 10: { name: 'Sarah Mitchell', detail: 'color + cut \u00b7 10:00 AM' }, 14: { name: 'Mark Lord', detail: 'hair cut \u00b7 2:00 PM' }, 16: { name: 'Emma Davis', detail: 'highlights \u00b7 4:00 PM' } };
+
+  const schedGrid = el('div', { className: 'sched-grid' });
+  hours.forEach(h => {
+    const isNow = h === 14;
+    schedGrid.appendChild(el('div', { className: 'sched-hour' + (isNow ? ' now' : ''), textContent: fmtHr(h) }));
+    const slot = el('div', { className: 'sched-slot' + (isNow ? ' now-bg' : '') });
+    if (appts[h]) {
+      const apptEl = el('div', { className: 'sched-appt' }, [
+        el('p', { className: 'sched-appt-name', textContent: appts[h].name }),
+        el('p', { className: 'sched-appt-detail', textContent: appts[h].detail }),
+      ]);
+      slot.appendChild(apptEl);
+    }
+    schedGrid.appendChild(slot);
+  });
+
+  const body = el('div', { className: 'widget-body' }, [schedGrid]);
+  const wrapper = document.createDocumentFragment();
+  wrapper.appendChild(widgetHead("Today's Schedule"));
+  wrapper.appendChild(body);
+  return wrapper;
+}
+
+function buildStat(title, value, label) {
+  const center = el('div', { className: 'stat-center' }, [
+    el('p', { className: 'stat-value', textContent: value }),
+    el('p', { className: 'stat-label', textContent: label }),
+  ]);
+  const wrapper = document.createDocumentFragment();
+  wrapper.appendChild(widgetHead(title));
+  wrapper.appendChild(center);
+  return wrapper;
+}
+
+function buildTasks() {
+  const tasks = ['Follow up with Sarah re: color', 'Order Olaplex No.3', 'Update client notes \u2014 Emma', 'Schedule team meeting', 'Restock toner supplies'];
+  const body = el('div', { className: 'widget-body' });
+  tasks.forEach(t => {
+    body.appendChild(el('div', { className: 'task-item' }, [
+      el('div', { className: 'task-check' }),
+      el('span', { className: 'task-label', textContent: t }),
+    ]));
+  });
+  const wrapper = document.createDocumentFragment();
+  wrapper.appendChild(widgetHead('Tasks'));
+  wrapper.appendChild(body);
+  return wrapper;
+}
+
+function buildActivity() {
+  const acts = [
+    { name: 'Sarah Mitchell', time: '10:00 AM' },
+    { name: 'Mark Lord', time: '2:00 PM' },
+    { name: 'Emma Davis', time: '4:00 PM' },
+    { name: 'Lily Chen', time: '5:30 PM' },
+  ];
+  const body = el('div', { className: 'widget-body' });
+  acts.forEach(a => {
+    body.appendChild(el('div', { className: 'activity-item' }, [
+      el('div', { className: 'activity-dot' }),
+      el('div', {}, [
+        el('p', { className: 'activity-name', textContent: a.name }),
+        el('p', { className: 'activity-time', textContent: a.time }),
+      ]),
+    ]));
+  });
+  const wrapper = document.createDocumentFragment();
+  wrapper.appendChild(widgetHead('Activity'));
+  wrapper.appendChild(body);
+  return wrapper;
+}
+
+function buildInventory() {
+  const items = [
+    { name: 'Olaplex No.3', low: false },
+    { name: 'r+co 6.66n', low: true },
+    { name: 'K18 Mask', low: false },
+    { name: 'Redken Shades EQ', low: false },
+    { name: 'Moroccan Oil', low: true },
+    { name: 'Wella T18', low: false },
+    { name: 'Matrix So Silver', low: false },
+    { name: 'Pulp Riot', low: false },
+  ];
+  const pills = el('div', { className: 'inv-pills' });
+  items.forEach(i => {
+    pills.appendChild(el('span', {
+      className: 'inv-pill' + (i.low ? ' low' : ''),
+      textContent: (i.low ? '\u26A0 ' : '') + i.name,
+    }));
+  });
+  const body = el('div', { className: 'widget-body' }, [pills]);
+  const wrapper = document.createDocumentFragment();
+  wrapper.appendChild(widgetHead('Inventory'));
+  wrapper.appendChild(body);
+  return wrapper;
+}
+
+function buildWidgetContent(type) {
+  switch(type) {
+    case 'schedule': return buildSchedule();
+    case 'revenue': return buildStat('Revenue', '$284', 'Earned Today');
+    case 'formulas': return buildStat('Formulas', '12', 'Active Formulas');
+    case 'tasks': return buildTasks();
+    case 'activity': return buildActivity();
+    case 'inventory': return buildInventory();
+    default: return el('div', { className: 'widget-body' }, [
+      el('p', { style: { fontSize: '11px', color: 'var(--text-on-stone-ghost)' }, textContent: 'Empty widget' })
+    ]);
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────
+function render() {
+  const grid = document.getElementById('grid');
+  grid.replaceChildren();
+
+  widgets.forEach(w => {
+    const card = el('div', {
+      className: 'widget-card' + (editMode ? ' editing' : ''),
+      style: { gridColumn: 'span ' + w.cols, gridRow: 'span ' + w.rows },
+      'data-id': w.id,
+    });
+
+    // Edit controls
+    if (editMode) {
+      const popover = el('div', { className: 'size-popover', id: 'pop-' + w.id });
+      popover.appendChild(el('label', { textContent: 'Dimensions' }));
+      const wInput = el('input', { className: 'size-input', type: 'number', min: '1', max: '16', value: String(w.cols), id: 'w-' + w.id });
+      const hInput = el('input', { className: 'size-input', type: 'number', min: '1', max: '16', value: String(w.rows), id: 'h-' + w.id });
+      popover.appendChild(el('div', { className: 'size-inputs' }, [
+        wInput,
+        el('span', { className: 'size-x', textContent: '\u00d7' }),
+        hInput,
+      ]));
+      const applyBtn = el('button', { className: 'size-apply', textContent: 'Apply', onClick: () => applySize(w.id) });
+      popover.appendChild(applyBtn);
+
+      const resizeBtn = el('button', {
+        className: 'edit-btn edit-btn-resize',
+        textContent: '\u21F2',
+        title: 'Resize',
+        onClick: (e) => toggleSizePopover(w.id, e),
+      });
+      const deleteBtn = el('button', {
+        className: 'edit-btn edit-btn-delete',
+        textContent: '\u00d7',
+        title: 'Delete',
+        onClick: () => deleteWidget(w.id),
+      });
+
+      const resizeWrap = el('div', { style: { position: 'relative' } }, [resizeBtn, popover]);
+      card.appendChild(el('div', { className: 'edit-controls' }, [resizeWrap, deleteBtn]));
+
+      // Resize handles
+      const handleR = el('div', { className: 'resize-handle-right', 'data-resize': 'right', 'data-id': w.id });
+      const handleB = el('div', { className: 'resize-handle-bottom', 'data-resize': 'bottom', 'data-id': w.id });
+      const handleC = el('div', { className: 'resize-handle-corner', 'data-resize': 'corner', 'data-id': w.id });
+      card.appendChild(handleR);
+      card.appendChild(handleB);
+      card.appendChild(handleC);
+    }
+
+    // Content wrapper
+    const content = el('div', { style: { height: '100%' } });
+    content.appendChild(buildWidgetContent(w.type));
+    card.appendChild(content);
+
+    grid.appendChild(card);
+  });
+
+  if (editMode) attachResizeListeners();
+}
+
+// ── Toggle Edit ───────────────────────────────────────────────────
+document.getElementById('editBtn').addEventListener('click', toggleEdit);
+document.getElementById('addBtn').addEventListener('click', toggleAddMenu);
+
+function toggleEdit() {
+  editMode = !editMode;
+  const btn = document.getElementById('editBtn');
+  const addBtn = document.getElementById('addBtn');
+  const overlay = document.getElementById('gridOverlay');
+
+  if (editMode) {
+    btn.textContent = 'Done';
+    btn.classList.add('btn-primary');
+    addBtn.style.display = 'flex';
+    overlay.classList.add('visible');
+  } else {
+    btn.textContent = 'Edit Widgets';
+    btn.classList.remove('btn-primary');
+    addBtn.style.display = 'none';
+    overlay.classList.remove('visible');
+    document.getElementById('addMenu').classList.remove('open');
+  }
+  render();
+}
+
+// ── Size Popover ──────────────────────────────────────────────────
+function toggleSizePopover(id, e) {
+  e.stopPropagation();
+  const pop = document.getElementById('pop-' + id);
+  document.querySelectorAll('.size-popover').forEach(p => {
+    if (p.id !== 'pop-' + id) p.classList.remove('open');
+  });
+  pop.classList.toggle('open');
+}
+
+function applySize(id) {
+  const wVal = parseInt(document.getElementById('w-' + id).value);
+  const hVal = parseInt(document.getElementById('h-' + id).value);
+  const cw = Math.max(1, Math.min(16, wVal || 1));
+  const ch = Math.max(1, Math.min(16, hVal || 1));
+  const widget = widgets.find(x => x.id === id);
+  if (widget) { widget.cols = cw; widget.rows = ch; }
+  render();
+}
+
+// ── Delete Widget ─────────────────────────────────────────────────
+function deleteWidget(id) {
+  widgets = widgets.filter(w => w.id !== id);
+  render();
+}
+
+// ── Add Widget ────────────────────────────────────────────────────
+function toggleAddMenu() {
+  const menu = document.getElementById('addMenu');
+  menu.classList.toggle('open');
+  if (menu.classList.contains('open')) {
+    menu.replaceChildren();
+    WIDGET_TYPES.forEach(t => {
+      menu.appendChild(el('button', {
+        className: 'add-menu-btn',
+        textContent: '+ ' + t.label,
+        onClick: () => {
+          widgets.push({ id: 'w' + Date.now(), type: t.type, cols: t.defCols, rows: t.defRows });
+          menu.classList.remove('open');
+          render();
+        },
+      }));
+    });
+  }
+}
+
+// ── Drag Resize ───────────────────────────────────────────────────
+let resizeState = null;
+
+function attachResizeListeners() {
+  document.querySelectorAll('[data-resize]').forEach(handle => {
+    handle.addEventListener('mousedown', startResize);
+  });
+}
+
+function startResize(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const id = e.target.dataset.id;
+  const dir = e.target.dataset.resize;
+  const widget = widgets.find(w => w.id === id);
+  if (!widget) return;
+
+  const gridEl = document.getElementById('grid');
+  const gridRect = gridEl.getBoundingClientRect();
+
+  resizeState = {
+    id, dir, widget,
+    startX: e.clientX, startY: e.clientY,
+    startCols: widget.cols, startRows: widget.rows,
+    cellW: gridRect.width / 16,
+    cellH: gridRect.height / 16,
+  };
+  document.addEventListener('mousemove', onResize);
+  document.addEventListener('mouseup', endResize);
+}
+
+function onResize(e) {
+  if (!resizeState) return;
+  const { dir, widget, startX, startY, startCols, startRows, cellW, cellH } = resizeState;
+  const dx = e.clientX - startX;
+  const dy = e.clientY - startY;
+
+  if (dir === 'right' || dir === 'corner') {
+    widget.cols = Math.max(1, Math.min(16, startCols + Math.round(dx / cellW)));
+  }
+  if (dir === 'bottom' || dir === 'corner') {
+    widget.rows = Math.max(1, Math.min(16, startRows + Math.round(dy / cellH)));
+  }
+  render();
+}
+
+function endResize() {
+  resizeState = null;
+  document.removeEventListener('mousemove', onResize);
+  document.removeEventListener('mouseup', endResize);
+}
+
+// Close popovers on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.edit-btn-resize') && !e.target.closest('.size-popover')) {
+    document.querySelectorAll('.size-popover').forEach(p => p.classList.remove('open'));
+  }
+});
+
+// ── Initial Render ────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
