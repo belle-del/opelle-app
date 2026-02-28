@@ -12,35 +12,29 @@ type WidgetType = "schedule" | "revenue" | "formulas" | "tasks" | "activity" | "
 interface Widget {
   id: string;
   type: WidgetType;
-  cols: 1 | 2 | 3;
-  rows: 1 | 2;
+  cols: number;
+  rows: number;
 }
 
-const SIZE_OPTIONS = [
-  { label: "S", cols: 1 as const, rows: 1 as const },
-  { label: "M", cols: 1 as const, rows: 2 as const },
-  { label: "W", cols: 2 as const, rows: 1 as const },
-  { label: "L", cols: 2 as const, rows: 2 as const },
-  { label: "XL", cols: 3 as const, rows: 1 as const },
-];
-
-const ALL_WIDGET_TYPES: { type: WidgetType; label: string; defaultCols: 1|2|3; defaultRows: 1|2 }[] = [
-  { type: "schedule", label: "Schedule", defaultCols: 2, defaultRows: 2 },
-  { type: "revenue", label: "Revenue", defaultCols: 1, defaultRows: 1 },
-  { type: "formulas", label: "Formulas", defaultCols: 1, defaultRows: 1 },
-  { type: "tasks", label: "Tasks", defaultCols: 2, defaultRows: 1 },
-  { type: "activity", label: "Activity", defaultCols: 1, defaultRows: 1 },
-  { type: "inventory", label: "Inventory", defaultCols: 3, defaultRows: 1 },
+const ALL_WIDGET_TYPES: { type: WidgetType; label: string; defaultCols: number; defaultRows: number }[] = [
+  { type: "schedule", label: "Schedule", defaultCols: 6, defaultRows: 10 },
+  { type: "revenue", label: "Revenue", defaultCols: 4, defaultRows: 4 },
+  { type: "formulas", label: "Formulas", defaultCols: 4, defaultRows: 4 },
+  { type: "tasks", label: "Tasks", defaultCols: 6, defaultRows: 6 },
+  { type: "activity", label: "Activity", defaultCols: 4, defaultRows: 5 },
+  { type: "inventory", label: "Inventory", defaultCols: 10, defaultRows: 4 },
 ];
 
 const DEFAULT_WIDGETS: Widget[] = [
-  { id: "w1", type: "schedule", cols: 2, rows: 2 },
-  { id: "w2", type: "revenue", cols: 1, rows: 1 },
-  { id: "w3", type: "formulas", cols: 1, rows: 1 },
-  { id: "w4", type: "tasks", cols: 2, rows: 1 },
-  { id: "w5", type: "activity", cols: 1, rows: 1 },
-  { id: "w6", type: "inventory", cols: 3, rows: 1 },
+  { id: "w1", type: "schedule", cols: 6, rows: 10 },
+  { id: "w2", type: "revenue", cols: 4, rows: 4 },
+  { id: "w3", type: "formulas", cols: 4, rows: 4 },
+  { id: "w4", type: "tasks", cols: 6, rows: 6 },
+  { id: "w5", type: "activity", cols: 4, rows: 5 },
+  { id: "w6", type: "inventory", cols: 10, rows: 4 },
 ];
+
+const clampGrid = (v: number) => Math.max(1, Math.min(16, v));
 
 // ── Props ──────────────────────────────────────────────────────────────
 interface Appointment { id: string; startAt: string; clientId: string; serviceName: string; status: string; }
@@ -66,15 +60,19 @@ function getClientName(clients: Client[], id: string) {
 
 // ── Draggable Widget Shell ─────────────────────────────────────────────
 function DraggableWidget({
-  widget, editMode, onDelete, onResize, children,
+  widget, editMode, onDelete, onResize, gridRef, children,
 }: {
   widget: Widget; editMode: boolean;
   onDelete: (id: string) => void;
-  onResize: (id: string, cols: 1|2|3, rows: 1|2) => void;
+  onResize: (id: string, cols: number, rows: number) => void;
+  gridRef: React.RefObject<HTMLDivElement | null>;
   children: React.ReactNode;
 }) {
   const [showSizePicker, setShowSizePicker] = useState(false);
+  const [inputCols, setInputCols] = useState(String(widget.cols));
+  const [inputRows, setInputRows] = useState(String(widget.rows));
   const ref = useRef<HTMLDivElement>(null);
+  const resizeRef = useRef<{ startX: number; startY: number; startCols: number; startRows: number; dir: string } | null>(null);
 
   const [{ isDragging }, drag] = useDrag({
     type: "WIDGET",
@@ -86,6 +84,46 @@ function DraggableWidget({
   const [, drop] = useDrop({ accept: "WIDGET" });
 
   drag(drop(ref));
+
+  // Sync inputs when widget changes externally (e.g. drag resize)
+  const prevCols = useRef(widget.cols);
+  const prevRows = useRef(widget.rows);
+  if (prevCols.current !== widget.cols) { prevCols.current = widget.cols; if (!showSizePicker) setInputCols(String(widget.cols)); }
+  if (prevRows.current !== widget.rows) { prevRows.current = widget.rows; if (!showSizePicker) setInputRows(String(widget.rows)); }
+
+  const handleApplySize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onResize(widget.id, clampGrid(parseInt(inputCols) || 1), clampGrid(parseInt(inputRows) || 1));
+    setShowSizePicker(false);
+  };
+
+  const startDragResize = (dir: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const gridEl = gridRef.current;
+    if (!gridEl) return;
+    const cellW = gridEl.getBoundingClientRect().width / 16;
+    const cellH = gridEl.getBoundingClientRect().height / 16;
+    resizeRef.current = { startX: e.clientX, startY: e.clientY, startCols: widget.cols, startRows: widget.rows, dir };
+
+    const onMove = (ev: MouseEvent) => {
+      if (!resizeRef.current) return;
+      const dx = ev.clientX - resizeRef.current.startX;
+      const dy = ev.clientY - resizeRef.current.startY;
+      let newCols = resizeRef.current.startCols;
+      let newRows = resizeRef.current.startRows;
+      if (dir === "right" || dir === "corner") newCols = clampGrid(resizeRef.current.startCols + Math.round(dx / cellW));
+      if (dir === "bottom" || dir === "corner") newRows = clampGrid(resizeRef.current.startRows + Math.round(dy / cellH));
+      onResize(widget.id, newCols, newRows);
+    };
+    const onUp = () => {
+      resizeRef.current = null;
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
 
   return (
     <div
@@ -100,39 +138,68 @@ function DraggableWidget({
         opacity: isDragging ? 0.5 : 1,
         position: "relative",
         overflow: "visible",
-        minHeight: widget.rows === 2 ? "280px" : "140px",
+        minHeight: `${Math.max(widget.rows * 48, 80)}px`,
       }}
     >
       {editMode && (
-        <div style={{ position: "absolute", top: "6px", right: "6px", zIndex: 20, display: "flex", gap: "4px" }}>
-          <div style={{ position: "relative" }}>
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowSizePicker(!showSizePicker); }}
-              style={{ width: "22px", height: "22px", borderRadius: "4px", background: "var(--brass-warm)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", border: "none" }}
-            >
-              <Maximize2 size={11} />
-            </button>
-            {showSizePicker && (
-              <div style={{ position: "absolute", top: "26px", right: 0, background: "var(--stone-card)", borderRadius: "6px", padding: "6px", display: "flex", gap: "4px", boxShadow: "0 4px 16px rgba(0,0,0,0.2)", border: "1px solid var(--stone-mid)", zIndex: 30 }}>
-                {SIZE_OPTIONS.map((s) => (
+        <>
+          {/* Edit controls */}
+          <div style={{ position: "absolute", top: "6px", right: "6px", zIndex: 20, display: "flex", gap: "4px" }}>
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!showSizePicker) { setInputCols(String(widget.cols)); setInputRows(String(widget.rows)); }
+                  setShowSizePicker(!showSizePicker);
+                }}
+                style={{ width: "22px", height: "22px", borderRadius: "4px", background: "var(--brass-warm)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
+              >
+                <Maximize2 size={11} />
+              </button>
+              {showSizePicker && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ position: "absolute", top: "28px", right: 0, background: "var(--stone-card)", borderRadius: "8px", padding: "10px", boxShadow: "0 4px 20px rgba(0,0,0,0.18)", border: "1px solid var(--stone-mid)", zIndex: 40, minWidth: "140px" }}
+                >
+                  <p style={{ fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-on-stone-faint)", marginBottom: "4px" }}>Dimensions</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                    <input
+                      type="number" min={1} max={16}
+                      value={inputCols}
+                      onChange={(e) => setInputCols(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ width: "44px", padding: "4px 6px", borderRadius: "4px", border: "1px solid var(--stone-warm)", background: "var(--stone-light)", fontSize: "12px", fontFamily: "'DM Sans', sans-serif", textAlign: "center", color: "var(--text-on-stone)" }}
+                    />
+                    <span style={{ fontSize: "11px", color: "var(--text-on-stone-ghost)", fontWeight: 500 }}>&times;</span>
+                    <input
+                      type="number" min={1} max={16}
+                      value={inputRows}
+                      onChange={(e) => setInputRows(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ width: "44px", padding: "4px 6px", borderRadius: "4px", border: "1px solid var(--stone-warm)", background: "var(--stone-light)", fontSize: "12px", fontFamily: "'DM Sans', sans-serif", textAlign: "center", color: "var(--text-on-stone)" }}
+                    />
+                  </div>
                   <button
-                    key={s.label}
-                    onClick={(e) => { e.stopPropagation(); onResize(widget.id, s.cols, s.rows); setShowSizePicker(false); }}
-                    style={{ width: "28px", height: "24px", borderRadius: "4px", background: widget.cols === s.cols && widget.rows === s.rows ? "var(--brass)" : "var(--stone-mid)", color: "var(--text-on-stone)", fontSize: "9px", border: "none", fontWeight: 600 }}
+                    onClick={handleApplySize}
+                    style={{ width: "100%", padding: "5px", borderRadius: "4px", border: "none", background: "var(--garnet)", color: "var(--stone-lightest)", fontSize: "10px", fontFamily: "'DM Sans', sans-serif", fontWeight: 500, cursor: "pointer" }}
                   >
-                    {s.label}
+                    Apply
                   </button>
-                ))}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(widget.id); }}
+              style={{ width: "22px", height: "22px", borderRadius: "4px", background: "var(--status-low)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}
+            >
+              <Trash2 size={11} />
+            </button>
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(widget.id); }}
-            style={{ width: "22px", height: "22px", borderRadius: "4px", background: "var(--status-low)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", border: "none" }}
-          >
-            <Trash2 size={11} />
-          </button>
-        </div>
+          {/* Drag resize handles */}
+          <div onMouseDown={startDragResize("right")} style={{ position: "absolute", top: "20%", right: "-4px", width: "6px", height: "60%", background: "var(--brass-soft)", borderRadius: "3px", cursor: "ew-resize", zIndex: 20 }} />
+          <div onMouseDown={startDragResize("bottom")} style={{ position: "absolute", left: "20%", bottom: "-4px", width: "60%", height: "6px", background: "var(--brass-soft)", borderRadius: "3px", cursor: "ns-resize", zIndex: 20 }} />
+          <div onMouseDown={startDragResize("corner")} style={{ position: "absolute", bottom: "-4px", right: "-4px", width: "14px", height: "14px", background: "var(--brass)", border: "2px solid var(--stone-card)", borderRadius: "3px", cursor: "nwse-resize", zIndex: 20 }} />
+        </>
       )}
       {children}
     </div>
@@ -193,9 +260,11 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
   const todayAppts = appointments.filter((a) => { const d = new Date(a.startAt); return d >= today && d <= todayEnd; });
   const pendingTasks = tasks.filter((t) => t.status !== "completed");
 
+  const gridRef = useRef<HTMLDivElement>(null);
+
   const deleteWidget = useCallback((id: string) => setWidgets((p) => p.filter((w) => w.id !== id)), []);
-  const resizeWidget = useCallback((id: string, cols: 1|2|3, rows: 1|2) =>
-    setWidgets((p) => p.map((w) => w.id === id ? { ...w, cols, rows } : w)), []);
+  const resizeWidget = useCallback((id: string, cols: number, rows: number) =>
+    setWidgets((p) => p.map((w) => w.id === id ? { ...w, cols: clampGrid(cols), rows: clampGrid(rows) } : w)), []);
   const addWidget = (type: WidgetType) => {
     const def = ALL_WIDGET_TYPES.find((t) => t.type === type);
     if (!def) return;
@@ -337,10 +406,10 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
         </div>
       )}
 
-      {/* Widget Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+      {/* Widget Grid — 16x16 freeform */}
+      <div ref={gridRef} style={{ display: "grid", gridTemplateColumns: "repeat(16, 1fr)", gridAutoRows: "minmax(48px, 1fr)", gap: "10px" }}>
         {widgets.map((widget) => (
-          <DraggableWidget key={widget.id} widget={widget} editMode={editMode} onDelete={deleteWidget} onResize={resizeWidget}>
+          <DraggableWidget key={widget.id} widget={widget} editMode={editMode} onDelete={deleteWidget} onResize={resizeWidget} gridRef={gridRef}>
             {renderContent(widget)}
           </DraggableWidget>
         ))}
