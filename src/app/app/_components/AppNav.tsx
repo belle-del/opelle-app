@@ -52,6 +52,28 @@ interface AppNavProps {
   workspaceName?: string;
 }
 
+/* Shared tree background image used in both mobile + desktop sidebars */
+function TreeBackground() {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/textures/olive-tree-banner.svg"
+      alt=""
+      aria-hidden="true"
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        objectPosition: "center bottom",
+        pointerEvents: "none",
+        zIndex: 0,
+      }}
+    />
+  );
+}
+
 export function AppNav({ user, workspaceName }: AppNavProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -298,10 +320,6 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         style={{
           width: "220px",
           background: "#1f231a",
-          backgroundImage: "url('/textures/olive-tree-banner.svg')",
-          backgroundSize: "contain",
-          backgroundPosition: "center bottom",
-          backgroundRepeat: "no-repeat",
           borderRight: "1px solid rgba(196,171,112,0.08)",
           overflow: "hidden",
           transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
@@ -309,6 +327,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           boxShadow: mobileOpen ? "8px 0 32px rgba(0,0,0,0.3)" : "none",
         }}
       >
+        <TreeBackground />
         {/* Close button inside sidebar */}
         <div className="absolute top-3 right-3 z-10">
           <button
@@ -337,14 +356,11 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
         style={{
           width: "170px",
           background: "#1f231a",
-          backgroundImage: "url('/textures/olive-tree-banner.svg')",
-          backgroundSize: "contain",
-          backgroundPosition: "center bottom",
-          backgroundRepeat: "no-repeat",
           borderRight: "1px solid rgba(196,171,112,0.08)",
           overflow: "hidden",
         }}
       >
+        <TreeBackground />
         {sidebarContent}
       </aside>
     </>
