@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Task, TaskRow, TaskStatus } from "@/lib/types";
 import { taskRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
+import { publishEvent } from "@/lib/kernel";
 
 export async function listTasks(): Promise<Task[]> {
   const workspace = await getCurrentWorkspace();
@@ -143,7 +144,24 @@ export async function updateTask(
     .single();
 
   if (error || !data) return null;
-  return taskRowToModel(data as TaskRow);
+
+  const task = taskRowToModel(data as TaskRow);
+
+  // Fire kernel event when task is completed
+  if (input.status === "completed") {
+    publishEvent({
+      event_type: "task_completed",
+      workspace_id: workspace.id,
+      timestamp: new Date().toISOString(),
+      payload: {
+        task_id: task.id,
+        title: task.title,
+        client_id: task.clientId ?? null,
+      },
+    });
+  }
+
+  return task;
 }
 
 export async function deleteTask(id: string): Promise<boolean> {

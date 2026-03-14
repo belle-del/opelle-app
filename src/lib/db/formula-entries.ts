@@ -153,7 +153,24 @@ export async function updateFormulaEntry(
     .single();
 
   if (error || !data) return null;
-  return formulaEntryRowToModel(data as FormulaEntryRow);
+
+  const entry = formulaEntryRowToModel(data as FormulaEntryRow);
+
+  // Fire kernel event when formula is corrected (parsed formula changed)
+  if (input.parsedFormula !== undefined) {
+    publishEvent({
+      event_type: "formula_corrected",
+      workspace_id: workspace.id,
+      timestamp: new Date().toISOString(),
+      payload: {
+        formula_entry_id: id,
+        has_new_parsed: !!input.parsedFormula,
+        service_date: input.serviceDate ?? null,
+      },
+    });
+  }
+
+  return entry;
 }
 
 export async function deleteFormulaEntry(id: string): Promise<boolean> {

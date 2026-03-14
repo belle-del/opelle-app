@@ -202,6 +202,23 @@ export async function adjustProductQuantity(id: string, delta: number): Promise<
   const newQuantity = Math.max(0, product.quantity + delta);
   const updated = await updateProduct(id, { quantity: newQuantity });
 
+  // Fire kernel event when product is restocked
+  if (updated && delta > 0) {
+    publishEvent({
+      event_type: "product_restocked",
+      workspace_id: product.workspaceId,
+      timestamp: new Date().toISOString(),
+      payload: {
+        product_id: product.id,
+        brand: product.brand,
+        shade: product.shade,
+        previous_quantity: product.quantity,
+        new_quantity: newQuantity,
+        restock_amount: delta,
+      },
+    });
+  }
+
   // Fire inventory_low event if quantity dropped to or below threshold
   if (updated && newQuantity <= product.lowStockThreshold && delta < 0) {
     publishEvent({

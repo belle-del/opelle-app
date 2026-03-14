@@ -171,6 +171,36 @@ export async function updateAppointment(
     });
   }
 
+  // Fire kernel event when appointment is cancelled
+  if (input.status === "cancelled") {
+    publishEvent({
+      event_type: "appointment_cancelled",
+      workspace_id: workspace.id,
+      timestamp: new Date().toISOString(),
+      payload: {
+        appointment_id: appointment.id,
+        client_id: appointment.clientId,
+        service_name: appointment.serviceName,
+        original_start_at: appointment.startAt,
+      },
+    });
+  }
+
+  // Fire kernel event when appointment is rescheduled
+  if (input.startAt && input.startAt !== (data as AppointmentRow).start_at) {
+    publishEvent({
+      event_type: "appointment_rescheduled",
+      workspace_id: workspace.id,
+      timestamp: new Date().toISOString(),
+      payload: {
+        appointment_id: appointment.id,
+        client_id: appointment.clientId,
+        original_start_at: (data as AppointmentRow).start_at,
+        new_start_at: input.startAt,
+      },
+    });
+  }
+
   return appointment;
 }
 
