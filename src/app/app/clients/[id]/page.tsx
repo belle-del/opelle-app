@@ -7,7 +7,8 @@ import { getClient } from "@/lib/db/clients";
 import { getAppointmentsForClient } from "@/lib/db/appointments";
 import { getFormulaEntriesForClient } from "@/lib/db/formula-entries";
 import { listServiceTypes } from "@/lib/db/service-types";
-import { getClientProfile, getClientRebook } from "@/lib/kernel";
+import { getClientProfile, getRebookMessage } from "@/lib/kernel";
+import { computeRebookIntelligence } from "@/lib/rebook";
 import { FormulaHistory } from "./_components/FormulaHistory";
 import { ClientDetailTabs } from "./_components/ClientDetailTabs";
 import { getClientDisplayName } from "@/lib/types";
@@ -20,18 +21,58 @@ interface ClientDetailPageProps {
 
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
   const { id } = await params;
-  const [client, appointments, formulaEntries, serviceTypes, kernelProfile, rebookData] = await Promise.all([
+  // Phase 1: DB queries (parallel)
+  const [client, appointments, formulaEntries, serviceTypes] = await Promise.all([
     getClient(id),
     getAppointmentsForClient(id),
     getFormulaEntriesForClient(id),
     listServiceTypes(),
-    getClientProfile(id),
-    getClientRebook(id),
   ]);
 
   if (!client) {
     notFound();
   }
+
+  // Phase 2: Intelligence (depends on Phase 1 data)
+  const rebookStats = computeRebookIntelligence(appointments);
+
+  // Use cached preference profile if available, otherwise call kernel
+  const kernelProfile = client.preferenceProfile ?? (
+    formulaEntries.length >= 2
+      ? await getClientProfile({
+          clientName: getClientDisplayName(client),
+          clientNotes: client.notes ?? null,
+          tags: client.tags,
+          formulaHistory: formulaEntries.slice(0, 20).map((fe) => ({
+            service_date: fe.serviceDate,
+            raw_notes: fe.rawNotes,
+            general_notes: fe.generalNotes,
+          })),
+          appointmentHistory: appointments.slice(0, 20).map((a) => ({
+            service_name: a.serviceName,
+            start_at: a.startAt,
+            status: a.status,
+          })),
+        })
+      : null
+  );
+
+  // Only generate rebook message for non-on_track urgency
+  const rebookMessage = rebookStats && rebookStats.urgency !== "on_track"
+    ? await getRebookMessage({
+        clientName: client.firstName,
+        daysSinceLastVisit: rebookStats.days_since_last_visit,
+        avgCadenceDays: rebookStats.avg_days_between_visits,
+        urgency: rebookStats.urgency,
+        lastServiceName: rebookStats.last_service_name,
+        lastServiceDate: rebookStats.last_service_date,
+      })
+    : null;
+
+  const rebookData = rebookStats ? {
+    ...rebookStats,
+    suggested_message: rebookMessage?.suggested_message ?? null,
+  } : null;
 
   return (
     <div className="space-y-8">

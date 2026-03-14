@@ -47,46 +47,94 @@ export async function publishEvent(
   }
 }
 
-// --- ENRICHMENT QUERIES ---
-// These functions will be wired to real kernel endpoints in later phases.
-// For now they use the correct auth but point to routes that will be
-// built during Phase C (AI migration) and Phase D (cortex features).
+// --- CORTEX-POWERED INTELLIGENCE (Phase D) ---
 
-export async function getClientProfile(
-  clientId: string
-): Promise<ClientPreferenceProfile | null> {
-  return kernelGet(`/api/v1/saas/clients/${clientId}/profile`, "profile");
+export async function getClientProfile(params: {
+  clientName: string;
+  clientNotes: string | null;
+  tags: string[];
+  formulaHistory: {
+    service_date: string;
+    raw_notes: string;
+    general_notes?: string;
+  }[];
+  appointmentHistory: {
+    service_name: string;
+    start_at: string;
+    status: string;
+  }[];
+}): Promise<ClientPreferenceProfile | null> {
+  const result = await kernelPost("/api/v1/saas/ai/client-profile", {
+    client_name: params.clientName,
+    client_notes: params.clientNotes,
+    tags: params.tags,
+    formula_history: params.formulaHistory,
+    appointment_history: params.appointmentHistory,
+  }, 15000);
+  return result?.profile ?? null;
 }
 
+export async function getRebookMessage(params: {
+  clientName: string;
+  daysSinceLastVisit: number;
+  avgCadenceDays: number;
+  urgency: string;
+  lastServiceName: string;
+  lastServiceDate: string;
+}): Promise<{ suggested_message: string } | null> {
+  return kernelPost("/api/v1/saas/ai/rebook-message", {
+    client_name: params.clientName,
+    days_since_last_visit: params.daysSinceLastVisit,
+    avg_cadence_days: params.avgCadenceDays,
+    urgency: params.urgency,
+    last_service_name: params.lastServiceName,
+    last_service_date: params.lastServiceDate,
+  }, 10000);
+}
+
+export async function getProductEnrichment(params: {
+  brand: string;
+  line?: string;
+  shade: string;
+  category: string;
+  name?: string;
+  notes?: string;
+}): Promise<ProductEnrichment | null> {
+  const result = await kernelPost("/api/v1/saas/ai/product-enrichment", {
+    brand: params.brand,
+    line: params.line ?? null,
+    shade: params.shade,
+    category: params.category,
+    name: params.name ?? null,
+    notes: params.notes ?? null,
+  }, 15000);
+  return result?.enrichment ?? null;
+}
+
+export async function getFormulaSuggestion(params: {
+  clientName: string;
+  serviceTypeName: string;
+  formulaHistory: {
+    service_date: string;
+    raw_notes: string;
+    general_notes?: string;
+    parsed_formula?: unknown;
+  }[];
+  clientPreferences?: ClientPreferenceProfile | null;
+}) {
+  return kernelPost("/api/v1/saas/ai/suggest-formula", {
+    client_name: params.clientName,
+    service_type_name: params.serviceTypeName,
+    formula_history: params.formulaHistory,
+    client_preferences: params.clientPreferences ?? null,
+  }, 20000);
+}
+
+// Phase E — no UI consumer yet
 export async function getInventoryPredictions(workspaceId: string) {
   return kernelGet(
     `/api/v1/saas/inventory/predictions?workspace_id=${workspaceId}`
   );
-}
-
-export async function getProductEnrichment(
-  productId: string
-): Promise<ProductEnrichment | null> {
-  return kernelGet(
-    `/api/v1/saas/products/${productId}/enrichment`,
-    "enrichment"
-  );
-}
-
-export async function getFormulaSuggestion(
-  workspaceId: string,
-  clientId: string,
-  serviceTypeName: string
-) {
-  return kernelPost("/api/v1/saas/formulas/suggest", {
-    workspace_id: workspaceId,
-    client_id: clientId,
-    service_type_name: serviceTypeName,
-  });
-}
-
-export async function getClientRebook(clientId: string) {
-  return kernelGet(`/api/v1/saas/clients/${clientId}/rebook`);
 }
 
 // --- AI CALLS (routed through kernel — Immutable Rule 2) ---

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getFormulaSuggestion } from "@/lib/kernel";
-import { getCurrentWorkspace } from "@/lib/db/workspaces";
+import { getClient } from "@/lib/db/clients";
+import { getFormulaEntriesForClient } from "@/lib/db/formula-entries";
+import { getClientDisplayName } from "@/lib/types";
 
 export async function POST(request: Request) {
   try {
@@ -13,23 +15,33 @@ export async function POST(request: Request) {
       );
     }
 
-    const workspace = await getCurrentWorkspace();
-    if (!workspace) {
+    const [client, formulaEntries] = await Promise.all([
+      getClient(clientId),
+      getFormulaEntriesForClient(clientId),
+    ]);
+
+    if (!client || formulaEntries.length < 2) {
       return NextResponse.json(
-        { error: "Not authenticated" },
-        { status: 401 }
+        { error: "No suggestion available — not enough history yet" },
+        { status: 404 }
       );
     }
 
-    const suggestion = await getFormulaSuggestion(
-      workspace.id,
-      clientId,
-      serviceTypeName
-    );
+    const suggestion = await getFormulaSuggestion({
+      clientName: getClientDisplayName(client),
+      serviceTypeName,
+      formulaHistory: formulaEntries.slice(0, 20).map((fe) => ({
+        service_date: fe.serviceDate,
+        raw_notes: fe.rawNotes,
+        general_notes: fe.generalNotes,
+        parsed_formula: fe.parsedFormula,
+      })),
+      clientPreferences: client.preferenceProfile ?? null,
+    });
 
     if (!suggestion) {
       return NextResponse.json(
-        { error: "No suggestion available — not enough history yet" },
+        { error: "No suggestion available" },
         { status: 404 }
       );
     }

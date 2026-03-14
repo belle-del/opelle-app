@@ -26,16 +26,23 @@ const categoryLabels: Record<string, string> = {
 
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { id } = await params;
-  const [product, kernelEnrichment] = await Promise.all([
-    getProduct(id),
-    getProductEnrichment(id),
-  ]);
+  const product = await getProduct(id);
 
   if (!product) {
     notFound();
   }
 
-  // Use DB-stored enrichment first, fall back to live Kernel query
+  // Use DB-stored enrichment first, fall back to live kernel query
+  const kernelEnrichment = !product.enrichment
+    ? await getProductEnrichment({
+        brand: product.brand,
+        line: product.line,
+        shade: product.shade,
+        category: product.category,
+        name: product.name,
+        notes: product.notes,
+      })
+    : null;
   const enrichment = product.enrichment ?? kernelEnrichment;
 
   return (
