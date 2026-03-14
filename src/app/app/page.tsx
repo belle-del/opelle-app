@@ -3,15 +3,17 @@ import { listAppointments } from "@/lib/db/appointments";
 import { listFormulas } from "@/lib/db/formulas";
 import { getPendingTasks } from "@/lib/db/tasks";
 import { listProducts } from "@/lib/db/products";
+import { getUnreviewedInspoFlags } from "@/lib/db/inspo";
 import { WidgetDashboard } from "./_components/WidgetDashboard";
 
 export default async function DashboardPage() {
-  const [clients, allAppointments, formulas, tasks, products] = await Promise.all([
+  const [clients, allAppointments, formulas, tasks, products, inspoFlags] = await Promise.all([
     listClients(),
     listAppointments(),
     listFormulas(),
     getPendingTasks(),
     listProducts(),
+    getUnreviewedInspoFlags(),
   ]);
 
   return (
@@ -21,6 +23,7 @@ export default async function DashboardPage() {
       tasks={tasks}
       products={products}
       clients={clients}
+      inspoFlags={inspoFlags}
     />
   );
 }

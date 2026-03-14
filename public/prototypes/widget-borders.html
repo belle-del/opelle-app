@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opelle — Vine Frame Widgets</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=DM+Sans:wght@400;500;600&family=Cormorant+Garamond:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Design Tokens ──────────────────────────────────────────────── */
+:root {
+  --stone-lightest: #F1EFE0;
+  --stone-light: #E5E3D3;
+  --stone-mid: #D7D5C5;
+  --stone-warm: #CAC7B5;
+  --stone-deep: #B5B2A2;
+  --stone-shadow: #9B988F;
+  --stone-card: #F1EFE0;
+
+  --garnet: #440606;
+  --garnet-vivid: #5C0B0B;
+  --garnet-wash: rgba(68,6,6,0.10);
+
+  --brass: #C4AB70;
+  --brass-warm: #D0BA82;
+  --brass-soft: rgba(196,171,112,0.45);
+  --brass-line: rgba(31,35,26,0.10);
+
+  --olive: #1f231a;
+  --olive-mid: #3B3C23;
+  --olive-sage: #555744;
+
+  --text-on-bark: #1f231a;
+  --text-on-bark-faint: rgba(31,35,26,0.50);
+  --text-on-stone: #000000;
+  --text-on-stone-faint: #3B3C23;
+  --text-on-stone-ghost: #9B988F;
+
+  --status-confirmed: #8FADC8;
+  --status-low: #440606;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--stone-warm) url('/textures/olive-painting.png') no-repeat center center;
+  background-size: cover;
+  background-attachment: fixed;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-on-bark);
+  min-height: 100vh;
+  padding: 24px 32px;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.topbar-sub {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-on-bark-faint);
+}
+.topbar h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--text-on-bark);
+  margin-top: 2px;
+}
+
+/* ── 16x16 Grid ─────────────────────────────────────────────────── */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  grid-auto-rows: minmax(48px, 1fr);
+  gap: 12px;
+  min-height: calc(16 * 48px + 15 * 12px);
+}
+
+/* ── Widget Header ──────────────────────────────────────────────── */
+.widget-head {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--stone-mid);
+  position: relative;
+  z-index: 3;
+}
+.widget-head a {
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  color: var(--text-on-stone);
+  font-weight: 400;
+  text-decoration: none;
+}
+
+/* ── Widget Body ────────────────────────────────────────────────── */
+.widget-body {
+  padding: 10px 14px;
+  overflow: auto;
+  height: calc(100% - 40px);
+  position: relative;
+  z-index: 3;
+}
+
+/* ── Stat Widget ────────────────────────────────────────────────── */
+.stat-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 40px);
+  padding: 10px 14px;
+  position: relative;
+  z-index: 3;
+}
+.stat-value {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  color: var(--text-on-stone);
+  font-weight: 300;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-on-stone-faint);
+  margin-top: 6px;
+}
+
+/* ── Task row ───────────────────────────────────────────────────── */
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--stone-mid);
+}
+.task-check {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1.5px solid var(--stone-deep);
+  flex-shrink: 0;
+}
+.task-text {
+  font-size: 11px;
+  color: var(--text-on-stone);
+}
+
+/* ── Activity row ───────────────────────────────────────────────── */
+.activity-row {
+  display: flex;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--stone-mid);
+}
+.activity-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--garnet);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.activity-name { font-size: 11px; color: var(--text-on-stone); }
+.activity-time { font-size: 9px; color: var(--text-on-stone-faint); }
+
+/* ── Inventory pill ─────────────────────────────────────────────── */
+.inv-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 9px;
+  background: var(--stone-mid);
+  color: var(--text-on-stone);
+  margin: 0 4px 6px 0;
+}
+
+/* ── Schedule slots ─────────────────────────────────────────────── */
+.sched-grid {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+}
+.sched-hour {
+  padding: 4px 4px 0 0;
+  text-align: right;
+  font-size: 8px;
+  color: var(--text-on-stone-ghost);
+  line-height: 1;
+}
+.sched-slot {
+  border-top: 1px solid var(--stone-mid);
+  padding: 2px 4px;
+  min-height: 36px;
+}
+.sched-appt {
+  padding: 3px 6px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  background: var(--garnet-wash);
+  border-left: 2px solid var(--garnet-vivid);
+}
+.sched-appt-name {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-on-stone);
+  line-height: 1.3;
+}
+.sched-appt-detail {
+  font-size: 8px;
+  color: var(--text-on-stone-faint);
+  line-height: 1.2;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   VINE FRAME CARD
+   Real olive painting photo at edges, 3D vignette depth,
+   clean bright center for content.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/*
+  Structure:
+  .vine-frame  (outer - provides border + shadow)
+    .vine-tl   (olive painting — top-left corner, natural orientation)
+    .vine-tr   (olive painting — top-right corner, flipped horizontal)
+    .vine-bl   (olive painting — bottom-left corner, flipped vertical)
+    .vine-br   (olive painting — bottom-right corner, flipped both)
+    .vine-vig  (radial gradient vignette for 3D depth)
+    .widget-head / .widget-body etc (content, z-index above overlays)
+*/
+
+.vine-frame {
+  position: relative;
+  background: var(--stone-card);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--olive-mid);
+  box-shadow:
+    0 2px 4px rgba(31,35,26,0.10),
+    0 6px 20px rgba(31,35,26,0.14),
+    0 14px 44px rgba(31,35,26,0.10);
+}
+
+/* Shared vine corner styles */
+.vine-corner {
+  position: absolute;
+  width: 55%;
+  height: 55%;
+  background-image: url('/textures/olive-painting.png');
+  background-size: cover;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.22;
+}
+
+/* Top-left: natural orientation */
+.vine-tl {
+  top: 0; left: 0;
+  background-position: top left;
+  -webkit-mask-image: radial-gradient(ellipse 90% 90% at 0% 0%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 35%, transparent 65%);
+  mask-image: radial-gradient(ellipse 90% 90% at 0% 0%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 35%, transparent 65%);
+}
+
+/* Top-right: flip horizontal */
+.vine-tr {
+  top: 0; right: 0;
+  background-position: top right;
+  transform: scaleX(-1);
+  -webkit-mask-image: radial-gradient(ellipse 90% 90% at 0% 0%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 35%, transparent 65%);
+  mask-image: radial-gradient(ellipse 90% 90% at 0% 0%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 35%, transparent 65%);
+}
+
+/* Bottom-left: flip vertical */
+.vine-bl {
+  bottom: 0; left: 0;
+  background-position: top left;
+  transform: scaleY(-1);
+  -webkit-mask-image: radial-gradient(ellipse 90% 90% at 0% 0%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 35%, transparent 65%);
+  mask-image: radial-gradient(ellipse 90% 90% at 0% 0%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 35%, transparent 65%);
+}
+
+/* Bottom-right: flip both */
+.vine-br {
+  bottom: 0; right: 0;
+  background-position: top left;
+  transform: scale(-1, -1);
+  -webkit-mask-image: radial-gradient(ellipse 90% 90% at 0% 0%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 35%, transparent 65%);
+  mask-image: radial-gradient(ellipse 90% 90% at 0% 0%, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 35%, transparent 65%);
+}
+
+/* 3D vignette — dark edges, bright center */
+.vine-vig {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: radial-gradient(
+    ellipse 70% 65% at 50% 50%,
+    transparent 30%,
+    rgba(31,35,26,0.04) 50%,
+    rgba(31,35,26,0.10) 70%,
+    rgba(31,35,26,0.18) 100%
+  );
+  /* Also add top-left light spot for 3D bevel feel */
+  box-shadow:
+    inset 2px 2px 8px rgba(255,255,255,0.20),
+    inset -2px -2px 8px rgba(31,35,26,0.06);
+  border-radius: 10px;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <p class="topbar-sub">Practitioner Suite</p>
+    <h1>Dashboard</h1>
+  </div>
+</div>
+
+<div class="grid-container" id="grid"></div>
+
+<script>
+// ── Safe DOM helpers ──────────────────────────────────────────────
+function el(tag, attrs, children) {
+  var e = document.createElement(tag);
+  if (attrs) Object.keys(attrs).forEach(function(k) {
+    if (k === 'className') e.className = attrs[k];
+    else if (k === 'textContent') e.textContent = attrs[k];
+    else if (k.startsWith('on')) e[k] = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  });
+  if (children) children.forEach(function(c) {
+    if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+    else if (c) e.appendChild(c);
+  });
+  return e;
+}
+
+// Creates a vine-framed card with all 4 corner overlays + vignette
+function vineCard(style) {
+  var card = el('div', { className: 'vine-frame', style: style });
+  card.appendChild(el('div', { className: 'vine-corner vine-tl' }));
+  card.appendChild(el('div', { className: 'vine-corner vine-tr' }));
+  card.appendChild(el('div', { className: 'vine-corner vine-bl' }));
+  card.appendChild(el('div', { className: 'vine-corner vine-br' }));
+  card.appendChild(el('div', { className: 'vine-vig' }));
+  return card;
+}
+
+function widgetHead(title) {
+  var d = el('div', { className: 'widget-head' });
+  d.appendChild(el('a', { href: '#', textContent: title }));
+  return d;
+}
+
+function scheduleContent() {
+  var hours = [8,9,10,11,12,13,14,15,16,17,18,19];
+  var fmtHr = function(h) { return h === 12 ? '12p' : h > 12 ? (h-12)+'p' : h+'a'; };
+  var appts = [
+    { hour: 9, name: 'Sarah M.', service: 'Color Refresh', time: '9:00 AM' },
+    { hour: 10, name: 'Emma L.', service: 'Balayage', time: '10:30 AM' },
+    { hour: 13, name: 'Priya K.', service: 'Gloss Treatment', time: '1:00 PM' },
+    { hour: 15, name: 'Ana R.', service: 'Highlights', time: '3:00 PM' },
+  ];
+
+  var wrap = el('div', { className: 'widget-body', style: 'padding:0;' });
+  var grid = el('div', { className: 'sched-grid' });
+
+  hours.forEach(function(h) {
+    var hourEl = el('div', { className: 'sched-hour', textContent: fmtHr(h) });
+    var slotEl = el('div', { className: 'sched-slot' });
+    appts.filter(function(a) { return a.hour === h; }).forEach(function(a) {
+      var apptEl = el('div', { className: 'sched-appt' });
+      apptEl.appendChild(el('p', { className: 'sched-appt-name', textContent: a.name }));
+      apptEl.appendChild(el('p', { className: 'sched-appt-detail', textContent: a.service + ' \u00B7 ' + a.time }));
+      slotEl.appendChild(apptEl);
+    });
+    grid.appendChild(hourEl);
+    grid.appendChild(slotEl);
+  });
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+function statContent(value, label) {
+  var wrap = el('div', { className: 'stat-center' });
+  wrap.appendChild(el('p', { className: 'stat-value', textContent: value }));
+  wrap.appendChild(el('p', { className: 'stat-label', textContent: label }));
+  return wrap;
+}
+
+function tasksContent() {
+  var tasks = ['Restock developer 20vol', 'Follow up with Emma L.', 'Order brass toner', 'Update client cards', 'Inventory check Friday'];
+  var wrap = el('div', { className: 'widget-body' });
+  tasks.forEach(function(t) {
+    var row = el('div', { className: 'task-row' });
+    row.appendChild(el('div', { className: 'task-check' }));
+    row.appendChild(el('p', { className: 'task-text', textContent: t }));
+    wrap.appendChild(row);
+  });
+  return wrap;
+}
+
+function activityContent() {
+  var items = [
+    { name: 'Sarah M.', time: '9:15 AM' },
+    { name: 'Emma L.', time: '10:45 AM' },
+    { name: 'Priya K.', time: '1:20 PM' },
+    { name: 'Ana R.', time: '3:10 PM' },
+  ];
+  var wrap = el('div', { className: 'widget-body' });
+  items.forEach(function(item) {
+    var row = el('div', { className: 'activity-row' });
+    row.appendChild(el('div', { className: 'activity-dot' }));
+    var info = el('div');
+    info.appendChild(el('p', { className: 'activity-name', textContent: item.name }));
+    info.appendChild(el('p', { className: 'activity-time', textContent: item.time }));
+    row.appendChild(info);
+    wrap.appendChild(row);
+  });
+  return wrap;
+}
+
+function inventoryContent() {
+  var items = ['Wella Koleston 7/0', 'Olaplex No.3', 'Redken Shades EQ', "L'Oreal Brass Off", 'Schwarzkopf Igora', 'Moroccanoil Treatment', 'K18 Mask', 'Malibu C'];
+  var wrap = el('div', { className: 'widget-body', style: 'display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;' });
+  items.forEach(function(name) {
+    wrap.appendChild(el('span', { className: 'inv-pill', textContent: name }));
+  });
+  return wrap;
+}
+
+// ── Build dashboard ───────────────────────────────────────────────
+var grid = document.getElementById('grid');
+
+// Schedule 6x10
+var w1 = vineCard('grid-column:span 6;grid-row:span 10;');
+w1.appendChild(widgetHead("Today's Schedule"));
+w1.appendChild(scheduleContent());
+grid.appendChild(w1);
+
+// Revenue 4x4
+var w2 = vineCard('grid-column:span 4;grid-row:span 4;');
+w2.appendChild(widgetHead('Revenue'));
+w2.appendChild(statContent('\u2014', 'Earned Today'));
+grid.appendChild(w2);
+
+// Formulas 4x4
+var w3 = vineCard('grid-column:span 4;grid-row:span 4;');
+w3.appendChild(widgetHead('Formulas'));
+w3.appendChild(statContent('12', 'Active Formulas'));
+grid.appendChild(w3);
+
+// Tasks 6x6
+var w4 = vineCard('grid-column:span 6;grid-row:span 6;');
+w4.appendChild(widgetHead('Tasks'));
+w4.appendChild(tasksContent());
+grid.appendChild(w4);
+
+// Activity 4x5
+var w5 = vineCard('grid-column:span 4;grid-row:span 5;');
+w5.appendChild(widgetHead('Activity'));
+w5.appendChild(activityContent());
+grid.appendChild(w5);
+
+// Inventory 10x4
+var w6 = vineCard('grid-column:span 10;grid-row:span 4;');
+w6.appendChild(widgetHead('Inventory'));
+w6.appendChild(inventoryContent());
+grid.appendChild(w6);
+</script>
+</body>
+</html>

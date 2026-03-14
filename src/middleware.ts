@@ -15,13 +15,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protected routes for clients (except invite page)
-  if (pathname.startsWith("/client") && !pathname.startsWith("/client/invite")) {
+  // Client portal — /client/join, /client/login, /client/auth are public
+  const clientPublicPaths = ["/client/join", "/client/login", "/client/auth"];
+  const isClientPublic = clientPublicPaths.some(p => pathname.startsWith(p));
+
+  if (pathname.startsWith("/client") && !isClientPublic) {
     if (!user) {
       const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("redirect", pathname);
-      url.searchParams.set("type", "client");
+      url.pathname = "/client/login";
       return NextResponse.redirect(url);
     }
   }
@@ -40,7 +41,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all routes except static files and api routes that don't need auth
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

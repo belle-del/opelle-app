@@ -1,0 +1,119 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { InspoTab } from "./InspoTab";
+
+type Props = {
+  clientId: string;
+  clientName: string;
+  children: React.ReactNode; // The existing content (formulas, etc.)
+};
+
+type InspoSubmission = {
+  id: string;
+  client_notes: string | null;
+  ai_analysis: {
+    feasibility: string;
+    clientSummary: string;
+    stylistFlag: string | null;
+    requiresConsult: boolean;
+    generatedFormQuestions: { id: string; question: string; type: string; options?: string[] }[];
+    demandSignals: { direction: string; productHint?: string; confidence: string }[];
+  } | null;
+  stylist_flag: string | null;
+  feasibility: string | null;
+  client_summary: string | null;
+  requires_consult: boolean;
+  reviewed_by_stylist: boolean;
+  created_at: string;
+  photoUrls: string[];
+  consultAnswers?: Record<string, unknown> | null;
+};
+
+export function ClientDetailTabs({ clientId, clientName, children }: Props) {
+  const [activeTab, setActiveTab] = useState<"formulas" | "inspo">("formulas");
+  const [inspoSubmissions, setInspoSubmissions] = useState<InspoSubmission[]>([]);
+  const [inspoLoaded, setInspoLoaded] = useState(false);
+  const [unreviewedCount, setUnreviewedCount] = useState(0);
+
+  useEffect(() => {
+    // Fetch inspo data
+    fetch(`/api/inspo?clientId=${clientId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setInspoSubmissions(data);
+          setUnreviewedCount(
+            data.filter((s: InspoSubmission) => s.requires_consult && !s.reviewed_by_stylist).length
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => setInspoLoaded(true));
+  }, [clientId]);
+
+  const tabs = [
+    { id: "formulas" as const, label: "Formulas" },
+    {
+      id: "inspo" as const,
+      label: "Inspo",
+      badge: unreviewedCount > 0 ? unreviewedCount : undefined,
+    },
+  ];
+
+  return (
+    <div>
+      {/* Tab bar */}
+      <div className="flex gap-1 mb-4 border-b border-white/10 pb-0">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className="px-4 py-2.5 text-sm font-medium transition-all relative"
+            style={{
+              color: activeTab === tab.id ? "var(--foreground)" : "var(--muted-foreground)",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              borderBottom: activeTab === tab.id ? "2px solid var(--brass, #D4B76A)" : "2px solid transparent",
+              marginBottom: "-1px",
+            }}
+          >
+            {tab.label}
+            {tab.badge && (
+              <span
+                className="ml-1.5 inline-flex items-center justify-center rounded-full px-1.5 py-0.5"
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  background: "var(--garnet, #440606)",
+                  color: "white",
+                  minWidth: "18px",
+                }}
+              >
+                {tab.badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      {activeTab === "formulas" && children}
+
+      {activeTab === "inspo" && (
+        inspoLoaded ? (
+          <InspoTab
+            clientId={clientId}
+            clientName={clientName}
+            submissions={inspoSubmissions}
+          />
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground">Loading inspo...</p>
+          </div>
+        )
+      )}
+    </div>
+  );
+}

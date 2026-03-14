@@ -14,6 +14,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       name: body.name,
       sortOrder: body.sortOrder,
       defaultDurationMins: body.defaultDurationMins,
+      bookingType: body.bookingType,
     });
 
     if (!serviceType) {

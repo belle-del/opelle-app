@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ServiceTypesManager } from "./_components/ServiceTypesManager";
+import { StylistCodeBlock } from "./_components/StylistCodeBlock";
+import { BookingConfig } from "./_components/BookingConfig";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function SettingsPage() {
@@ -72,6 +74,36 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <ServiceTypesManager />
+        </CardContent>
+      </Card>
+
+      {/* Booking Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Booking Configuration</CardTitle>
+          <CardDescription>Configure how clients can book appointments</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BookingConfig
+            workspaceId={workspace?.id}
+            initialBookingWindow={workspace?.booking_window_days ?? 60}
+            initialBufferMinutes={workspace?.buffer_minutes ?? 0}
+            initialWorkingHours={workspace?.working_hours ?? {}}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Client Portal */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Client Portal</CardTitle>
+          <CardDescription>Share your code so clients can connect with you</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <StylistCodeBlock
+            workspaceId={workspace?.id}
+            initialCode={workspace?.stylist_code || null}
+          />
         </CardContent>
       </Card>
 

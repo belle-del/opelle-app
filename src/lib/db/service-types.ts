@@ -78,7 +78,7 @@ export async function createServiceType(input: {
 
 export async function updateServiceType(
   id: string,
-  input: { name?: string; sortOrder?: number; defaultDurationMins?: number | null }
+  input: { name?: string; sortOrder?: number; defaultDurationMins?: number | null; bookingType?: string }
 ): Promise<ServiceType | null> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
@@ -88,6 +88,7 @@ export async function updateServiceType(
   if (input.name !== undefined) updateData.name = input.name;
   if (input.sortOrder !== undefined) updateData.sort_order = input.sortOrder;
   if (input.defaultDurationMins !== undefined) updateData.default_duration_mins = input.defaultDurationMins;
+  if (input.bookingType !== undefined) updateData.booking_type = input.bookingType;
 
   const { data, error } = await supabase
     .from("service_types")

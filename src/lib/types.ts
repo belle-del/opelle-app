@@ -150,12 +150,15 @@ export type Formula = {
 };
 
 // Service Type (workspace-editable list)
+export type BookingType = 'instant' | 'request';
+
 export type ServiceType = {
   id: string;
   workspaceId: string;
   name: string;
   sortOrder: number;
   defaultDurationMins?: number;
+  bookingType?: BookingType;
   createdAt: string;
 };
 
@@ -398,6 +401,7 @@ export type ServiceTypeRow = {
   name: string;
   sort_order: number;
   default_duration_mins: number | null;
+  booking_type: string | null;
   created_at: string;
 };
 
@@ -536,6 +540,7 @@ export function serviceTypeRowToModel(row: ServiceTypeRow): ServiceType {
     name: row.name,
     sortOrder: row.sort_order,
     defaultDurationMins: row.default_duration_mins ?? undefined,
+    bookingType: (row.booking_type as BookingType) ?? undefined,
     createdAt: row.created_at,
   };
 }
@@ -577,4 +582,214 @@ export function getClientDisplayName(client: Client): string {
   return client.lastName
     ? `${client.firstName} ${client.lastName}`
     : client.firstName;
+}
+
+// ============================================================================
+// Client Portal Types — New for Migration 006
+// ============================================================================
+
+// ── Inspo & AI Consult ─────────────────────────────────────
+
+export type InspoSubmission = {
+  id: string
+  workspaceId: string
+  clientId: string
+  clientNotes?: string
+  aiAnalysis?: InspoAnalysis
+  stylistFlag?: string
+  clientSummary?: string
+  feasibility?: 'straightforward' | 'multi_session' | 'needs_consult' | 'not_recommended'
+  requiresConsult: boolean
+  reviewedByStylist: boolean
+  createdAt: string
+}
+
+export type InspoAnalysis = {
+  feasibility: 'straightforward' | 'multi_session' | 'needs_consult' | 'not_recommended'
+  clientSummary: string
+  stylistFlag: string | null
+  requiresConsult: boolean
+  generatedFormQuestions: ConsultQuestion[]
+  demandSignals: DemandSignal[]
+}
+
+export type ConsultQuestion = {
+  id: string
+  question: string
+  type: 'yes_no' | 'multiple_choice' | 'free_text' | 'scale'
+  options?: string[]
+}
+
+export type DemandSignal = {
+  direction: 'lighter' | 'darker' | 'vivid' | 'natural' | 'warmer' | 'cooler'
+  productHint?: string
+  confidence: 'low' | 'medium' | 'high'
+}
+
+// ── Product Orders ─────────────────────────────────────────
+
+export type ProductOrderRequest = {
+  id: string
+  workspaceId: string
+  clientId: string
+  items: OrderItem[]
+  status: 'pending' | 'acknowledged' | 'fulfilled' | 'cancelled'
+  clientNotes?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type OrderItem = {
+  productId: string
+  productName: string
+  quantity: number
+  notes?: string
+}
+
+// ── Client Notifications ───────────────────────────────────
+
+export type ClientNotification = {
+  id: string
+  workspaceId: string
+  clientId: string
+  type: 'system' | 'stylist_message' | 'booking_update' | 'order_update' | 'inspo_update' | 'aftercare'
+  title: string
+  body?: string
+  readAt?: string
+  actionUrl?: string
+  createdAt: string
+}
+
+// ── Workspace Members (multi-stylist) ──────────────────────
+
+export type WorkspaceMember = {
+  id: string
+  workspaceId: string
+  userId: string
+  role: 'owner' | 'stylist'
+  displayName?: string
+  createdAt: string
+}
+
+// ── Row Types for New Tables ───────────────────────────────
+
+export type InspoSubmissionRow = {
+  id: string
+  workspace_id: string
+  client_id: string
+  client_notes: string | null
+  ai_analysis: InspoAnalysis | null
+  stylist_flag: string | null
+  feasibility: string | null
+  client_summary: string | null
+  requires_consult: boolean
+  reviewed_by_stylist: boolean
+  created_at: string
+}
+
+export type InspoDemandsignalRow = {
+  id: string
+  workspace_id: string
+  client_id: string
+  inspo_submission_id: string
+  direction: string
+  product_hint: string | null
+  confidence: string
+  created_at: string
+}
+
+export type ProductOrderRequestRow = {
+  id: string
+  workspace_id: string
+  client_id: string
+  items: OrderItem[]
+  status: string
+  client_notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type ClientNotificationRow = {
+  id: string
+  workspace_id: string
+  client_id: string
+  type: string
+  title: string
+  body: string | null
+  read_at: string | null
+  action_url: string | null
+  created_at: string
+}
+
+export type WorkspaceMemberRow = {
+  id: string
+  workspace_id: string
+  user_id: string
+  role: string
+  display_name: string | null
+  created_at: string
+}
+
+export type ClientUserRow = {
+  id: string
+  auth_user_id: string
+  workspace_id: string
+  client_id: string
+  created_at: string
+}
+
+// ── Conversion Helpers for New Tables ──────────────────────
+
+export function clientNotificationRowToModel(row: ClientNotificationRow): ClientNotification {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    clientId: row.client_id,
+    type: row.type as ClientNotification['type'],
+    title: row.title,
+    body: row.body ?? undefined,
+    readAt: row.read_at ?? undefined,
+    actionUrl: row.action_url ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+export function inspoSubmissionRowToModel(row: InspoSubmissionRow): InspoSubmission {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    clientId: row.client_id,
+    clientNotes: row.client_notes ?? undefined,
+    aiAnalysis: row.ai_analysis ?? undefined,
+    stylistFlag: row.stylist_flag ?? undefined,
+    clientSummary: row.client_summary ?? undefined,
+    feasibility: row.feasibility as InspoSubmission['feasibility'],
+    requiresConsult: row.requires_consult,
+    reviewedByStylist: row.reviewed_by_stylist,
+    createdAt: row.created_at,
+  };
+}
+
+export function productOrderRequestRowToModel(row: ProductOrderRequestRow): ProductOrderRequest {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    clientId: row.client_id,
+    items: row.items,
+    status: row.status as ProductOrderRequest['status'],
+    clientNotes: row.client_notes ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function workspaceMemberRowToModel(row: WorkspaceMemberRow): WorkspaceMember {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    userId: row.user_id,
+    role: row.role as WorkspaceMember['role'],
+    displayName: row.display_name ?? undefined,
+    createdAt: row.created_at,
+  };
 }

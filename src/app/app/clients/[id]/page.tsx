@@ -9,6 +9,7 @@ import { getFormulaEntriesForClient } from "@/lib/db/formula-entries";
 import { listServiceTypes } from "@/lib/db/service-types";
 import { getClientProfile, getClientRebook } from "@/lib/kernel";
 import { FormulaHistory } from "./_components/FormulaHistory";
+import { ClientDetailTabs } from "./_components/ClientDetailTabs";
 import { getClientDisplayName } from "@/lib/types";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { ArrowLeft, Edit, Calendar, Plus, Sparkles } from "lucide-react";
@@ -255,14 +256,19 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         </CardContent>
       </Card>
 
-      {/* Formula History */}
+      {/* Formula History + Inspo Tabs */}
       <Card>
         <CardContent className="p-6">
-          <FormulaHistory
+          <ClientDetailTabs
             clientId={client.id}
-            entries={formulaEntries}
-            serviceTypes={serviceTypes}
-          />
+            clientName={getClientDisplayName(client)}
+          >
+            <FormulaHistory
+              clientId={client.id}
+              entries={formulaEntries}
+              serviceTypes={serviceTypes}
+            />
+          </ClientDetailTabs>
         </CardContent>
       </Card>
     </div>

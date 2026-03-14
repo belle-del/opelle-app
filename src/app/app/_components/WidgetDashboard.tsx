@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Trash2, Maximize2, Plus } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────
-type WidgetType = "schedule" | "revenue" | "formulas" | "tasks" | "activity" | "inventory";
+type WidgetType = "schedule" | "revenue" | "formulas" | "tasks" | "activity" | "inventory" | "inspoFlags";
 
 interface Widget {
   id: string;
@@ -23,6 +23,7 @@ const ALL_WIDGET_TYPES: { type: WidgetType; label: string; defaultCols: number; 
   { type: "tasks", label: "Tasks", defaultCols: 6, defaultRows: 6 },
   { type: "activity", label: "Activity", defaultCols: 4, defaultRows: 5 },
   { type: "inventory", label: "Inventory", defaultCols: 10, defaultRows: 4 },
+  { type: "inspoFlags", label: "Inspo Flags", defaultCols: 6, defaultRows: 6 },
 ];
 
 const DEFAULT_WIDGETS: Widget[] = [
@@ -43,12 +44,20 @@ interface Task { id: string; title: string; status: string; dueAt?: string; }
 interface Product { id: string; brand: string; shade?: string; quantity?: number; lowStockThreshold?: number; }
 interface Client { id: string; firstName?: string; lastName?: string; preferredName?: string; }
 
+interface InspoFlag {
+  id: string;
+  clientId: string;
+  stylistFlag: string | null;
+  createdAt: string;
+}
+
 interface WidgetDashboardProps {
   appointments: Appointment[];
   formulas: Formula[];
   tasks: Task[];
   products: Product[];
   clients: Client[];
+  inspoFlags?: InspoFlag[];
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -257,7 +266,7 @@ function StatWidget({ value, label, change, changePositive, link }: {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────
-export function WidgetDashboard({ appointments, formulas, tasks, products, clients }: WidgetDashboardProps) {
+export function WidgetDashboard({ appointments, formulas, tasks, products, clients, inspoFlags = [] }: WidgetDashboardProps) {
   const [widgets, setWidgets] = useState<Widget[]>(DEFAULT_WIDGETS);
   const [editMode, setEditMode] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -404,6 +413,40 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
                 );
               })}
               {products.length === 0 && <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>No products</p>}
+            </div>
+          </>
+        );
+      case "inspoFlags":
+        return (
+          <>
+            <WidgetHead title="Inspo Flags" link="/app/clients" />
+            <div style={{ padding: "8px 12px" }}>
+              {inspoFlags.length === 0 ? (
+                <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>No pending inspo flags</p>
+              ) : inspoFlags.slice(0, 5).map((flag) => (
+                <Link key={flag.id} href={`/app/clients/${flag.clientId}`}>
+                  <div style={{ display: "flex", gap: "8px", padding: "6px 0", borderBottom: "1px solid var(--stone-mid)", alignItems: "flex-start" }}>
+                    <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "var(--garnet-wash)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
+                      <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--garnet)" }}>
+                        {getClientName(clients, flag.clientId).charAt(0)}
+                      </span>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: "10px", fontWeight: 500, color: "var(--text-on-stone)" }}>
+                        {getClientName(clients, flag.clientId)}
+                      </p>
+                      {flag.stylistFlag && (
+                        <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {flag.stylistFlag}
+                        </p>
+                      )}
+                    </div>
+                    <span style={{ padding: "2px 6px", borderRadius: "100px", fontSize: "8px", fontWeight: 600, background: "var(--garnet-wash)", color: "var(--garnet)", flexShrink: 0, marginTop: "2px" }}>
+                      Needs Review
+                    </span>
+                  </div>
+                </Link>
+              ))}
             </div>
           </>
         );
