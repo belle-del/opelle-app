@@ -8,6 +8,7 @@ import { getProductEnrichment } from "@/lib/kernel";
 import { formatDate } from "@/lib/utils";
 import { ArrowLeft, Edit, Package, Barcode, DollarSign, Sparkles } from "lucide-react";
 import { ProductActions } from "./_components/ProductActions";
+import { InventoryPredictionCard } from "./_components/InventoryPredictionCard";
 
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>;
@@ -246,6 +247,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           </CardContent>
         </Card>
       )}
+
+      {/* Inventory Prediction (Phase E — AI-powered) */}
+      <InventoryPredictionCard productId={product.id} />
 
       {/* Notes */}
       <Card>

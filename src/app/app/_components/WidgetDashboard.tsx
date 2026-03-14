@@ -278,6 +278,20 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
   const todayAppts = appointments.filter((a) => { const d = new Date(a.startAt); return d >= today && d <= todayEnd; });
   const pendingTasks = tasks.filter((t) => t.status !== "completed");
 
+  // Phase E: Inventory predictions (async, non-blocking)
+  const [predictions, setPredictions] = useState<{
+    predictions: { productId: string; estimatedDaysUntilDepletion: number | null; avgUsagePerWeek: number }[];
+    criticalCount: number;
+    warningCount: number;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/intelligence/inventory-predictions", { method: "POST" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data) setPredictions(data); })
+      .catch(() => {});
+  }, []);
+
   const gridRef = useRef<HTMLDivElement>(null);
   const [cellSize, setCellSize] = useState(48);
 
@@ -399,16 +413,31 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
             </div>
           </>
         );
-      case "inventory":
+      case "inventory": {
+        const getPrediction = (pid: string) => predictions?.predictions?.find((p) => p.productId === pid);
         return (
           <>
             <WidgetHead title="Inventory" link="/app/products" />
+            {predictions && (predictions.criticalCount > 0 || predictions.warningCount > 0) && (
+              <div style={{ padding: "4px 12px", fontSize: "9px", background: predictions.criticalCount > 0 ? "rgba(117,18,18,0.08)" : "rgba(212,183,106,0.12)", color: predictions.criticalCount > 0 ? "var(--status-low)" : "var(--brass-warm)", borderBottom: "1px solid var(--stone-mid)" }}>
+                {predictions.criticalCount > 0
+                  ? `${predictions.criticalCount} product${predictions.criticalCount > 1 ? "s" : ""} running low soon`
+                  : `${predictions.warningCount} to reorder this month`}
+              </div>
+            )}
             <div style={{ padding: "8px 12px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
               {products.slice(0, 8).map((p) => {
                 const isLow = p.quantity !== undefined && p.lowStockThreshold !== undefined && p.quantity <= p.lowStockThreshold;
+                const pred = getPrediction(p.id);
+                const isCritical = pred && pred.estimatedDaysUntilDepletion !== null && pred.estimatedDaysUntilDepletion <= 14;
+                const daysLabel = pred?.estimatedDaysUntilDepletion != null ? ` (${pred.estimatedDaysUntilDepletion}d)` : "";
                 return (
-                  <span key={p.id} style={{ padding: "3px 8px", borderRadius: "100px", fontSize: "9px", background: isLow ? "rgba(117,18,18,0.15)" : "var(--stone-mid)", color: isLow ? "var(--status-low)" : "var(--text-on-stone)", border: isLow ? "1px solid rgba(117,18,18,0.3)" : "none" }}>
-                    {isLow ? "⚠ " : ""}{p.brand}{p.shade ? ` ${p.shade}` : ""}
+                  <span
+                    key={p.id}
+                    title={pred ? `~${pred.estimatedDaysUntilDepletion ?? "?"}d remaining \u00b7 ${pred.avgUsagePerWeek.toFixed(1)}/wk` : undefined}
+                    style={{ padding: "3px 8px", borderRadius: "100px", fontSize: "9px", background: isCritical ? "rgba(117,18,18,0.15)" : isLow ? "rgba(117,18,18,0.1)" : "var(--stone-mid)", color: isCritical || isLow ? "var(--status-low)" : "var(--text-on-stone)", border: isCritical ? "1px solid rgba(117,18,18,0.3)" : "none" }}
+                  >
+                    {isCritical ? "!! " : isLow ? "! " : ""}{p.brand}{p.shade ? ` ${p.shade}` : ""}{daysLabel}
                   </span>
                 );
               })}
@@ -416,6 +445,7 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
             </div>
           </>
         );
+      }
       case "inspoFlags":
         return (
           <>

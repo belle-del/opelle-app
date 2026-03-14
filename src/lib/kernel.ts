@@ -2,7 +2,7 @@
 // All communication with MetisOS Opelle Kernel goes through this file.
 // If the Kernel is unavailable, all functions return null — never throw.
 
-import type { ClientPreferenceProfile, ProductEnrichment, InspoAnalysis, ParsedFormula } from "@/lib/types";
+import type { ClientPreferenceProfile, ProductEnrichment, InspoAnalysis, ParsedFormula, InventoryPredictionsResult } from "@/lib/types";
 
 const KERNEL_URL =
   process.env.KERNEL_API_URL || "https://opelle.dominusfoundry.com";
@@ -24,7 +24,7 @@ export async function publishEvent(
   if (!KERNEL_ENABLED || !KERNEL_KEY) return null;
 
   try {
-    const res = await fetch(`${KERNEL_URL}/api/v1/saas/events/ingest`, {
+    const res = await fetch(`${KERNEL_URL}/api/v1/events/ingest`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -64,7 +64,7 @@ export async function getClientProfile(params: {
     status: string;
   }[];
 }): Promise<ClientPreferenceProfile | null> {
-  const result = await kernelPost("/api/v1/saas/ai/client-profile", {
+  const result = await kernelPost("/api/v1/ai/client-profile", {
     client_name: params.clientName,
     client_notes: params.clientNotes,
     tags: params.tags,
@@ -82,7 +82,7 @@ export async function getRebookMessage(params: {
   lastServiceName: string;
   lastServiceDate: string;
 }): Promise<{ suggested_message: string } | null> {
-  return kernelPost("/api/v1/saas/ai/rebook-message", {
+  return kernelPost("/api/v1/ai/rebook-message", {
     client_name: params.clientName,
     days_since_last_visit: params.daysSinceLastVisit,
     avg_cadence_days: params.avgCadenceDays,
@@ -100,7 +100,7 @@ export async function getProductEnrichment(params: {
   name?: string;
   notes?: string;
 }): Promise<ProductEnrichment | null> {
-  const result = await kernelPost("/api/v1/saas/ai/product-enrichment", {
+  const result = await kernelPost("/api/v1/ai/product-enrichment", {
     brand: params.brand,
     line: params.line ?? null,
     shade: params.shade,
@@ -122,7 +122,7 @@ export async function getFormulaSuggestion(params: {
   }[];
   clientPreferences?: ClientPreferenceProfile | null;
 }) {
-  return kernelPost("/api/v1/saas/ai/suggest-formula", {
+  return kernelPost("/api/v1/ai/suggest-formula", {
     client_name: params.clientName,
     service_type_name: params.serviceTypeName,
     formula_history: params.formulaHistory,
@@ -130,11 +130,36 @@ export async function getFormulaSuggestion(params: {
   }, 20000);
 }
 
-// Phase E — no UI consumer yet
-export async function getInventoryPredictions(workspaceId: string) {
-  return kernelGet(
-    `/api/v1/saas/inventory/predictions?workspace_id=${workspaceId}`
-  );
+export async function getInventoryPredictions(params: {
+  products: {
+    id: string;
+    brand: string;
+    shade: string;
+    line?: string;
+    category: string;
+    quantity: number;
+    sizeOz?: number;
+    costCents?: number;
+    lowStockThreshold: number;
+    avgUsageOzPerAppointment?: number;
+  }[];
+  usageHistory: {
+    productId: string;
+    brand: string;
+    shade: string;
+    amountUsed?: string;
+    serviceDate: string;
+  }[];
+  totalFormulaEntries: number;
+  dateRange: { earliest: string; latest: string };
+}): Promise<InventoryPredictionsResult | null> {
+  const result = await kernelPost("/api/v1/ai/inventory-predictions", {
+    products: params.products,
+    usage_history: params.usageHistory,
+    total_formula_entries: params.totalFormulaEntries,
+    date_range: params.dateRange,
+  }, 15000);
+  return result?.predictions_result ?? null;
 }
 
 // --- AI CALLS (routed through kernel — Immutable Rule 2) ---
@@ -152,7 +177,7 @@ export async function analyzeInspo(params: {
   clientNotes: string | null;
   formulaHistory: string | null;
 }): Promise<{ success: boolean; analysis: InspoAnalysis } | null> {
-  return kernelPost("/api/v1/saas/ai/analyze-inspo", {
+  return kernelPost("/api/v1/ai/analyze-inspo", {
     images: params.images,
     client_context: params.clientContext,
     client_notes: params.clientNotes,
@@ -163,7 +188,7 @@ export async function analyzeInspo(params: {
 export async function parseFormula(
   rawNotes: string
 ): Promise<{ success: boolean; parsed: ParsedFormula } | null> {
-  return kernelPost("/api/v1/saas/ai/parse-formula", {
+  return kernelPost("/api/v1/ai/parse-formula", {
     raw_notes: rawNotes,
   }, 30000); // 30s timeout for AI parsing
 }

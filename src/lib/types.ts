@@ -118,6 +118,29 @@ export type ProductEnrichment = {
   notes: string;
 };
 
+// Kernel-generated inventory prediction (Phase E)
+export type InventoryPrediction = {
+  productId: string;
+  brand: string;
+  shade: string;
+  currentQuantity: number;
+  estimatedDaysUntilDepletion: number | null;
+  suggestedReorderDate: string | null;
+  avgUsagePerWeek: number;
+  avgUsagePerMonth: number;
+  usageTrend: "increasing" | "stable" | "decreasing";
+  confidence: "low" | "medium" | "high";
+  reasoning: string;
+};
+
+export type InventoryPredictionsResult = {
+  predictions: InventoryPrediction[];
+  generatedAt: string;
+  summary: string;
+  criticalCount: number;
+  warningCount: number;
+};
+
 // @deprecated — old formula system, kept for migration compatibility
 // Formula
 export type FormulaServiceType = 'color' | 'lighten' | 'tone' | 'gloss' | 'other';
