@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAppointment, updateAppointment, deleteAppointment } from "@/lib/db/appointments";
 import { logActivity } from "@/lib/db/activity-log";
+import { emitCommsEvent } from "@/lib/comms-events";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -41,6 +42,14 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
 
     await logActivity("appointment.updated", "appointment", id, body.serviceName || id, { after: body });
+
+    emitCommsEvent({
+      event: "appointment.changed",
+      workspaceId: appointment.workspaceId,
+      clientId: appointment.clientId,
+      context: { title: "Your appointment has been updated", action_url: "/client/book" },
+    });
+
     return NextResponse.json(appointment);
   } catch (error) {
     console.error("Failed to update appointment:", error);

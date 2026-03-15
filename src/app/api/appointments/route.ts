@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAppointment, listAppointments } from "@/lib/db/appointments";
 import { logActivity } from "@/lib/db/activity-log";
+import { emitCommsEvent } from "@/lib/comms-events";
 
 export async function GET() {
   try {
@@ -37,6 +38,14 @@ export async function POST(request: Request) {
     }
 
     await logActivity("appointment.created", "appointment", appointment.id, appointment.serviceName || appointment.startAt || appointment.id);
+
+    emitCommsEvent({
+      event: "appointment.confirmed",
+      workspaceId: appointment.workspaceId,
+      clientId: body.clientId,
+      context: { title: `Your appointment on ${new Date(body.startAt).toLocaleDateString()} is confirmed`, action_url: "/client/book" },
+    });
+
     return NextResponse.json(appointment);
   } catch (error) {
     console.error("Failed to create appointment:", error);

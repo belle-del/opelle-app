@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createClientNotification } from "@/lib/client-notifications";
 import { getCurrentWorkspace } from "@/lib/db/workspaces";
+import { emitCommsEvent } from "@/lib/comms-events";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -38,6 +39,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       clientId: submission.client_id,
       type: "inspo_update",
       title: "Your stylist has reviewed your inspo photos",
+    });
+
+    emitCommsEvent({
+      event: "inspo.reviewed",
+      workspaceId: workspace.id,
+      clientId: submission.client_id,
+      context: { title: "Your stylist reviewed your inspiration photos", action_url: "/client/inspo" },
     });
   }
 
