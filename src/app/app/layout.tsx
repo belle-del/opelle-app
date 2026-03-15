@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { AppNav } from "./_components/AppNav";
+import MentisFloatingChat from "./_components/MentisFloatingChat";
 
 export default async function AppLayout({
   children,
@@ -32,6 +33,8 @@ export default async function AppLayout({
           {children}
         </div>
       </main>
+
+      <MentisFloatingChat />
     </div>
   );
 }
