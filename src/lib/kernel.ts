@@ -162,6 +162,38 @@ export async function getInventoryPredictions(params: {
   return result?.predictions_result ?? null;
 }
 
+// --- COMMUNICATION DISPATCH (Phase 4) ---
+
+export type CommsDispatchPayload = {
+  event: string;
+  workspace_id: string;
+  client_id: string;
+  context: Record<string, unknown>;
+  template_id?: string;
+  body?: string;
+};
+
+export type CommsDispatchResult = {
+  notification_id?: string;
+  email_sent: boolean;
+  sms_sent: boolean;
+  personalized_body?: string;
+};
+
+export async function dispatchComms(
+  payload: CommsDispatchPayload
+): Promise<CommsDispatchResult | null> {
+  return kernelPost("/api/v1/comms/dispatch", payload, 15000);
+}
+
+export async function personalizeMessage(params: {
+  template: string;
+  client_name: string;
+  context: Record<string, unknown>;
+}): Promise<{ personalized: string } | null> {
+  return kernelPost("/api/v1/comms/personalize", params, 10000);
+}
+
 // --- AI CALLS (routed through kernel — Immutable Rule 2) ---
 
 export async function analyzeInspo(params: {
