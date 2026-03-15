@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { FileText } from "lucide-react";
 import type { ContentPost } from "@/lib/types";
 
 const categoryBadgeStyles: Record<string, { background: string; color: string }> = {
-  tip: { background: "var(--brass)", color: "var(--bark-deepest)" },
-  product_spotlight: { background: "var(--garnet)", color: "var(--stone-lightest)" },
-  seasonal: { background: "rgba(106,142,102,0.3)", color: "rgb(166,202,162)" },
+  tip: { background: "rgba(196,171,112,0.12)", color: "var(--brass-warm)" },
+  product_spotlight: { background: "rgba(68,6,6,0.1)", color: "var(--garnet-ruby)" },
+  seasonal: { background: "rgba(91,138,90,0.1)", color: "#5B8A5A" },
 };
 
 function categoryLabel(cat: string): string {
@@ -33,14 +34,32 @@ export function ContentFeed({ posts }: Props) {
   if (posts.length === 0) {
     return (
       <div className="text-center py-12">
+        <FileText
+          style={{
+            width: "32px",
+            height: "32px",
+            color: "var(--text-on-stone-ghost)",
+            margin: "0 auto 12px",
+          }}
+        />
         <p
           style={{
             fontSize: "15px",
             color: "var(--text-on-stone-faint)",
+            fontFamily: "'Fraunces', serif",
+            marginBottom: "4px",
+          }}
+        >
+          No content yet
+        </p>
+        <p
+          style={{
+            fontSize: "12px",
+            color: "var(--text-on-stone-ghost)",
             fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          No content from your stylist yet
+          Tips, product spotlights, and seasonal updates from your stylist will appear here.
         </p>
       </div>
     );

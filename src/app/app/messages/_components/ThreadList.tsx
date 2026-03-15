@@ -33,12 +33,12 @@ export function ThreadList({ threads }: { threads: ThreadWithClient[] }) {
             <Card className="cursor-pointer" style={{ marginBottom: "8px" }}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3" style={{ minWidth: 0, flex: 1 }}>
                     <div
-                      className="flex items-center justify-center font-medium"
+                      className="flex items-center justify-center font-medium flex-shrink-0"
                       style={{
-                        width: "30px",
-                        height: "30px",
+                        width: "36px",
+                        height: "36px",
                         borderRadius: "50%",
                         background: hasUnread
                           ? "rgba(196,171,112,0.15)"
@@ -46,7 +46,7 @@ export function ThreadList({ threads }: { threads: ThreadWithClient[] }) {
                         color: hasUnread
                           ? "var(--brass)"
                           : "var(--garnet-blush)",
-                        fontSize: "11px",
+                        fontSize: "12px",
                       }}
                     >
                       {thread.clientName
@@ -56,12 +56,15 @@ export function ThreadList({ threads }: { threads: ThreadWithClient[] }) {
                         .substring(0, 2)
                         .toUpperCase()}
                     </div>
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <p
                         style={{
                           fontSize: "11px",
                           fontWeight: hasUnread ? 600 : 500,
                           color: "var(--text-on-stone)",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
                         }}
                       >
                         {thread.clientName}
@@ -70,13 +73,16 @@ export function ThreadList({ threads }: { threads: ThreadWithClient[] }) {
                         style={{
                           fontSize: "9px",
                           color: "var(--text-on-stone-faint)",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
                         }}
                       >
                         {thread.subject || "Conversation"}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-shrink-0">
                     {hasUnread && (
                       <Badge variant="warning">
                         {thread.unreadStylist}
