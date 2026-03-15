@@ -1,5 +1,43 @@
 -- ============================================================
 -- MIGRATION: Phase 4 — Communication & Content Tables
+-- Run on: 2026-03-14
+-- ============================================================
+
+-- ============================================================
+-- PRE-REQUISITES
+-- ============================================================
+
+-- Rename client_users.user_id → auth_user_id (matches app code)
+ALTER TABLE client_users RENAME COLUMN user_id TO auth_user_id;
+
+-- client_notifications (dependency for delivery_log FK)
+CREATE TABLE IF NOT EXISTS client_notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID REFERENCES workspaces NOT NULL,
+  client_id UUID REFERENCES clients NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('inspo_reviewed','appointment_reminder','rebook_reminder','welcome','general')),
+  title TEXT NOT NULL,
+  body TEXT,
+  read_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE client_notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "client_read_own_notifications" ON client_notifications
+  FOR SELECT USING (client_id IN (SELECT client_id FROM client_users WHERE auth_user_id = auth.uid()));
+CREATE POLICY "client_update_own_notifications" ON client_notifications
+  FOR UPDATE USING (client_id IN (SELECT client_id FROM client_users WHERE auth_user_id = auth.uid()));
+CREATE POLICY "stylist_send_notifications" ON client_notifications
+  FOR INSERT WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+
+CREATE INDEX IF NOT EXISTS idx_client_notifications_client ON client_notifications(client_id, read_at);
+
+-- Drop conflicting pre-existing messages table (Supabase Realtime)
+DROP TABLE IF EXISTS messages CASCADE;
+
+-- ============================================================
+-- PHASE 4 TABLES
 -- ============================================================
 
 -- 1. message_threads
@@ -159,3 +197,36 @@ CREATE INDEX IF NOT EXISTS idx_delivery_log_workspace ON delivery_log(workspace_
 CREATE INDEX IF NOT EXISTS idx_delivery_log_notification ON delivery_log(notification_id);
 CREATE INDEX IF NOT EXISTS idx_delivery_log_message ON delivery_log(message_id);
 CREATE INDEX IF NOT EXISTS idx_delivery_log_sent ON delivery_log(workspace_id, sent_at DESC);
+
+-- ============================================================
+-- FIX PRE-EXISTING POLICIES (from 001_fresh_schema.sql)
+-- These referenced user_id, now auth_user_id after column rename
+-- ============================================================
+DROP POLICY IF EXISTS "client_user_select_own" ON intake_responses;
+DROP POLICY IF EXISTS "client_user_insert_own" ON intake_responses;
+DROP POLICY IF EXISTS "client_user_select_aftercare" ON aftercare_plans;
+DROP POLICY IF EXISTS "client_user_select_consents" ON consents;
+DROP POLICY IF EXISTS "client_user_insert_consents" ON consents;
+DROP POLICY IF EXISTS "client_user_select_rebook" ON rebook_requests;
+DROP POLICY IF EXISTS "client_user_insert_rebook" ON rebook_requests;
+DROP POLICY IF EXISTS "client_read_own_user_record" ON client_users;
+
+CREATE POLICY "client_user_select_own" ON intake_responses
+  FOR SELECT USING (client_id IN (SELECT client_id FROM client_users WHERE auth_user_id = auth.uid()));
+CREATE POLICY "client_user_insert_own" ON intake_responses
+  FOR INSERT WITH CHECK (client_id IN (SELECT client_id FROM client_users WHERE auth_user_id = auth.uid()));
+CREATE POLICY "client_user_select_aftercare" ON aftercare_plans
+  FOR SELECT USING (client_id IN (SELECT client_id FROM client_users WHERE auth_user_id = auth.uid()));
+CREATE POLICY "client_user_select_consents" ON consents
+  FOR SELECT USING (client_id IN (SELECT client_id FROM client_users WHERE auth_user_id = auth.uid()));
+CREATE POLICY "client_user_insert_consents" ON consents
+  FOR INSERT WITH CHECK (client_id IN (SELECT client_id FROM client_users WHERE auth_user_id = auth.uid()));
+CREATE POLICY "client_user_select_rebook" ON rebook_requests
+  FOR SELECT USING (client_id IN (SELECT client_id FROM client_users WHERE auth_user_id = auth.uid()));
+CREATE POLICY "client_user_insert_rebook" ON rebook_requests
+  FOR INSERT WITH CHECK (client_id IN (SELECT client_id FROM client_users WHERE auth_user_id = auth.uid()));
+CREATE POLICY "client_read_own_user_record" ON client_users
+  FOR SELECT USING (auth_user_id = auth.uid());
+
+DROP INDEX IF EXISTS idx_client_users_user_id;
+CREATE INDEX IF NOT EXISTS idx_client_users_auth_user_id ON client_users(auth_user_id);
