@@ -1035,3 +1035,48 @@ export function contentPostRowToModel(row: ContentPostRow): ContentPost {
     updatedAt: row.updated_at,
   }
 }
+
+// ============================================================
+// Mentis AI Copilot
+// ============================================================
+
+export type MentisMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  context?: MentisContext;
+};
+
+export type MentisContext = {
+  page?: string;
+  clientId?: string;
+  clientName?: string;
+  productId?: string;
+  productName?: string;
+  formulaId?: string;
+};
+
+export type MentisChatRequest = {
+  message: string;
+  conversationHistory: { role: "user" | "assistant"; content: string }[];
+  context?: MentisContext;
+};
+
+export type MentisChatResponse = {
+  reply: string;
+  suggestedFollowUps?: string[];
+};
+
+export type MentisSuggestion = {
+  id: string;
+  priority: "proactive" | "quiet";
+  title: string;
+  body: string;
+  actionLabel?: string;
+  actionUrl?: string;
+};
+
+export type MentisSuggestionsResult = {
+  suggestions: MentisSuggestion[];
+};
