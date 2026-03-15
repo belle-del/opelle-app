@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import type { ContentPost } from "@/lib/types";
 
 type AppointmentRow = {
   id: string;
@@ -27,6 +28,7 @@ type Props = {
   lastVisit: AppointmentRow | null;
   unreadNotifications: NotificationRow[];
   hasSharedFormula: boolean;
+  recentContent: ContentPost[];
 };
 
 function formatDate(dateStr: string): string {
@@ -45,6 +47,21 @@ function formatShortDate(dateStr: string): string {
   return d.toLocaleDateString("en-US", { month: "long", day: "numeric" });
 }
 
+const categoryBadgeStyles: Record<string, { background: string; color: string }> = {
+  tip: { background: "var(--brass)", color: "var(--bark-deepest)" },
+  product_spotlight: { background: "var(--garnet)", color: "var(--stone-lightest)" },
+  seasonal: { background: "rgba(106,142,102,0.3)", color: "rgb(166,202,162)" },
+};
+
+function categoryLabel(cat: string): string {
+  switch (cat) {
+    case "tip": return "Tip";
+    case "product_spotlight": return "Product Spotlight";
+    case "seasonal": return "Seasonal";
+    default: return cat;
+  }
+}
+
 export function HomeDashboard({
   clientFirstName,
   stylistName,
@@ -52,6 +69,7 @@ export function HomeDashboard({
   lastVisit,
   unreadNotifications,
   hasSharedFormula,
+  recentContent,
 }: Props) {
   return (
     <div className="space-y-5">
@@ -170,6 +188,59 @@ export function HomeDashboard({
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* From Your Stylist — Content Feed */}
+      {recentContent.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2
+              className="text-lg"
+              style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+            >
+              From Your Stylist
+            </h2>
+            <Link
+              href="/client/content"
+              style={{ fontSize: "13px", color: "var(--brass)", textDecoration: "none", fontFamily: "'DM Sans', sans-serif" }}
+            >
+              See all
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {recentContent.map((post) => {
+              const badgeStyle = categoryBadgeStyles[post.category] || categoryBadgeStyles.tip;
+              return (
+                <Link key={post.id} href={`/client/content/${post.id}`} style={{ textDecoration: "none" }}>
+                  <Card style={{ background: "var(--stone-card)" }}>
+                    <CardContent className="py-3">
+                      <div className="flex items-start justify-between mb-1.5">
+                        <Badge
+                          variant="default"
+                          style={{ ...badgeStyle, fontSize: "10px" }}
+                        >
+                          {categoryLabel(post.category)}
+                        </Badge>
+                        <span style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>
+                          {post.publishedAt ? formatShortDate(post.publishedAt) : ""}
+                        </span>
+                      </div>
+                      <h3
+                        className="text-sm mb-1"
+                        style={{ fontFamily: "'Fraunces', serif", color: "var(--text-on-stone)" }}
+                      >
+                        {post.title}
+                      </h3>
+                      <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", lineHeight: "1.4" }}>
+                        {post.body.length > 80 ? post.body.slice(0, 80) + "..." : post.body}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       )}
     </div>
   );

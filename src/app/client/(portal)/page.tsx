@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getClientContext } from "@/lib/client-auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPublishedContent } from "@/lib/db/content";
 import { HomeDashboard } from "./_components/HomeDashboard";
 
 export default async function ClientHomePage() {
@@ -53,6 +54,10 @@ export default async function ClientHomePage() {
     hasSharedFormula = !!formulaEntry;
   }
 
+  // Recent content posts (limit 3)
+  const allContent = await getPublishedContent(ctx.clientUser.workspaceId);
+  const recentContent = allContent.slice(0, 3);
+
   return (
     <HomeDashboard
       clientFirstName={ctx.client.firstName}
@@ -61,6 +66,7 @@ export default async function ClientHomePage() {
       lastVisit={lastVisit}
       unreadNotifications={unreadNotifications || []}
       hasSharedFormula={hasSharedFormula}
+      recentContent={recentContent}
     />
   );
 }
