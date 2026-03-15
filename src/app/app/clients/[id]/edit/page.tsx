@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import type { Client } from "@/lib/types";
 import { useAutoFormat } from "@/lib/use-auto-format";
+import { CommsPrefsSection } from "../_components/CommsPrefsSection";
 
 interface EditClientPageProps {
   params: Promise<{ id: string }>;
@@ -231,6 +232,9 @@ export default function EditClientPage({ params }: EditClientPageProps) {
           </div>
         </CardFooter>
       </Card>
+
+      {/* Communication Preferences */}
+      <CommsPrefsSection clientId={id} />
     </div>
   );
 }
