@@ -694,6 +694,91 @@ export type WorkspaceMember = {
   createdAt: string
 }
 
+// ── Two-Way Messaging ────────────────────────────────────────
+
+export type MessageThread = {
+  id: string
+  workspaceId: string
+  clientId: string
+  subject?: string
+  lastMessageAt: string
+  unreadStylist: number
+  unreadClient: number
+  createdAt: string
+}
+
+export type Message = {
+  id: string
+  workspaceId: string
+  threadId: string
+  senderType: 'stylist' | 'client'
+  senderId: string
+  body: string
+  createdAt: string
+}
+
+// ── Communication Preferences ────────────────────────────────
+
+export type CommunicationPreferences = {
+  id: string
+  workspaceId: string
+  clientId: string
+  emailEnabled: boolean
+  smsEnabled: boolean
+  rebookReminderWeeks: number
+  quietHoursStart?: string
+  quietHoursEnd?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// ── Message Templates ────────────────────────────────────────
+
+export type TemplateCategory = 'rebook' | 'thank_you' | 'welcome' | 'follow_up' | 'custom'
+
+export type MessageTemplate = {
+  id: string
+  workspaceId: string
+  name: string
+  category: TemplateCategory
+  bodyTemplate: string
+  isSystem: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+// ── Content Posts ────────────────────────────────────────────
+
+export type ContentCategory = 'tip' | 'product_spotlight' | 'seasonal'
+
+export type ContentPost = {
+  id: string
+  workspaceId: string
+  title: string
+  body: string
+  category: ContentCategory
+  publishedAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// ── Delivery Log ─────────────────────────────────────────────
+
+export type DeliveryChannel = 'in_app' | 'email' | 'sms'
+export type DeliveryStatus = 'sent' | 'failed' | 'delivered'
+
+export type DeliveryLogEntry = {
+  id: string
+  workspaceId: string
+  notificationId?: string
+  messageId?: string
+  channel: DeliveryChannel
+  status: DeliveryStatus
+  externalId?: string
+  error?: string
+  sentAt: string
+}
+
 // ── Row Types for New Tables ───────────────────────────────
 
 export type InspoSubmissionRow = {
@@ -761,6 +846,74 @@ export type ClientUserRow = {
   created_at: string
 }
 
+export type MessageThreadRow = {
+  id: string
+  workspace_id: string
+  client_id: string
+  subject: string | null
+  last_message_at: string
+  unread_stylist: number
+  unread_client: number
+  created_at: string
+}
+
+export type MessageRow = {
+  id: string
+  workspace_id: string
+  thread_id: string
+  sender_type: string
+  sender_id: string
+  body: string
+  created_at: string
+}
+
+export type CommunicationPreferencesRow = {
+  id: string
+  workspace_id: string
+  client_id: string
+  email_enabled: boolean
+  sms_enabled: boolean
+  rebook_reminder_weeks: number
+  quiet_hours_start: string | null
+  quiet_hours_end: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type MessageTemplateRow = {
+  id: string
+  workspace_id: string
+  name: string
+  category: string
+  body_template: string
+  is_system: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type ContentPostRow = {
+  id: string
+  workspace_id: string
+  title: string
+  body: string
+  category: string
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type DeliveryLogRow = {
+  id: string
+  workspace_id: string
+  notification_id: string | null
+  message_id: string | null
+  channel: string
+  status: string
+  external_id: string | null
+  error: string | null
+  sent_at: string
+}
+
 // ── Conversion Helpers for New Tables ──────────────────────
 
 export function clientNotificationRowToModel(row: ClientNotificationRow): ClientNotification {
@@ -815,4 +968,70 @@ export function workspaceMemberRowToModel(row: WorkspaceMemberRow): WorkspaceMem
     displayName: row.display_name ?? undefined,
     createdAt: row.created_at,
   };
+}
+
+export function messageThreadRowToModel(row: MessageThreadRow): MessageThread {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    clientId: row.client_id,
+    subject: row.subject ?? undefined,
+    lastMessageAt: row.last_message_at,
+    unreadStylist: row.unread_stylist,
+    unreadClient: row.unread_client,
+    createdAt: row.created_at,
+  }
+}
+
+export function messageRowToModel(row: MessageRow): Message {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    threadId: row.thread_id,
+    senderType: row.sender_type as Message['senderType'],
+    senderId: row.sender_id,
+    body: row.body,
+    createdAt: row.created_at,
+  }
+}
+
+export function communicationPreferencesRowToModel(row: CommunicationPreferencesRow): CommunicationPreferences {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    clientId: row.client_id,
+    emailEnabled: row.email_enabled,
+    smsEnabled: row.sms_enabled,
+    rebookReminderWeeks: row.rebook_reminder_weeks,
+    quietHoursStart: row.quiet_hours_start ?? undefined,
+    quietHoursEnd: row.quiet_hours_end ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export function messageTemplateRowToModel(row: MessageTemplateRow): MessageTemplate {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    name: row.name,
+    category: row.category as TemplateCategory,
+    bodyTemplate: row.body_template,
+    isSystem: row.is_system,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export function contentPostRowToModel(row: ContentPostRow): ContentPost {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    title: row.title,
+    body: row.body,
+    category: row.category as ContentCategory,
+    publishedAt: row.published_at ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
 }
