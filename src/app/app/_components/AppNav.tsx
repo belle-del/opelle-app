@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -61,6 +61,30 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread message count
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const res = await fetch("/api/messages/threads");
+      if (!res.ok) return;
+      const data = await res.json();
+      const threads = data.threads || [];
+      const total = threads.reduce(
+        (sum: number, t: { unreadStylist?: number }) => sum + (t.unreadStylist || 0),
+        0
+      );
+      setUnreadCount(total);
+    } catch {
+      // silently ignore fetch errors
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchUnreadCount]);
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -172,14 +196,39 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
                       borderLeft: isActive ? "2px solid #8FADC8" : "2px solid transparent",
                     }}
                   >
-                    <Icon
-                      style={{
-                        width: "16px",
-                        height: "16px",
-                        opacity: isActive ? 0.85 : 0.55,
-                        flexShrink: 0,
-                      }}
-                    />
+                    <span style={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>
+                      <Icon
+                        style={{
+                          width: "16px",
+                          height: "16px",
+                          opacity: isActive ? 0.85 : 0.55,
+                          flexShrink: 0,
+                        }}
+                      />
+                      {item.label === "Messages" && unreadCount > 0 && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: "-6px",
+                            right: "-8px",
+                            background: "#C4AB70",
+                            color: "#fff",
+                            fontSize: "10px",
+                            fontWeight: 600,
+                            minWidth: "16px",
+                            height: "16px",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            lineHeight: 1,
+                            padding: "0 3px",
+                          }}
+                        >
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
+                    </span>
                     {item.label}
                   </Link>
                 );
