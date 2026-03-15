@@ -50,6 +50,29 @@ export function ThreadView({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Poll for new messages every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      // Pause polling when tab is hidden or a message is being sent
+      if (document.hidden || sending) return;
+
+      try {
+        const res = await fetch(`/api/messages/threads/${thread.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          const fetched: Message[] = data.messages ?? data;
+          setMessages((prev) =>
+            fetched.length !== prev.length ? fetched : prev
+          );
+        }
+      } catch {
+        // Silently ignore polling errors
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [thread.id, sending]);
+
   const handleSend = async () => {
     const trimmed = body.trim();
     if (!trimmed || sending) return;
