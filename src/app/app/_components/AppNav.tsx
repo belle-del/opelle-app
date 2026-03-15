@@ -16,6 +16,8 @@ import {
   Settings,
   LogOut,
   History,
+  MessageCircle,
+  FileText,
   Menu,
   X,
 } from "lucide-react";
@@ -35,6 +37,8 @@ const NAV_SECTIONS = [
     items: [
       { href: "/app/formulas", label: "Formulas", icon: FlaskConical },
       { href: "/app/products", label: "Products", icon: Package },
+      { href: "/app/messages", label: "Messages", icon: MessageCircle },
+      { href: "/app/content", label: "Content", icon: FileText },
       { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
       { href: "/app/history", label: "History", icon: History },
     ],
