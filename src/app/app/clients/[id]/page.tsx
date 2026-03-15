@@ -7,6 +7,7 @@ import { getClient } from "@/lib/db/clients";
 import { getAppointmentsForClient } from "@/lib/db/appointments";
 import { getFormulaEntriesForClient } from "@/lib/db/formula-entries";
 import { listServiceTypes } from "@/lib/db/service-types";
+import { getThreadsForClient, getMessagesForThread } from "@/lib/db/messaging";
 import { getClientProfile, getRebookMessage } from "@/lib/kernel";
 import { computeRebookIntelligence } from "@/lib/rebook";
 import { FormulaHistory } from "./_components/FormulaHistory";
@@ -22,16 +23,25 @@ interface ClientDetailPageProps {
 export default async function ClientDetailPage({ params }: ClientDetailPageProps) {
   const { id } = await params;
   // Phase 1: DB queries (parallel)
-  const [client, appointments, formulaEntries, serviceTypes] = await Promise.all([
+  const [client, appointments, formulaEntries, serviceTypes, threads] = await Promise.all([
     getClient(id),
     getAppointmentsForClient(id),
     getFormulaEntriesForClient(id),
     listServiceTypes(),
+    getThreadsForClient(id),
   ]);
 
   if (!client) {
     notFound();
   }
+
+  // Phase 1b: Fetch messages for each thread (parallel)
+  const threadsWithMessages = await Promise.all(
+    threads.map(async (thread) => ({
+      thread,
+      messages: await getMessagesForThread(thread.id),
+    }))
+  );
 
   // Phase 2: Intelligence (depends on Phase 1 data)
   const rebookStats = computeRebookIntelligence(appointments);
@@ -303,6 +313,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           <ClientDetailTabs
             clientId={client.id}
             clientName={getClientDisplayName(client)}
+            threads={threadsWithMessages}
           >
             <FormulaHistory
               clientId={client.id}

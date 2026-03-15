@@ -2,11 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { InspoTab } from "./InspoTab";
+import { ClientMessagesTab } from "./ClientMessagesTab";
+import type { MessageThread, Message } from "@/lib/types";
+
+type ThreadWithMessages = {
+  thread: MessageThread;
+  messages: Message[];
+};
 
 type Props = {
   clientId: string;
   clientName: string;
   children: React.ReactNode; // The existing content (formulas, etc.)
+  threads?: ThreadWithMessages[];
 };
 
 type InspoSubmission = {
@@ -30,8 +38,8 @@ type InspoSubmission = {
   consultAnswers?: Record<string, unknown> | null;
 };
 
-export function ClientDetailTabs({ clientId, clientName, children }: Props) {
-  const [activeTab, setActiveTab] = useState<"formulas" | "inspo">("formulas");
+export function ClientDetailTabs({ clientId, clientName, children, threads = [] }: Props) {
+  const [activeTab, setActiveTab] = useState<"formulas" | "inspo" | "messages">("formulas");
   const [inspoSubmissions, setInspoSubmissions] = useState<InspoSubmission[]>([]);
   const [inspoLoaded, setInspoLoaded] = useState(false);
   const [unreviewedCount, setUnreviewedCount] = useState(0);
@@ -52,12 +60,23 @@ export function ClientDetailTabs({ clientId, clientName, children }: Props) {
       .finally(() => setInspoLoaded(true));
   }, [clientId]);
 
+  // Count unread messages from clients
+  const unreadMessages = threads.reduce(
+    (sum, t) => sum + (t.thread.unreadStylist ?? 0),
+    0
+  );
+
   const tabs = [
     { id: "formulas" as const, label: "Formulas" },
     {
       id: "inspo" as const,
       label: "Inspo",
       badge: unreviewedCount > 0 ? unreviewedCount : undefined,
+    },
+    {
+      id: "messages" as const,
+      label: "Messages",
+      badge: unreadMessages > 0 ? unreadMessages : undefined,
     },
   ];
 
@@ -113,6 +132,13 @@ export function ClientDetailTabs({ clientId, clientName, children }: Props) {
             <p className="text-sm text-muted-foreground">Loading inspo...</p>
           </div>
         )
+      )}
+
+      {activeTab === "messages" && (
+        <ClientMessagesTab
+          threads={threads}
+          clientId={clientId}
+        />
       )}
     </div>
   );
