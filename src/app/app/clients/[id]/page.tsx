@@ -15,6 +15,7 @@ import { ClientDetailTabs } from "./_components/ClientDetailTabs";
 import { getClientDisplayName } from "@/lib/types";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { ArrowLeft, Edit, Calendar, Plus, Sparkles } from "lucide-react";
+import { MentisSuggestions } from "../../_components/MentisSuggestions";
 
 interface ClientDetailPageProps {
   params: Promise<{ id: string }>;
@@ -116,6 +117,18 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           </Link>
         </div>
       </header>
+
+      {/* Mentis Suggestions */}
+      <MentisSuggestions
+        page="client-detail"
+        entityType="client"
+        entityData={{
+          clientName: getClientDisplayName(client),
+          clientId: client.id,
+          tags: client.tags,
+          notes: client.notes,
+        }}
+      />
 
       {/* Info Cards */}
       <div className="grid gap-6 lg:grid-cols-3">

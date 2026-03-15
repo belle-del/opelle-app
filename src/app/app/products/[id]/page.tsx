@@ -8,6 +8,7 @@ import { getProductEnrichment } from "@/lib/kernel";
 import { formatDate } from "@/lib/utils";
 import { ArrowLeft, Edit, Package, Barcode, DollarSign, Sparkles } from "lucide-react";
 import { ProductActions } from "./_components/ProductActions";
+import { MentisSuggestions } from "../../_components/MentisSuggestions";
 import { InventoryPredictionCard } from "./_components/InventoryPredictionCard";
 
 interface ProductDetailPageProps {
@@ -85,6 +86,18 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           </div>
         </div>
       </header>
+
+      {/* Mentis Suggestions */}
+      <MentisSuggestions
+        page="product-detail"
+        entityType="product"
+        entityData={{
+          productName: `${product.brand} ${product.shade}`,
+          brand: product.brand,
+          category: product.category,
+          quantity: product.quantity,
+        }}
+      />
 
       {/* Info Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
