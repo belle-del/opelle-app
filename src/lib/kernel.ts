@@ -2,7 +2,7 @@
 // All communication with MetisOS Opelle Kernel goes through this file.
 // If the Kernel is unavailable, all functions return null — never throw.
 
-import type { ClientPreferenceProfile, ProductEnrichment, InspoAnalysis, ParsedFormula, InventoryPredictionsResult } from "@/lib/types";
+import type { ClientPreferenceProfile, ProductEnrichment, InspoAnalysis, ParsedFormula, InventoryPredictionsResult, MentisChatResponse, MentisSuggestionsResult } from "@/lib/types";
 
 const KERNEL_URL =
   process.env.KERNEL_API_URL || "https://opelle.dominusfoundry.com";
@@ -223,6 +223,47 @@ export async function parseFormula(
   return kernelPost("/api/v1/ai/parse-formula", {
     raw_notes: rawNotes,
   }, 30000); // 30s timeout for AI parsing
+}
+
+// --- MENTIS AI COPILOT ---
+
+export async function mentisChat(params: {
+  message: string;
+  conversationHistory: { role: "user" | "assistant"; content: string }[];
+  context?: {
+    page?: string;
+    clientId?: string;
+    clientName?: string;
+    productId?: string;
+    productName?: string;
+    formulaId?: string;
+  };
+  workspaceContext?: {
+    totalClients?: number;
+    totalProducts?: number;
+    recentAppointments?: { serviceName: string; clientName: string; date: string }[];
+  };
+}): Promise<MentisChatResponse | null> {
+  const result = await kernelPost("/api/v1/ai/chat", {
+    message: params.message,
+    conversation_history: params.conversationHistory,
+    context: params.context,
+    workspace_context: params.workspaceContext,
+  }, 30000);
+  return result ?? null;
+}
+
+export async function mentisSuggestions(params: {
+  page: string;
+  entityType?: "client" | "product" | "formula" | "dashboard";
+  entityData?: Record<string, unknown>;
+}): Promise<MentisSuggestionsResult | null> {
+  const result = await kernelPost("/api/v1/ai/suggestions", {
+    page: params.page,
+    entity_type: params.entityType,
+    entity_data: params.entityData,
+  }, 10000);
+  return result ?? null;
 }
 
 // --- INTERNAL HELPERS ---
