@@ -54,24 +54,12 @@ export async function POST(req: NextRequest) {
 
   const messageLower = message.toLowerCase();
 
-  // Prioritize full name matches over partial (first/last only) matches
+  // Only match when full name (first + last) appears in the message
   const clients = allClients || [];
-  const matchedClient =
-    // 1. Full name match (most specific)
-    clients.find((c: Record<string, unknown>) => {
-      const full = `${((c.first_name as string) || "").toLowerCase()} ${((c.last_name as string) || "").toLowerCase()}`.trim();
-      return full.length > 4 && messageLower.includes(full);
-    }) ||
-    // 2. First name match (requires 3+ chars)
-    clients.find((c: Record<string, unknown>) => {
-      const first = ((c.first_name as string) || "").toLowerCase();
-      return first.length > 2 && messageLower.includes(first);
-    }) ||
-    // 3. Last name match (requires 3+ chars, least specific)
-    clients.find((c: Record<string, unknown>) => {
-      const last = ((c.last_name as string) || "").toLowerCase();
-      return last.length > 2 && messageLower.includes(last);
-    });
+  const matchedClient = clients.find((c: Record<string, unknown>) => {
+    const full = `${((c.first_name as string) || "").toLowerCase()} ${((c.last_name as string) || "").toLowerCase()}`.trim();
+    return full.length > 4 && messageLower.includes(full);
+  });
 
   let clientContext: Record<string, unknown> | null = null;
   if (matchedClient) {
