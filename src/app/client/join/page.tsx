@@ -60,7 +60,7 @@ export default function JoinPage() {
     setLoading(true);
 
     try {
-      // Store join data in cookie for the callback to pick up
+      // Also set cookie as backup (works if magic link opens in same browser)
       document.cookie = `opelle_join_data=${encodeURIComponent(
         JSON.stringify({
           workspaceId: codeResult!.workspaceId,
@@ -73,6 +73,7 @@ export default function JoinPage() {
       )}; path=/; max-age=3600; SameSite=Lax`;
 
       // Sign up with Supabase magic link
+      // Join data is stored in user_metadata so it survives cross-browser magic link clicks
       const { createBrowserClient } = await import("@supabase/ssr");
       const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -86,6 +87,10 @@ export default function JoinPage() {
           data: {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
+            join_workspace_id: codeResult!.workspaceId,
+            join_stylist_id: codeResult!.stylistId || null,
+            join_invite_id: codeResult!.inviteId || null,
+            join_existing_client_id: codeResult!.clientId || null,
           },
         },
       });
