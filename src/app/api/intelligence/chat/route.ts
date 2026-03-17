@@ -149,13 +149,16 @@ export async function POST(req: NextRequest) {
     ...(productContext ? { productInventory: productContext } : {}),
   };
 
-  // Temporary debug: if message starts with "DEBUG:", return raw context
+  // Temporary debug: if message starts with "DEBUG:", return raw context as reply
   if (message.startsWith("DEBUG:")) {
-    return NextResponse.json({
-      _debug: true,
+    const debugData = {
       matchedClientName: (matchedClient as Record<string, unknown>)?.first_name ?? "NO MATCH",
+      formulaCount: (clientContext?.formulaHistory as unknown[])?.length ?? 0,
+      appointmentCount: (clientContext?.appointmentHistory as unknown[])?.length ?? 0,
       clientContext,
-      workspaceContext: fullWorkspaceContext,
+    };
+    return NextResponse.json({
+      reply: "```json\n" + JSON.stringify(debugData, null, 2) + "\n```",
     });
   }
 
