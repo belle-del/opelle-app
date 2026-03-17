@@ -41,6 +41,8 @@ export async function POST(req: NextRequest) {
     })),
   };
 
+  console.log("[Mentis] KERNEL_ENABLED:", process.env.KERNEL_ENABLED, "KERNEL_AUTH_KEY set:", !!process.env.KERNEL_AUTH_KEY, "KERNEL_API_URL:", process.env.KERNEL_API_URL);
+
   const result = await mentisChat({
     message,
     conversationHistory,
