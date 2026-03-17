@@ -294,14 +294,22 @@ function StatWidget({ value, label, change, changePositive, link }: {
 
 // ── Main Component ─────────────────────────────────────────────────────
 export function WidgetDashboard({ appointments, formulas, tasks, products, clients, inspoFlags = [] }: WidgetDashboardProps) {
-  const [widgets, setWidgets] = useState<Widget[]>(loadWidgets);
+  const [widgets, setWidgets] = useState<Widget[]>(DEFAULT_WIDGETS);
   const [editMode, setEditMode] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
-  // Persist widget layout on every change
+  // Load saved layout from localStorage on mount (client-side only)
   useEffect(() => {
-    saveWidgets(widgets);
-  }, [widgets]);
+    const saved = loadWidgets();
+    setWidgets(saved);
+    setHydrated(true);
+  }, []);
+
+  // Persist widget layout on every change — but only after hydration
+  useEffect(() => {
+    if (hydrated) saveWidgets(widgets);
+  }, [widgets, hydrated]);
 
   const now = new Date();
   const today = new Date(); today.setHours(0, 0, 0, 0);
