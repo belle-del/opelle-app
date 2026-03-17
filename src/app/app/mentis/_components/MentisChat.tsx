@@ -277,6 +277,7 @@ export default function MentisChat({
   const [activeConvId, setActiveConvId] = useState<string | null>(externalConversationId ?? null);
   const [loadingConversation, setLoadingConversation] = useState(false);
   const hasAutoTitled = useRef(false);
+  const justCreatedConvId = useRef<string | null>(null); // Track self-created conversations
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -286,6 +287,14 @@ export default function MentisChat({
     const newId = externalConversationId ?? null;
     setActiveConvId(newId);
     hasAutoTitled.current = false;
+
+    // Skip reloading if we just created this conversation ourselves
+    // (messages are already in React state and may not be persisted yet)
+    if (newId && newId === justCreatedConvId.current) {
+      justCreatedConvId.current = null;
+      hasAutoTitled.current = true;
+      return;
+    }
 
     if (newId) {
       setLoadingConversation(true);
@@ -358,6 +367,7 @@ export default function MentisChat({
         const initialTitle = trimmed.length > 60 ? trimmed.slice(0, 60) + "..." : trimmed;
         convId = await createConversation(initialTitle);
         if (convId) {
+          justCreatedConvId.current = convId; // Prevent useEffect from wiping messages
           setActiveConvId(convId);
           hasAutoTitled.current = true; // Already titled from creation
           onConversationCreated?.(convId);
