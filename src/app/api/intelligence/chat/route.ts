@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { mentisChat } from "@/lib/kernel";
+import { logActivity } from "@/lib/db/activity-log";
 
 export async function POST(req: NextRequest) {
   // Auth check with user-scoped client
@@ -158,6 +159,10 @@ const result = await mentisChat({
   if (!result) {
     return NextResponse.json({ error: "Mentis unavailable" }, { status: 503 });
   }
+
+  // Log Mentis chat to activity history
+  const preview = message.length > 50 ? message.slice(0, 50) + "..." : message;
+  await logActivity("mentis.chat", "mentis", "mentis-chat", preview);
 
   return NextResponse.json(result);
 }

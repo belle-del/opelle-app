@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  FlaskConical, Users, Package, Calendar, CheckSquare, History, Loader2
+  FlaskConical, Users, Package, Calendar, CheckSquare, History, Loader2, Sparkles
 } from "lucide-react";
 
 type ActivityLogEntry = {
@@ -23,6 +23,7 @@ const ENTITY_FILTERS = [
   { label: "Products", value: "product" },
   { label: "Appointments", value: "appointment" },
   { label: "Tasks", value: "task" },
+  { label: "Mentis", value: "mentis" },
 ];
 
 const ENTITY_ICONS: Record<string, React.ReactNode> = {
@@ -31,6 +32,7 @@ const ENTITY_ICONS: Record<string, React.ReactNode> = {
   product: <Package style={{ width: "14px", height: "14px" }} />,
   appointment: <Calendar style={{ width: "14px", height: "14px" }} />,
   task: <CheckSquare style={{ width: "14px", height: "14px" }} />,
+  mentis: <Sparkles style={{ width: "14px", height: "14px" }} />,
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -47,6 +49,7 @@ const ACTION_LABELS: Record<string, string> = {
   "task.created": "Task created",
   "task.updated": "Task updated",
   "task.deleted": "Task deleted",
+  "mentis.chat": "Mentis conversation",
 };
 
 function relativeTime(iso: string): string {

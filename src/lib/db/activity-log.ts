@@ -6,9 +6,10 @@ export type ActivityAction =
   | "client.created" | "client.updated" | "client.deleted"
   | "product.created" | "product.updated" | "product.deleted"
   | "appointment.created" | "appointment.updated" | "appointment.deleted"
-  | "task.created" | "task.updated" | "task.deleted";
+  | "task.created" | "task.updated" | "task.deleted"
+  | "mentis.chat";
 
-export type EntityType = "formula" | "client" | "product" | "appointment" | "task";
+export type EntityType = "formula" | "client" | "product" | "appointment" | "task" | "mentis";
 
 export async function logActivity(
   action: ActivityAction,
