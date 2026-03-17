@@ -354,9 +354,12 @@ export default function MentisChat({
       // Ensure we have a conversation for persistence (full-page only)
       let convId = activeConvId;
       if (fullPage && !convId) {
-        convId = await createConversation();
+        // Create conversation with user's first message as the title
+        const initialTitle = trimmed.length > 60 ? trimmed.slice(0, 60) + "..." : trimmed;
+        convId = await createConversation(initialTitle);
         if (convId) {
           setActiveConvId(convId);
+          hasAutoTitled.current = true; // Already titled from creation
           onConversationCreated?.(convId);
         }
       }
