@@ -36,7 +36,7 @@ const GARNET = "#6B2737";
 const TEXT_PRIMARY = "#3A3A32";
 const TEXT_FAINT = "#8A8A7A";
 
-const STARTER_PROMPTS = [
+const FALLBACK_STARTERS = [
   "Who's due for a rebook this week?",
   "What products are running low?",
   "Suggest a formula for warm copper tones",
@@ -206,9 +206,25 @@ export default function MentisChat({ fullPage = false, context }: MentisChatProp
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [suggestedFollowUps, setSuggestedFollowUps] = useState<string[]>([]);
+  const [starters, setStarters] = useState<string[]>([]);
+  const [startersLoading, setStartersLoading] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /* Fetch dynamic starter prompts */
+  useEffect(() => {
+    fetch("/api/intelligence/starters")
+      .then(r => r.json())
+      .then(data => {
+        if (data.starters?.length > 0) setStarters(data.starters);
+        else setStarters(FALLBACK_STARTERS);
+      })
+      .catch(() => {
+        setStarters(FALLBACK_STARTERS);
+      })
+      .finally(() => setStartersLoading(false));
+  }, []);
 
   /* Auto-scroll */
   useEffect(() => {
@@ -328,6 +344,12 @@ export default function MentisChat({ fullPage = false, context }: MentisChatProp
 
   return (
     <div style={containerStyle}>
+      <style>{`
+        @keyframes mentisShimmer {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.6; }
+        }
+      `}</style>
       {/* Header — full page only */}
       {fullPage && (
         <div
@@ -407,34 +429,50 @@ export default function MentisChat({ fullPage = false, context }: MentisChatProp
                 maxWidth: "420px",
               }}
             >
-              {STARTER_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => sendMessage(prompt)}
-                  style={{
-                    background: CREAM,
-                    border: `1px solid ${STONE}`,
-                    borderRadius: "10px",
-                    padding: "12px 14px",
-                    fontSize: "11px",
-                    lineHeight: 1.5,
-                    color: TEXT_PRIMARY,
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "border-color 0.15s, box-shadow 0.15s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = BRASS;
-                    e.currentTarget.style.boxShadow = `0 0 0 1px ${BRASS}40`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = STONE;
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                >
-                  {prompt}
-                </button>
-              ))}
+              {startersLoading
+                ? [0, 1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: STONE,
+                        border: `1px solid ${STONE}`,
+                        borderRadius: "10px",
+                        padding: "12px 14px",
+                        height: "56px",
+                        opacity: 0.5,
+                        animation: "mentisShimmer 1.5s ease-in-out infinite",
+                        animationDelay: `${i * 0.15}s`,
+                      }}
+                    />
+                  ))
+                : starters.map((prompt) => (
+                    <button
+                      key={prompt}
+                      onClick={() => sendMessage(prompt)}
+                      style={{
+                        background: CREAM,
+                        border: `1px solid ${STONE}`,
+                        borderRadius: "10px",
+                        padding: "12px 14px",
+                        fontSize: "11px",
+                        lineHeight: 1.5,
+                        color: TEXT_PRIMARY,
+                        cursor: "pointer",
+                        textAlign: "left",
+                        transition: "border-color 0.15s, box-shadow 0.15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = BRASS;
+                        e.currentTarget.style.boxShadow = `0 0 0 1px ${BRASS}40`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = STONE;
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    >
+                      {prompt}
+                    </button>
+                  ))}
             </div>
           </div>
         )}
