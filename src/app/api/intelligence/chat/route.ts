@@ -53,14 +53,25 @@ export async function POST(req: NextRequest) {
     .eq("workspace_id", workspace.id);
 
   const messageLower = message.toLowerCase();
-  const matchedClient = (allClients || []).find((c: Record<string, unknown>) => {
-    const first = ((c.first_name as string) || "").toLowerCase();
-    const last = ((c.last_name as string) || "").toLowerCase();
-    const full = `${first} ${last}`.trim();
-    return (first.length > 2 && messageLower.includes(first)) ||
-           (last.length > 2 && messageLower.includes(last)) ||
-           (full.length > 4 && messageLower.includes(full));
-  });
+
+  // Prioritize full name matches over partial (first/last only) matches
+  const clients = allClients || [];
+  const matchedClient =
+    // 1. Full name match (most specific)
+    clients.find((c: Record<string, unknown>) => {
+      const full = `${((c.first_name as string) || "").toLowerCase()} ${((c.last_name as string) || "").toLowerCase()}`.trim();
+      return full.length > 4 && messageLower.includes(full);
+    }) ||
+    // 2. First name match (requires 3+ chars)
+    clients.find((c: Record<string, unknown>) => {
+      const first = ((c.first_name as string) || "").toLowerCase();
+      return first.length > 2 && messageLower.includes(first);
+    }) ||
+    // 3. Last name match (requires 3+ chars, least specific)
+    clients.find((c: Record<string, unknown>) => {
+      const last = ((c.last_name as string) || "").toLowerCase();
+      return last.length > 2 && messageLower.includes(last);
+    });
 
   let clientContext: Record<string, unknown> | null = null;
   if (matchedClient) {
@@ -149,20 +160,7 @@ export async function POST(req: NextRequest) {
     ...(productContext ? { productInventory: productContext } : {}),
   };
 
-  // Temporary debug: if message starts with "DEBUG:", return raw context as reply
-  if (message.startsWith("DEBUG:")) {
-    const debugData = {
-      matchedClientName: (matchedClient as Record<string, unknown>)?.first_name ?? "NO MATCH",
-      formulaCount: (clientContext?.formulaHistory as unknown[])?.length ?? 0,
-      appointmentCount: (clientContext?.appointmentHistory as unknown[])?.length ?? 0,
-      clientContext,
-    };
-    return NextResponse.json({
-      reply: "```json\n" + JSON.stringify(debugData, null, 2) + "\n```",
-    });
-  }
-
-  const result = await mentisChat({
+const result = await mentisChat({
     message,
     conversationHistory,
     context,
