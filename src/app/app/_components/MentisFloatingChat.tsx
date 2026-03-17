@@ -68,7 +68,7 @@ export default function MentisFloatingChat() {
         {/* Panel Header */}
         <div
           style={{
-            background: "linear-gradient(135deg, #C4AB70, #B89A5F)",
+            background: "linear-gradient(135deg, #6B2737, #440606)",
             padding: "14px 16px",
             display: "flex",
             alignItems: "center",
@@ -134,7 +134,7 @@ export default function MentisFloatingChat() {
           height: "56px",
           borderRadius: "50%",
           border: "none",
-          background: "linear-gradient(135deg, #C4AB70, #B89A5F)",
+          background: "linear-gradient(135deg, #6B2737, #440606)",
           color: "#fff",
           cursor: "pointer",
           display: "flex",
@@ -142,7 +142,7 @@ export default function MentisFloatingChat() {
           justifyContent: "center",
           zIndex: 50,
           boxShadow: hovered
-            ? "0 0 20px rgba(196, 171, 112, 0.4)"
+            ? "0 0 20px rgba(68, 6, 6, 0.4)"
             : "0 4px 12px rgba(0,0,0,0.15)",
           transform: hovered ? "scale(1.05)" : "scale(1)",
           transition: "transform 0.2s ease, box-shadow 0.2s ease",
