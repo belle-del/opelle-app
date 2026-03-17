@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentWorkspace } from "./workspaces";
 
 export type ActivityAction =
@@ -19,10 +19,14 @@ export async function logActivity(
 ): Promise<void> {
   try {
     const workspace = await getCurrentWorkspace();
-    if (!workspace) return;
+    if (!workspace) {
+      console.warn("[activity-log] No workspace found, skipping log");
+      return;
+    }
 
-    const supabase = await createSupabaseServerClient();
-    await supabase.from("activity_log").insert({
+    // Use admin client to bypass RLS — this is a trusted server-side operation
+    const admin = createSupabaseAdminClient();
+    const { error } = await admin.from("activity_log").insert({
       workspace_id: workspace.id,
       action,
       entity_type: entityType,
@@ -30,8 +34,12 @@ export async function logActivity(
       entity_label: entityLabel,
       diff: diff || null,
     });
-  } catch {
-    // Never throw from logging — non-critical
+
+    if (error) {
+      console.error("[activity-log] Failed to log activity:", error.message);
+    }
+  } catch (err) {
+    console.error("[activity-log] Unexpected error:", err);
   }
 }
 
@@ -50,8 +58,8 @@ export async function listActivityLog(entityType?: string): Promise<ActivityLogE
     const workspace = await getCurrentWorkspace();
     if (!workspace) return [];
 
-    const supabase = await createSupabaseServerClient();
-    let query = supabase
+    const admin = createSupabaseAdminClient();
+    let query = admin
       .from("activity_log")
       .select("*")
       .eq("workspace_id", workspace.id)
