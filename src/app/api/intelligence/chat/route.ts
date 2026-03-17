@@ -143,15 +143,27 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  const fullWorkspaceContext = {
+    ...workspaceContext,
+    ...(clientContext ? { matchedClient: clientContext } : {}),
+    ...(productContext ? { productInventory: productContext } : {}),
+  };
+
+  // Temporary debug: if message starts with "DEBUG:", return raw context
+  if (message.startsWith("DEBUG:")) {
+    return NextResponse.json({
+      _debug: true,
+      matchedClientName: (matchedClient as Record<string, unknown>)?.first_name ?? "NO MATCH",
+      clientContext,
+      workspaceContext: fullWorkspaceContext,
+    });
+  }
+
   const result = await mentisChat({
     message,
     conversationHistory,
     context,
-    workspaceContext: {
-      ...workspaceContext,
-      ...(clientContext ? { matchedClient: clientContext } : {}),
-      ...(productContext ? { productInventory: productContext } : {}),
-    },
+    workspaceContext: fullWorkspaceContext,
   });
 
   if (!result) {
