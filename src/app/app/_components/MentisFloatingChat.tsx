@@ -12,9 +12,6 @@ export default function MentisFloatingChat() {
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Don't render on the full Mentis page
-  if (pathname === "/app/mentis") return null;
-
   // Build context from pathname
   const context: { page: string; clientId?: string } = { page: pathname };
   if (pathname.includes("/clients/")) {
@@ -38,6 +35,9 @@ export default function MentisFloatingChat() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
+
+  // Don't render on the full Mentis page (must be after all hooks)
+  if (pathname === "/app/mentis") return null;
 
   return (
     <>
