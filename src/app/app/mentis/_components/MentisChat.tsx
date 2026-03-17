@@ -24,6 +24,8 @@ interface MentisChatContext {
 interface MentisChatProps {
   fullPage?: boolean;
   context?: MentisChatContext;
+  conversationId?: string | null;
+  onConversationCreated?: (id: string) => void;
 }
 
 /* ─── Constants ──────────────────────────────────────────────────── */
@@ -199,18 +201,103 @@ function formatTimestamp(iso: string): string {
   return isToday ? time : `${date.toLocaleDateString([], { month: "short", day: "numeric" })} ${time}`;
 }
 
+/* ─── Persistence helpers ────────────────────────────────────────── */
+
+async function createConversation(title?: string): Promise<string | null> {
+  try {
+    const res = await fetch("/api/intelligence/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: title || "New conversation" }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.conversation?.id || null;
+  } catch {
+    return null;
+  }
+}
+
+async function persistMessage(conversationId: string, role: "user" | "assistant", content: string) {
+  try {
+    await fetch(`/api/intelligence/conversations/${conversationId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role, content }),
+    });
+  } catch {
+    // Silently fail — chat still works without persistence
+  }
+}
+
+async function updateConversationTitle(conversationId: string, title: string) {
+  try {
+    await fetch(`/api/intelligence/conversations/${conversationId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    });
+  } catch {
+    // Silently fail
+  }
+}
+
+async function loadConversationMessages(conversationId: string): Promise<Message[]> {
+  try {
+    const res = await fetch(`/api/intelligence/conversations/${conversationId}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.conversation?.messages || []).map((m: { id: string; role: "user" | "assistant"; content: string; created_at: string }) => ({
+      id: m.id,
+      role: m.role,
+      content: m.content,
+      timestamp: m.created_at,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 /* ─── Main Component ─────────────────────────────────────────────── */
 
-export default function MentisChat({ fullPage = false, context }: MentisChatProps) {
+export default function MentisChat({
+  fullPage = false,
+  context,
+  conversationId: externalConversationId = null,
+  onConversationCreated,
+}: MentisChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [suggestedFollowUps, setSuggestedFollowUps] = useState<string[]>([]);
   const [starters, setStarters] = useState<string[]>([]);
   const [startersLoading, setStartersLoading] = useState(true);
+  const [activeConvId, setActiveConvId] = useState<string | null>(externalConversationId ?? null);
+  const [loadingConversation, setLoadingConversation] = useState(false);
+  const hasAutoTitled = useRef(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /* Track external conversationId changes */
+  useEffect(() => {
+    const newId = externalConversationId ?? null;
+    setActiveConvId(newId);
+    hasAutoTitled.current = false;
+
+    if (newId) {
+      setLoadingConversation(true);
+      loadConversationMessages(newId).then((msgs) => {
+        setMessages(msgs);
+        setLoadingConversation(false);
+        setSuggestedFollowUps([]);
+        if (msgs.length > 0) hasAutoTitled.current = true;
+      });
+    } else {
+      setMessages([]);
+      setSuggestedFollowUps([]);
+    }
+  }, [externalConversationId]);
 
   /* Fetch dynamic starter prompts */
   useEffect(() => {
@@ -262,6 +349,21 @@ export default function MentisChat({ fullPage = false, context }: MentisChatProp
       setSending(true);
       setSuggestedFollowUps([]);
 
+      // Ensure we have a conversation for persistence (full-page only)
+      let convId = activeConvId;
+      if (fullPage && !convId) {
+        convId = await createConversation();
+        if (convId) {
+          setActiveConvId(convId);
+          onConversationCreated?.(convId);
+        }
+      }
+
+      // Persist user message
+      if (fullPage && convId) {
+        persistMessage(convId, "user", trimmed);
+      }
+
       try {
         const conversationHistory = [...messages, userMsg].map((m) => ({
           role: m.role,
@@ -292,6 +394,19 @@ export default function MentisChat({ fullPage = false, context }: MentisChatProp
         };
 
         setMessages((prev) => [...prev, assistantMsg]);
+
+        // Persist assistant message
+        if (fullPage && convId) {
+          persistMessage(convId, "assistant", assistantMsg.content);
+
+          // Auto-title: after first assistant response, set title from first user message
+          if (!hasAutoTitled.current) {
+            hasAutoTitled.current = true;
+            const autoTitle = trimmed.length > 60 ? trimmed.slice(0, 60) + "..." : trimmed;
+            updateConversationTitle(convId, autoTitle);
+          }
+        }
+
         if (data.suggestedFollowUps?.length) {
           setSuggestedFollowUps(data.suggestedFollowUps);
         }
@@ -307,7 +422,7 @@ export default function MentisChat({ fullPage = false, context }: MentisChatProp
         setSending(false);
       }
     },
-    [messages, sending, context]
+    [messages, sending, context, activeConvId, fullPage, onConversationCreated]
   );
 
   /* Key handler */
@@ -324,9 +439,7 @@ export default function MentisChat({ fullPage = false, context }: MentisChatProp
     ? {
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 80px)",
-        maxWidth: "780px",
-        margin: "0 auto",
+        height: "100%",
         background: "#FAFAF5",
         borderRadius: "12px",
         boxShadow: "0 0 20px rgba(196, 171, 112, 0.15)",
@@ -350,37 +463,6 @@ export default function MentisChat({ fullPage = false, context }: MentisChatProp
           50% { opacity: 0.6; }
         }
       `}</style>
-      {/* Header — full page only */}
-      {fullPage && (
-        <div
-          style={{
-            padding: "20px 24px 16px",
-            borderBottom: `1px solid ${STONE}`,
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            flexShrink: 0,
-          }}
-        >
-          <Sparkles size={20} style={{ color: BRASS }} />
-          <div>
-            <h1
-              style={{
-                fontFamily: "'Fraunces', serif",
-                fontSize: "20px",
-                fontWeight: 400,
-                color: TEXT_PRIMARY,
-                lineHeight: 1.2,
-              }}
-            >
-              Mentis
-            </h1>
-            <p style={{ fontSize: "11px", color: TEXT_FAINT, marginTop: "2px" }}>
-              Your AI salon copilot
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Messages area */}
       <div
@@ -393,8 +475,22 @@ export default function MentisChat({ fullPage = false, context }: MentisChatProp
           gap: "16px",
         }}
       >
+        {/* Loading state for conversation */}
+        {loadingConversation && (
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ThinkingDots />
+          </div>
+        )}
+
         {/* Empty state — starter prompts */}
-        {messages.length === 0 && !sending && (
+        {messages.length === 0 && !sending && !loadingConversation && (
           <div
             style={{
               flex: 1,
