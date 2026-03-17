@@ -41,7 +41,13 @@ export async function POST(req: NextRequest) {
     })),
   };
 
-  console.log("[Mentis] KERNEL_ENABLED:", process.env.KERNEL_ENABLED, "KERNEL_AUTH_KEY set:", !!process.env.KERNEL_AUTH_KEY, "KERNEL_API_URL:", process.env.KERNEL_API_URL);
+  const debugInfo = {
+    KERNEL_ENABLED: process.env.KERNEL_ENABLED,
+    KERNEL_AUTH_KEY_set: !!process.env.KERNEL_AUTH_KEY,
+    KERNEL_API_KEY_set: !!process.env.KERNEL_API_KEY,
+    KERNEL_API_URL: process.env.KERNEL_API_URL,
+  };
+  console.log("[Mentis] env debug:", JSON.stringify(debugInfo));
 
   const result = await mentisChat({
     message,
@@ -51,7 +57,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (!result) {
-    return NextResponse.json({ error: "Mentis unavailable" }, { status: 503 });
+    return NextResponse.json({ error: "Mentis unavailable", debug: debugInfo }, { status: 503 });
   }
 
   return NextResponse.json(result);
