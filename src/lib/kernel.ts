@@ -5,9 +5,9 @@
 import type { ClientPreferenceProfile, ProductEnrichment, InspoAnalysis, ParsedFormula, InventoryPredictionsResult, MentisChatResponse, MentisSuggestionsResult } from "@/lib/types";
 
 const KERNEL_URL =
-  process.env.KERNEL_API_URL || "https://opelle.dominusfoundry.com";
-const KERNEL_KEY = process.env.KERNEL_AUTH_KEY || "";
-const KERNEL_ENABLED = process.env.KERNEL_ENABLED === "true";
+  process.env.KERNEL_API_URL || process.env.KERNEL_WEBHOOK_URL || "https://opelle.dominusfoundry.com";
+const KERNEL_KEY = process.env.KERNEL_AUTH_KEY || process.env.KERNEL_API_KEY || "";
+const KERNEL_ENABLED = process.env.KERNEL_ENABLED === "true" || !!KERNEL_KEY;
 
 export interface KernelEventPayload {
   event_type: string;
