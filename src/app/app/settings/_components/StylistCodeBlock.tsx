@@ -43,11 +43,36 @@ export function StylistCodeBlock({ workspaceId, initialCode }: Props) {
     }
   }
 
+  async function generateCode() {
+    if (!workspaceId) return;
+    setRegenerating(true);
+    try {
+      const res = await fetch("/api/settings/regenerate-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspaceId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.code) {
+        setCode(data.code);
+      }
+    } catch {
+      // silent fail
+    } finally {
+      setRegenerating(false);
+    }
+  }
+
   if (!code) {
     return (
-      <p style={{ fontSize: 12, color: "var(--text-on-stone-faint)" }}>
-        No stylist code generated yet. One will be created automatically.
-      </p>
+      <div className="space-y-3">
+        <p style={{ fontSize: 12, color: "var(--text-on-stone-faint)" }}>
+          No stylist code generated yet.
+        </p>
+        <Button variant="secondary" size="sm" onClick={generateCode} disabled={regenerating}>
+          {regenerating ? "Generating..." : "Generate Code"}
+        </Button>
+      </div>
     );
   }
 
