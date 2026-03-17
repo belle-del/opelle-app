@@ -248,6 +248,7 @@ export async function mentisChat(params: {
     totalProducts?: number;
     recentAppointments?: { serviceName: string; clientName: string; date: string }[];
     matchedClient?: Record<string, unknown>;
+    productInventory?: Record<string, unknown>;
   };
 }): Promise<MentisChatResponse | null> {
   const result = await kernelPost("/api/v1/ai/chat", {

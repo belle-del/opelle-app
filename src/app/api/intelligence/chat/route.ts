@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
   if (matchedClient) {
     const clientId = (matchedClient as Record<string, unknown>).id as string;
 
-    const [clientDetail, formulas, appointments, notes] = await Promise.all([
+    const [clientDetail, formulas, appointments] = await Promise.all([
       supabase.from("clients").select("*").eq("id", clientId).single(),
       supabase.from("formula_entries")
         .select("id, service_date, raw_notes, general_notes, service_types(name)")
@@ -73,22 +73,15 @@ export async function POST(req: NextRequest) {
         .eq("client_id", clientId)
         .order("start_at", { ascending: false })
         .limit(10),
-      supabase.from("client_notes")
-        .select("id, note, created_at")
-        .eq("client_id", clientId)
-        .order("created_at", { ascending: false })
-        .limit(5),
     ]);
 
+    const cd = clientDetail.data as Record<string, unknown> | null;
     clientContext = {
-      clientName: `${(clientDetail.data as Record<string, unknown>)?.first_name || ""} ${(clientDetail.data as Record<string, unknown>)?.last_name || ""}`.trim(),
+      clientName: `${cd?.first_name || ""} ${cd?.last_name || ""}`.trim(),
       clientId,
-      tags: (clientDetail.data as Record<string, unknown>)?.tags || [],
-      colorDirection: (clientDetail.data as Record<string, unknown>)?.color_direction,
-      maintenanceLevel: (clientDetail.data as Record<string, unknown>)?.maintenance_level,
-      processingPreferences: (clientDetail.data as Record<string, unknown>)?.processing_preferences,
-      styleNotes: (clientDetail.data as Record<string, unknown>)?.style_notes,
-      lastVisitAt: (clientDetail.data as Record<string, unknown>)?.last_visit_at,
+      tags: cd?.tags || [],
+      notes: cd?.notes || null,
+      preferenceProfile: cd?.preference_profile || null,
       formulaHistory: (formulas.data || []).map((f: Record<string, unknown>) => ({
         date: f.service_date,
         service: (f.service_types as Record<string, unknown>)?.name || "Unknown",
@@ -100,20 +93,50 @@ export async function POST(req: NextRequest) {
         status: a.status,
         service: (a.services as Record<string, unknown>)?.name || "Unknown",
       })),
-      notes: (notes.data || []).map((n: Record<string, unknown>) => ({
-        note: n.note,
-        date: n.created_at,
-      })),
     };
   }
 
-  const debugInfo = {
-    KERNEL_ENABLED: process.env.KERNEL_ENABLED,
-    KERNEL_AUTH_KEY_set: !!process.env.KERNEL_AUTH_KEY,
-    KERNEL_API_KEY_set: !!process.env.KERNEL_API_KEY,
-    KERNEL_API_URL: process.env.KERNEL_API_URL,
-  };
-  console.log("[Mentis] env debug:", JSON.stringify(debugInfo));
+  // --- Product data lookup (for inventory/reorder questions) ---
+  const productKeywords = ["product", "stock", "inventory", "reorder", "running low", "low stock", "order", "supply"];
+  const isProductQuestion = productKeywords.some(kw => messageLower.includes(kw));
+
+  let productContext: Record<string, unknown> | null = null;
+  if (isProductQuestion) {
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, brand, shade, line, category, quantity, low_stock_threshold, size_oz, cost_cents, name")
+      .eq("workspace_id", workspace.id)
+      .order("quantity", { ascending: true })
+      .limit(50);
+
+    if (products && products.length > 0) {
+      const lowStock = products.filter((p: Record<string, unknown>) =>
+        (p.quantity as number) <= (p.low_stock_threshold as number || 3)
+      );
+      productContext = {
+        totalProducts: products.length,
+        lowStockProducts: lowStock.map((p: Record<string, unknown>) => ({
+          brand: p.brand,
+          shade: p.shade,
+          line: p.line,
+          name: p.name,
+          category: p.category,
+          quantity: p.quantity,
+          threshold: p.low_stock_threshold,
+          sizeOz: p.size_oz,
+          costCents: p.cost_cents,
+        })),
+        allProducts: products.slice(0, 20).map((p: Record<string, unknown>) => ({
+          brand: p.brand,
+          shade: p.shade,
+          line: p.line,
+          name: p.name,
+          category: p.category,
+          quantity: p.quantity,
+        })),
+      };
+    }
+  }
 
   const result = await mentisChat({
     message,
@@ -122,11 +145,12 @@ export async function POST(req: NextRequest) {
     workspaceContext: {
       ...workspaceContext,
       ...(clientContext ? { matchedClient: clientContext } : {}),
+      ...(productContext ? { productInventory: productContext } : {}),
     },
   });
 
   if (!result) {
-    return NextResponse.json({ error: "Mentis unavailable", debug: debugInfo }, { status: 503 });
+    return NextResponse.json({ error: "Mentis unavailable" }, { status: 503 });
   }
 
   return NextResponse.json(result);
