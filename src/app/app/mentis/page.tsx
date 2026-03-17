@@ -64,8 +64,15 @@ export default function MentisPage() {
     }
   }, []);
 
+  // Fetch on mount
   useEffect(() => {
     fetchConversations();
+  }, [fetchConversations]);
+
+  // Poll every 5 seconds to keep sidebar fresh (titles, timestamps, new convos)
+  useEffect(() => {
+    const interval = setInterval(fetchConversations, 5000);
+    return () => clearInterval(interval);
   }, [fetchConversations]);
 
   /* Start new chat */
@@ -385,6 +392,7 @@ export default function MentisPage() {
             fullPage
             conversationId={activeConversationId}
             onConversationCreated={handleConversationCreated}
+            onMessageSent={fetchConversations}
           />
         </div>
       </div>

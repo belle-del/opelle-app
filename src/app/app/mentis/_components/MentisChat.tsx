@@ -26,6 +26,7 @@ interface MentisChatProps {
   context?: MentisChatContext;
   conversationId?: string | null;
   onConversationCreated?: (id: string) => void;
+  onMessageSent?: () => void;
 }
 
 /* ─── Constants ──────────────────────────────────────────────────── */
@@ -265,6 +266,7 @@ export default function MentisChat({
   context,
   conversationId: externalConversationId = null,
   onConversationCreated,
+  onMessageSent,
 }: MentisChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -405,6 +407,9 @@ export default function MentisChat({
             const autoTitle = trimmed.length > 60 ? trimmed.slice(0, 60) + "..." : trimmed;
             updateConversationTitle(convId, autoTitle);
           }
+
+          // Notify parent to refresh sidebar
+          onMessageSent?.();
         }
 
         if (data.suggestedFollowUps?.length) {
@@ -422,7 +427,7 @@ export default function MentisChat({
         setSending(false);
       }
     },
-    [messages, sending, context, activeConvId, fullPage, onConversationCreated]
+    [messages, sending, context, activeConvId, fullPage, onConversationCreated, onMessageSent]
   );
 
   /* Key handler */
