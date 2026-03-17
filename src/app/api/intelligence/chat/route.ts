@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { mentisChat } from "@/lib/kernel";
 
 export async function POST(req: NextRequest) {
+  // Auth check with user-scoped client
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: workspace } = await supabase
+  // Use admin client for data lookups (bypasses RLS)
+  const admin = createSupabaseAdminClient();
+
+  const { data: workspace } = await admin
     .from("workspaces")
     .select("id")
     .eq("owner_id", user.id)
@@ -21,11 +26,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Message required" }, { status: 400 });
   }
 
-  // Gather workspace context for Mentis
+  // Gather workspace context for Mentis (admin client bypasses RLS)
   const [clientCount, productCount, recentAppts] = await Promise.all([
-    supabase.from("clients").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
-    supabase.from("products").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
-    supabase.from("appointments").select("id, start_at, services(name), clients(first_name, last_name)")
+    admin.from("clients").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
+    admin.from("products").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
+    admin.from("appointments").select("id, start_at, services(name), clients(first_name, last_name)")
       .eq("workspace_id", workspace.id)
       .order("start_at", { ascending: false })
       .limit(10),
@@ -42,7 +47,7 @@ export async function POST(req: NextRequest) {
   };
 
   // --- Client name detection & data lookup ---
-  const { data: allClients } = await supabase
+  const { data: allClients } = await admin
     .from("clients")
     .select("id, first_name, last_name")
     .eq("workspace_id", workspace.id);
@@ -62,13 +67,13 @@ export async function POST(req: NextRequest) {
     const clientId = (matchedClient as Record<string, unknown>).id as string;
 
     const [clientDetail, formulas, appointments] = await Promise.all([
-      supabase.from("clients").select("*").eq("id", clientId).single(),
-      supabase.from("formula_entries")
+      admin.from("clients").select("*").eq("id", clientId).single(),
+      admin.from("formula_entries")
         .select("id, service_date, raw_notes, general_notes, service_types(name)")
         .eq("client_id", clientId)
         .order("service_date", { ascending: false })
         .limit(10),
-      supabase.from("appointments")
+      admin.from("appointments")
         .select("id, start_at, status, services(name)")
         .eq("client_id", clientId)
         .order("start_at", { ascending: false })
@@ -102,7 +107,7 @@ export async function POST(req: NextRequest) {
 
   let productContext: Record<string, unknown> | null = null;
   if (isProductQuestion) {
-    const { data: products } = await supabase
+    const { data: products } = await admin
       .from("products")
       .select("id, brand, shade, line, category, quantity, low_stock_threshold, size_oz, cost_cents, name")
       .eq("workspace_id", workspace.id)
