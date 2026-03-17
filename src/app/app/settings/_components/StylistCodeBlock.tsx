@@ -43,9 +43,12 @@ export function StylistCodeBlock({ workspaceId, initialCode }: Props) {
     }
   }
 
+  const [genError, setGenError] = useState<string | null>(null);
+
   async function generateCode() {
     if (!workspaceId) return;
     setRegenerating(true);
+    setGenError(null);
     try {
       const res = await fetch("/api/settings/regenerate-code", {
         method: "POST",
@@ -55,9 +58,11 @@ export function StylistCodeBlock({ workspaceId, initialCode }: Props) {
       const data = await res.json();
       if (res.ok && data.code) {
         setCode(data.code);
+      } else {
+        setGenError(data.error || "Failed to generate code");
       }
-    } catch {
-      // silent fail
+    } catch (err) {
+      setGenError(String(err));
     } finally {
       setRegenerating(false);
     }
@@ -72,6 +77,9 @@ export function StylistCodeBlock({ workspaceId, initialCode }: Props) {
         <Button variant="secondary" size="sm" onClick={generateCode} disabled={regenerating}>
           {regenerating ? "Generating..." : "Generate Code"}
         </Button>
+        {genError && (
+          <p style={{ fontSize: 11, color: "var(--garnet)" }}>{genError}</p>
+        )}
       </div>
     );
   }

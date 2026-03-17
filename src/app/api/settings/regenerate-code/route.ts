@@ -26,7 +26,8 @@ export async function POST(request: Request) {
   try {
     const newCode = await regenerateStylistCode(workspaceId);
     return NextResponse.json({ code: newCode });
-  } catch {
-    return NextResponse.json({ error: "Failed to regenerate code" }, { status: 500 });
+  } catch (err) {
+    console.error("[regenerate-code] Error:", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

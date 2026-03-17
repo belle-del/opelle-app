@@ -81,14 +81,17 @@ export async function updateWorkspace(id: string, name: string): Promise<Workspa
 }
 
 export async function regenerateStylistCode(workspaceId: string): Promise<string> {
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
   const newCode = await generateUniqueStylistCode();
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("workspaces")
     .update({ stylist_code: newCode })
     .eq("id", workspaceId);
 
-  if (error) throw new Error("Failed to regenerate stylist code");
+  if (error) {
+    console.error("[regenerateStylistCode] Error:", error.message);
+    throw new Error("Failed to regenerate stylist code");
+  }
   return newCode;
 }
