@@ -37,6 +37,33 @@ const DEFAULT_WIDGETS: Widget[] = [
 
 const clampGrid = (v: number) => Math.max(1, Math.min(16, v));
 
+const STORAGE_KEY = "opelle-widget-layout";
+
+function loadWidgets(): Widget[] {
+  if (typeof window === "undefined") return DEFAULT_WIDGETS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULT_WIDGETS;
+    const parsed = JSON.parse(raw) as Widget[];
+    // Validate structure
+    if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_WIDGETS;
+    const valid = parsed.every(
+      (w) => w.id && w.type && typeof w.cols === "number" && typeof w.rows === "number"
+    );
+    return valid ? parsed : DEFAULT_WIDGETS;
+  } catch {
+    return DEFAULT_WIDGETS;
+  }
+}
+
+function saveWidgets(widgets: Widget[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(widgets));
+  } catch {
+    // Storage full or unavailable — silent fail
+  }
+}
+
 // ── Props ──────────────────────────────────────────────────────────────
 interface Appointment { id: string; startAt: string; clientId: string; serviceName: string; status: string; }
 interface Formula { id: string; }
@@ -267,9 +294,14 @@ function StatWidget({ value, label, change, changePositive, link }: {
 
 // ── Main Component ─────────────────────────────────────────────────────
 export function WidgetDashboard({ appointments, formulas, tasks, products, clients, inspoFlags = [] }: WidgetDashboardProps) {
-  const [widgets, setWidgets] = useState<Widget[]>(DEFAULT_WIDGETS);
+  const [widgets, setWidgets] = useState<Widget[]>(loadWidgets);
   const [editMode, setEditMode] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
+
+  // Persist widget layout on every change
+  useEffect(() => {
+    saveWidgets(widgets);
+  }, [widgets]);
 
   const now = new Date();
   const today = new Date(); today.setHours(0, 0, 0, 0);
