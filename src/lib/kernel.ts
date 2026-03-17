@@ -4,10 +4,15 @@
 
 import type { ClientPreferenceProfile, ProductEnrichment, InspoAnalysis, ParsedFormula, InventoryPredictionsResult, MentisChatResponse, MentisSuggestionsResult } from "@/lib/types";
 
-const KERNEL_URL =
-  process.env.KERNEL_API_URL || process.env.KERNEL_WEBHOOK_URL || "https://opelle.dominusfoundry.com";
-const KERNEL_KEY = process.env.KERNEL_AUTH_KEY || process.env.KERNEL_API_KEY || "";
-const KERNEL_ENABLED = process.env.KERNEL_ENABLED === "true" || !!KERNEL_KEY;
+function getKernelUrl() {
+  return process.env.KERNEL_API_URL || process.env.KERNEL_WEBHOOK_URL || "https://opelle.dominusfoundry.com";
+}
+function getKernelKey() {
+  return process.env.KERNEL_AUTH_KEY || process.env.KERNEL_API_KEY || "";
+}
+function isKernelEnabled() {
+  return process.env.KERNEL_ENABLED === "true" || !!getKernelKey();
+}
 
 export interface KernelEventPayload {
   event_type: string;
@@ -21,14 +26,14 @@ export interface KernelEventPayload {
 export async function publishEvent(
   event: KernelEventPayload
 ): Promise<string | null> {
-  if (!KERNEL_ENABLED || !KERNEL_KEY) return null;
+  if (!isKernelEnabled() || !getKernelKey()) return null;
 
   try {
-    const res = await fetch(`${KERNEL_URL}/api/v1/events/ingest`, {
+    const res = await fetch(`${getKernelUrl()}/api/v1/events/ingest`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Kernel-Auth": KERNEL_KEY,
+        "X-Kernel-Auth": getKernelKey(),
       },
       body: JSON.stringify(event),
       signal: AbortSignal.timeout(5000),
@@ -273,11 +278,11 @@ async function kernelGet(
   extract?: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any | null> {
-  if (!KERNEL_ENABLED || !KERNEL_KEY) return null;
+  if (!isKernelEnabled() || !getKernelKey()) return null;
 
   try {
-    const res = await fetch(`${KERNEL_URL}${path}`, {
-      headers: { "X-Kernel-Auth": KERNEL_KEY },
+    const res = await fetch(`${getKernelUrl()}${path}`, {
+      headers: { "X-Kernel-Auth": getKernelKey() },
       signal: AbortSignal.timeout(8000),
       next: { revalidate: 300 },
     });
@@ -296,14 +301,14 @@ async function kernelPost(
   timeoutMs = 10000
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any | null> {
-  if (!KERNEL_ENABLED || !KERNEL_KEY) return null;
+  if (!isKernelEnabled() || !getKernelKey()) return null;
 
   try {
-    const res = await fetch(`${KERNEL_URL}${path}`, {
+    const res = await fetch(`${getKernelUrl()}${path}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Kernel-Auth": KERNEL_KEY,
+        "X-Kernel-Auth": getKernelKey(),
       },
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(timeoutMs),
