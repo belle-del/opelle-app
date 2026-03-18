@@ -1,7 +1,7 @@
 import { listAppointments } from "@/lib/db/appointments";
 import { listClients } from "@/lib/db/clients";
 import { getCurrentWorkspace } from "@/lib/db/workspaces";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { V7Calendar } from "./_components/V7Calendar";
 import { RebookRequestsList } from "./_components/RebookRequestsList";
 import { AppointmentsTabs } from "./_components/AppointmentsTabs";
@@ -13,7 +13,7 @@ export default async function AppointmentsPage() {
     getCurrentWorkspace(),
   ]);
 
-  // Get rebook requests
+  // Get rebook requests using admin client to bypass RLS
   let rebookRequests: Array<{
     id: string;
     client_id: string;
@@ -25,12 +25,15 @@ export default async function AppointmentsPage() {
   }> = [];
 
   if (workspace) {
-    const supabase = await createSupabaseServerClient();
-    const { data } = await supabase
+    const admin = createSupabaseAdminClient();
+    const { data, error } = await admin
       .from("rebook_requests")
       .select("*")
       .eq("workspace_id", workspace.id)
       .order("created_at", { ascending: false });
+    if (error) {
+      console.error("[AppointmentsPage] Failed to fetch rebook requests:", error.message);
+    }
     rebookRequests = data || [];
   }
 

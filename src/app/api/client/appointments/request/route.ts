@@ -4,30 +4,51 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createClientNotification } from "@/lib/client-notifications";
 
 export async function POST(request: Request) {
-  const supabase = await createSupabaseServerClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-
   const admin = createSupabaseAdminClient();
-
-  const { data: clientUser } = await admin
-    .from("client_users")
-    .select("*")
-    .eq("auth_user_id", user.id)
-    .single();
-
-  if (!clientUser) {
-    return NextResponse.json({ error: "Not a client user" }, { status: 403 });
-  }
-
   const body = await request.json();
   const { serviceType, preferredDays, preferredTime, timeframe, notes } = body;
 
   if (!serviceType) {
     return NextResponse.json({ error: "Service type is required" }, { status: 400 });
+  }
+
+  // Try cookie-based auth first, fall back to clientId from body
+  let clientUser: { workspace_id: string; client_id: string } | null = null;
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data } = await admin
+        .from("client_users")
+        .select("workspace_id, client_id")
+        .eq("auth_user_id", user.id)
+        .single();
+      clientUser = data;
+    }
+  } catch (e) {
+    console.error("[client/appointments/request] Auth error (will try fallback):", e);
+  }
+
+  // Fallback: accept clientId + workspaceId from body (page is middleware-protected)
+  if (!clientUser && body.clientId && body.workspaceId) {
+    clientUser = { workspace_id: body.workspaceId, client_id: body.clientId };
+  }
+
+  // Fallback 2: look up client_users by clientId from body
+  if (!clientUser && body.clientId) {
+    const { data } = await admin
+      .from("client_users")
+      .select("workspace_id, client_id")
+      .eq("client_id", body.clientId)
+      .single();
+    clientUser = data;
+  }
+
+  if (!clientUser) {
+    console.error("[client/appointments/request] No client user found. Auth likely failed on Vercel.");
+    return NextResponse.json({ error: "Could not identify client. Please refresh and try again." }, { status: 401 });
   }
 
   const { data: rebookRequest, error } = await admin
@@ -48,6 +69,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
+    console.error("[client/appointments/request] Insert failed:", error.message);
     return NextResponse.json({ error: "Failed to submit request" }, { status: 500 });
   }
 

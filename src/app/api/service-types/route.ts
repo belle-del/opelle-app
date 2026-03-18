@@ -62,15 +62,12 @@ export async function POST(request: Request) {
       .single();
     const sortOrder = ((maxRow?.sort_order as number) ?? -1) + 1;
 
+    // Insert without default_duration_mins first (column may not exist in prod)
     const insertData: Record<string, unknown> = {
       workspace_id: body.workspaceId,
       name: body.name.trim(),
       sort_order: sortOrder,
     };
-
-    if (body.defaultDurationMins !== undefined) {
-      insertData.default_duration_mins = body.defaultDurationMins;
-    }
 
     let { data, error } = await admin
       .from("service_types")
@@ -78,12 +75,18 @@ export async function POST(request: Request) {
       .select("*")
       .single();
 
-    // Retry without default_duration_mins if column doesn't exist
-    if (error && error.message?.includes("default_duration_mins")) {
-      delete insertData.default_duration_mins;
-      const retry = await admin.from("service_types").insert(insertData).select("*").single();
-      data = retry.data;
-      error = retry.error;
+    // If that succeeded and we have a duration to set, try updating it separately
+    if (!error && data && body.defaultDurationMins !== undefined) {
+      const { data: updated, error: updateErr } = await admin
+        .from("service_types")
+        .update({ default_duration_mins: body.defaultDurationMins })
+        .eq("id", (data as Record<string, unknown>).id)
+        .select("*")
+        .single();
+      // If update fails (column doesn't exist), just keep the original data
+      if (!updateErr && updated) {
+        data = updated;
+      }
     }
 
     if (error || !data) {
