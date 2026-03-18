@@ -2,20 +2,23 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ServiceTypesManager } from "./_components/ServiceTypesManager";
 import { StylistCodeBlock } from "./_components/StylistCodeBlock";
 import { BookingConfig } from "./_components/BookingConfig";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getUserIdFromMiddleware } from "@/lib/supabase/get-user-from-middleware";
 
 export default async function SettingsPage() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const userId = await getUserIdFromMiddleware();
 
-  // Use admin client to bypass RLS for workspace query
   const admin = createSupabaseAdminClient();
   const { data: workspace } = await admin
     .from("workspaces")
     .select("*")
-    .eq("owner_id", user?.id)
+    .eq("owner_id", userId)
     .single();
+
+  // Get user info for display
+  const { data: { user } } = userId
+    ? await admin.auth.admin.getUserById(userId)
+    : { data: { user: null } };
 
   return (
     <div className="space-y-8">

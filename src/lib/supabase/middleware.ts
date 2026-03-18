@@ -34,5 +34,25 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Pass user ID to downstream server components via request header
+  // so they don't need to call getUser() again (avoids stale rotated cookies)
+  if (user) {
+    request.headers.set("x-user-id", user.id);
+    request.headers.set("x-user-email", user.email || "");
+
+    // Rebuild response with updated request headers, preserving existing cookies
+    const existingCookies: { name: string; value: string }[] = [];
+    supabaseResponse.cookies.getAll().forEach((c) => {
+      existingCookies.push({ name: c.name, value: c.value });
+    });
+
+    supabaseResponse = NextResponse.next({ request });
+
+    // Re-apply cookies
+    existingCookies.forEach(({ name, value }) => {
+      supabaseResponse.cookies.set(name, value);
+    });
+  }
+
   return { supabaseResponse, user };
 }
