@@ -73,7 +73,7 @@ export default async function SettingsPage() {
           <CardDescription>Manage the service types available when logging formulas</CardDescription>
         </CardHeader>
         <CardContent>
-          <ServiceTypesManager />
+          <ServiceTypesManager workspaceId={workspace?.id} />
         </CardContent>
       </Card>
 

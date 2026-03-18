@@ -19,31 +19,32 @@ const DURATION_OPTIONS = [
   { value: 240, label: "4 hr" },
 ];
 
-export function ServiceTypesManager() {
+export function ServiceTypesManager({ workspaceId }: { workspaceId?: string }) {
   const [types, setTypes] = useState<ServiceType[]>([]);
   const [newName, setNewName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/service-types")
+    if (!workspaceId) { setLoading(false); return; }
+    fetch(`/api/service-types?workspaceId=${workspaceId}`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setTypes(data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [workspaceId]);
 
   const handleAdd = async () => {
-    if (!newName.trim()) return;
+    if (!newName.trim() || !workspaceId) return;
     setError(null);
 
     try {
       const res = await fetch("/api/service-types", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim(), defaultDurationMins: 60 }),
+        body: JSON.stringify({ name: newName.trim(), defaultDurationMins: 60, workspaceId }),
       });
 
       if (res.ok) {
@@ -65,7 +66,7 @@ export function ServiceTypesManager() {
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this service type? Existing formulas using it will be affected.")) return;
 
-    const res = await fetch(`/api/service-types/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/service-types/${id}?workspaceId=${workspaceId}`, { method: "DELETE" });
     if (res.ok) {
       setTypes((prev) => prev.filter((t) => t.id !== id));
     }
@@ -75,7 +76,7 @@ export function ServiceTypesManager() {
     await fetch(`/api/service-types/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, workspaceId }),
     });
   };
 
@@ -88,7 +89,7 @@ export function ServiceTypesManager() {
     await fetch(`/api/service-types/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ defaultDurationMins: durationMins }),
+      body: JSON.stringify({ defaultDurationMins: durationMins, workspaceId }),
     });
   };
 
