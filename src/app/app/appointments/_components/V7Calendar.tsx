@@ -50,7 +50,8 @@ function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-const HOURS = Array.from({ length: 10 }, (_, i) => i + 8);
+// Show 6 AM to 9 PM to cover most salon hours across timezones
+const HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -73,12 +74,7 @@ function getSavedView(): View {
 }
 
 function getSavedDate(): Date {
-  if (typeof window === "undefined") return new Date();
-  const saved = localStorage.getItem("opelle-calendar-date");
-  if (saved) {
-    const d = new Date(saved);
-    if (!isNaN(d.getTime())) return d;
-  }
+  // Always start on today — saved dates cause stale calendar views
   return new Date();
 }
 
@@ -98,8 +94,8 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
   // Apply localStorage values after hydration to avoid SSR mismatch
   useEffect(() => {
     setView(getSavedView());
-    setCurrent(getSavedDate());
     setHydrated(true);
+    console.log("[V7Calendar] hydrated, appointments:", appointments.length, "clients:", clients.length);
   }, []);
 
   // Persist view and date to localStorage

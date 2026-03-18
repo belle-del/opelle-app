@@ -103,8 +103,9 @@ export function BookingSuggestionModal({
     setBooking(true);
 
     try {
-      // Build the ISO start time
-      const startAt = `${selectedSlot.date}T${selectedSlot.startTime}:00`;
+      // Build the ISO start time with local timezone offset
+      const localDate = new Date(`${selectedSlot.date}T${selectedSlot.startTime}:00`);
+      const startAt = localDate.toISOString();
 
       // Create the appointment
       const apptRes = await fetch("/api/appointments", {
