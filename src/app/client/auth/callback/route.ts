@@ -134,18 +134,45 @@ export async function GET(request: Request) {
   if (joinData) {
     let clientId = joinData.existingClientId;
 
-    // Check if client record already exists for this email
+    // Check if client record already exists for this email (case-insensitive)
     if (!clientId && email) {
       const { data: existingClient } = await admin
         .from("clients")
         .select("id")
         .eq("workspace_id", joinData.workspaceId)
-        .eq("email", email)
+        .ilike("email", email)
         .maybeSingle();
 
       if (existingClient) {
         clientId = existingClient.id;
         console.log("[client-callback] Found existing client by email:", clientId);
+      }
+    }
+
+    // Also try dedup function to match by name + email/phone
+    if (!clientId && joinData.firstName) {
+      try {
+        const { data: canonicalId } = await admin.rpc("find_canonical_client", {
+          p_first_name: joinData.firstName,
+          p_last_name: joinData.lastName || null,
+          p_email: email || null,
+          p_phone: null,
+        });
+        if (canonicalId) {
+          // Check if the canonical client is in this workspace
+          const { data: wsClient } = await admin
+            .from("clients")
+            .select("id")
+            .eq("id", canonicalId)
+            .eq("workspace_id", joinData.workspaceId)
+            .maybeSingle();
+          if (wsClient) {
+            clientId = wsClient.id;
+            console.log("[client-callback] Found existing client via dedup:", clientId);
+          }
+        }
+      } catch (e) {
+        console.log("[client-callback] Dedup check failed (non-critical):", e);
       }
     }
 
@@ -213,12 +240,12 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/client`);
   }
 
-  // ── 4. No join data — try auto-link by email ──
+  // ── 4. No join data — try auto-link by email (case-insensitive) ──
   if (email) {
     const { data: matchingClient } = await admin
       .from("clients")
       .select("id, workspace_id")
-      .eq("email", email)
+      .ilike("email", email)
       .limit(1)
       .maybeSingle();
 
