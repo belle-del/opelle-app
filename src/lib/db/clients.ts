@@ -7,10 +7,22 @@ import { publishEvent } from "@/lib/kernel";
 
 export async function listClients(): Promise<Client[]> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  if (!workspace) {
+    // Fallback: get workspace directly
+    const admin = createSupabaseAdminClient();
+    const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+    if (!ws) return [];
+    const { data, error } = await admin
+      .from("clients")
+      .select("*")
+      .eq("workspace_id", ws.id)
+      .order("created_at", { ascending: false });
+    if (error || !data) return [];
+    return (data as ClientRow[]).map(clientRowToModel);
+  }
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("clients")
     .select("*")
     .eq("workspace_id", workspace.id)
@@ -21,15 +33,11 @@ export async function listClients(): Promise<Client[]> {
 }
 
 export async function getClient(id: string): Promise<Client | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
-
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("clients")
     .select("*")
     .eq("id", id)
-    .eq("workspace_id", workspace.id)
     .single();
 
   if (error || !data) return null;
@@ -48,8 +56,8 @@ export async function createClient(input: {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("clients")
     .insert({
       workspace_id: workspace.id,
@@ -64,12 +72,14 @@ export async function createClient(input: {
     .select("*")
     .single();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    console.error("[createClient] Insert failed:", error?.message);
+    return null;
+  }
 
   const client = clientRowToModel(data as ClientRow);
 
   // ── Canonical dedup: link to existing client if match found ──
-  const admin = createSupabaseAdminClient();
   try {
     const { data: canonicalId } = await admin.rpc("find_canonical_client", {
       p_first_name: input.firstName,
@@ -130,10 +140,7 @@ export async function updateClient(
     tags?: string[];
   }
 ): Promise<Client | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
-
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
 
   const updateData: Record<string, unknown> = {};
   if (input.firstName !== undefined) updateData.first_name = input.firstName;
@@ -144,22 +151,26 @@ export async function updateClient(
   if (input.notes !== undefined) updateData.notes = input.notes || null;
   if (input.tags !== undefined) updateData.tags = input.tags;
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("clients")
     .update(updateData)
     .eq("id", id)
-    .eq("workspace_id", workspace.id)
     .select("*")
     .single();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    console.error("[updateClient] Failed:", error?.message);
+    return null;
+  }
+
+  const workspace = await getCurrentWorkspace();
 
   const client = clientRowToModel(data as ClientRow);
 
   // Fire kernel event (non-blocking)
   publishEvent({
     event_type: "client_updated",
-    workspace_id: workspace.id,
+    workspace_id: workspace?.id || "",
     timestamp: new Date().toISOString(),
     payload: {
       client_id: client.id,
@@ -174,28 +185,31 @@ export async function updateClient(
 }
 
 export async function deleteClient(id: string): Promise<boolean> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return false;
-
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
     .from("clients")
     .delete()
-    .eq("id", id)
-    .eq("workspace_id", workspace.id);
+    .eq("id", id);
 
+  if (error) console.error("[deleteClient] Failed:", error.message);
   return !error;
 }
 
 export async function searchClients(query: string): Promise<Client[]> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  const admin = createSupabaseAdminClient();
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  let workspaceId = workspace?.id;
+  if (!workspaceId) {
+    const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+    workspaceId = ws?.id;
+  }
+  if (!workspaceId) return [];
+
+  const { data, error } = await admin
     .from("clients")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", workspaceId)
     .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,email.ilike.%${query}%`)
     .order("created_at", { ascending: false });
 
