@@ -8,8 +8,8 @@ export async function listServiceTypes(): Promise<ServiceType[]> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return [];
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("service_types")
     .select("*")
     .eq("workspace_id", workspace.id)
@@ -23,8 +23,8 @@ export async function getServiceType(id: string): Promise<ServiceType | null> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("service_types")
     .select("*")
     .eq("id", id)

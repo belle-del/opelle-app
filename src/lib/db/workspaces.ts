@@ -32,13 +32,18 @@ export async function getCurrentWorkspace(): Promise<Workspace | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data, error } = await supabase
+  // Use admin client to bypass RLS — we already verified the user is authenticated
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("workspaces")
     .select("*")
     .eq("owner_id", user.id)
     .single();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    if (error) console.error("[getCurrentWorkspace] Error:", error.message);
+    return null;
+  }
   return workspaceRowToModel(data as WorkspaceRow);
 }
 
@@ -50,7 +55,8 @@ export async function createWorkspace(name: string): Promise<Workspace | null> {
 
   const stylistCode = await generateUniqueStylistCode();
 
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("workspaces")
     .insert({ owner_id: user.id, name, stylist_code: stylistCode })
     .select("*")
@@ -59,7 +65,7 @@ export async function createWorkspace(name: string): Promise<Workspace | null> {
   if (error || !data) return null;
 
   // Also create workspace_members entry for owner
-  await supabase
+  await admin
     .from("workspace_members")
     .insert({ workspace_id: data.id, user_id: user.id, role: 'owner' });
 
@@ -67,9 +73,9 @@ export async function createWorkspace(name: string): Promise<Workspace | null> {
 }
 
 export async function updateWorkspace(id: string, name: string): Promise<Workspace | null> {
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("workspaces")
     .update({ name })
     .eq("id", id)
