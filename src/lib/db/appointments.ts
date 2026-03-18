@@ -110,6 +110,10 @@ export async function createAppointment(input: {
   if (!wsId) return null;
 
   const admin = createSupabaseAdminClient();
+  const durationMins = input.durationMins || 60;
+  const startDate = new Date(input.startAt);
+  const endDate = new Date(startDate.getTime() + durationMins * 60 * 1000);
+
   const { data, error } = await admin
     .from("appointments")
     .insert({
@@ -117,7 +121,8 @@ export async function createAppointment(input: {
       client_id: input.clientId,
       service_name: input.serviceName,
       start_at: input.startAt,
-      duration_mins: input.durationMins || 60,
+      end_at: endDate.toISOString(),
+      duration_mins: durationMins,
       notes: input.notes || null,
       service_id: input.serviceId || null,
       status: "scheduled",
