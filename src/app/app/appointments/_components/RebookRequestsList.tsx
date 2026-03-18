@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { BookingSuggestionModal } from "./BookingSuggestionModal";
 
 type RebookRequest = {
   id: string;
@@ -24,6 +26,7 @@ type ClientInfo = {
 type Props = {
   requests: RebookRequest[];
   clients: ClientInfo[];
+  workspaceId: string;
 };
 
 function getClientName(clients: ClientInfo[], clientId: string): string {
@@ -60,7 +63,32 @@ const statusConfig: Record<string, { variant: "default" | "success" | "warning" 
   acknowledged: { variant: "default", label: "Acknowledged" },
 };
 
-export function RebookRequestsList({ requests, clients }: Props) {
+export function RebookRequestsList({ requests, clients, workspaceId }: Props) {
+  const router = useRouter();
+  const [selectedRequest, setSelectedRequest] = useState<RebookRequest | null>(null);
+  const [decliningId, setDecliningId] = useState<string | null>(null);
+
+  async function handleDecline(requestId: string) {
+    setDecliningId(requestId);
+    try {
+      await fetch(`/api/appointments/requests/${requestId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "declined" }),
+      });
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to decline request:", err);
+    } finally {
+      setDecliningId(null);
+    }
+  }
+
+  function handleBooked() {
+    setSelectedRequest(null);
+    router.refresh();
+  }
+
   if (requests.length === 0) {
     return (
       <div className="rounded-xl border border-dashed p-8 text-center" style={{ borderColor: "var(--stone-mid)" }}>
@@ -75,74 +103,94 @@ export function RebookRequestsList({ requests, clients }: Props) {
   }
 
   return (
-    <div className="space-y-3">
-      {requests.map(req => {
-        const clientName = getClientName(clients, req.client_id);
-        const notes = parseNotes(req.notes);
-        const status = statusConfig[req.status] || statusConfig.pending;
+    <>
+      <div className="space-y-3">
+        {requests.map(req => {
+          const clientName = getClientName(clients, req.client_id);
+          const notes = parseNotes(req.notes);
+          const status = statusConfig[req.status] || statusConfig.pending;
 
-        return (
-          <Card key={req.id}>
-            <CardContent className="py-3.5">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <p style={{ fontSize: "14px", color: "var(--text-on-stone)", fontWeight: 500 }}>
-                    {clientName}
-                  </p>
-                  <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", marginTop: "2px" }}>
-                    {req.service_type || "Service not specified"}
-                  </p>
-                </div>
-                <Badge variant={status.variant}>{status.label}</Badge>
-              </div>
-
-              {/* Preferences */}
-              <div className="space-y-1 mb-3">
-                {req.preferred_dates.length > 0 && (
-                  <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>
-                    <span style={{ fontWeight: 500 }}>Days:</span>{" "}
-                    {req.preferred_dates.map(d => d.charAt(0).toUpperCase() + d.slice(0, 3)).join(", ")}
-                  </p>
-                )}
-                {notes.preferredTime && (
-                  <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>
-                    <span style={{ fontWeight: 500 }}>Time:</span>{" "}
-                    <span style={{ textTransform: "capitalize" }}>{notes.preferredTime}</span>
-                  </p>
-                )}
-                {notes.timeframe && (
-                  <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>
-                    <span style={{ fontWeight: 500 }}>Timeframe:</span>{" "}
-                    {notes.timeframe === "2_weeks" ? "Within 2 weeks" : notes.timeframe === "1_month" ? "Within a month" : "Flexible"}
-                  </p>
-                )}
-                {notes.clientNotes && (
-                  <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)", fontStyle: "italic" }}>
-                    &ldquo;{notes.clientNotes}&rdquo;
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span style={{ fontSize: "10px", color: "var(--text-on-stone-ghost)" }}>
-                  {formatRelativeDate(req.created_at)}
-                </span>
-
-                {req.status === "pending" && (
-                  <div className="flex gap-2">
-                    <Link href={`/app/appointments/new?clientId=${req.client_id}&service=${encodeURIComponent(req.service_type || "")}`}>
-                      <Button size="sm">Book Them</Button>
-                    </Link>
-                    <Button size="sm" variant="ghost">
-                      Decline
-                    </Button>
+          return (
+            <Card key={req.id}>
+              <CardContent className="py-3.5">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p style={{ fontSize: "14px", color: "var(--text-on-stone)", fontWeight: 500 }}>
+                      {clientName}
+                    </p>
+                    <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", marginTop: "2px" }}>
+                      {req.service_type || "Service not specified"}
+                    </p>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+                  <Badge variant={status.variant}>{status.label}</Badge>
+                </div>
+
+                {/* Preferences */}
+                <div className="space-y-1 mb-3">
+                  {req.preferred_dates.length > 0 && (
+                    <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>
+                      <span style={{ fontWeight: 500 }}>Days:</span>{" "}
+                      {req.preferred_dates.map(d => d.charAt(0).toUpperCase() + d.slice(0, 3)).join(", ")}
+                    </p>
+                  )}
+                  {notes.preferredTime && (
+                    <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>
+                      <span style={{ fontWeight: 500 }}>Time:</span>{" "}
+                      <span style={{ textTransform: "capitalize" }}>{notes.preferredTime}</span>
+                    </p>
+                  )}
+                  {notes.timeframe && (
+                    <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>
+                      <span style={{ fontWeight: 500 }}>Timeframe:</span>{" "}
+                      {notes.timeframe === "2_weeks" ? "Within 2 weeks" : notes.timeframe === "1_month" ? "Within a month" : "Flexible"}
+                    </p>
+                  )}
+                  {notes.clientNotes && (
+                    <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)", fontStyle: "italic" }}>
+                      &ldquo;{notes.clientNotes}&rdquo;
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span style={{ fontSize: "10px", color: "var(--text-on-stone-ghost)" }}>
+                    {formatRelativeDate(req.created_at)}
+                  </span>
+
+                  {req.status === "pending" && (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => setSelectedRequest(req)}
+                      >
+                        Book Them
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={decliningId === req.id}
+                        onClick={() => handleDecline(req.id)}
+                      >
+                        {decliningId === req.id ? "Declining..." : "Decline"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {selectedRequest && (
+        <BookingSuggestionModal
+          request={selectedRequest}
+          clientName={getClientName(clients, selectedRequest.client_id)}
+          workspaceId={workspaceId}
+          onClose={() => setSelectedRequest(null)}
+          onBooked={handleBooked}
+        />
+      )}
+    </>
   );
 }

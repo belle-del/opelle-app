@@ -64,6 +64,7 @@ export default async function AppointmentsPage() {
             <RebookRequestsList
               requests={rebookRequests}
               clients={clients}
+              workspaceId={workspaceId || ""}
             />
           ),
         }}
