@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import type { ClientPreferenceProfile } from "@/lib/types";
 
 async function getClientUser(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -14,6 +15,82 @@ async function getClientUser(supabase: Awaited<ReturnType<typeof createSupabaseS
     .single();
 
   return clientUser;
+}
+
+/**
+ * Build a notes section from client preference data.
+ * Returns the section string or null if no preference data is present.
+ */
+function buildPreferencesNotesSection(pref: Partial<ClientPreferenceProfile>): string | null {
+  const lines: string[] = [];
+  if (pref.styleNotes) lines.push(`Hair Goals: ${pref.styleNotes}`);
+  if (pref.allergies) lines.push(`Allergies: ${pref.allergies}`);
+  if (pref.lifestyleNotes) lines.push(`Lifestyle: ${pref.lifestyleNotes}`);
+  if (pref.maintenanceLevel) lines.push(`Maintenance: ${pref.maintenanceLevel}`);
+  if (pref.visitCadenceDays) lines.push(`Visit Cadence: every ${pref.visitCadenceDays} days`);
+
+  if (lines.length === 0) return null;
+  return `--- Client Preferences ---\n${lines.join("\n")}`;
+}
+
+/**
+ * Merge the preferences section into existing notes.
+ * If existing notes already contain the section header, replace that section.
+ * Otherwise append it.
+ */
+function mergeNotesWithPreferences(existingNotes: string | null, prefSection: string): string {
+  const header = "--- Client Preferences ---";
+  if (existingNotes && existingNotes.includes(header)) {
+    // Replace from the header to the end (preferences section is always last)
+    const idx = existingNotes.indexOf(header);
+    const before = existingNotes.substring(0, idx).trimEnd();
+    return before ? `${before}\n\n${prefSection}` : prefSection;
+  }
+  if (existingNotes && existingNotes.trim()) {
+    return `${existingNotes.trimEnd()}\n\n${prefSection}`;
+  }
+  return prefSection;
+}
+
+/**
+ * Generate tags from preference data and merge with existing tags.
+ */
+function mergeTagsWithPreferences(
+  existingTags: string[],
+  pref: Partial<ClientPreferenceProfile>
+): string[] {
+  const newTags: string[] = [];
+
+  if (pref.maintenanceLevel) {
+    const label = `Maintenance: ${pref.maintenanceLevel.charAt(0).toUpperCase() + pref.maintenanceLevel.slice(1)}`;
+    newTags.push(label);
+  }
+
+  if (pref.visitCadenceDays && pref.visitCadenceDays > 0) {
+    const weeks = Math.round(pref.visitCadenceDays / 7);
+    newTags.push(`Every ${weeks} Weeks`);
+  }
+
+  if (pref.allergies && pref.allergies.trim()) {
+    newTags.push("Has Allergies");
+  }
+
+  // Merge: add new tags that aren't already present (case-insensitive check)
+  const existingLower = new Set(existingTags.map((t) => t.toLowerCase()));
+  // Remove old auto-generated tags that may have changed
+  const autoTagPrefixes = ["maintenance:", "every ", "has allergies"];
+  const filtered = existingTags.filter((t) => {
+    const lower = t.toLowerCase();
+    return !autoTagPrefixes.some((prefix) => lower.startsWith(prefix) || lower === prefix);
+  });
+
+  for (const tag of newTags) {
+    if (!filtered.some((t) => t.toLowerCase() === tag.toLowerCase())) {
+      filtered.push(tag);
+    }
+  }
+
+  return filtered;
 }
 
 export async function GET() {
@@ -59,6 +136,31 @@ export async function PATCH(request: Request) {
   }
 
   const admin = createSupabaseAdminClient();
+
+  // If preference_profile is being updated, also sync to notes and tags
+  if (updates.preference_profile) {
+    const pref = updates.preference_profile as Partial<ClientPreferenceProfile>;
+
+    // Fetch current client data for existing notes and tags
+    const { data: currentClient } = await admin
+      .from("clients")
+      .select("notes, tags")
+      .eq("id", clientUser.client_id)
+      .single();
+
+    const existingNotes: string | null = currentClient?.notes ?? null;
+    const existingTags: string[] = currentClient?.tags ?? [];
+
+    // Build and merge notes
+    const prefSection = buildPreferencesNotesSection(pref);
+    if (prefSection) {
+      updates.notes = mergeNotesWithPreferences(existingNotes, prefSection);
+    }
+
+    // Build and merge tags
+    updates.tags = mergeTagsWithPreferences(existingTags, pref);
+  }
+
   const { data: client, error } = await admin
     .from("clients")
     .update(updates)

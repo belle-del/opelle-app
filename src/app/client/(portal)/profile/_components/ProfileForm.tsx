@@ -19,8 +19,8 @@ export function ProfileForm({ client, stylistName, workspaceName }: Props) {
   const [pronouns, setPronouns] = useState(client.pronouns || "");
   const [phone, setPhone] = useState(client.phone || "");
   const [hairGoals, setHairGoals] = useState(client.preferenceProfile?.styleNotes || "");
-  const [allergies, setAllergies] = useState("");
-  const [lifestyleNotes, setLifestyleNotes] = useState("");
+  const [allergies, setAllergies] = useState(client.preferenceProfile?.allergies || "");
+  const [lifestyleNotes, setLifestyleNotes] = useState(client.preferenceProfile?.lifestyleNotes || "");
   const [maintenanceLevel, setMaintenanceLevel] = useState(client.preferenceProfile?.maintenanceLevel || "");
   const [visitCadence, setVisitCadence] = useState(
     client.preferenceProfile?.visitCadenceDays
@@ -46,6 +46,8 @@ export function ProfileForm({ client, stylistName, workspaceName }: Props) {
           preference_profile: {
             ...(client.preferenceProfile || {}),
             styleNotes: hairGoals.trim(),
+            allergies: allergies.trim(),
+            lifestyleNotes: lifestyleNotes.trim(),
             maintenanceLevel: maintenanceLevel || undefined,
             visitCadenceDays: visitCadence ? parseInt(visitCadence) : undefined,
           },

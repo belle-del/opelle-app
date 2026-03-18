@@ -48,26 +48,27 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
   // Phase 2: Intelligence (depends on Phase 1 data)
   const rebookStats = computeRebookIntelligence(appointments);
 
-  // Use cached preference profile if available, otherwise call kernel
-  const kernelProfile = client.preferenceProfile ?? (
-    formulaEntries.length >= 2
-      ? await getClientProfile({
-          clientName: getClientDisplayName(client),
-          clientNotes: client.notes ?? null,
-          tags: client.tags,
-          formulaHistory: formulaEntries.slice(0, 20).map((fe) => ({
-            service_date: fe.serviceDate,
-            raw_notes: fe.rawNotes,
-            general_notes: fe.generalNotes,
-          })),
-          appointmentHistory: appointments.slice(0, 20).map((a) => ({
-            service_name: a.serviceName,
-            start_at: a.startAt,
-            status: a.status,
-          })),
-        })
-      : null
-  );
+  // Use cached preference profile if available, otherwise call kernel when enough data exists
+  // Client-submitted preference data (from portal) shows regardless of formula count
+  let kernelProfile = client.preferenceProfile ?? null;
+
+  if (!kernelProfile && formulaEntries.length >= 2) {
+    kernelProfile = await getClientProfile({
+      clientName: getClientDisplayName(client),
+      clientNotes: client.notes ?? null,
+      tags: client.tags,
+      formulaHistory: formulaEntries.slice(0, 20).map((fe) => ({
+        service_date: fe.serviceDate,
+        raw_notes: fe.rawNotes,
+        general_notes: fe.generalNotes,
+      })),
+      appointmentHistory: appointments.slice(0, 20).map((a) => ({
+        service_name: a.serviceName,
+        start_at: a.startAt,
+        status: a.status,
+      })),
+    });
+  }
 
   // Only generate rebook message for non-on_track urgency
   const rebookMessage = rebookStats && rebookStats.urgency !== "on_track"
@@ -231,6 +232,18 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Style Notes</p>
                 <p className="mt-1">{kernelProfile.styleNotes}</p>
+              </div>
+            )}
+            {kernelProfile.allergies && (
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Allergies / Sensitivities</p>
+                <p className="mt-1">{kernelProfile.allergies}</p>
+              </div>
+            )}
+            {kernelProfile.lifestyleNotes && (
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Lifestyle Notes</p>
+                <p className="mt-1">{kernelProfile.lifestyleNotes}</p>
               </div>
             )}
             {kernelProfile.nextVisitSuggestion && (

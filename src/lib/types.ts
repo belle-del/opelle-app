@@ -36,6 +36,8 @@ export type ClientPreferenceProfile = {
   processingPreferences: string;
   maintenanceLevel: string;
   styleNotes: string;
+  allergies: string;
+  lifestyleNotes: string;
   nextVisitSuggestion: string;
   visitCadenceDays: number;
   totalVisits: number;
