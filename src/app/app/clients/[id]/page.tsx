@@ -100,7 +100,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         </Link>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center text-2xl font-medium text-black">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-600 to-amber-400 flex items-center justify-center text-2xl font-medium text-black">
               {client.firstName[0]}
               {client.lastName?.[0] || ""}
             </div>
@@ -258,11 +258,11 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
 
       {/* Rebook Intelligence (Kernel-powered) */}
       {rebookData && (
-        <Card className="border-cyan-500/20 bg-cyan-500/5">
+        <Card style={{ borderColor: "rgba(196,171,112,0.2)", backgroundColor: "rgba(196,171,112,0.05)" }}>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-cyan-400">Rebooking Window</p>
+                <p className="text-sm font-medium" style={{ color: "var(--brass)" }}>Rebooking Window</p>
                 <p className="text-sm text-muted-foreground">
                   {rebookData.days_since_last_visit} days since last visit
                   (avg: {rebookData.avg_days_between_visits} days)

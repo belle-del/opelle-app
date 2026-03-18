@@ -27,19 +27,19 @@
 }
 
 .rbc-toolbar button:hover {
-  background: rgba(143,173,200,0.08);
-  border-color: rgba(143,173,200,0.4);
+  background: rgba(196,171,112,0.08);
+  border-color: rgba(196,171,112,0.4);
 }
 
 .rbc-toolbar button.rbc-active {
-  background: rgba(143,173,200,0.15);
-  border-color: #8FADC8;
-  color: #0E213B;
+  background: rgba(196,171,112,0.15);
+  border-color: #C4AB70;
+  color: var(--text-on-stone);
 }
 
 .rbc-toolbar button:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(143,173,200,0.2);
+  box-shadow: 0 0 0 3px rgba(196,171,112,0.2);
 }
 
 .rbc-header {
@@ -53,7 +53,7 @@
 }
 
 .rbc-today {
-  background: rgba(143,173,200,0.08);
+  background: rgba(196,171,112,0.08);
 }
 
 .rbc-off-range-bg {
@@ -67,7 +67,7 @@
 }
 
 .rbc-date-cell.rbc-now {
-  color: #8FADC8;
+  color: #C4AB70;
   font-weight: 700;
 }
 
@@ -157,8 +157,8 @@
 }
 
 .rbc-show-more {
-  background: rgba(143,173,200,0.15);
-  color: #0E213B;
+  background: rgba(196,171,112,0.15);
+  color: var(--text-on-stone);
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.75rem;

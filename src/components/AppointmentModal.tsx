@@ -245,13 +245,14 @@ export function AppointmentModal({
                   <div className="flex items-center gap-3 text-sm">
                     <span className="text-muted-foreground ml-7">Status:</span>
                     <span
-                      className={`font-medium capitalize ${
-                        appointment.status === "completed"
-                          ? "text-emerald-400"
+                      className="font-medium capitalize"
+                      style={{
+                        color: appointment.status === "completed"
+                          ? "#C4AB70"
                           : appointment.status === "cancelled"
-                          ? "text-red-400"
-                          : "text-blue-400"
-                      }`}
+                          ? "#751212"
+                          : "var(--brass)",
+                      }}
                     >
                       {appointment.status}
                     </span>
