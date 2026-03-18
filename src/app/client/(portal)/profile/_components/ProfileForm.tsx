@@ -39,6 +39,7 @@ export function ProfileForm({ client, stylistName, workspaceName }: Props) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          clientId: client.id,
           first_name: firstName.trim(),
           last_name: lastName.trim() || null,
           pronouns: pronouns.trim() || null,

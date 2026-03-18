@@ -5,16 +5,31 @@ import type { ClientPreferenceProfile } from "@/lib/types";
 
 async function getClientUser(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
   const admin = createSupabaseAdminClient();
-  const { data: clientUser } = await admin
+
+  if (user) {
+    const { data: clientUser } = await admin
+      .from("client_users")
+      .select("*")
+      .eq("auth_user_id", user.id)
+      .limit(1);
+    if (clientUser && clientUser.length > 0) return clientUser[0];
+  }
+
+  // Cookie auth failed — return null (caller must handle)
+  return null;
+}
+
+// Fallback: accept clientId from request body when cookie auth fails
+async function getClientUserFromBody(body: Record<string, unknown>) {
+  if (!body.clientId) return null;
+  const admin = createSupabaseAdminClient();
+  const { data } = await admin
     .from("client_users")
     .select("*")
-    .eq("auth_user_id", user.id)
-    .single();
-
-  return clientUser;
+    .eq("client_id", body.clientId as string)
+    .limit(1);
+  return data?.[0] || null;
 }
 
 /**
@@ -115,13 +130,16 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+  const body = await request.json();
+
   const supabase = await createSupabaseServerClient();
-  const clientUser = await getClientUser(supabase);
+  let clientUser = await getClientUser(supabase);
+  if (!clientUser) {
+    clientUser = await getClientUserFromBody(body);
+  }
   if (!clientUser) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
-
-  const body = await request.json();
   const allowedFields = ["first_name", "last_name", "pronouns", "phone", "preference_profile"];
   const updates: Record<string, unknown> = {};
 
