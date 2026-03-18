@@ -16,6 +16,7 @@ import { getClientDisplayName } from "@/lib/types";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { ArrowLeft, Edit, Calendar, Plus, Sparkles } from "lucide-react";
 import { MentisSuggestions } from "../../_components/MentisSuggestions";
+import { PortalAccountCard } from "./_components/PortalAccountCard";
 
 interface ClientDetailPageProps {
   params: Promise<{ id: string }>;
@@ -117,6 +118,9 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
           </Link>
         </div>
       </header>
+
+      {/* Portal Account Status */}
+      <PortalAccountCard clientId={client.id} />
 
       {/* Mentis Suggestions */}
       <MentisSuggestions

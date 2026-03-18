@@ -1,0 +1,28 @@
+import { NextResponse } from "next/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+interface RouteParams { params: Promise<{ id: string }> }
+
+export async function GET(request: Request, { params }: RouteParams) {
+  const { id } = await params;
+  const admin = createSupabaseAdminClient();
+
+  const { data: clientUser } = await admin
+    .from("client_users")
+    .select("created_at")
+    .eq("client_id", id)
+    .maybeSingle();
+
+  const { data: invites } = await admin
+    .from("client_invites")
+    .select("id, token, expires_at, used_at, created_at")
+    .eq("client_id", id)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  return NextResponse.json({
+    hasAccount: !!clientUser,
+    accountCreatedAt: clientUser?.created_at || null,
+    pendingInvites: (invites || []).filter((i: any) => !i.used_at && new Date(i.expires_at) > new Date()),
+  });
+}
