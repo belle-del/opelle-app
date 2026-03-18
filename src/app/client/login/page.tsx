@@ -1,29 +1,36 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Eye, EyeOff } from "lucide-react";
 
 const ERROR_MESSAGES: Record<string, string> = {
-  missing_code: "Something went wrong with the sign-in link. Try again.",
-  auth_failed: "Sign-in link expired or already used. Request a new one.",
+  missing_code: "Something went wrong. Try again.",
+  auth_failed: "Sign-in failed. Check your email and password.",
   link_failed: "Couldn't link your account. Try again or contact your stylist.",
   no_account: "No account found for that email. Enter your stylist's code first.",
 };
 
 function ClientLoginForm() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [justCreated, setJustCreated] = useState(false);
 
   useEffect(() => {
     const urlError = searchParams.get("error");
     if (urlError && ERROR_MESSAGES[urlError]) {
       setError(ERROR_MESSAGES[urlError]);
+    }
+    if (searchParams.get("created") === "true") {
+      setJustCreated(true);
     }
     if (searchParams.get("signout") === "true") {
       (async () => {
@@ -53,19 +60,22 @@ function ClientLoginForm() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
 
-      const { error: authError } = await supabase.auth.signInWithOtp({
+      const { error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        options: {
-          emailRedirectTo: `${window.location.origin}/client/auth/callback`,
-        },
+        password,
       });
 
       if (authError) {
-        setError(authError.message);
+        if (authError.message.includes("Invalid login")) {
+          setError("Invalid email or password");
+        } else {
+          setError(authError.message);
+        }
         return;
       }
 
-      setSent(true);
+      // Signed in — go to portal
+      router.push("/client");
     } catch {
       setError("Something went wrong — try again");
     } finally {
@@ -76,103 +86,102 @@ function ClientLoginForm() {
   const showNoAccountError = searchParams.get("error") === "no_account";
 
   return (
-    <>
-      {!sent ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="text-center mb-4">
-            <h2
-              className="text-lg mb-1"
-              style={{ fontFamily: "'Cormorant Garamond', serif", color: "var(--text-on-stone)" }}
-            >
-              Sign in
-            </h2>
-            <p style={{ fontSize: "13px", color: "var(--text-on-stone-faint)" }}>
-              We&apos;ll send you a sign-in link
-            </p>
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="text-center mb-4">
+        <h2
+          className="text-lg mb-1"
+          style={{ fontFamily: "'Cormorant Garamond', serif", color: "var(--text-on-stone)" }}
+        >
+          Sign in
+        </h2>
+        <p style={{ fontSize: "13px", color: "var(--text-on-stone-faint)" }}>
+          Enter your email and password
+        </p>
+      </div>
 
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(""); }}
-            placeholder="Email address"
-            required
-            autoFocus
-          />
-
-          {error && (
-            <p style={{ color: "var(--garnet)", fontSize: "13px", textAlign: "center" }}>{error}</p>
-          )}
-
-          {showNoAccountError && (
-            <div
-              className="p-3 rounded-lg text-center"
-              style={{ background: "rgba(196,171,112,0.08)", border: "1px solid rgba(196,171,112,0.2)" }}
-            >
-              <a
-                href="/client/join"
-                style={{
-                  color: "var(--brass)",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  textDecoration: "none",
-                  fontFamily: "'DM Sans', sans-serif",
-                }}
-              >
-                → Enter your stylist code to get started
-              </a>
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            disabled={!email.trim() || loading}
-            className="w-full"
-            size="lg"
-          >
-            {loading ? "Sending..." : "Send sign-in link"}
-          </Button>
-
-          <div className="text-center mt-4">
-            <a
-              href="/client/join"
-              style={{ color: "var(--brass)", fontSize: "13px", textDecoration: "none" }}
-            >
-              New here? Enter your stylist code
-            </a>
-          </div>
-        </form>
-      ) : (
-        <div className="text-center space-y-4 py-4">
-          <div
-            className="mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4"
-            style={{ background: "var(--brass-soft)" }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brass)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect width="20" height="16" x="2" y="4" rx="2" />
-              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-            </svg>
-          </div>
-          <h2
-            className="text-lg"
-            style={{ fontFamily: "'Cormorant Garamond', serif", color: "var(--text-on-stone)" }}
-          >
-            Check your email
-          </h2>
-          <p style={{ fontSize: "13px", color: "var(--text-on-stone-faint)", lineHeight: "1.5" }}>
-            We sent a sign-in link to <strong style={{ color: "var(--text-on-stone)" }}>{email}</strong>
+      {justCreated && (
+        <div
+          className="p-3 rounded-lg text-center"
+          style={{ background: "rgba(196,171,112,0.08)", border: "1px solid rgba(196,171,112,0.2)" }}
+        >
+          <p style={{ color: "var(--brass)", fontSize: "13px" }}>
+            Account created! Sign in below.
           </p>
-          <button
-            type="button"
-            onClick={() => { setSent(false); setEmail(""); }}
-            className="mt-2"
-            style={{ color: "var(--brass)", fontSize: "13px", background: "none", border: "none", cursor: "pointer" }}
-          >
-            Try a different email
-          </button>
         </div>
       )}
-    </>
+
+      <div className="space-y-3">
+        <Input
+          type="email"
+          value={email}
+          onChange={(e) => { setEmail(e.target.value); setError(""); }}
+          placeholder="Email address"
+          required
+          autoFocus
+        />
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); setError(""); }}
+            placeholder="Password"
+            required
+            className="pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2"
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-on-stone-faint)" }}
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <p style={{ color: "var(--garnet)", fontSize: "13px", textAlign: "center" }}>{error}</p>
+      )}
+
+      {showNoAccountError && (
+        <div
+          className="p-3 rounded-lg text-center"
+          style={{ background: "rgba(196,171,112,0.08)", border: "1px solid rgba(196,171,112,0.2)" }}
+        >
+          <a
+            href="/client/join"
+            style={{
+              color: "var(--brass)",
+              fontSize: "14px",
+              fontWeight: 500,
+              textDecoration: "none",
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            → Enter your stylist code to get started
+          </a>
+        </div>
+      )}
+
+      <Button
+        type="submit"
+        disabled={!email.trim() || !password || loading}
+        className="w-full"
+        size="lg"
+      >
+        {loading ? "Signing in..." : "Sign in"}
+      </Button>
+
+      <div className="text-center mt-4">
+        <a
+          href="/client/join"
+          style={{ color: "var(--brass)", fontSize: "13px", textDecoration: "none" }}
+        >
+          New here? Enter your stylist code
+        </a>
+      </div>
+    </form>
   );
 }
 

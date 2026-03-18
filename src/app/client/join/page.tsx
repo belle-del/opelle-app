@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Eye, EyeOff } from "lucide-react";
 
-type JoinStep = "code" | "account" | "check_email";
+type JoinStep = "code" | "account";
 
 type CodeResult = {
   type: "stylist_code" | "salon_code" | "booking_code";
@@ -18,12 +20,15 @@ type CodeResult = {
 };
 
 export default function JoinPage() {
+  const router = useRouter();
   const [step, setStep] = useState<JoinStep>("code");
   const [code, setCode] = useState("");
   const [codeResult, setCodeResult] = useState<CodeResult | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -57,50 +62,58 @@ export default function JoinPage() {
   async function handleAccountSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Also set cookie as backup (works if magic link opens in same browser)
-      document.cookie = `opelle_join_data=${encodeURIComponent(
-        JSON.stringify({
-          workspaceId: codeResult!.workspaceId,
-          stylistId: codeResult!.stylistId,
+      // 1. Create account on server (admin creates user + client + link)
+      const res = await fetch("/api/client/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
           firstName: firstName.trim(),
           lastName: lastName.trim(),
+          workspaceId: codeResult!.workspaceId,
+          stylistId: codeResult!.stylistId,
           inviteId: codeResult!.inviteId,
           existingClientId: codeResult!.clientId,
-        })
-      )}; path=/; max-age=3600; SameSite=Lax`;
+        }),
+      });
+      const data = await res.json();
 
-      // Sign up with Supabase magic link
-      // Join data is stored in user_metadata so it survives cross-browser magic link clicks
+      if (!res.ok) {
+        setError(data.error || "Failed to create account");
+        return;
+      }
+
+      // 2. Immediately sign in with the new credentials
       const { createBrowserClient } = await import("@supabase/ssr");
       const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
 
-      const { error: authError } = await supabase.auth.signInWithOtp({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        options: {
-          emailRedirectTo: `${window.location.origin}/client/auth/callback`,
-          data: {
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            join_workspace_id: codeResult!.workspaceId,
-            join_stylist_id: codeResult!.stylistId || null,
-            join_invite_id: codeResult!.inviteId || null,
-            join_existing_client_id: codeResult!.clientId || null,
-          },
-        },
+        password,
       });
 
-      if (authError) {
-        setError(authError.message);
+      if (signInError) {
+        console.error("[join] Sign-in after signup failed:", signInError.message);
+        // Account was created, just redirect to login
+        router.push("/client/login?created=true");
         return;
       }
 
-      setStep("check_email");
+      // 3. Go straight to portal — no magic link needed!
+      router.push("/client");
     } catch {
       setError("Something went wrong — try again");
     } finally {
@@ -214,6 +227,29 @@ export default function JoinPage() {
                     placeholder="Email address"
                     required
                   />
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Create a password"
+                      required
+                      minLength={6}
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-on-stone-faint)" }}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  <p style={{ fontSize: "11px", color: "var(--text-on-stone-ghost)", marginTop: "2px" }}>
+                    At least 6 characters
+                  </p>
                 </div>
 
                 {error && (
@@ -222,11 +258,11 @@ export default function JoinPage() {
 
                 <Button
                   type="submit"
-                  disabled={!firstName.trim() || !email.trim() || loading}
+                  disabled={!firstName.trim() || !email.trim() || !password || loading}
                   className="w-full"
                   size="lg"
                 >
-                  {loading ? "Setting up..." : "Continue"}
+                  {loading ? "Creating account..." : "Create account"}
                 </Button>
 
                 <button
@@ -239,34 +275,22 @@ export default function JoinPage() {
                 </button>
               </form>
             )}
-
-            {step === "check_email" && (
-              <div className="text-center space-y-4 py-4">
-                <div
-                  className="mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4"
-                  style={{ background: "var(--brass-soft)" }}
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brass)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="20" height="16" x="2" y="4" rx="2" />
-                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                  </svg>
-                </div>
-                <h2
-                  className="text-lg"
-                  style={{ fontFamily: "'Cormorant Garamond', serif", color: "var(--text-on-stone)" }}
-                >
-                  Check your email
-                </h2>
-                <p style={{ fontSize: "13px", color: "var(--text-on-stone-faint)", lineHeight: "1.5" }}>
-                  We sent a sign-in link to <strong style={{ color: "var(--text-on-stone)" }}>{email}</strong>
-                </p>
-                <p style={{ fontSize: "12px", color: "var(--text-on-stone-ghost)" }}>
-                  The link will expire in 1 hour
-                </p>
-              </div>
-            )}
           </CardContent>
         </Card>
+
+        <div className="text-center mt-6">
+          <a
+            href="/"
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: "12px",
+              color: "var(--stone-shadow)",
+              textDecoration: "none",
+            }}
+          >
+            ← Back to home
+          </a>
+        </div>
       </div>
     </div>
   );
