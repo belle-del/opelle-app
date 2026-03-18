@@ -15,8 +15,20 @@ export async function listServiceTypes(): Promise<ServiceType[]> {
     .eq("workspace_id", workspace.id)
     .order("sort_order", { ascending: true });
 
-  if (error || !data) return [];
-  return (data as ServiceTypeRow[]).map(serviceTypeRowToModel);
+  if (error || !data) {
+    if (error) console.error("[service-types] List failed:", error.message);
+    return [];
+  }
+  // Safely map rows — handle missing columns
+  return data.map((row) => ({
+    id: row.id,
+    workspaceId: row.workspace_id,
+    name: row.name,
+    sortOrder: row.sort_order,
+    defaultDurationMins: row.default_duration_mins ?? undefined,
+    bookingType: row.booking_type ?? undefined,
+    createdAt: row.created_at,
+  }));
 }
 
 export async function getServiceType(id: string): Promise<ServiceType | null> {
@@ -67,11 +79,24 @@ export async function createServiceType(input: {
     insertData.default_duration_mins = input.defaultDurationMins;
   }
 
-  const { data, error } = await admin
+  let { data, error } = await admin
     .from("service_types")
     .insert(insertData)
     .select("*")
     .single();
+
+  // If default_duration_mins column doesn't exist, retry without it
+  if (error && error.message?.includes("default_duration_mins")) {
+    console.warn("[service-types] default_duration_mins column missing, retrying without it");
+    delete insertData.default_duration_mins;
+    const retry = await admin
+      .from("service_types")
+      .insert(insertData)
+      .select("*")
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
 
   if (error) {
     console.error("[service-types] Create failed:", error.message);
@@ -94,13 +119,30 @@ export async function updateServiceType(
   if (input.defaultDurationMins !== undefined) updateData.default_duration_mins = input.defaultDurationMins;
   if (input.bookingType !== undefined) updateData.booking_type = input.bookingType;
 
-  const { data, error } = await admin
+  let { data, error } = await admin
     .from("service_types")
     .update(updateData)
     .eq("id", id)
     .eq("workspace_id", workspace.id)
     .select("*")
     .single();
+
+  // If default_duration_mins column doesn't exist, retry without it
+  if (error && error.message?.includes("default_duration_mins")) {
+    console.warn("[service-types] default_duration_mins column missing, retrying without it");
+    delete updateData.default_duration_mins;
+    if (Object.keys(updateData).length > 0) {
+      const retry = await admin
+        .from("service_types")
+        .update(updateData)
+        .eq("id", id)
+        .eq("workspace_id", workspace.id)
+        .select("*")
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
+  }
 
   if (error) {
     console.error("[service-types] Update failed:", error.message);
