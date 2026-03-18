@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
@@ -90,9 +90,17 @@ function makeNewApptUrl(date: Date, hour: number): string {
 
 export function V7Calendar({ appointments, clients }: V7CalendarProps) {
   const router = useRouter();
-  const [view, setView] = useState<View>(getSavedView);
-  const [current, setCurrent] = useState<Date>(getSavedDate);
+  const [view, setView] = useState<View>("week");
+  const [current, setCurrent] = useState<Date>(new Date());
+  const [hydrated, setHydrated] = useState(false);
   const today = new Date();
+
+  // Apply localStorage values after hydration to avoid SSR mismatch
+  useEffect(() => {
+    setView(getSavedView());
+    setCurrent(getSavedDate());
+    setHydrated(true);
+  }, []);
 
   // Persist view and date to localStorage
   const updateView = (v: View) => {
