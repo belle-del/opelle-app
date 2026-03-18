@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createClientNotification } from "@/lib/client-notifications";
 
 export async function POST(request: Request) {
@@ -10,7 +11,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { data: clientUser } = await supabase
+  const admin = createSupabaseAdminClient();
+
+  const { data: clientUser } = await admin
     .from("client_users")
     .select("*")
     .eq("auth_user_id", user.id)
@@ -27,7 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Service type is required" }, { status: 400 });
   }
 
-  const { data: rebookRequest, error } = await supabase
+  const { data: rebookRequest, error } = await admin
     .from("rebook_requests")
     .insert({
       workspace_id: clientUser.workspace_id,

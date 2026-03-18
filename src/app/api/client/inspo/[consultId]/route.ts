@@ -15,7 +15,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: clientUser } = await supabase
+  const admin = createSupabaseAdminClient();
+
+  const { data: clientUser } = await admin
     .from("client_users")
     .select("*")
     .eq("auth_user_id", user.id)
@@ -24,7 +26,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   const cu = clientUser as ClientUserRow;
 
   // Get the submission
-  const { data: submission } = await supabase
+  const { data: submission } = await admin
     .from("inspo_submissions")
     .select("*")
     .eq("id", consultId)
@@ -36,9 +38,6 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   }
 
   const aiAnalysis = submission.ai_analysis as InspoAnalysis | null;
-
-  // Get photo URLs
-  const admin = createSupabaseAdminClient();
   const { data: files } = await admin.storage
     .from("client-inspo")
     .list(`${cu.workspace_id}/${cu.client_id}/${submission.id}`);
@@ -51,7 +50,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   });
 
   // Check if consult form was already submitted
-  const { data: existingResponse } = await supabase
+  const { data: existingResponse } = await admin
     .from("intake_responses")
     .select("id, answers, created_at")
     .eq("client_id", cu.client_id)
@@ -80,7 +79,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: clientUser } = await supabase
+  const admin = createSupabaseAdminClient();
+
+  const { data: clientUser } = await admin
     .from("client_users")
     .select("*")
     .eq("auth_user_id", user.id)
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const cu = clientUser as ClientUserRow;
 
   // Verify submission belongs to client
-  const { data: submission } = await supabase
+  const { data: submission } = await admin
     .from("inspo_submissions")
     .select("id, workspace_id")
     .eq("id", consultId)
@@ -106,8 +107,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!answers || typeof answers !== "object") {
     return NextResponse.json({ error: "Answers are required" }, { status: 400 });
   }
-
-  const admin = createSupabaseAdminClient();
 
   // Save as intake_responses row
   const { error: insertError } = await admin

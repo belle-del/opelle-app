@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createClientNotification } from "@/lib/client-notifications";
 
 async function getClientUser(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: clientUser } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data: clientUser } = await admin
     .from("client_users")
     .select("*")
     .eq("auth_user_id", user.id)
@@ -22,7 +24,8 @@ export async function GET() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { data: appointments } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data: appointments } = await admin
     .from("appointments")
     .select("*")
     .eq("client_id", clientUser.client_id)
@@ -47,7 +50,8 @@ export async function POST(request: Request) {
 
   const endAt = new Date(new Date(startAt).getTime() + durationMins * 60000).toISOString();
 
-  const { data: appointment, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data: appointment, error } = await admin
     .from("appointments")
     .insert({
       workspace_id: clientUser.workspace_id,

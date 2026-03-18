@@ -1,16 +1,16 @@
 import { redirect } from "next/navigation";
 import { getClientContext } from "@/lib/client-auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ServiceSelector } from "./_components/ServiceSelector";
 
 export default async function BookPage() {
   const ctx = await getClientContext();
   if (!ctx) redirect("/client/join");
 
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
 
   // Get service types with booking_type set
-  const { data: serviceTypes } = await supabase
+  const { data: serviceTypes } = await admin
     .from("service_types")
     .select("*")
     .eq("workspace_id", ctx.clientUser.workspaceId)

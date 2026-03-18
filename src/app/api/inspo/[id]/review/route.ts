@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createClientNotification } from "@/lib/client-notifications";
 import { getCurrentWorkspace } from "@/lib/db/workspaces";
 import { emitCommsEvent } from "@/lib/comms-events";
@@ -19,8 +19,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   const body = await request.json();
   const reviewed = body.reviewed === true;
 
-  const supabase = await createSupabaseServerClient();
-  const { data: submission, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data: submission, error } = await admin
     .from("inspo_submissions")
     .update({ reviewed_by_stylist: reviewed })
     .eq("id", id)

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   getOrCreateCommsPreferences,
   updateCommsPreferences,
@@ -9,7 +10,8 @@ async function getClientUser(supabase: Awaited<ReturnType<typeof createSupabaseS
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: clientUser } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data: clientUser } = await admin
     .from("client_users")
     .select("*")
     .eq("auth_user_id", user.id)

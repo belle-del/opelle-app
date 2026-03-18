@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type WorkingHoursDay = { start: string; end: string; closed: boolean };
 type WorkingHours = Record<string, WorkingHoursDay>;
@@ -29,8 +30,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+  const admin = createSupabaseAdminClient();
+
   // Get client user
-  const { data: clientUser } = await supabase
+  const { data: clientUser } = await admin
     .from("client_users")
     .select("*")
     .eq("auth_user_id", user.id)
@@ -41,7 +44,7 @@ export async function GET(request: Request) {
   }
 
   // Get workspace settings
-  const { data: workspace } = await supabase
+  const { data: workspace } = await admin
     .from("workspaces")
     .select("working_hours, buffer_minutes, booking_window_days")
     .eq("id", clientUser.workspace_id)
@@ -54,7 +57,7 @@ export async function GET(request: Request) {
   // Get service duration
   let durationMins = 60;
   if (serviceId) {
-    const { data: service } = await supabase
+    const { data: service } = await admin
       .from("service_types")
       .select("default_duration_mins")
       .eq("id", serviceId)
@@ -95,7 +98,7 @@ export async function GET(request: Request) {
   endDate.setDate(endDate.getDate() + 1);
   const endRange = endDate.toISOString();
 
-  const { data: existingAppointments } = await supabase
+  const { data: existingAppointments } = await admin
     .from("appointments")
     .select("start_at, duration_mins")
     .eq("workspace_id", clientUser.workspace_id)

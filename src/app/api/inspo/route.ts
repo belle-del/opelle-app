@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentWorkspace } from "@/lib/db/workspaces";
 
@@ -16,8 +15,8 @@ export async function GET(request: NextRequest) {
   const clientId = searchParams.get("clientId");
   const unreviewedOnly = searchParams.get("unreviewedOnly") === "true";
 
-  const supabase = await createSupabaseServerClient();
-  let query = supabase
+  const admin = createSupabaseAdminClient();
+  let query = admin
     .from("inspo_submissions")
     .select("*")
     .eq("workspace_id", workspace.id)
@@ -33,7 +32,6 @@ export async function GET(request: NextRequest) {
   const { data: submissions } = await query;
 
   // Enrich with photo URLs and consult answers
-  const admin = createSupabaseAdminClient();
   const enriched = await Promise.all(
     (submissions || []).map(async (sub) => {
       // Get photos
@@ -49,7 +47,7 @@ export async function GET(request: NextRequest) {
       });
 
       // Check for consult form answers
-      const { data: intakeResponse } = await supabase
+      const { data: intakeResponse } = await admin
         .from("intake_responses")
         .select("answers")
         .eq("client_id", sub.client_id)

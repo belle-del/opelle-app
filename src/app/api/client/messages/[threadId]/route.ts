@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getThread, getMessagesForThread, markThreadRead } from "@/lib/db/messaging";
 
 async function getClientUser(
@@ -10,7 +11,8 @@ async function getClientUser(
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: clientUser } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data: clientUser } = await admin
     .from("client_users")
     .select("*")
     .eq("auth_user_id", user.id)

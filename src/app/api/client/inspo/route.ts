@@ -11,7 +11,9 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: clientUser } = await supabase
+  const admin = createSupabaseAdminClient();
+
+  const { data: clientUser } = await admin
     .from("client_users")
     .select("*")
     .eq("auth_user_id", user.id)
@@ -19,15 +21,12 @@ export async function GET() {
   if (!clientUser) return NextResponse.json({ error: "No client record" }, { status: 403 });
   const cu = clientUser as ClientUserRow;
 
-  const { data: submissions } = await supabase
+  const { data: submissions } = await admin
     .from("inspo_submissions")
     .select("*")
     .eq("client_id", cu.client_id)
     .eq("workspace_id", cu.workspace_id)
     .order("created_at", { ascending: false });
-
-  // Also fetch photo URLs from storage for each submission
-  const admin = createSupabaseAdminClient();
   const enriched = await Promise.all(
     (submissions || []).map(async (sub) => {
       const { data: files } = await admin.storage
@@ -54,7 +53,9 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: clientUser } = await supabase
+  const admin = createSupabaseAdminClient();
+
+  const { data: clientUser } = await admin
     .from("client_users")
     .select("*")
     .eq("auth_user_id", user.id)
@@ -78,8 +79,6 @@ export async function POST(request: NextRequest) {
   if (photoFiles.length > 5) {
     return NextResponse.json({ error: "Maximum 5 photos allowed" }, { status: 400 });
   }
-
-  const admin = createSupabaseAdminClient();
 
   // 1. Create the inspo_submissions row first to get an ID
   const { data: submission, error: insertError } = await admin

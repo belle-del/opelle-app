@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getClientContext } from "@/lib/client-auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getPublishedContent } from "@/lib/db/content";
 import { HomeDashboard } from "./_components/HomeDashboard";
 
@@ -8,10 +8,10 @@ export default async function ClientHomePage() {
   const ctx = await getClientContext();
   if (!ctx) redirect("/client/join");
 
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
 
   // Next appointment
-  const { data: nextAppointment } = await supabase
+  const { data: nextAppointment } = await admin
     .from("appointments")
     .select("*")
     .eq("client_id", ctx.clientUser.clientId)
@@ -22,7 +22,7 @@ export default async function ClientHomePage() {
     .maybeSingle();
 
   // Last completed visit
-  const { data: lastVisit } = await supabase
+  const { data: lastVisit } = await admin
     .from("appointments")
     .select("*")
     .eq("client_id", ctx.clientUser.clientId)
@@ -32,7 +32,7 @@ export default async function ClientHomePage() {
     .maybeSingle();
 
   // Unread notifications (action items)
-  const { data: unreadNotifications } = await supabase
+  const { data: unreadNotifications } = await admin
     .from("client_notifications")
     .select("*")
     .eq("client_id", ctx.clientUser.clientId)
@@ -43,7 +43,7 @@ export default async function ClientHomePage() {
   // Check for shared formula on last visit
   let hasSharedFormula = false;
   if (lastVisit) {
-    const { data: formulaEntry } = await supabase
+    const { data: formulaEntry } = await admin
       .from("formula_entries")
       .select("id, share_with_client")
       .eq("client_id", ctx.clientUser.clientId)
