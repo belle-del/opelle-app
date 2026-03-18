@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import type { ContentPost } from "@/lib/types";
 
 type AppointmentRow = {
@@ -47,10 +45,10 @@ function formatShortDate(dateStr: string): string {
   return d.toLocaleDateString("en-US", { month: "long", day: "numeric" });
 }
 
-const categoryBadgeStyles: Record<string, { background: string; color: string }> = {
-  tip: { background: "var(--brass)", color: "var(--bark-deepest)" },
-  product_spotlight: { background: "var(--garnet)", color: "var(--stone-lightest)" },
-  seasonal: { background: "rgba(106,142,102,0.3)", color: "rgb(166,202,162)" },
+const categoryColors: Record<string, { bg: string; text: string }> = {
+  tip: { bg: "#C4AB70", text: "#2C2C24" },
+  product_spotlight: { bg: "#9E5A5A", text: "#FFF" },
+  seasonal: { bg: "#6A8E66", text: "#FFF" },
 };
 
 function categoryLabel(cat: string): string {
@@ -72,62 +70,96 @@ export function HomeDashboard({
   recentContent,
 }: Props) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Greeting */}
       <div>
         <h1
-          className="text-2xl mb-0.5"
-          style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+          style={{
+            fontFamily: "'Fraunces', serif",
+            fontSize: "28px",
+            color: "#2C2C24",
+            marginBottom: "2px",
+            letterSpacing: "-0.02em",
+          }}
         >
           Hi, {clientFirstName}
         </h1>
-        <p style={{ fontSize: "13px", color: "var(--stone-shadow)" }}>
+        <p style={{ fontSize: "15px", color: "#8A8778", fontFamily: "'DM Sans', sans-serif" }}>
           Here&apos;s what&apos;s happening
         </p>
       </div>
 
-      {/* Next Appointment Card */}
+      {/* Next Appointment */}
       {nextAppointment ? (
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-start justify-between mb-2">
-              <Badge variant="default" style={{ background: "var(--garnet)", color: "var(--stone-lightest)", fontSize: "10px" }}>
-                Upcoming
-              </Badge>
-            </div>
-            <h3
-              className="text-lg mb-1"
-              style={{ fontFamily: "'Fraunces', serif", color: "var(--text-on-stone)" }}
+        <div
+          style={{
+            background: "#FFFFFF",
+            borderRadius: "16px",
+            padding: "20px",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <span
+              style={{
+                background: "#9E5A5A",
+                color: "#FFF",
+                fontSize: "11px",
+                fontWeight: 600,
+                padding: "3px 10px",
+                borderRadius: "20px",
+                fontFamily: "'DM Sans', sans-serif",
+                letterSpacing: "0.03em",
+              }}
             >
-              {nextAppointment.service_name}
-            </h3>
-            <p style={{ fontSize: "14px", color: "var(--text-on-stone-dim)", marginBottom: "4px" }}>
-              {formatDate(nextAppointment.start_at)}
-            </p>
-            <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)" }}>
-              with {stylistName}
-            </p>
-          </CardContent>
-        </Card>
+              Upcoming
+            </span>
+          </div>
+          <h3
+            style={{
+              fontFamily: "'Fraunces', serif",
+              fontSize: "20px",
+              color: "#2C2C24",
+              marginBottom: "6px",
+            }}
+          >
+            {nextAppointment.service_name}
+          </h3>
+          <p style={{ fontSize: "15px", color: "#5C5A4F", marginBottom: "4px", fontFamily: "'DM Sans', sans-serif" }}>
+            {formatDate(nextAppointment.start_at)}
+          </p>
+          <p style={{ fontSize: "13px", color: "#8A8778", fontFamily: "'DM Sans', sans-serif" }}>
+            with {stylistName}
+          </p>
+        </div>
       ) : (
-        <Link href="/client/book" style={{ textDecoration: "none" }}>
-          <Card style={{ border: "1px dashed var(--brass-soft)" }}>
-            <CardContent className="py-6 text-center">
-              <p
-                className="text-lg mb-1"
-                style={{ fontFamily: "'Cormorant Garamond', serif", color: "var(--text-on-stone)" }}
-              >
-                Ready for your next visit?
-              </p>
-              <p style={{ fontSize: "13px", color: "var(--brass)" }}>
-                Book an appointment
-              </p>
-            </CardContent>
-          </Card>
+        <Link href="/client/book" style={{ textDecoration: "none", display: "block" }}>
+          <div
+            style={{
+              background: "linear-gradient(135deg, #2C2C24 0%, #3D3D35 100%)",
+              borderRadius: "16px",
+              padding: "28px 24px",
+              textAlign: "center",
+            }}
+          >
+            <p
+              style={{
+                fontFamily: "'Fraunces', serif",
+                fontSize: "20px",
+                color: "#F7F4EF",
+                marginBottom: "6px",
+              }}
+            >
+              Ready for your next visit?
+            </p>
+            <span style={{ fontSize: "14px", color: "#C4AB70", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+              Book an appointment →
+            </span>
+          </div>
         </Link>
       )}
 
-      {/* Action Items Strip */}
+      {/* Notifications */}
       {unreadNotifications.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
           {unreadNotifications.map((n) => (
@@ -137,105 +169,134 @@ export function HomeDashboard({
               style={{ textDecoration: "none", flexShrink: 0 }}
             >
               <div
-                className="px-3 py-2 rounded-full whitespace-nowrap flex items-center gap-1.5"
+                className="flex items-center gap-2 whitespace-nowrap"
                 style={{
-                  background: "var(--brass-soft)",
-                  fontSize: "12px",
-                  color: "var(--text-on-stone)",
+                  background: "#FFFFFF",
+                  border: "1px solid #EDE9E1",
+                  borderRadius: "24px",
+                  padding: "8px 14px",
+                  fontSize: "13px",
+                  color: "#3D3D35",
                   fontFamily: "'DM Sans', sans-serif",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                 }}
               >
                 <NotificationIcon type={n.type} />
                 {n.title.length > 35 ? n.title.slice(0, 35) + "..." : n.title}
-                <span style={{ color: "var(--brass)" }}>&rarr;</span>
+                <span style={{ color: "#C4AB70", fontWeight: 600 }}>→</span>
               </div>
             </Link>
           ))}
         </div>
       )}
 
-      {/* Quick Action Cards */}
+      {/* Quick Actions */}
       <div className="grid grid-cols-3 gap-3">
         <QuickAction href="/client/book" label="Book Again" icon="calendar" />
         <QuickAction href="/client/inspo" label="Upload Inspo" icon="sparkles" />
         <QuickAction href="/client/aftercare" label="Aftercare" icon="leaf" />
       </div>
 
-      {/* Last Visit Summary */}
+      {/* Last Visit */}
       {lastVisit && (
-        <Card>
-          <CardContent className="py-3">
-            <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-              Last visit
-            </p>
-            <div className="flex items-center justify-between">
-              <div>
-                <p style={{ fontSize: "14px", color: "var(--text-on-stone)", fontFamily: "'DM Sans', sans-serif" }}>
-                  {lastVisit.service_name}
-                </p>
-                <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)" }}>
-                  {formatShortDate(lastVisit.start_at)}
-                </p>
-              </div>
-              {hasSharedFormula && (
-                <div className="flex items-center gap-1">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brass)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span style={{ fontSize: "12px", color: "var(--brass)" }}>Formula on file</span>
-                </div>
-              )}
+        <div
+          style={{
+            background: "#FFFFFF",
+            borderRadius: "16px",
+            padding: "16px 20px",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+          }}
+        >
+          <p style={{ fontSize: "11px", color: "#8A8778", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: "8px", fontFamily: "'DM Sans', sans-serif" }}>
+            Last visit
+          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p style={{ fontSize: "16px", color: "#2C2C24", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+                {lastVisit.service_name}
+              </p>
+              <p style={{ fontSize: "13px", color: "#8A8778", fontFamily: "'DM Sans', sans-serif" }}>
+                {formatShortDate(lastVisit.start_at)}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            {hasSharedFormula && (
+              <div className="flex items-center gap-1.5" style={{ background: "rgba(196,171,112,0.12)", padding: "5px 10px", borderRadius: "20px" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4AB70" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span style={{ fontSize: "12px", color: "#C4AB70", fontWeight: 500, fontFamily: "'DM Sans', sans-serif" }}>Formula on file</span>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
-      {/* From Your Stylist — Content Feed */}
+      {/* From Your Stylist */}
       {recentContent.length > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <h2
-              className="text-lg"
-              style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+              style={{
+                fontFamily: "'Fraunces', serif",
+                fontSize: "20px",
+                color: "#2C2C24",
+              }}
             >
               From Your Stylist
             </h2>
             <Link
               href="/client/content"
-              style={{ fontSize: "13px", color: "var(--brass)", textDecoration: "none", fontFamily: "'DM Sans', sans-serif" }}
+              style={{ fontSize: "14px", color: "#C4AB70", textDecoration: "none", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}
             >
               See all
             </Link>
           </div>
           <div className="space-y-3">
             {recentContent.map((post) => {
-              const badgeStyle = categoryBadgeStyles[post.category] || categoryBadgeStyles.tip;
+              const colors = categoryColors[post.category] || categoryColors.tip;
               return (
-                <Link key={post.id} href={`/client/content/${post.id}`} style={{ textDecoration: "none" }}>
-                  <Card style={{ background: "var(--stone-card)" }}>
-                    <CardContent className="py-3">
-                      <div className="flex items-start justify-between mb-1.5">
-                        <Badge
-                          variant="default"
-                          style={{ ...badgeStyle, fontSize: "10px" }}
-                        >
-                          {categoryLabel(post.category)}
-                        </Badge>
-                        <span style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>
-                          {post.publishedAt ? formatShortDate(post.publishedAt) : ""}
-                        </span>
-                      </div>
-                      <h3
-                        className="text-sm mb-1"
-                        style={{ fontFamily: "'Fraunces', serif", color: "var(--text-on-stone)" }}
+                <Link key={post.id} href={`/client/content/${post.id}`} style={{ textDecoration: "none", display: "block" }}>
+                  <div
+                    style={{
+                      background: "#FFFFFF",
+                      borderRadius: "16px",
+                      padding: "16px 20px",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                      transition: "transform 0.15s ease",
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span
+                        style={{
+                          background: colors.bg,
+                          color: colors.text,
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          padding: "3px 10px",
+                          borderRadius: "20px",
+                          fontFamily: "'DM Sans', sans-serif",
+                        }}
                       >
-                        {post.title}
-                      </h3>
-                      <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", lineHeight: "1.4" }}>
-                        {post.body.length > 80 ? post.body.slice(0, 80) + "..." : post.body}
-                      </p>
-                    </CardContent>
-                  </Card>
+                        {categoryLabel(post.category)}
+                      </span>
+                      <span style={{ fontSize: "12px", color: "#8A8778", fontFamily: "'DM Sans', sans-serif" }}>
+                        {post.publishedAt ? formatShortDate(post.publishedAt) : ""}
+                      </span>
+                    </div>
+                    <h3
+                      style={{
+                        fontFamily: "'Fraunces', serif",
+                        fontSize: "16px",
+                        color: "#2C2C24",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      {post.title}
+                    </h3>
+                    <p style={{ fontSize: "14px", color: "#8A8778", lineHeight: "1.5", fontFamily: "'DM Sans', sans-serif" }}>
+                      {post.body.length > 100 ? post.body.slice(0, 100) + "..." : post.body}
+                    </p>
+                  </div>
                 </Link>
               );
             })}
@@ -249,28 +310,42 @@ export function HomeDashboard({
 function QuickAction({ href, label, icon }: { href: string; label: string; icon: string }) {
   return (
     <Link href={href} style={{ textDecoration: "none" }}>
-      <Card className="text-center" style={{ background: "var(--stone-card)" }}>
-        <CardContent className="py-4 px-2">
-          <div className="mx-auto mb-2 w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "var(--brass-soft)" }}>
-            <QuickActionIcon icon={icon} />
-          </div>
-          <p style={{ fontSize: "11px", color: "var(--text-on-stone)", fontFamily: "'DM Sans', sans-serif" }}>
-            {label}
-          </p>
-        </CardContent>
-      </Card>
+      <div
+        className="text-center"
+        style={{
+          background: "#FFFFFF",
+          borderRadius: "16px",
+          padding: "20px 8px 16px",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+        }}
+      >
+        <div
+          className="mx-auto mb-3 flex items-center justify-center"
+          style={{
+            width: "44px",
+            height: "44px",
+            borderRadius: "12px",
+            background: "rgba(196,171,112,0.12)",
+          }}
+        >
+          <QuickActionIcon icon={icon} />
+        </div>
+        <p style={{ fontSize: "13px", color: "#3D3D35", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+          {label}
+        </p>
+      </div>
     </Link>
   );
 }
 
 function QuickActionIcon({ icon }: { icon: string }) {
-  const color = "var(--brass)";
-  const size = 18;
+  const color = "#C4AB70";
+  const size = 22;
 
   switch (icon) {
     case "calendar":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M8 2v4" /><path d="M16 2v4" />
           <rect width="18" height="18" x="3" y="4" rx="2" />
           <path d="M3 10h18" />
@@ -278,13 +353,13 @@ function QuickActionIcon({ icon }: { icon: string }) {
       );
     case "sparkles":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
         </svg>
       );
     case "leaf":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10Z" />
           <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
         </svg>
@@ -295,7 +370,7 @@ function QuickActionIcon({ icon }: { icon: string }) {
 }
 
 function NotificationIcon({ type }: { type: string }) {
-  const color = "var(--text-on-stone-dim)";
+  const color = "#5C5A4F";
   const size = 14;
 
   switch (type) {
@@ -311,13 +386,6 @@ function NotificationIcon({ type }: { type: string }) {
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
-        </svg>
-      );
-    case "aftercare":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10Z" />
-          <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
         </svg>
       );
     default:
