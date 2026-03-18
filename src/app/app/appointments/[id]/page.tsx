@@ -73,7 +73,7 @@ export default async function AppointmentDetailPage({ params }: AppointmentDetai
                 className="block rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-600 to-amber-400 flex items-center justify-center text-black font-medium">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium" style={{ background: "linear-gradient(135deg, #6A90AE, #8FADC8)" }}>
                     {client.firstName[0]}{client.lastName?.[0] || ""}
                   </div>
                   <div>

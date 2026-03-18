@@ -251,7 +251,7 @@ export function AppointmentModal({
                           ? "#C4AB70"
                           : appointment.status === "cancelled"
                           ? "#751212"
-                          : "var(--brass)",
+                          : "var(--blue)",
                       }}
                     >
                       {appointment.status}

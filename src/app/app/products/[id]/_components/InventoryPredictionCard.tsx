@@ -49,9 +49,9 @@ export function InventoryPredictionCard({ productId }: InventoryPredictionCardPr
     prediction.estimatedDaysUntilDepletion <= 14;
 
   return (
-    <Card className={isUrgent ? "border-amber-500/30 bg-amber-500/5" : ""} style={!isUrgent ? { borderColor: "rgba(196,171,112,0.2)", backgroundColor: "rgba(196,171,112,0.05)" } : undefined}>
+    <Card className={isUrgent ? "border-amber-500/30 bg-amber-500/5" : ""} style={!isUrgent ? { borderColor: "rgba(143,173,200,0.2)", backgroundColor: "rgba(143,173,200,0.05)" } : undefined}>
       <CardHeader>
-        <CardTitle className={`flex items-center gap-2 ${isUrgent ? "text-amber-400" : ""}`} style={!isUrgent ? { color: "var(--brass)" } : undefined}>
+        <CardTitle className={`flex items-center gap-2 ${isUrgent ? "text-amber-400" : ""}`} style={!isUrgent ? { color: "var(--blue)" } : undefined}>
           {isUrgent ? <AlertTriangle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
           Inventory Prediction
           <span className="text-xs font-normal text-muted-foreground ml-auto">

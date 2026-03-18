@@ -195,7 +195,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
                       fontSize: "11px",
                       color: isActive ? "#F1EFE0" : "rgba(241,239,224,0.55)",
                       background: isActive ? "rgba(196,171,112,0.08)" : "transparent",
-                      borderLeft: isActive ? "2px solid var(--brass)" : "2px solid transparent",
+                      borderLeft: isActive ? "2px solid #8FADC8" : "2px solid transparent",
                     }}
                   >
                     <span style={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>

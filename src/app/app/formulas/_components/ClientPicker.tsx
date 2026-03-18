@@ -61,7 +61,7 @@ export function ClientPicker({ value, onChange }: ClientPickerProps) {
     <div ref={wrapperRef} className="relative">
       {selectedClient ? (
         <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-600 to-amber-400 flex items-center justify-center text-sm font-medium text-black">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium text-white" style={{ background: "linear-gradient(135deg, #6A90AE, #8FADC8)" }}>
             {selectedClient.firstName[0]}
             {selectedClient.lastName?.[0] || ""}
           </div>
@@ -104,7 +104,7 @@ export function ClientPicker({ value, onChange }: ClientPickerProps) {
                 onClick={() => handleSelect(client)}
                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-left"
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-600 to-amber-400 flex items-center justify-center text-sm font-medium text-black shrink-0">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium text-white shrink-0" style={{ background: "linear-gradient(135deg, #6A90AE, #8FADC8)" }}>
                   {client.firstName[0]}
                   {client.lastName?.[0] || ""}
                 </div>

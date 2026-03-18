@@ -137,12 +137,12 @@ body > * {
 .cursor-dot {
   width: 8px;
   height: 8px;
-  background: var(--brass);
+  background: #8FADC8;
   border-radius: 50%;
   position: fixed;
   pointer-events: none;
   z-index: 99999;
-  box-shadow: 0 0 10px rgba(196,171,112,0.4);
+  box-shadow: 0 0 10px rgba(143,173,200,0.4);
   transform: translate(-50%, -50%);
   transition: width 0.15s, height 0.15s, background 0.15s;
   left: -100px;
@@ -151,7 +151,7 @@ body > * {
 .cursor-ring {
   width: 34px;
   height: 34px;
-  border: 1.5px solid rgba(196,171,112,0.35);
+  border: 1.5px solid rgba(143,173,200,0.35);
   border-radius: 50%;
   position: fixed;
   pointer-events: none;
@@ -180,7 +180,7 @@ body > * {
 
 /* Focus styles */
 :focus-visible {
-  outline: 2px solid rgba(196,171,112,0.5);
+  outline: 2px solid rgba(143,173,200,0.5);
   outline-offset: 2px;
 }
 

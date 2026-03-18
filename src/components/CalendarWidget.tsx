@@ -82,8 +82,8 @@ export function CalendarWidget({ appointments, clients }: CalendarWidgetProps) {
 
   const eventStyleGetter = (event: CalendarEvent) => {
     const { appointment } = event.resource;
-    let backgroundColor = "#C4AB70";
-    let borderColor = "#B89B5E";
+    let backgroundColor = "#8FADC8";
+    let borderColor = "#6A90AE";
 
     if (appointment.status === "cancelled") {
       backgroundColor = "#751212";
