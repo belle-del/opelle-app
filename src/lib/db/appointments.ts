@@ -6,30 +6,46 @@ import { getCurrentWorkspace } from "./workspaces";
 import { publishEvent } from "@/lib/kernel";
 
 export async function listAppointments(): Promise<Appointment[]> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  const admin = createSupabaseAdminClient();
+  let wsId: string | undefined;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const workspace = await getCurrentWorkspace();
+  if (workspace) {
+    wsId = workspace.id;
+  } else {
+    const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+    wsId = ws?.id;
+  }
+  if (!wsId) return [];
+
+  const { data, error } = await admin
     .from("appointments")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .order("start_at", { ascending: false });
 
   if (error || !data) return [];
   return (data as AppointmentRow[]).map(appointmentRowToModel);
 }
 
-export async function getAppointment(id: string): Promise<Appointment | null> {
+async function resolveWorkspaceId(): Promise<string | undefined> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  if (workspace) return workspace.id;
+  const admin = createSupabaseAdminClient();
+  const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+  return ws?.id;
+}
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+export async function getAppointment(id: string): Promise<Appointment | null> {
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("appointments")
     .select("*")
     .eq("id", id)
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .single();
 
   if (error || !data) return null;
@@ -37,14 +53,14 @@ export async function getAppointment(id: string): Promise<Appointment | null> {
 }
 
 export async function getAppointmentsForClient(clientId: string): Promise<Appointment[]> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return [];
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("appointments")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .eq("client_id", clientId)
     .order("start_at", { ascending: false });
 
@@ -53,14 +69,14 @@ export async function getAppointmentsForClient(clientId: string): Promise<Appoin
 }
 
 export async function getUpcomingAppointments(limit = 10): Promise<Appointment[]> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return [];
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("appointments")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .gte("start_at", new Date().toISOString())
     .eq("status", "scheduled")
     .order("start_at", { ascending: true })
@@ -141,10 +157,10 @@ export async function updateAppointment(
     status?: AppointmentStatus;
   }
 ): Promise<Appointment | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
 
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
 
   const updateData: Record<string, unknown> = {};
   if (input.clientId !== undefined) updateData.client_id = input.clientId;
@@ -154,11 +170,11 @@ export async function updateAppointment(
   if (input.notes !== undefined) updateData.notes = input.notes || null;
   if (input.status !== undefined) updateData.status = input.status;
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("appointments")
     .update(updateData)
     .eq("id", id)
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .select("*")
     .single();
 
@@ -170,7 +186,7 @@ export async function updateAppointment(
   if (input.status === "completed") {
     publishEvent({
       event_type: "appointment_completed",
-      workspace_id: workspace.id,
+      workspace_id: wsId,
       timestamp: new Date().toISOString(),
       payload: {
         appointment_id: appointment.id,
@@ -188,7 +204,7 @@ export async function updateAppointment(
   if (input.status === "cancelled") {
     publishEvent({
       event_type: "appointment_cancelled",
-      workspace_id: workspace.id,
+      workspace_id: wsId,
       timestamp: new Date().toISOString(),
       payload: {
         appointment_id: appointment.id,
@@ -203,7 +219,7 @@ export async function updateAppointment(
   if (input.startAt && input.startAt !== (data as AppointmentRow).start_at) {
     publishEvent({
       event_type: "appointment_rescheduled",
-      workspace_id: workspace.id,
+      workspace_id: wsId,
       timestamp: new Date().toISOString(),
       payload: {
         appointment_id: appointment.id,
@@ -218,15 +234,15 @@ export async function updateAppointment(
 }
 
 export async function deleteAppointment(id: string): Promise<boolean> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return false;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return false;
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
     .from("appointments")
     .delete()
     .eq("id", id)
-    .eq("workspace_id", workspace.id);
+    .eq("workspace_id", wsId);
 
   return !error;
 }
