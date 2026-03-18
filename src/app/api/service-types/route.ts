@@ -16,12 +16,17 @@ function mapRow(row: Record<string, unknown>): ServiceType {
 
 export async function GET(request: NextRequest) {
   try {
-    const workspaceId = request.nextUrl.searchParams.get("workspaceId");
+    let workspaceId = request.nextUrl.searchParams.get("workspaceId");
+    const admin = createSupabaseAdminClient();
+
+    // Fallback: if no workspaceId provided, get the first workspace
+    if (!workspaceId) {
+      const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+      workspaceId = ws?.id || null;
+    }
     if (!workspaceId) {
       return NextResponse.json([], { status: 200 });
     }
-
-    const admin = createSupabaseAdminClient();
     const { data, error } = await admin
       .from("service_types")
       .select("*")
