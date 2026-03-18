@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Appointment, AppointmentRow, AppointmentStatus } from "@/lib/types";
 import { appointmentRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
@@ -80,8 +81,8 @@ export async function createAppointment(input: {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("appointments")
     .insert({
       workspace_id: workspace.id,

@@ -130,7 +130,11 @@ export function RebookRequestsList({ requests, clients, workspaceId }: Props) {
                   {req.preferred_dates.length > 0 && (
                     <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>
                       <span style={{ fontWeight: 500 }}>Days:</span>{" "}
-                      {req.preferred_dates.map(d => d.charAt(0).toUpperCase() + d.slice(0, 3)).join(", ")}
+                      {req.preferred_dates.map(d => {
+                        const clean = d.toLowerCase().replace(/^[^a-z]+/, "");
+                        const map: Record<string, string> = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday", monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday", thursday: "Thursday", friday: "Friday", saturday: "Saturday", sunday: "Sunday" };
+                        return map[clean] || d;
+                      }).join(", ")}
                     </p>
                   )}
                   {notes.preferredTime && (
