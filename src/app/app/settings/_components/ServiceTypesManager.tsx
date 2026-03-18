@@ -23,6 +23,7 @@ export function ServiceTypesManager() {
   const [types, setTypes] = useState<ServiceType[]>([]);
   const [newName, setNewName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/service-types")
@@ -36,17 +37,28 @@ export function ServiceTypesManager() {
 
   const handleAdd = async () => {
     if (!newName.trim()) return;
+    setError(null);
 
-    const res = await fetch("/api/service-types", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName.trim(), defaultDurationMins: 60 }),
-    });
+    try {
+      const res = await fetch("/api/service-types", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim(), defaultDurationMins: 60 }),
+      });
 
-    if (res.ok) {
-      const created = await res.json();
-      setTypes((prev) => [...prev, created]);
-      setNewName("");
+      if (res.ok) {
+        const created = await res.json();
+        setTypes((prev) => [...prev, created]);
+        setNewName("");
+      } else {
+        const errBody = await res.json().catch(() => ({}));
+        const msg = errBody.error || `Failed (${res.status})`;
+        setError(msg);
+        console.error("[ServiceTypesManager] Add failed:", res.status, msg);
+      }
+    } catch (err) {
+      setError("Network error — check console");
+      console.error("[ServiceTypesManager] Network error:", err);
     }
   };
 
@@ -167,6 +179,12 @@ export function ServiceTypesManager() {
           <Plus className="w-4 h-4" />
         </Button>
       </div>
+
+      {error && (
+        <p style={{ fontSize: "12px", color: "var(--garnet)", marginTop: "8px", fontWeight: 500 }}>
+          {error}
+        </p>
+      )}
 
       <p style={{ fontSize: "10px", color: "var(--text-on-stone-ghost)", marginTop: "8px" }}>
         Default times auto-fill when creating appointments. You can always adjust the duration per appointment.
