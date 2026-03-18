@@ -57,7 +57,6 @@ export function PortalAccountCard({ clientId }: { clientId: string }) {
       if (res.ok) {
         const data: InviteResponse = await res.json();
         setNewInvite(data);
-        // Refresh status to show new pending invite
         fetchStatus();
       }
     } catch (err) {
@@ -73,7 +72,6 @@ export function PortalAccountCard({ clientId }: { clientId: string }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const textarea = document.createElement("textarea");
       textarea.value = text;
       document.body.appendChild(textarea);
@@ -87,8 +85,8 @@ export function PortalAccountCard({ clientId }: { clientId: string }) {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-stone-700/50 bg-stone-900/60 p-5">
-        <div className="flex items-center gap-2 text-sm text-stone-400">
+      <div style={{ borderRadius: 12, border: "1px solid var(--stone-mid)", background: "var(--bark-mid)", padding: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--stone-lightest)" }}>
           <Loader2 className="w-4 h-4 animate-spin" />
           Loading portal status...
         </div>
@@ -101,22 +99,26 @@ export function PortalAccountCard({ clientId }: { clientId: string }) {
   // Active account
   if (status.hasAccount) {
     return (
-      <div className="rounded-xl border border-stone-700/50 bg-stone-900/60 p-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <UserCheck className="w-5 h-5 text-amber-600" />
+      <div style={{ borderRadius: 12, border: "1px solid var(--stone-mid)", background: "var(--bark-mid)", padding: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <UserCheck className="w-5 h-5" style={{ color: "var(--blue)" }} />
             <div>
-              <p className="text-sm font-medium font-[family-name:var(--font-dm-sans)]">
+              <p style={{ fontSize: 13, fontWeight: 500, fontFamily: "'DM Sans', sans-serif", color: "var(--stone-lightest)" }}>
                 Client Portal
               </p>
               {status.accountCreatedAt && (
-                <p className="text-xs text-stone-400 mt-0.5">
+                <p style={{ fontSize: 11, color: "var(--stone-warm)", marginTop: 2 }}>
                   Joined {new Date(status.accountCreatedAt).toLocaleDateString()}
                 </p>
               )}
             </div>
           </div>
-          <span className="inline-flex items-center rounded-full bg-amber-900/40 border border-amber-700/50 px-2.5 py-0.5 text-xs font-medium text-amber-500">
+          <span style={{
+            display: "inline-flex", alignItems: "center", borderRadius: 999,
+            background: "rgba(143,173,200,0.15)", border: "1px solid rgba(143,173,200,0.3)",
+            padding: "2px 10px", fontSize: 11, fontWeight: 500, color: "var(--blue)"
+          }}>
             Portal Active
           </span>
         </div>
@@ -124,111 +126,93 @@ export function PortalAccountCard({ clientId }: { clientId: string }) {
     );
   }
 
+  // Invite URL display helper
+  const renderInviteUrl = (url: string, expiresDate: string) => (
+    <div style={{ borderRadius: 12, border: "1px solid var(--stone-mid)", background: "var(--bark-mid)", padding: 20, display: "flex", flexDirection: "column" as const, gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Link2 className="w-5 h-5" style={{ color: "var(--brass)" }} />
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 500, fontFamily: "'DM Sans', sans-serif", color: "var(--stone-lightest)" }}>
+              Client Portal
+            </p>
+            <p style={{ fontSize: 11, color: "var(--stone-warm)", marginTop: 2 }}>
+              Invite expires {expiresDate}
+            </p>
+          </div>
+        </div>
+        <span style={{
+          display: "inline-flex", alignItems: "center", borderRadius: 999,
+          background: "rgba(196,171,112,0.15)", border: "1px solid rgba(196,171,112,0.3)",
+          padding: "2px 10px", fontSize: 11, fontWeight: 500, color: "var(--brass)"
+        }}>
+          Invite Pending
+        </span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <input
+          type="text"
+          readOnly
+          value={url}
+          style={{
+            flex: 1, borderRadius: 8, border: "1px solid var(--stone-mid)",
+            background: "var(--bark)", padding: "6px 12px", fontSize: 11,
+            color: "var(--stone-lightest)", fontFamily: "monospace",
+            overflow: "hidden", textOverflow: "ellipsis", outline: "none"
+          }}
+        />
+        <button
+          onClick={() => copyToClipboard(url)}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 8,
+            border: "1px solid var(--stone-mid)", background: "var(--bark)",
+            padding: "6px 12px", fontSize: 11, color: "var(--stone-lightest)",
+            cursor: "pointer"
+          }}
+        >
+          {copied ? <Check className="w-3.5 h-3.5" style={{ color: "var(--blue)" }} /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+    </div>
+  );
+
   // Pending invite exists
   const latestPending = status.pendingInvites[0];
   if (latestPending && !newInvite) {
     const inviteUrl = `${window.location.origin}/client/join?code=${latestPending.token}`;
-    const expiresDate = new Date(latestPending.expires_at).toLocaleDateString();
-
-    return (
-      <div className="rounded-xl border border-stone-700/50 bg-stone-900/60 p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link2 className="w-5 h-5 text-amber-700" />
-            <div>
-              <p className="text-sm font-medium font-[family-name:var(--font-dm-sans)]">
-                Client Portal
-              </p>
-              <p className="text-xs text-stone-400 mt-0.5">
-                Invite expires {expiresDate}
-              </p>
-            </div>
-          </div>
-          <span className="inline-flex items-center rounded-full bg-amber-950/40 border border-amber-800/40 px-2.5 py-0.5 text-xs font-medium text-amber-600">
-            Invite Pending
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            readOnly
-            value={inviteUrl}
-            className="flex-1 rounded-lg border border-stone-700/50 bg-stone-800/60 px-3 py-1.5 text-xs text-stone-300 font-mono truncate"
-          />
-          <button
-            onClick={() => copyToClipboard(inviteUrl)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-700/50 bg-stone-800/60 px-3 py-1.5 text-xs text-stone-300 hover:bg-stone-700/60 transition-colors"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-            {copied ? "Copied" : "Copy"}
-          </button>
-        </div>
-      </div>
-    );
+    return renderInviteUrl(inviteUrl, new Date(latestPending.expires_at).toLocaleDateString());
   }
 
   // New invite just generated
   if (newInvite) {
-    const expiresDate = new Date(newInvite.expiresAt).toLocaleDateString();
-
-    return (
-      <div className="rounded-xl border border-stone-700/50 bg-stone-900/60 p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link2 className="w-5 h-5 text-amber-700" />
-            <div>
-              <p className="text-sm font-medium font-[family-name:var(--font-dm-sans)]">
-                Client Portal
-              </p>
-              <p className="text-xs text-stone-400 mt-0.5">
-                Invite expires {expiresDate}
-              </p>
-            </div>
-          </div>
-          <span className="inline-flex items-center rounded-full bg-amber-950/40 border border-amber-800/40 px-2.5 py-0.5 text-xs font-medium text-amber-600">
-            Invite Pending
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            readOnly
-            value={newInvite.inviteUrl}
-            className="flex-1 rounded-lg border border-stone-700/50 bg-stone-800/60 px-3 py-1.5 text-xs text-stone-300 font-mono truncate"
-          />
-          <button
-            onClick={() => copyToClipboard(newInvite.inviteUrl)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-700/50 bg-stone-800/60 px-3 py-1.5 text-xs text-stone-300 hover:bg-stone-700/60 transition-colors"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-            {copied ? "Copied" : "Copy"}
-          </button>
-        </div>
-      </div>
-    );
+    return renderInviteUrl(newInvite.inviteUrl, new Date(newInvite.expiresAt).toLocaleDateString());
   }
 
   // No account, no pending invite
   return (
-    <div className="rounded-xl border border-stone-700/50 bg-stone-900/60 p-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <UserX className="w-5 h-5 text-stone-500" />
+    <div style={{ borderRadius: 12, border: "1px solid var(--stone-mid)", background: "var(--bark-mid)", padding: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <UserX className="w-5 h-5" style={{ color: "var(--stone-warm)" }} />
           <div>
-            <p className="text-sm font-medium font-[family-name:var(--font-dm-sans)]">
+            <p style={{ fontSize: 13, fontWeight: 500, fontFamily: "'DM Sans', sans-serif", color: "var(--stone-lightest)" }}>
               Client Portal
             </p>
-            <p className="text-xs text-stone-400 mt-0.5">No portal account</p>
+            <p style={{ fontSize: 11, color: "var(--stone-warm)", marginTop: 2 }}>No portal account</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center rounded-full bg-stone-800/60 border border-stone-700/50 px-2.5 py-0.5 text-xs font-medium text-stone-400">
-            No Portal Account
-          </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button
             onClick={handleGenerateInvite}
             disabled={generating}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-900/40 border border-amber-700/50 px-3 py-1.5 text-xs font-medium text-amber-500 hover:bg-amber-900/60 transition-colors disabled:opacity-50"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 8,
+              background: "var(--garnet)", border: "none",
+              padding: "6px 14px", fontSize: 11, fontWeight: 500,
+              color: "var(--stone-lightest)", cursor: "pointer",
+              opacity: generating ? 0.5 : 1
+            }}
           >
             {generating ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
