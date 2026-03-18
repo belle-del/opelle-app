@@ -11,6 +11,29 @@ export async function POST(request: Request) {
   const trimmed = code.trim().toUpperCase();
   const admin = createSupabaseAdminClient();
 
+  // Check workspace_members stylist_code (individual stylist within a salon)
+  const { data: memberMatch } = await admin
+    .from("workspace_members")
+    .select("workspace_id, user_id, display_name")
+    .eq("stylist_code", trimmed)
+    .maybeSingle();
+
+  if (memberMatch) {
+    const { data: ws } = await admin
+      .from("workspaces")
+      .select("name")
+      .eq("id", memberMatch.workspace_id)
+      .single();
+
+    return NextResponse.json({
+      type: "stylist_member_code",
+      workspaceId: memberMatch.workspace_id,
+      stylistId: memberMatch.user_id,
+      stylistName: memberMatch.display_name || ws?.name || "Stylist",
+      workspaceName: ws?.name || "Salon",
+    });
+  }
+
   // Check stylist code
   const { data: workspace } = await admin
     .from("workspaces")

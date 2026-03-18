@@ -1,9 +1,21 @@
-import { NextResponse } from "next/server";
-import { createClient, listClients } from "@/lib/db/clients";
+import { NextRequest, NextResponse } from "next/server";
+import { createClient, listClients, listClientsForStylist } from "@/lib/db/clients";
+import { getCurrentWorkspace } from "@/lib/db/workspaces";
 import { logActivity } from "@/lib/db/activity-log";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const stylistId = request.nextUrl.searchParams.get("stylist");
+
+    if (stylistId) {
+      const workspace = await getCurrentWorkspace();
+      if (!workspace) {
+        return NextResponse.json({ error: "No workspace found" }, { status: 401 });
+      }
+      const clients = await listClientsForStylist(workspace.id, stylistId);
+      return NextResponse.json(clients);
+    }
+
     const clients = await listClients();
     return NextResponse.json(clients);
   } catch (error) {

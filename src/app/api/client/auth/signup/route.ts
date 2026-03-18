@@ -87,6 +87,42 @@ export async function POST(request: Request) {
       console.log("[client-signup] Created new client:", clientId);
     }
 
+    // ── 2b. Canonical dedup & stylist assignment ──
+    try {
+      const { data: canonicalId } = await admin.rpc("find_canonical_client", {
+        p_first_name: firstName.trim(),
+        p_last_name: lastName?.trim() || null,
+        p_email: email.trim().toLowerCase(),
+        p_phone: null,
+      });
+
+      if (canonicalId && canonicalId !== clientId) {
+        await admin
+          .from("clients")
+          .update({ canonical_client_id: canonicalId })
+          .eq("id", clientId);
+      }
+    } catch (e) {
+      console.error("[client-signup] canonical dedup failed (non-critical):", e);
+    }
+
+    // Create client_stylist_assignments row
+    if (stylistId) {
+      try {
+        await admin.from("client_stylist_assignments").upsert(
+          {
+            workspace_id: workspaceId,
+            client_id: clientId,
+            stylist_id: stylistId,
+            is_primary: true,
+          },
+          { onConflict: "workspace_id,client_id,stylist_id" }
+        );
+      } catch (e) {
+        console.error("[client-signup] stylist assignment failed (non-critical):", e);
+      }
+    }
+
     // ── 3. Create client_users link ──
     const { error: linkError } = await admin
       .from("client_users")

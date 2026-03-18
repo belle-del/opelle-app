@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Client, ClientRow } from "@/lib/types";
 import { clientRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
@@ -66,6 +67,39 @@ export async function createClient(input: {
   if (error || !data) return null;
 
   const client = clientRowToModel(data as ClientRow);
+
+  // ── Canonical dedup: link to existing client if match found ──
+  const admin = createSupabaseAdminClient();
+  try {
+    const { data: canonicalId } = await admin.rpc("find_canonical_client", {
+      p_first_name: input.firstName,
+      p_last_name: input.lastName || null,
+      p_email: input.email || null,
+      p_phone: input.phone || null,
+    });
+
+    if (canonicalId && canonicalId !== client.id) {
+      await admin
+        .from("clients")
+        .update({ canonical_client_id: canonicalId })
+        .eq("id", client.id);
+      client.canonicalClientId = canonicalId;
+    }
+  } catch (e) {
+    console.error("[createClient] canonical dedup failed (non-critical):", e);
+  }
+
+  // ── Create client-stylist assignment (owner as primary) ──
+  try {
+    await admin.from("client_stylist_assignments").insert({
+      workspace_id: workspace.id,
+      client_id: client.id,
+      stylist_id: workspace.ownerId,
+      is_primary: true,
+    });
+  } catch (e) {
+    console.error("[createClient] stylist assignment failed (non-critical):", e);
+  }
 
   // Fire kernel event (non-blocking)
   publishEvent({
@@ -164,6 +198,48 @@ export async function searchClients(query: string): Promise<Client[]> {
     .eq("workspace_id", workspace.id)
     .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%,email.ilike.%${query}%`)
     .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+  return (data as ClientRow[]).map(clientRowToModel);
+}
+
+export async function listClientsForStylist(
+  workspaceId: string,
+  stylistId: string
+): Promise<Client[]> {
+  const admin = createSupabaseAdminClient();
+
+  // Get client IDs assigned to this stylist
+  const { data: assignments, error: aErr } = await admin
+    .from("client_stylist_assignments")
+    .select("client_id")
+    .eq("workspace_id", workspaceId)
+    .eq("stylist_id", stylistId);
+
+  if (aErr || !assignments || assignments.length === 0) return [];
+
+  const clientIds = assignments.map((a: { client_id: string }) => a.client_id);
+
+  const { data, error } = await admin
+    .from("clients")
+    .select("*")
+    .in("id", clientIds)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+  return (data as ClientRow[]).map(clientRowToModel);
+}
+
+export async function getCanonicalMatches(
+  canonicalClientId: string
+): Promise<Client[]> {
+  const admin = createSupabaseAdminClient();
+
+  const { data, error } = await admin
+    .from("clients")
+    .select("*")
+    .or(`canonical_client_id.eq.${canonicalClientId},id.eq.${canonicalClientId}`)
+    .order("created_at", { ascending: true });
 
   if (error || !data) return [];
   return (data as ClientRow[]).map(clientRowToModel);

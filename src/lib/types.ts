@@ -24,6 +24,7 @@ export type Client = {
   tags: string[];
   preferenceProfile?: ClientPreferenceProfile | null;
   kernelRef?: string | null;
+  canonicalClientId?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -352,6 +353,7 @@ export type ClientRow = {
   tags: string[];
   preference_profile: ClientPreferenceProfile | null;
   kernel_ref: string | null;
+  canonical_client_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -362,6 +364,7 @@ export type AppointmentRow = {
   client_id: string;
   service_id: string | null;
   service_name: string;
+  stylist_id: string | null;
   start_at: string;
   end_at: string | null;
   duration_mins: number;
@@ -494,6 +497,7 @@ export function clientRowToModel(row: ClientRow): Client {
     tags: row.tags ?? [],
     preferenceProfile: row.preference_profile ?? undefined,
     kernelRef: row.kernel_ref ?? undefined,
+    canonicalClientId: row.canonical_client_id ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -1034,6 +1038,37 @@ export function contentPostRowToModel(row: ContentPostRow): ContentPost {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
+}
+
+// ── Client-Stylist Assignments ─────────────────────────────
+
+export type ClientStylistAssignment = {
+  id: string;
+  workspaceId: string;
+  clientId: string;
+  stylistId: string;
+  isPrimary: boolean;
+  assignedAt: string;
+};
+
+export type ClientStylistAssignmentRow = {
+  id: string;
+  workspace_id: string;
+  client_id: string;
+  stylist_id: string;
+  is_primary: boolean;
+  assigned_at: string;
+};
+
+export function clientStylistAssignmentRowToModel(row: ClientStylistAssignmentRow): ClientStylistAssignment {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    clientId: row.client_id,
+    stylistId: row.stylist_id,
+    isPrimary: row.is_primary,
+    assignedAt: row.assigned_at,
+  };
 }
 
 // ============================================================

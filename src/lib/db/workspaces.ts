@@ -46,7 +46,26 @@ export async function getCurrentWorkspace(): Promise<Workspace | null> {
 
   if (error || !data) {
     if (error) console.error("[getCurrentWorkspace] DB error:", error.message, "for user:", user.id);
-    else console.error("[getCurrentWorkspace] No workspace found for user:", user.id);
+    else console.log("[getCurrentWorkspace] No owned workspace for user:", user.id, "— checking membership");
+
+    // Fallback: check if user is a workspace member (non-owner stylist)
+    const { data: membership } = await admin
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", user.id)
+      .limit(1)
+      .single();
+
+    if (membership) {
+      const { data: ws } = await admin
+        .from("workspaces")
+        .select("*")
+        .eq("id", membership.workspace_id)
+        .single();
+      if (ws) return workspaceRowToModel(ws as WorkspaceRow);
+    }
+
+    console.error("[getCurrentWorkspace] No workspace found for user:", user.id);
     return null;
   }
   return workspaceRowToModel(data as WorkspaceRow);
