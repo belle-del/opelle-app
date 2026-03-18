@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { ServiceType, ServiceTypeRow } from "@/lib/types";
 import { serviceTypeRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
@@ -42,12 +43,12 @@ export async function createServiceType(input: {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
 
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
 
   // If no sort_order provided, put it at the end
   let sortOrder = input.sortOrder ?? 0;
   if (input.sortOrder === undefined) {
-    const { data: maxRow } = await supabase
+    const { data: maxRow } = await admin
       .from("service_types")
       .select("sort_order")
       .eq("workspace_id", workspace.id)
@@ -66,13 +67,16 @@ export async function createServiceType(input: {
     insertData.default_duration_mins = input.defaultDurationMins;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("service_types")
     .insert(insertData)
     .select("*")
     .single();
 
-  if (error || !data) return null;
+  if (error) {
+    console.error("[service-types] Create failed:", error.message);
+    return null;
+  }
   return serviceTypeRowToModel(data as ServiceTypeRow);
 }
 
@@ -83,14 +87,14 @@ export async function updateServiceType(
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
 
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
   const updateData: Record<string, unknown> = {};
   if (input.name !== undefined) updateData.name = input.name;
   if (input.sortOrder !== undefined) updateData.sort_order = input.sortOrder;
   if (input.defaultDurationMins !== undefined) updateData.default_duration_mins = input.defaultDurationMins;
   if (input.bookingType !== undefined) updateData.booking_type = input.bookingType;
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("service_types")
     .update(updateData)
     .eq("id", id)
@@ -98,7 +102,10 @@ export async function updateServiceType(
     .select("*")
     .single();
 
-  if (error || !data) return null;
+  if (error) {
+    console.error("[service-types] Update failed:", error.message);
+    return null;
+  }
   return serviceTypeRowToModel(data as ServiceTypeRow);
 }
 
@@ -106,13 +113,14 @@ export async function deleteServiceType(id: string): Promise<boolean> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return false;
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
     .from("service_types")
     .delete()
     .eq("id", id)
     .eq("workspace_id", workspace.id);
 
+  if (error) console.error("[service-types] Delete failed:", error.message);
   return !error;
 }
 
@@ -120,10 +128,10 @@ export async function seedDefaultServiceTypes(): Promise<void> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return;
 
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
 
   // Check if workspace already has service types
-  const { data: existing } = await supabase
+  const { data: existing } = await admin
     .from("service_types")
     .select("id")
     .eq("workspace_id", workspace.id)
@@ -142,7 +150,7 @@ export async function seedDefaultServiceTypes(): Promise<void> {
     "Mini Highlight",
   ];
 
-  await supabase.from("service_types").insert(
+  await admin.from("service_types").insert(
     defaults.map((name, index) => ({
       workspace_id: workspace.id,
       name,
