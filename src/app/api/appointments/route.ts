@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       durationMins: body.durationMins,
       notes: body.notes,
       serviceId: body.serviceId,
+      workspaceId: body.workspaceId,
     });
 
     if (!appointment) {

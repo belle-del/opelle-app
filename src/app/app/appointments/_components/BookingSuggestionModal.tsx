@@ -116,6 +116,7 @@ export function BookingSuggestionModal({
           startAt,
           durationMins: 60,
           notes: notes.clientNotes || undefined,
+          workspaceId,
         }),
       });
 
