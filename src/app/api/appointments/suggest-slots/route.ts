@@ -82,8 +82,9 @@ export async function POST(request: Request) {
       .eq("id", workspaceId)
       .single();
 
+    const rawHours = workspace?.working_hours as WorkingHours | null;
     const workingHours: WorkingHours =
-      (workspace?.working_hours as WorkingHours) || DEFAULT_WORKING_HOURS;
+      rawHours && Object.keys(rawHours).length > 0 ? rawHours : DEFAULT_WORKING_HOURS;
 
     // Get existing appointments in the timeframe window
     const now = new Date();
@@ -111,8 +112,18 @@ export async function POST(request: Request) {
       busyByDate.get(dateKey)!.push({ start: startMin, end: endMin });
     }
 
-    // Normalize preferred days to lowercase
-    const normalizedPreferredDays = preferredDays.map((d: string) => d.toLowerCase());
+    // Normalize preferred days: handle formats like "Tthu", "Wwed", "monday", "thu"
+    const normalizedPreferredDays = preferredDays.map((d: string) => {
+      const clean = d.toLowerCase().replace(/^[^a-z]+/, ""); // strip leading non-alpha
+      // Map abbreviations to full day names
+      const abbrevMap: Record<string, string> = {
+        mon: "monday", tue: "tuesday", wed: "wednesday", thu: "thursday",
+        fri: "friday", sat: "saturday", sun: "sunday",
+        monday: "monday", tuesday: "tuesday", wednesday: "wednesday",
+        thursday: "thursday", friday: "friday", saturday: "saturday", sunday: "sunday",
+      };
+      return abbrevMap[clean] || clean;
+    });
     const timeRange = TIME_RANGES[preferredTime] || TIME_RANGES.morning;
 
     const slots: SuggestedSlot[] = [];
