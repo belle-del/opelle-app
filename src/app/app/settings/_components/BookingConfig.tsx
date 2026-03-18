@@ -59,14 +59,15 @@ export function BookingConfig({ workspaceId, initialBookingWindow, initialBuffer
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    fetch("/api/service-types")
+    if (!workspaceId) { setLoading(false); return; }
+    fetch(`/api/service-types?workspaceId=${workspaceId}`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setServiceTypes(data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [workspaceId]);
 
   async function handleBookingTypeChange(serviceId: string, bookingType: string) {
     setServiceTypes(prev =>
@@ -76,7 +77,7 @@ export function BookingConfig({ workspaceId, initialBookingWindow, initialBuffer
     await fetch(`/api/service-types/${serviceId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingType }),
+      body: JSON.stringify({ bookingType, workspaceId }),
     });
   }
 
