@@ -37,7 +37,11 @@ export function ServiceTypesManager({ workspaceId }: { workspaceId?: string }) {
   }, [workspaceId]);
 
   const handleAdd = async () => {
-    if (!newName.trim() || !workspaceId) return;
+    if (!newName.trim()) return;
+    if (!workspaceId) {
+      setError("Workspace not loaded — try refreshing the page");
+      return;
+    }
     setError(null);
 
     try {

@@ -3,12 +3,15 @@ import { ServiceTypesManager } from "./_components/ServiceTypesManager";
 import { StylistCodeBlock } from "./_components/StylistCodeBlock";
 import { BookingConfig } from "./_components/BookingConfig";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: workspace } = await supabase
+  // Use admin client to bypass RLS for workspace query
+  const admin = createSupabaseAdminClient();
+  const { data: workspace } = await admin
     .from("workspaces")
     .select("*")
     .eq("owner_id", user?.id)
