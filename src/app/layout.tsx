@@ -3,8 +3,15 @@ import "./globals.css";
 import { BrassCursor } from "@/components/BrassCursor";
 
 export const metadata: Metadata = {
-  title: "Opelle - Practitioner Suite",
+  title: {
+    default: "Opelle",
+    template: "%s | Opelle",
+  },
   description: "The operating system for practitioner stylists.",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

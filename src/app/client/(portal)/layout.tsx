@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getClientContext } from "@/lib/client-auth";
 import { ClientPortalShell } from "./_components/ClientPortalShell";
+
+export const metadata: Metadata = {
+  title: "Client Portal",
+};
 
 export default async function ClientPortalLayout({
   children,
