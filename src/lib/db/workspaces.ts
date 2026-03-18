@@ -29,8 +29,12 @@ async function generateUniqueStylistCode(): Promise<string> {
 export async function getCurrentWorkspace(): Promise<Workspace | null> {
   const supabase = await createSupabaseServerClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (!user) {
+    console.error("[getCurrentWorkspace] No user. Auth error:", authError?.message || "none — cookies may be missing");
+    return null;
+  }
+  console.log("[getCurrentWorkspace] User:", user.id, user.email);
 
   // Use admin client to bypass RLS — we already verified the user is authenticated
   const admin = createSupabaseAdminClient();
@@ -41,7 +45,8 @@ export async function getCurrentWorkspace(): Promise<Workspace | null> {
     .single();
 
   if (error || !data) {
-    if (error) console.error("[getCurrentWorkspace] Error:", error.message);
+    if (error) console.error("[getCurrentWorkspace] DB error:", error.message, "for user:", user.id);
+    else console.error("[getCurrentWorkspace] No workspace found for user:", user.id);
     return null;
   }
   return workspaceRowToModel(data as WorkspaceRow);
