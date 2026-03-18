@@ -102,7 +102,7 @@ export function PortalAccountCard({ clientId }: { clientId: string }) {
       <div style={{ borderRadius: 12, border: "1px solid var(--stone-mid)", background: "var(--bark-mid)", padding: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <UserCheck className="w-5 h-5" style={{ color: "var(--blue)" }} />
+            <UserCheck className="w-5 h-5" style={{ color: "var(--garnet-ruby)" }} />
             <div>
               <p style={{ fontSize: 13, fontWeight: 500, fontFamily: "'DM Sans', sans-serif", color: "var(--stone-lightest)" }}>
                 Client Portal
@@ -116,8 +116,8 @@ export function PortalAccountCard({ clientId }: { clientId: string }) {
           </div>
           <span style={{
             display: "inline-flex", alignItems: "center", borderRadius: 999,
-            background: "rgba(143,173,200,0.15)", border: "1px solid rgba(143,173,200,0.3)",
-            padding: "2px 10px", fontSize: 11, fontWeight: 500, color: "var(--blue)"
+            background: "rgba(68,6,6,0.15)", border: "1px solid rgba(117,18,18,0.4)",
+            padding: "2px 10px", fontSize: 11, fontWeight: 500, color: "var(--garnet-ruby)"
           }}>
             Portal Active
           </span>
@@ -131,7 +131,7 @@ export function PortalAccountCard({ clientId }: { clientId: string }) {
     <div style={{ borderRadius: 12, border: "1px solid var(--stone-mid)", background: "var(--bark-mid)", padding: 20, display: "flex", flexDirection: "column" as const, gap: 12 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Link2 className="w-5 h-5" style={{ color: "var(--brass)" }} />
+          <Link2 className="w-5 h-5" style={{ color: "var(--garnet-blush)" }} />
           <div>
             <p style={{ fontSize: 13, fontWeight: 500, fontFamily: "'DM Sans', sans-serif", color: "var(--stone-lightest)" }}>
               Client Portal
@@ -143,8 +143,8 @@ export function PortalAccountCard({ clientId }: { clientId: string }) {
         </div>
         <span style={{
           display: "inline-flex", alignItems: "center", borderRadius: 999,
-          background: "rgba(196,171,112,0.15)", border: "1px solid rgba(196,171,112,0.3)",
-          padding: "2px 10px", fontSize: 11, fontWeight: 500, color: "var(--brass)"
+          background: "rgba(68,6,6,0.12)", border: "1px solid rgba(155,69,69,0.3)",
+          padding: "2px 10px", fontSize: 11, fontWeight: 500, color: "var(--garnet-blush)"
         }}>
           Invite Pending
         </span>
