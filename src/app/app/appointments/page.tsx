@@ -13,6 +13,14 @@ export default async function AppointmentsPage() {
     getCurrentWorkspace(),
   ]);
 
+  // Get workspace ID — fallback to admin query if getCurrentWorkspace failed
+  const admin = createSupabaseAdminClient();
+  let workspaceId = workspace?.id;
+  if (!workspaceId) {
+    const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+    workspaceId = ws?.id;
+  }
+
   // Get rebook requests using admin client to bypass RLS
   let rebookRequests: Array<{
     id: string;
@@ -24,12 +32,11 @@ export default async function AppointmentsPage() {
     created_at: string;
   }> = [];
 
-  if (workspace) {
-    const admin = createSupabaseAdminClient();
+  if (workspaceId) {
     const { data, error } = await admin
       .from("rebook_requests")
       .select("*")
-      .eq("workspace_id", workspace.id)
+      .eq("workspace_id", workspaceId)
       .order("created_at", { ascending: false });
     if (error) {
       console.error("[AppointmentsPage] Failed to fetch rebook requests:", error.message);
