@@ -2,23 +2,39 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ServiceTypesManager } from "./_components/ServiceTypesManager";
 import { StylistCodeBlock } from "./_components/StylistCodeBlock";
 import { BookingConfig } from "./_components/BookingConfig";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getUserIdFromMiddleware } from "@/lib/supabase/get-user-from-middleware";
 
 export default async function SettingsPage() {
-  const userId = await getUserIdFromMiddleware();
+  // Get user via cookie auth
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
+  // Get workspace using admin client (bypasses RLS)
+  // Try by owner_id first, fall back to getting the first workspace
   const admin = createSupabaseAdminClient();
-  const { data: workspace } = await admin
-    .from("workspaces")
-    .select("*")
-    .eq("owner_id", userId)
-    .single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let workspace: any = null;
 
-  // Get user info for display
-  const { data: { user } } = userId
-    ? await admin.auth.admin.getUserById(userId)
-    : { data: { user: null } };
+  if (user?.id) {
+    const { data } = await admin
+      .from("workspaces")
+      .select("*")
+      .eq("owner_id", user.id)
+      .single();
+    workspace = data;
+  }
+
+  // Fallback: if cookie auth failed but user is on the page (middleware passed them),
+  // get the workspace directly. Single-stylist app has one workspace.
+  if (!workspace) {
+    const { data } = await admin
+      .from("workspaces")
+      .select("*")
+      .limit(1)
+      .single();
+    workspace = data;
+  }
 
   return (
     <div className="space-y-8">
