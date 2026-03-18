@@ -7,11 +7,13 @@ export async function GET(request: Request, { params }: RouteParams) {
   const { id } = await params;
   const admin = createSupabaseAdminClient();
 
-  const { data: clientUser } = await admin
+  const { data: clientUsers } = await admin
     .from("client_users")
     .select("created_at")
     .eq("client_id", id)
-    .maybeSingle();
+    .limit(1);
+
+  const clientUser = clientUsers?.[0] || null;
 
   const { data: invites } = await admin
     .from("client_invites")
