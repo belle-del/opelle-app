@@ -341,11 +341,11 @@ export function BookingSuggestionModal({
                       padding: "12px 16px",
                       borderRadius: "8px",
                       border: isSelected
-                        ? "1.5px solid var(--brass, #C4AB70)"
-                        : "1px solid var(--bark-medium, #4A4A46)",
+                        ? "2px solid var(--brass, #C4AB70)"
+                        : "1px solid var(--stone-warm, #D4C9B5)",
                       background: isSelected
-                        ? "rgba(196,171,112,0.08)"
-                        : "var(--bark-deep, #353533)",
+                        ? "var(--stone, #F5F0E8)"
+                        : "var(--stone-card, #FAF8F3)",
                       cursor: "pointer",
                       transition: "all 0.15s ease",
                     }}
@@ -354,8 +354,8 @@ export function BookingSuggestionModal({
                       style={{
                         fontFamily: "'DM Sans', sans-serif",
                         fontSize: "13px",
-                        fontWeight: 500,
-                        color: "var(--text-on-bark, #F5F0E8)",
+                        fontWeight: 600,
+                        color: "var(--text-on-stone, #2C2C2A)",
                         margin: 0,
                       }}
                     >
@@ -366,9 +366,10 @@ export function BookingSuggestionModal({
                         fontFamily: "'DM Sans', sans-serif",
                         fontSize: "12px",
                         color: isSelected
-                          ? "var(--brass, #C4AB70)"
-                          : "var(--text-on-bark-faint, #9A9A92)",
+                          ? "var(--garnet, #4A1A2E)"
+                          : "var(--text-on-stone-faint, #7A7A72)",
                         marginTop: "2px",
+                        fontWeight: isSelected ? 600 : 400,
                       }}
                     >
                       {formatSlotTime(slot.startTime)} &ndash; {formatSlotTime(slot.endTime)}
@@ -380,25 +381,57 @@ export function BookingSuggestionModal({
           )}
 
           {/* Actions */}
-          {!loading && slots.length > 0 && (
+          {!loading && (
             <div
               style={{
                 display: "flex",
-                gap: "8px",
+                flexDirection: "column",
+                gap: "10px",
                 marginTop: "20px",
-                justifyContent: "flex-end",
               }}
             >
-              <Button variant="ghost" size="md" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button
-                size="md"
-                disabled={!selectedSlot || booking}
-                onClick={handleConfirmBooking}
+              {slots.length > 0 && (
+                <Button
+                  size="md"
+                  disabled={!selectedSlot || booking}
+                  onClick={handleConfirmBooking}
+                  style={{ width: "100%" }}
+                >
+                  {booking ? "Booking..." : "Confirm Booking"}
+                </Button>
+              )}
+              <a
+                href={`/app/appointments/new?clientId=${request.client_id}&service=${encodeURIComponent(request.service_type || "")}`}
+                style={{
+                  display: "block",
+                  textAlign: "center",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--stone-warm, #D4C9B5)",
+                  background: "var(--stone-card, #FAF8F3)",
+                  color: "var(--text-on-stone, #2C2C2A)",
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  textDecoration: "none",
+                }}
               >
-                {booking ? "Booking..." : "Confirm Booking"}
-              </Button>
+                Book Manually
+              </a>
+              <button
+                onClick={onClose}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "var(--text-on-bark-faint, #9A9A92)",
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: "11px",
+                  cursor: "pointer",
+                  padding: "4px",
+                }}
+              >
+                Cancel
+              </button>
             </div>
           )}
         </div>
