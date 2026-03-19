@@ -93,7 +93,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       <header className="space-y-4">
         <Link
           href="/app/clients"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
+          style={{ color: "var(--text-on-bark, #F5F0E8)" }}
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Clients
@@ -105,7 +106,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
               {client.lastName?.[0] || ""}
             </div>
             <div>
-              <h2 className="text-3xl font-semibold">{getClientDisplayName(client)}</h2>
+              <h2 className="text-3xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest, #FAF8F3)" }}>{getClientDisplayName(client)}</h2>
               {client.pronouns && (
                 <p className="text-muted-foreground">{client.pronouns}</p>
               )}

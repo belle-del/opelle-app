@@ -31,7 +31,8 @@ export default async function AppointmentDetailPage({ params }: AppointmentDetai
       <header className="space-y-4">
         <Link
           href="/app/appointments"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
+          style={{ color: "var(--text-on-bark, #F5F0E8)" }}
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Appointments
@@ -39,7 +40,7 @@ export default async function AppointmentDetailPage({ params }: AppointmentDetai
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-3xl font-semibold">{appointment.serviceName}</h2>
+              <h2 className="text-3xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest, #FAF8F3)" }}>{appointment.serviceName}</h2>
               <Badge
                 variant={
                   appointment.status === "completed" ? "success" :

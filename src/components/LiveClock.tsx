@@ -22,8 +22,8 @@ export function LiveClock() {
   return (
     <p style={{
       fontFamily: "'DM Sans', sans-serif",
-      fontSize: "12px",
-      color: "var(--text-on-bark-faint, #9A9A92)",
+      fontSize: "13px",
+      color: "var(--text-on-bark, #F5F0E8)",
       letterSpacing: "0.02em",
     }}>
       {formatted}

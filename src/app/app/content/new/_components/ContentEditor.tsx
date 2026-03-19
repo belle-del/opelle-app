@@ -106,7 +106,7 @@ export function ContentEditor({ initialData }: ContentEditorProps) {
           className="inline-flex items-center gap-2 transition-colors"
           style={{
             fontSize: "12px",
-            color: "var(--text-on-bark-faint)",
+            color: "var(--text-on-bark, #F5F0E8)",
             marginBottom: "12px",
             display: "inline-flex",
           }}
@@ -116,10 +116,10 @@ export function ContentEditor({ initialData }: ContentEditorProps) {
         </Link>
         <p
           style={{
-            fontSize: "9px",
-            letterSpacing: "0.3em",
+            fontSize: "10px",
+            letterSpacing: "0.15em",
             textTransform: "uppercase",
-            color: "var(--text-on-bark-faint)",
+            color: "var(--brass, #C4AB70)",
             marginBottom: "4px",
           }}
         >
@@ -128,8 +128,8 @@ export function ContentEditor({ initialData }: ContentEditorProps) {
         <h2
           style={{
             fontFamily: "'Fraunces', serif",
-            fontSize: "24px",
-            color: "var(--text-on-bark)",
+            fontSize: "26px",
+            color: "var(--stone-lightest, #FAF8F3)",
             fontWeight: 300,
           }}
         >

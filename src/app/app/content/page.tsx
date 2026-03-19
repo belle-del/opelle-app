@@ -36,10 +36,10 @@ export default function ContentPage() {
         <div>
           <p
             style={{
-              fontSize: "9px",
-              letterSpacing: "0.3em",
+              fontSize: "10px",
+              letterSpacing: "0.15em",
               textTransform: "uppercase",
-              color: "var(--text-on-bark-faint)",
+              color: "var(--brass, #C4AB70)",
               marginBottom: "4px",
             }}
           >
@@ -48,8 +48,8 @@ export default function ContentPage() {
           <h2
             style={{
               fontFamily: "'Fraunces', serif",
-              fontSize: "24px",
-              color: "var(--text-on-bark)",
+              fontSize: "26px",
+              color: "var(--stone-lightest, #FAF8F3)",
               fontWeight: 300,
             }}
           >
@@ -58,7 +58,7 @@ export default function ContentPage() {
           <p
             style={{
               fontSize: "12px",
-              color: "var(--text-on-bark-faint)",
+              color: "var(--text-on-bark, #F5F0E8)",
               marginTop: "4px",
             }}
           >

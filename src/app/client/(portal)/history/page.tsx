@@ -4,8 +4,7 @@ export default function HistoryPage() {
   return (
     <div className="space-y-5">
       <h1
-        className="text-xl"
-        style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+        style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", color: "#2C2C24" }}
       >
         History
       </h1>

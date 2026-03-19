@@ -257,7 +257,7 @@ function WidgetHead({ title, link }: { title: string; link: string }) {
   return (
     <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--stone-mid)" }}>
       <Link href={link}>
-        <p style={{ fontFamily: "'Fraunces', serif", fontSize: "12px", color: "var(--text-on-stone)", fontWeight: 400 }}>
+        <p style={{ fontFamily: "'Fraunces', serif", fontSize: "12px", color: "var(--text-on-stone, #2C2C2A)", fontWeight: 600 }}>
           {title}
         </p>
       </Link>
@@ -272,7 +272,7 @@ function StatWidget({ value, label, change, changePositive, link }: {
   return (
     <Link href={link} style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--stone-mid)" }}>
-        <p style={{ fontFamily: "'Fraunces', serif", fontSize: "12px", color: "var(--text-on-stone)", fontWeight: 400 }}>
+        <p style={{ fontFamily: "'Fraunces', serif", fontSize: "12px", color: "var(--text-on-stone, #2C2C2A)", fontWeight: 600 }}>
           {label.split(" ").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}
         </p>
       </div>
@@ -531,8 +531,8 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
       {/* Topbar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", marginTop: "24px" }}>
         <div>
-          <p style={{ fontSize: "9px", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--text-on-bark-faint)" }}>Practitioner Suite</p>
-          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", color: "var(--text-on-bark)", fontWeight: 300, marginTop: "2px" }}>Dashboard</h1>
+          <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--brass, #C4AB70)" }}>Practitioner Suite</p>
+          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "var(--stone-lightest, #FAF8F3)", fontWeight: 300, marginTop: "2px" }}>Dashboard</h1>
           <LiveClock />
         </div>
         <div style={{ display: "flex", gap: "8px" }}>

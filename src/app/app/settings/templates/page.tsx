@@ -46,11 +46,11 @@ export default async function TemplatesPage() {
         </Link>
         <p
           style={{
-            fontSize: 9,
+            fontSize: 10,
             fontWeight: 500,
-            letterSpacing: "0.25em",
+            letterSpacing: "0.15em",
             textTransform: "uppercase",
-            color: "var(--text-on-stone-faint)",
+            color: "var(--brass, #C4AB70)",
             fontFamily: "'DM Sans', sans-serif",
             marginBottom: 4,
           }}

@@ -49,10 +49,10 @@ export function InspoPageClient() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1
-          className="text-xl"
           style={{
             fontFamily: "'Fraunces', serif",
-            color: "var(--stone-lightest)",
+            fontSize: "24px",
+            color: "#2C2C24",
           }}
         >
           Inspo

@@ -57,8 +57,7 @@ export default async function MessagesPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1
-          className="text-xl"
-          style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+          style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", color: "#2C2C24" }}
         >
           Messages
         </h1>
@@ -70,11 +69,11 @@ export default async function MessagesPage() {
         <div className="space-y-2">
           <h2
             style={{
-              fontFamily: "'Fraunces', serif",
-              color: "var(--stone-lightest)",
-              fontSize: "14px",
-              fontWeight: 500,
-              letterSpacing: "0.5px",
+              fontFamily: "'DM Sans', sans-serif",
+              color: "#2C2C24",
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "0.1em",
               textTransform: "uppercase" as const,
             }}
           >
@@ -182,11 +181,11 @@ export default async function MessagesPage() {
       {hasThreads && hasNotifications && (
         <h2
           style={{
-            fontFamily: "'Fraunces', serif",
-            color: "var(--stone-lightest)",
-            fontSize: "14px",
-            fontWeight: 500,
-            letterSpacing: "0.5px",
+            fontFamily: "'DM Sans', sans-serif",
+            color: "#2C2C24",
+            fontSize: "12px",
+            fontWeight: 600,
+            letterSpacing: "0.1em",
             textTransform: "uppercase" as const,
           }}
         >

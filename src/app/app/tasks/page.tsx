@@ -154,10 +154,10 @@ export default function TasksPage() {
     <div className="space-y-8">
       {/* Header */}
       <header style={{ marginBottom: 8 }}>
-        <p style={{ fontSize: 9, fontWeight: 500, letterSpacing: "0.25em", textTransform: "uppercase", color: "var(--text-on-stone-faint)", fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>
+        <p style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--brass, #C4AB70)", fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>
           Productivity
         </p>
-        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 400, color: "var(--text-on-stone)", letterSpacing: "-0.01em" }}>Tasks</h2>
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 400, color: "var(--text-on-stone, #2C2C2A)", letterSpacing: "-0.01em" }}>Tasks</h2>
         <p style={{ fontSize: 12, color: "var(--text-on-stone-faint)", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
           Manage your tasks, reminders, and client follow-ups.
         </p>

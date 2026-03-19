@@ -169,10 +169,10 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
           <div key={section.label}>
             <p
               style={{
-                fontSize: "8px",
-                letterSpacing: "0.25em",
+                fontSize: "9px",
+                letterSpacing: "0.15em",
                 textTransform: "uppercase",
-                color: "rgba(241,239,224,0.35)",
+                color: "rgba(196,171,112,0.7)",
                 marginBottom: "6px",
                 paddingLeft: "8px",
               }}
@@ -193,7 +193,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
                     className={cn("flex items-center gap-2.5 px-2 py-2 rounded transition-all duration-150")}
                     style={{
                       fontSize: "11px",
-                      color: isActive ? "#F1EFE0" : "rgba(241,239,224,0.55)",
+                      color: isActive ? "#F1EFE0" : "rgba(241,239,224,0.7)",
                       background: isActive ? "rgba(196,171,112,0.08)" : "transparent",
                       borderLeft: isActive ? "2px solid #8FADC8" : "2px solid transparent",
                     }}
@@ -203,7 +203,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
                         style={{
                           width: "16px",
                           height: "16px",
-                          opacity: isActive ? 0.85 : 0.55,
+                          opacity: isActive ? 0.9 : 0.7,
                           flexShrink: 0,
                         }}
                       />

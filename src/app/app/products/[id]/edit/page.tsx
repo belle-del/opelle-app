@@ -95,13 +95,14 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       <header className="space-y-4">
         <Link
           href={`/app/products/${id}`}
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
+          style={{ color: "var(--text-on-bark, #F5F0E8)" }}
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Product
         </Link>
         <div>
-          <h2 className="text-3xl font-semibold">Edit Product</h2>
+          <h2 className="text-3xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest, #FAF8F3)" }}>Edit Product</h2>
           <p className="text-muted-foreground">
             Update product details.
           </p>
