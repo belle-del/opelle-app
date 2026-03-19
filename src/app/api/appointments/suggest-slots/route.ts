@@ -83,9 +83,21 @@ export async function POST(request: Request) {
       .eq("id", workspaceId)
       .single();
 
-    const rawHours = workspace?.working_hours as WorkingHours | null;
-    const workingHours: WorkingHours =
-      rawHours && Object.keys(rawHours).length > 0 ? rawHours : DEFAULT_WORKING_HOURS;
+    // Normalize working hours — DB may store { start, end, closed } or { open, close }
+    const rawHours = workspace?.working_hours as Record<string, Record<string, unknown> | null> | null;
+    let workingHours: WorkingHours = DEFAULT_WORKING_HOURS;
+    if (rawHours && Object.keys(rawHours).length > 0) {
+      workingHours = {};
+      for (const [day, val] of Object.entries(rawHours)) {
+        if (!val || val.closed) {
+          workingHours[day] = null;
+        } else {
+          const open = (val.open as string) || (val.start as string) || "09:00";
+          const close = (val.close as string) || (val.end as string) || "17:00";
+          workingHours[day] = { open, close };
+        }
+      }
+    }
     const bufferMinutes = (workspace?.buffer_minutes as number) || 0;
 
     // Get existing appointments in the timeframe window

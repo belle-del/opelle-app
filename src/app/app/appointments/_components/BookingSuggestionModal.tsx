@@ -102,8 +102,8 @@ export function BookingSuggestionModal({
       }
       const data = await res.json();
       setSlots(data.slots || []);
-    } catch (err) {
-      setError(`Could not load suggested times: ${err instanceof Error ? err.message : "Unknown error"}. workspaceId=${workspaceId}`);
+    } catch {
+      setError("Could not load suggested times. Please try again.");
     } finally {
       setLoading(false);
     }
