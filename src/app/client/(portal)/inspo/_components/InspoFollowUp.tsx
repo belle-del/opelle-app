@@ -217,18 +217,52 @@ export function InspoFollowUp({
         </span>
       </div>
 
-      {/* Photo preview */}
-      {photoIdx !== undefined && photoUrls[photoIdx] && (
-        <div style={{ borderRadius: "12px", overflow: "hidden", maxHeight: "240px" }}>
-          <img
-            src={photoUrls[photoIdx]}
-            alt={`Inspo photo ${photoIdx + 1}`}
-            style={{
-              width: "100%",
-              height: "240px",
-              objectFit: "cover",
-            }}
-          />
+      {/* Numbered photo grid — always visible so client can match references */}
+      {photoUrls.length > 0 && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${Math.min(photoUrls.length, 4)}, 1fr)`,
+            gap: "6px",
+          }}
+        >
+          {photoUrls.map((url, i) => (
+            <div
+              key={i}
+              style={{
+                position: "relative",
+                borderRadius: "8px",
+                overflow: "hidden",
+                aspectRatio: "1",
+                border: photoIdx === i ? "2px solid var(--brass, #C4AB70)" : "1px solid #E8E0D0",
+              }}
+            >
+              <img
+                src={url}
+                alt={`Photo ${i + 1}`}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+              <span
+                style={{
+                  position: "absolute",
+                  bottom: "3px",
+                  left: "3px",
+                  background: "rgba(0,0,0,0.6)",
+                  color: "white",
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  width: "18px",
+                  height: "18px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {i + 1}
+              </span>
+            </div>
+          ))}
         </div>
       )}
 
