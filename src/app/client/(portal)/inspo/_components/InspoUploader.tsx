@@ -32,6 +32,11 @@ type SubmissionResult = {
   };
 };
 
+type SuccessInfo = {
+  clientSummary: string | null;
+  aiAnalysisFailed: boolean;
+};
+
 const CATEGORIES = [
   {
     id: "color_tone",
@@ -73,6 +78,7 @@ export function InspoUploader({ onSubmitted }: Props) {
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState("");
   const [submission, setSubmission] = useState<SubmissionResult | null>(null);
+  const [successInfo, setSuccessInfo] = useState<SuccessInfo | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -184,7 +190,10 @@ export function InspoUploader({ onSubmitted }: Props) {
           aiAnalysis: data.aiAnalysis,
         });
       } else {
-        onSubmitted();
+        setSuccessInfo({
+          clientSummary: data.clientSummary ?? null,
+          aiAnalysisFailed: data.aiAnalysisFailed ?? false,
+        });
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -202,6 +211,57 @@ export function InspoUploader({ onSubmitted }: Props) {
         aiAnalysis={submission.aiAnalysis}
         onComplete={onSubmitted}
       />
+    );
+  }
+
+  if (successInfo) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <div
+            className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
+            style={{ background: "var(--brass-soft)" }}
+          >
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--brass)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          </div>
+          <h3
+            className="text-lg mb-2"
+            style={{ fontFamily: "'Fraunces', serif", color: "#2C2C2A" }}
+          >
+            {successInfo.aiAnalysisFailed
+              ? "Photos submitted"
+              : "Inspo received"}
+          </h3>
+          <p
+            style={{ fontSize: "13px", color: "#7A7A72", maxWidth: "280px", margin: "0 auto" }}
+          >
+            {successInfo.aiAnalysisFailed
+              ? "Your photos have been saved. Your stylist will review them shortly."
+              : successInfo.clientSummary
+                ? successInfo.clientSummary
+                : "Your stylist will review your inspo and follow up with you."}
+          </p>
+          <Button
+            onClick={onSubmitted}
+            className="mt-6"
+            variant="outline"
+            size="sm"
+          >
+            Done
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -235,7 +295,7 @@ export function InspoUploader({ onSubmitted }: Props) {
             Analyzing your inspo...
           </h3>
           <p style={{ fontSize: "13px", color: "#7A7A72" }}>
-            Our AI is reviewing your photos and preparing personalized questions.
+            Metis is reviewing your photos and preparing personalized questions.
           </p>
         </CardContent>
       </Card>

@@ -186,6 +186,8 @@ export async function POST(request: NextRequest) {
     });
     if (result?.success && result.analysis) {
       aiAnalysis = result.analysis as InspoAnalysis;
+    } else {
+      console.error("Kernel AI analysis returned no result:", JSON.stringify(result));
     }
   } catch (err) {
     console.error("Kernel AI analysis failed:", err);
@@ -276,6 +278,8 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     id: submission.id,
     aiAnalysis,
+    aiAnalysisFailed: aiAnalysis === null,
+    clientSummary: aiAnalysis?.clientSummary ?? null,
     success: true,
   });
 }
