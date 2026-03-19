@@ -145,7 +145,7 @@ export default async function MessagesPage() {
                             <span
                               style={{
                                 fontSize: "10px",
-                                color: "var(--text-on-stone-ghost)",
+                                color: "#7A7A72",
                               }}
                             >
                               {formatRelativeDate(thread.lastMessageAt)}

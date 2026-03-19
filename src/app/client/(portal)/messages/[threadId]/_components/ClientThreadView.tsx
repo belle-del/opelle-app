@@ -137,7 +137,7 @@ export function ClientThreadView({ messages: initialMessages, threadId, stylistN
           alignItems: "center",
           gap: "12px",
           paddingBottom: "12px",
-          borderBottom: "1px solid var(--stone-shadow, rgba(255,255,255,0.08))",
+          borderBottom: "1px solid #E8E0D0",
           flexShrink: 0,
         }}
       >
@@ -168,7 +168,7 @@ export function ClientThreadView({ messages: initialMessages, threadId, stylistN
             style={{
               fontSize: "15px",
               fontWeight: 600,
-              color: "var(--stone-lightest)",
+              color: "#2C2C2A",
               fontFamily: "'Fraunces', serif",
             }}
           >
@@ -177,7 +177,7 @@ export function ClientThreadView({ messages: initialMessages, threadId, stylistN
           <p
             style={{
               fontSize: "11px",
-              color: "var(--text-on-stone-ghost)",
+              color: "#7A7A72",
               fontFamily: "'DM Sans', sans-serif",
             }}
           >
@@ -254,7 +254,7 @@ export function ClientThreadView({ messages: initialMessages, threadId, stylistN
                     fontSize: "10px",
                     color: isClient
                       ? "rgba(255,255,255,0.5)"
-                      : "var(--text-on-stone-ghost)",
+                      : "#7A7A72",
                     marginTop: "4px",
                     textAlign: "right" as const,
                   }}
@@ -274,7 +274,7 @@ export function ClientThreadView({ messages: initialMessages, threadId, stylistN
           gap: "8px",
           alignItems: "flex-end",
           paddingTop: "12px",
-          borderTop: "1px solid var(--stone-shadow, rgba(255,255,255,0.08))",
+          borderTop: "1px solid #E8E0D0",
           flexShrink: 0,
         }}
       >
@@ -288,7 +288,7 @@ export function ClientThreadView({ messages: initialMessages, threadId, stylistN
           style={{
             flex: 1,
             background: "var(--stone-card)",
-            border: "1px solid var(--stone-shadow, rgba(255,255,255,0.12))",
+            border: "1px solid #E8E0D0",
             borderRadius: "20px",
             padding: "10px 16px",
             fontSize: "14px",
@@ -322,7 +322,7 @@ export function ClientThreadView({ messages: initialMessages, threadId, stylistN
             height={18}
             viewBox="0 0 24 24"
             fill="none"
-            stroke={body.trim() && !sending ? "var(--bark-deepest)" : "var(--text-on-stone-ghost)"}
+            stroke={body.trim() && !sending ? "var(--bark-deepest)" : "#7A7A72"}
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"

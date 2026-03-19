@@ -25,12 +25,12 @@ function formatDuration(mins: number): string {
 export function ServiceSelector({ serviceTypes }: Props) {
   if (serviceTypes.length === 0) {
     return (
-      <Card style={{ border: "1px dashed var(--stone-shadow)" }}>
+      <Card style={{ border: "1px dashed #E8E0D0" }}>
         <CardContent className="py-8 text-center">
           <p style={{ color: "var(--text-on-stone-faint)", fontSize: "14px", fontFamily: "'Cormorant Garamond', serif" }}>
             No services available yet
           </p>
-          <p style={{ color: "var(--text-on-stone-ghost)", fontSize: "12px", marginTop: "4px" }}>
+          <p style={{ color: "#7A7A72", fontSize: "12px", marginTop: "4px" }}>
             Your stylist hasn&apos;t configured booking services yet.
           </p>
         </CardContent>
@@ -40,7 +40,7 @@ export function ServiceSelector({ serviceTypes }: Props) {
 
   return (
     <div className="space-y-3">
-      <p style={{ fontSize: "13px", color: "var(--stone-shadow)" }}>
+      <p style={{ fontSize: "13px", color: "#7A7A72" }}>
         Select a service to get started
       </p>
 
@@ -76,7 +76,7 @@ export function ServiceSelector({ serviceTypes }: Props) {
                     >
                       {st.bookingType === "instant" ? "Instant" : "Request"}
                     </span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--stone-shadow)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A7A72" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m9 18 6-6-6-6" />
                     </svg>
                   </div>

@@ -85,12 +85,12 @@ function typeIcon(type: string) {
 export function MessagesFeed({ notifications }: Props) {
   if (notifications.length === 0) {
     return (
-      <Card style={{ border: "1px dashed var(--stone-shadow)" }}>
+      <Card style={{ border: "1px dashed #E8E0D0" }}>
         <CardContent className="py-8 text-center">
           <p style={{ color: "var(--text-on-stone-faint)", fontSize: "14px", fontFamily: "'Cormorant Garamond', serif" }}>
             No messages yet
           </p>
-          <p style={{ color: "var(--text-on-stone-ghost)", fontSize: "12px", marginTop: "4px" }}>
+          <p style={{ color: "#7A7A72", fontSize: "12px", marginTop: "4px" }}>
             You&apos;ll see updates from your stylist here.
           </p>
         </CardContent>
@@ -128,7 +128,7 @@ export function MessagesFeed({ notifications }: Props) {
                       {n.body}
                     </p>
                   )}
-                  <p style={{ fontSize: "10px", color: "var(--text-on-stone-ghost)", marginTop: "4px" }}>
+                  <p style={{ fontSize: "10px", color: "#7A7A72", marginTop: "4px" }}>
                     {formatRelativeDate(n.created_at)}
                   </p>
                 </div>

@@ -9,12 +9,12 @@ export default function ProductsPage() {
         Products
       </h1>
 
-      <Card style={{ border: "1px dashed var(--stone-shadow)" }}>
+      <Card style={{ border: "1px dashed #E8E0D0" }}>
         <CardContent className="py-8 text-center">
           <p style={{ color: "var(--text-on-stone-faint)", fontSize: "14px", fontFamily: "'Cormorant Garamond', serif" }}>
             Product orders are coming in Phase 5
           </p>
-          <p style={{ color: "var(--text-on-stone-ghost)", fontSize: "12px", marginTop: "4px" }}>
+          <p style={{ color: "#7A7A72", fontSize: "12px", marginTop: "4px" }}>
             Request products directly from your stylist.
           </p>
         </CardContent>

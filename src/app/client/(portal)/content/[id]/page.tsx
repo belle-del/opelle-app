@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 
 const categoryBadgeStyles: Record<string, { background: string; color: string }> = {
   tip: { background: "var(--brass)", color: "var(--bark-deepest)" },
-  product_spotlight: { background: "var(--garnet)", color: "var(--stone-lightest)" },
-  seasonal: { background: "rgba(106,142,102,0.3)", color: "rgb(166,202,162)" },
+  product_spotlight: { background: "var(--garnet)", color: "#FFF" },
+  seasonal: { background: "rgba(106,142,102,0.3)", color: "#2C5E2A" },
 };
 
 function categoryLabel(cat: string): string {
@@ -77,7 +77,7 @@ export default async function ContentDetailPage({ params }: PageProps) {
         </div>
         <h1
           className="text-2xl"
-          style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+          style={{ fontFamily: "'Fraunces', serif", color: "#2C2C2A" }}
         >
           {post.title}
         </h1>

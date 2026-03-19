@@ -38,7 +38,7 @@ export function ContentFeed({ posts }: Props) {
           style={{
             width: "32px",
             height: "32px",
-            color: "var(--text-on-stone-ghost)",
+            color: "#7A7A72",
             margin: "0 auto 12px",
           }}
         />
@@ -55,7 +55,7 @@ export function ContentFeed({ posts }: Props) {
         <p
           style={{
             fontSize: "12px",
-            color: "var(--text-on-stone-ghost)",
+            color: "#7A7A72",
             fontFamily: "'DM Sans', sans-serif",
           }}
         >

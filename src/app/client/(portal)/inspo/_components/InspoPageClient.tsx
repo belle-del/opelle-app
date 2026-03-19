@@ -130,9 +130,9 @@ export function InspoPageClient() {
               <p
                 style={{
                   fontSize: "11px",
-                  color: "var(--text-on-stone-ghost)",
+                  color: "#5A5A52",
                   textTransform: "uppercase",
-                  letterSpacing: "0.05em",
+                  letterSpacing: "0.12em",
                   fontWeight: 600,
                 }}
               >

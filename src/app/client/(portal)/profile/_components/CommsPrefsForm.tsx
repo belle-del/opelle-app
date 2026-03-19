@@ -65,7 +65,7 @@ export function CommsPrefsForm({ initialPrefs }: Props) {
     <div className="space-y-5">
       <h2
         className="text-lg"
-        style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+        style={{ fontFamily: "'Fraunces', serif", color: "#2C2C2A" }}
       >
         Notification Preferences
       </h2>

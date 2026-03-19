@@ -150,14 +150,14 @@ export default function SlotPickerPage() {
           </div>
           <h2
             className="text-2xl mb-2"
-            style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+            style={{ fontFamily: "'Fraunces', serif", color: "#2C2C2A" }}
           >
             You&apos;re booked!
           </h2>
-          <p style={{ fontSize: "14px", color: "var(--stone-shadow)", marginBottom: "4px" }}>
+          <p style={{ fontSize: "14px", color: "#5A5A52", marginBottom: "4px" }}>
             {decodeURIComponent(serviceName)}
           </p>
-          <p style={{ fontSize: "13px", color: "var(--stone-shadow)" }}>
+          <p style={{ fontSize: "13px", color: "#5A5A52" }}>
             {selectedSlot && formatFullDate(selectedSlot.startAt)}
           </p>
         </div>
@@ -184,7 +184,7 @@ export default function SlotPickerPage() {
 
         <h1
           className="text-xl"
-          style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+          style={{ fontFamily: "'Fraunces', serif", color: "#2C2C2A" }}
         >
           Confirm Booking
         </h1>
@@ -233,11 +233,11 @@ export default function SlotPickerPage() {
 
       <h1
         className="text-xl"
-        style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+        style={{ fontFamily: "'Fraunces', serif", color: "#2C2C2A" }}
       >
         Pick a Time
       </h1>
-      <p style={{ fontSize: "13px", color: "var(--stone-shadow)" }}>
+      <p style={{ fontSize: "13px", color: "#5A5A52" }}>
         {decodeURIComponent(serviceName)}
       </p>
 
@@ -258,7 +258,7 @@ export default function SlotPickerPage() {
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
-        <span style={{ fontSize: "13px", color: "var(--stone-lightest)" }}>
+        <span style={{ fontSize: "13px", color: "#5A5A52" }}>
           {weekDates.length > 0 && (
             <>
               {new Date(weekDates[0] + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
@@ -317,11 +317,11 @@ export default function SlotPickerPage() {
       {/* Slots */}
       {loading ? (
         <div className="py-8 text-center">
-          <p style={{ color: "var(--stone-shadow)", fontSize: "13px" }}>Loading available times...</p>
+          <p style={{ color: "#7A7A72", fontSize: "13px" }}>Loading available times...</p>
         </div>
       ) : slotsForDate.length > 0 ? (
         <div className="space-y-2">
-          <p style={{ fontSize: "12px", color: "var(--stone-shadow)", marginBottom: "4px" }}>
+          <p style={{ fontSize: "12px", color: "#7A7A72", marginBottom: "4px" }}>
             {formatDayLabel(selectedDate)} — {slotsForDate.length} available
           </p>
           <div className="grid grid-cols-3 gap-2">
@@ -347,7 +347,7 @@ export default function SlotPickerPage() {
           </div>
         </div>
       ) : selectedDate ? (
-        <Card style={{ border: "1px dashed var(--stone-shadow)" }}>
+        <Card style={{ border: "1px dashed #E8E0D0" }}>
           <CardContent className="py-6 text-center">
             <p style={{ color: "var(--text-on-stone-faint)", fontSize: "13px" }}>
               No available times on this day
@@ -355,7 +355,7 @@ export default function SlotPickerPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card style={{ border: "1px dashed var(--stone-shadow)" }}>
+        <Card style={{ border: "1px dashed #E8E0D0" }}>
           <CardContent className="py-6 text-center">
             <p style={{ color: "var(--text-on-stone-faint)", fontSize: "13px" }}>
               Select a day above to see available times

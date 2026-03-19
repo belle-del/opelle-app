@@ -70,7 +70,7 @@ export function ProfileForm({ client, stylistName, workspaceName }: Props) {
     <div className="space-y-5">
       <h1
         className="text-xl"
-        style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+        style={{ fontFamily: "'Fraunces', serif", color: "#2C2C2A" }}
       >
         Profile
       </h1>
@@ -286,7 +286,7 @@ export function ProfileForm({ client, stylistName, workspaceName }: Props) {
           </p>
           <p
             className="mt-3"
-            style={{ fontSize: "12px", color: "var(--stone-shadow)", fontStyle: "italic" }}
+            style={{ fontSize: "12px", color: "#7A7A72", fontStyle: "italic" }}
           >
             Multi-stylist support coming soon
           </p>

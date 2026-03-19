@@ -99,11 +99,11 @@ export function RequestForm({ clientId, workspaceId }: Props) {
           </div>
           <h2
             className="text-2xl mb-2"
-            style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+            style={{ fontFamily: "'Fraunces', serif", color: "#2C2C2A" }}
           >
             Request Sent
           </h2>
-          <p style={{ fontSize: "14px", color: "var(--stone-shadow)" }}>
+          <p style={{ fontSize: "14px", color: "#7A7A72" }}>
             Your stylist will review your preferences and get back to you soon.
           </p>
         </div>
@@ -129,11 +129,11 @@ export function RequestForm({ clientId, workspaceId }: Props) {
       <div>
         <h1
           className="text-xl"
-          style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest)" }}
+          style={{ fontFamily: "'Fraunces', serif", color: "#2C2C2A" }}
         >
           Request Booking
         </h1>
-        <p style={{ fontSize: "13px", color: "var(--stone-shadow)", marginTop: "2px" }}>
+        <p style={{ fontSize: "13px", color: "#7A7A72", marginTop: "2px" }}>
           {decodeURIComponent(serviceName)}
         </p>
       </div>

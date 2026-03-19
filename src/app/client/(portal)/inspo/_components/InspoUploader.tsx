@@ -104,12 +104,12 @@ export function InspoUploader({ onSubmitted }: Props) {
             className="text-lg mb-2"
             style={{
               fontFamily: "'Fraunces', serif",
-              color: "var(--stone-lightest)",
+              color: "#2C2C2A",
             }}
           >
             Analyzing your inspo...
           </h3>
-          <p style={{ fontSize: "13px", color: "var(--stone-shadow)" }}>
+          <p style={{ fontSize: "13px", color: "#7A7A72" }}>
             Our AI is reviewing your photos and preparing personalized
             questions.
           </p>
@@ -137,7 +137,7 @@ export function InspoUploader({ onSubmitted }: Props) {
             <p
               style={{
                 fontSize: "11px",
-                color: "var(--text-on-stone-ghost)",
+                color: "#7A7A72",
                 marginBottom: "12px",
               }}
             >

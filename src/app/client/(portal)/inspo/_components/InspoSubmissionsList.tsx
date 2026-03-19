@@ -66,7 +66,7 @@ export function InspoSubmissionsList({ submissions }: Props) {
         </p>
         <p
           style={{
-            color: "var(--text-on-stone-ghost)",
+            color: "#7A7A72",
             fontSize: "11px",
             marginTop: "4px",
           }}
@@ -129,7 +129,7 @@ export function InspoSubmissionsList({ submissions }: Props) {
                         <p
                           style={{
                             fontSize: "11px",
-                            color: "var(--text-on-stone-ghost)",
+                            color: "#7A7A72",
                           }}
                         >
                           {formatRelativeDate(sub.created_at)}
