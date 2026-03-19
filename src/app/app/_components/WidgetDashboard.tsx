@@ -531,8 +531,8 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
       {/* Topbar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", marginTop: "24px" }}>
         <div>
-          <p style={{ fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--brass, #C4AB70)", fontWeight: 500 }}>Practitioner Suite</p>
-          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: "32px", color: "#FFFFFF", fontWeight: 400, marginTop: "2px" }}>Dashboard</h1>
+          <p style={{ fontSize: "18px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#FFFFFF", fontWeight: 600 }}>Practitioner Suite</p>
+          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: "32px", color: "#000000", fontWeight: 400, marginTop: "2px" }}>Dashboard</h1>
           <LiveClock />
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
