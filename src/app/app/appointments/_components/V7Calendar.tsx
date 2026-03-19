@@ -51,8 +51,8 @@ function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-// Show 6 AM to 9 PM to cover most salon hours across timezones
-const HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
+// Show full 24 hours
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -63,6 +63,7 @@ function statusColor(status: string) {
 }
 
 function formatHour(h: number) {
+  if (h === 0) return "12AM";
   if (h === 12) return "12PM";
   return h > 12 ? `${h - 12}PM` : `${h}AM`;
 }
