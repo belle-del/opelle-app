@@ -171,7 +171,10 @@ export function InspoUploader({ onSubmitted }: Props) {
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Upload failed");
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.error || `Server error ${res.status}`);
+      }
 
       const data = await res.json();
 
@@ -199,8 +202,8 @@ export function InspoUploader({ onSubmitted }: Props) {
           aiAnalysisFailed: false,
         });
       }
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setUploading(false);
       setAnalyzing(false);

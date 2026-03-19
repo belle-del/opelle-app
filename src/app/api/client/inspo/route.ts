@@ -56,6 +56,7 @@ export async function GET() {
 
 // POST — upload inspo photos + run Claude AI analysis for deep understanding
 export async function POST(request: NextRequest) {
+  try {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -225,4 +226,11 @@ export async function POST(request: NextRequest) {
     analysisError,
     success: true,
   });
+  } catch (err) {
+    console.error("Inspo POST crashed:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Internal server error" },
+      { status: 500 }
+    );
+  }
 }
