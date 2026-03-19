@@ -255,9 +255,9 @@ function DraggableWidget({
 // ── Widget Head ────────────────────────────────────────────────────────
 function WidgetHead({ title, link }: { title: string; link: string }) {
   return (
-    <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--stone-mid)" }}>
-      <Link href={link}>
-        <p style={{ fontFamily: "'Fraunces', serif", fontSize: "12px", color: "var(--text-on-stone, #2C2C2A)", fontWeight: 600 }}>
+    <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--stone-mid)" }}>
+      <Link href={link} style={{ textDecoration: "none" }}>
+        <p style={{ fontFamily: "'Fraunces', serif", fontSize: "14px", color: "var(--text-on-stone, #2C2C2A)", fontWeight: 600 }}>
           {title}
         </p>
       </Link>
@@ -439,7 +439,7 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
       case "activity":
         return (
           <>
-            <WidgetHead title="Activity" link="/app/clients" />
+            <WidgetHead title="Activity" link="/app/history" />
             <div style={{ padding: "8px 12px" }}>
               {todayAppts.slice(0, 4).map((appt) => (
                 <div key={appt.id} style={{ display: "flex", gap: "8px", padding: "4px 0", borderBottom: "1px solid var(--stone-mid)" }}>
@@ -490,7 +490,7 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
       case "inspoFlags":
         return (
           <>
-            <WidgetHead title="Inspo Flags" link="/app/clients" />
+            <WidgetHead title="Inspo Flags" link="/app/formulas" />
             <div style={{ padding: "8px 12px" }}>
               {inspoFlags.length === 0 ? (
                 <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>No pending inspo flags</p>
@@ -531,8 +531,8 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
       {/* Topbar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", marginTop: "24px" }}>
         <div>
-          <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--brass, #C4AB70)" }}>Practitioner Suite</p>
-          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "var(--stone-lightest, #FAF8F3)", fontWeight: 300, marginTop: "2px" }}>Dashboard</h1>
+          <p style={{ fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--brass, #C4AB70)", fontWeight: 500 }}>Practitioner Suite</p>
+          <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: "32px", color: "#FFFFFF", fontWeight: 400, marginTop: "2px" }}>Dashboard</h1>
           <LiveClock />
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
