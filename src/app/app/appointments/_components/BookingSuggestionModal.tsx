@@ -66,8 +66,20 @@ export function BookingSuggestionModal({
   const [error, setError] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<SuggestedSlot | null>(null);
   const [booking, setBooking] = useState(false);
+  const [serviceDuration, setServiceDuration] = useState(60);
 
   const notes = parseNotes(request.notes);
+
+  // Look up the service type's configured duration
+  useEffect(() => {
+    fetch(`/api/service-types?workspaceId=${workspaceId}`)
+      .then(r => r.json())
+      .then((types: Array<{ name: string; defaultDurationMins?: number }>) => {
+        const match = types.find(t => t.name === request.service_type);
+        if (match?.defaultDurationMins) setServiceDuration(match.defaultDurationMins);
+      })
+      .catch(() => {});
+  }, [workspaceId, request.service_type]);
 
   const fetchSlots = useCallback(async () => {
     setLoading(true);
@@ -81,7 +93,7 @@ export function BookingSuggestionModal({
           preferredDays: request.preferred_dates,
           preferredTime: notes.preferredTime || "morning",
           timeframe: notes.timeframe || "2_weeks",
-          durationMins: 60,
+          durationMins: serviceDuration,
         }),
       });
       if (!res.ok) throw new Error("Failed to load suggestions");
@@ -115,7 +127,7 @@ export function BookingSuggestionModal({
           clientId: request.client_id,
           serviceName: request.service_type || "Service",
           startAt,
-          durationMins: 60,
+          durationMins: serviceDuration,
           notes: notes.clientNotes || undefined,
           workspaceId,
         }),

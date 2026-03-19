@@ -13,6 +13,7 @@ interface Appointment {
   clientId: string;
   serviceName: string;
   status: string;
+  durationMins: number;
 }
 
 interface Client {
@@ -141,19 +142,26 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
               </div>
               <div
                 onClick={() => { if (slotAppts.length === 0) router.push(makeNewApptUrl(current, hour)); }}
-                style={{ borderTop: "1px solid var(--stone-mid)", padding: "4px 0 4px 8px", minHeight: "52px", cursor: slotAppts.length === 0 ? "pointer" : "default", transition: "background 0.15s" }}
+                style={{ borderTop: "1px solid var(--stone-mid)", padding: "4px 0 4px 8px", minHeight: "52px", cursor: slotAppts.length === 0 ? "pointer" : "default", transition: "background 0.15s", position: "relative" }}
                 onMouseEnter={(e) => { if (slotAppts.length === 0) e.currentTarget.style.background = "rgba(143,173,200,0.06)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 title={slotAppts.length === 0 ? "Click to add appointment" : undefined}
               >
-                {slotAppts.map((appt) => (
-                  <Link key={appt.id} href={`/app/appointments/${appt.id}`} style={{ display: "block", height: "100%" }}>
-                    <div style={{ padding: "8px 12px", borderRadius: "6px", background: "var(--garnet-wash)", borderLeft: `3px solid ${statusColor(appt.status)}`, height: "100%", minHeight: "44px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                      <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-on-stone)" }}>{getClientName(clients, appt.clientId)}</p>
-                      <p style={{ fontSize: "10px", color: "var(--text-on-stone-faint)" }}>{appt.serviceName}</p>
-                    </div>
-                  </Link>
-                ))}
+                {slotAppts.map((appt) => {
+                  const durationHours = (appt.durationMins || 60) / 60;
+                  const spanHeight = Math.max(1, durationHours) * 52;
+                  const startMin = new Date(appt.startAt).getMinutes();
+                  const topOffset = (startMin / 60) * 52;
+                  return (
+                    <Link key={appt.id} href={`/app/appointments/${appt.id}`} style={{ display: "block", position: "absolute", top: `${topOffset}px`, left: "8px", right: "8px", zIndex: 2 }}>
+                      <div style={{ padding: "8px 12px", borderRadius: "6px", background: "var(--garnet-wash)", borderLeft: `3px solid ${statusColor(appt.status)}`, height: `${spanHeight - 4}px`, display: "flex", flexDirection: "column", justifyContent: "flex-start", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
+                        <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-on-stone)" }}>{getClientName(clients, appt.clientId)}</p>
+                        <p style={{ fontSize: "10px", color: "var(--text-on-stone-faint)" }}>{appt.serviceName}</p>
+                        <p style={{ fontSize: "10px", color: "var(--text-on-stone-faint)", marginTop: "auto" }}>{(appt.durationMins || 60)} min</p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           );
@@ -189,19 +197,26 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
                 <div
                   key={day.toISOString()}
                   onClick={() => { if (slotAppts.length === 0) router.push(makeNewApptUrl(day, hour)); }}
-                  style={{ borderTop: "1px solid var(--stone-mid)", borderLeft: "1px solid var(--stone-mid)", padding: "3px", minHeight: "44px", cursor: slotAppts.length === 0 ? "pointer" : "default", transition: "background 0.15s" }}
+                  style={{ borderTop: "1px solid var(--stone-mid)", borderLeft: "1px solid var(--stone-mid)", padding: "3px", minHeight: "44px", cursor: slotAppts.length === 0 ? "pointer" : "default", transition: "background 0.15s", position: "relative" }}
                   onMouseEnter={(e) => { if (slotAppts.length === 0) e.currentTarget.style.background = "rgba(143,173,200,0.06)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                   title={slotAppts.length === 0 ? "Click to add appointment" : undefined}
                 >
-                  {slotAppts.map((appt) => (
-                    <Link key={appt.id} href={`/app/appointments/${appt.id}`} style={{ display: "block" }}>
-                      <div style={{ padding: "3px 6px", borderRadius: "4px", background: "var(--garnet-wash)", borderLeft: `2px solid ${statusColor(appt.status)}`, height: "100%", minHeight: "36px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                        <p style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-on-stone)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{getClientName(clients, appt.clientId)}</p>
-                        <p style={{ fontSize: "8px", color: "var(--text-on-stone-faint)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{appt.serviceName}</p>
-                      </div>
-                    </Link>
-                  ))}
+                  {slotAppts.map((appt) => {
+                    const durationHours = (appt.durationMins || 60) / 60;
+                    const spanHeight = Math.max(1, durationHours) * 44;
+                    const startMin = new Date(appt.startAt).getMinutes();
+                    const topOffset = (startMin / 60) * 44;
+                    return (
+                      <Link key={appt.id} href={`/app/appointments/${appt.id}`} style={{ display: "block", position: "absolute", top: `${topOffset}px`, left: "3px", right: "3px", zIndex: 2 }}>
+                        <div style={{ padding: "4px 6px", borderRadius: "4px", background: "var(--garnet-wash)", borderLeft: `3px solid ${statusColor(appt.status)}`, height: `${spanHeight - 4}px`, display: "flex", flexDirection: "column", justifyContent: "flex-start", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+                          <p style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-on-stone)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{getClientName(clients, appt.clientId)}</p>
+                          <p style={{ fontSize: "8px", color: "var(--text-on-stone-faint)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{appt.serviceName}</p>
+                          <p style={{ fontSize: "8px", color: "var(--text-on-stone-faint)", marginTop: "auto" }}>{(appt.durationMins || 60)} min</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               );
             })}
