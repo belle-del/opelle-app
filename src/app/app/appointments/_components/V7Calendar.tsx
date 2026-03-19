@@ -296,7 +296,7 @@ export function V7Calendar({ appointments: initialAppointments, clients, working
               </div>
               <div
                 onClick={() => { if (slotAppts.length === 0 && !isClosed) router.push(makeNewApptUrl(current, hour)); }}
-                style={{ borderTop: "1px solid var(--stone-mid)", padding: "4px 0 4px 8px", minHeight: "52px", cursor: slotAppts.length === 0 && !isClosed ? "pointer" : "default", transition: "background 0.15s", position: "relative", background: isClosed ? "rgba(0,0,0,0.08)" : "transparent" }}
+                style={{ borderTop: "1px solid var(--stone-mid)", padding: "4px 0 4px 8px", minHeight: "52px", cursor: slotAppts.length === 0 && !isClosed ? "pointer" : "default", transition: "background 0.15s", position: "relative", overflow: "visible", background: isClosed ? "rgba(0,0,0,0.08)" : "transparent" }}
                 onMouseEnter={(e) => { if (slotAppts.length === 0 && !isClosed) e.currentTarget.style.background = "rgba(143,173,200,0.06)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = isClosed ? "rgba(0,0,0,0.08)" : "transparent"; }}
                 title={slotAppts.length === 0 && !isClosed ? "Click to add appointment" : isClosed ? "Outside working hours" : undefined}
@@ -343,7 +343,7 @@ export function V7Calendar({ appointments: initialAppointments, clients, working
           })}
         </div>
         {HOURS.map((hour) => (
-          <div key={hour} style={{ display: "grid", gridTemplateColumns: "48px repeat(7, 1fr)" }}>
+          <div key={hour} style={{ display: "grid", gridTemplateColumns: "48px repeat(7, 1fr)", overflow: "visible" }}>
             <div style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", textAlign: "right", paddingRight: "8px", paddingTop: "8px" }}>{formatHour(hour)}</div>
             {days.map((day) => {
               const slotAppts = appointments.filter((a) => isSameDay(new Date(a.startAt), day) && new Date(a.startAt).getHours() === hour);
@@ -358,7 +358,7 @@ export function V7Calendar({ appointments: initialAppointments, clients, working
                   onDrop={handleDrop}
                   onClick={() => { if (slotAppts.length === 0 && !isClosed) router.push(makeNewApptUrl(day, hour)); }}
                   title={slotAppts.length === 0 ? "Click to add appointment" : undefined}
-                  style={{ borderTop: "1px solid var(--stone-mid)", borderLeft: "1px solid var(--stone-mid)", padding: "3px", minHeight: "44px", cursor: slotAppts.length === 0 && !isClosed ? "pointer" : "default", transition: "background 0.15s", position: "relative", background: isClosed ? "rgba(0,0,0,0.08)" : "transparent" }}
+                  style={{ borderTop: "1px solid var(--stone-mid)", borderLeft: "1px solid var(--stone-mid)", padding: "3px", minHeight: "44px", cursor: slotAppts.length === 0 && !isClosed ? "pointer" : "default", transition: "background 0.15s", position: "relative", overflow: "visible", background: isClosed ? "rgba(0,0,0,0.08)" : "transparent" }}
                 >
                   {slotAppts.map((appt) => {
                     const durationHours = (appt.durationMins || 60) / 60;
