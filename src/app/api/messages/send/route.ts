@@ -16,12 +16,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const workspace = await getCurrentWorkspace();
-    if (!workspace) {
+    const admin = createSupabaseAdminClient();
+
+    // Resolve workspace: try owner match, then membership, then first workspace
+    let workspaceId: string | undefined;
+    const { data: ownedWs } = await admin
+      .from("workspaces")
+      .select("id")
+      .eq("owner_id", user.id)
+      .maybeSingle();
+
+    if (ownedWs) {
+      workspaceId = ownedWs.id;
+    } else {
+      // Single-tenant fallback: get the first workspace
+      const { data: anyWs } = await admin
+        .from("workspaces")
+        .select("id")
+        .limit(1)
+        .single();
+      workspaceId = anyWs?.id;
+    }
+
+    if (!workspaceId) {
       return NextResponse.json({ error: "No workspace found" }, { status: 404 });
     }
 
-    const admin = createSupabaseAdminClient();
+    const workspace = { id: workspaceId };
 
     const body = await request.json();
     const { clientId, body: messageBody, templateId } = body;
