@@ -51,8 +51,18 @@ function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-// Show full 24 hours
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+// 8 AM to 8 PM
+const HOURS = Array.from({ length: 13 }, (_, i) => i + 8);
+// Default working hours (Mon-Sat 9-6, Sun closed) — used for greying out closed hours
+const DEFAULT_WORKING: Record<number, { open: number; close: number } | null> = {
+  0: null, // Sunday closed
+  1: { open: 9, close: 18 },
+  2: { open: 9, close: 18 },
+  3: { open: 9, close: 18 },
+  4: { open: 9, close: 18 },
+  5: { open: 9, close: 18 },
+  6: { open: 9, close: 17 }, // Saturday
+};
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -137,17 +147,19 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
       <div style={{ display: "grid", gridTemplateColumns: "48px 1fr" }}>
         {HOURS.map((hour) => {
           const slotAppts = dayAppts.filter((a) => new Date(a.startAt).getHours() === hour);
+          const dayWork = DEFAULT_WORKING[current.getDay()];
+          const isClosed = !dayWork || hour < dayWork.open || hour >= dayWork.close;
           return (
             <div key={hour} style={{ display: "contents" }}>
-              <div style={{ padding: "10px 8px 8px 0", textAlign: "right", fontSize: "9px", color: "var(--text-on-stone-faint)" }}>
+              <div style={{ padding: "10px 8px 8px 0", textAlign: "right", fontSize: "9px", color: isClosed ? "var(--text-on-stone-ghost)" : "var(--text-on-stone-faint)" }}>
                 {formatHour(hour)}
               </div>
               <div
-                onClick={() => { if (slotAppts.length === 0) router.push(makeNewApptUrl(current, hour)); }}
-                style={{ borderTop: "1px solid var(--stone-mid)", padding: "4px 0 4px 8px", minHeight: "52px", cursor: slotAppts.length === 0 ? "pointer" : "default", transition: "background 0.15s", position: "relative" }}
-                onMouseEnter={(e) => { if (slotAppts.length === 0) e.currentTarget.style.background = "rgba(143,173,200,0.06)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                title={slotAppts.length === 0 ? "Click to add appointment" : undefined}
+                onClick={() => { if (slotAppts.length === 0 && !isClosed) router.push(makeNewApptUrl(current, hour)); }}
+                style={{ borderTop: "1px solid var(--stone-mid)", padding: "4px 0 4px 8px", minHeight: "52px", cursor: slotAppts.length === 0 && !isClosed ? "pointer" : "default", transition: "background 0.15s", position: "relative", background: isClosed ? "rgba(0,0,0,0.04)" : "transparent" }}
+                onMouseEnter={(e) => { if (slotAppts.length === 0 && !isClosed) e.currentTarget.style.background = "rgba(143,173,200,0.06)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = isClosed ? "rgba(0,0,0,0.04)" : "transparent"; }}
+                title={slotAppts.length === 0 && !isClosed ? "Click to add appointment" : isClosed ? "Outside working hours" : undefined}
               >
                 {slotAppts.map((appt) => {
                   const durationHours = (appt.durationMins || 60) / 60;
@@ -195,13 +207,15 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
             <div style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", textAlign: "right", paddingRight: "8px", paddingTop: "8px" }}>{formatHour(hour)}</div>
             {days.map((day) => {
               const slotAppts = appointments.filter((a) => isSameDay(new Date(a.startAt), day) && new Date(a.startAt).getHours() === hour);
+              const dayWork = DEFAULT_WORKING[day.getDay()];
+              const isClosed = !dayWork || hour < dayWork.open || hour >= dayWork.close;
               return (
                 <div
                   key={day.toISOString()}
-                  onClick={() => { if (slotAppts.length === 0) router.push(makeNewApptUrl(day, hour)); }}
-                  style={{ borderTop: "1px solid var(--stone-mid)", borderLeft: "1px solid var(--stone-mid)", padding: "3px", minHeight: "44px", cursor: slotAppts.length === 0 ? "pointer" : "default", transition: "background 0.15s", position: "relative" }}
-                  onMouseEnter={(e) => { if (slotAppts.length === 0) e.currentTarget.style.background = "rgba(143,173,200,0.06)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                  onClick={() => { if (slotAppts.length === 0 && !isClosed) router.push(makeNewApptUrl(day, hour)); }}
+                  style={{ borderTop: "1px solid var(--stone-mid)", borderLeft: "1px solid var(--stone-mid)", padding: "3px", minHeight: "44px", cursor: slotAppts.length === 0 && !isClosed ? "pointer" : "default", transition: "background 0.15s", position: "relative", background: isClosed ? "rgba(0,0,0,0.04)" : "transparent" }}
+                  onMouseEnter={(e) => { if (slotAppts.length === 0 && !isClosed) e.currentTarget.style.background = "rgba(143,173,200,0.06)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = isClosed ? "rgba(0,0,0,0.04)" : "transparent"; }}
                   title={slotAppts.length === 0 ? "Click to add appointment" : undefined}
                 >
                   {slotAppts.map((appt) => {
