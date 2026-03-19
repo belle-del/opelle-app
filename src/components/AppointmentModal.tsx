@@ -39,7 +39,7 @@ export function AppointmentModal({
   const [formData, setFormData] = useState({
     clientId: appointment.clientId,
     serviceName: appointment.serviceName,
-    startAt: new Date(appointment.startAt).toISOString().slice(0, 16),
+    startAt: appointment.startAt.slice(0, 16),
     durationMins: appointment.durationMins,
     notes: appointment.notes || "",
   });
@@ -53,7 +53,7 @@ export function AppointmentModal({
         body: JSON.stringify({
           clientId: formData.clientId,
           serviceName: formData.serviceName,
-          startAt: new Date(formData.startAt).toISOString(),
+          startAt: formData.startAt + ":00",
           durationMins: formData.durationMins,
           notes: formData.notes || undefined,
         }),

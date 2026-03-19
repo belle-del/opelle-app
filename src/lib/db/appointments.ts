@@ -4,6 +4,7 @@ import type { Appointment, AppointmentRow, AppointmentStatus } from "@/lib/types
 import { appointmentRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
 import { publishEvent } from "@/lib/kernel";
+import { nowLocal, toLocalISOString } from "@/lib/utils";
 
 export async function listAppointments(): Promise<Appointment[]> {
   const admin = createSupabaseAdminClient();
@@ -77,7 +78,7 @@ export async function getUpcomingAppointments(limit = 10): Promise<Appointment[]
     .from("appointments")
     .select("*")
     .eq("workspace_id", wsId)
-    .gte("start_at", new Date().toISOString())
+    .gte("start_at", nowLocal())
     .eq("status", "scheduled")
     .order("start_at", { ascending: true })
     .limit(limit);
@@ -113,6 +114,7 @@ export async function createAppointment(input: {
   const durationMins = input.durationMins || 60;
   const startDate = new Date(input.startAt);
   const endDate = new Date(startDate.getTime() + durationMins * 60 * 1000);
+  const endLocal = toLocalISOString(endDate);
 
   const { data, error } = await admin
     .from("appointments")
@@ -121,7 +123,7 @@ export async function createAppointment(input: {
       client_id: input.clientId,
       service_name: input.serviceName,
       start_at: input.startAt,
-      end_at: endDate.toISOString(),
+      end_at: endLocal,
       duration_mins: durationMins,
       notes: input.notes || null,
       service_id: input.serviceId || null,

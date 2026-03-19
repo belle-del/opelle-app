@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { toLocalISOString, toLocalDateString } from "@/lib/utils";
 
 type TimeOfDay = "morning" | "afternoon" | "evening";
 type Timeframe = "1_week" | "2_weeks" | "1_month";
@@ -98,14 +99,14 @@ export async function POST(request: Request) {
       .select("start_at, duration_mins")
       .eq("workspace_id", workspaceId)
       .in("status", ["scheduled"])
-      .gte("start_at", startDate.toISOString())
-      .lte("start_at", endDate.toISOString());
+      .gte("start_at", toLocalISOString(startDate))
+      .lte("start_at", toLocalISOString(endDate));
 
     // Build a set of busy periods (start minute, end minute) per date string
     const busyByDate = new Map<string, Array<{ start: number; end: number }>>();
     for (const appt of existingAppointments || []) {
       const d = new Date(appt.start_at);
-      const dateKey = d.toISOString().split("T")[0];
+      const dateKey = toLocalDateString(d);
       const startMin = d.getHours() * 60 + d.getMinutes();
       const endMin = startMin + (appt.duration_mins || 60) + 15; // 15 min buffer
       if (!busyByDate.has(dateKey)) busyByDate.set(dateKey, []);
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
     const cursor = new Date(startDate);
     while (cursor <= endDate && slots.length < 12) {
       const dayName = DAY_NAMES[cursor.getDay()];
-      const dateKey = cursor.toISOString().split("T")[0];
+      const dateKey = toLocalDateString(cursor);
       const hours = workingHours[dayName];
 
       // Skip days where the workspace is closed

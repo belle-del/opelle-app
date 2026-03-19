@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { emitCommsEvent } from "@/lib/comms-events";
+import { nowLocal } from "@/lib/utils";
 
 export async function GET(request: Request) {
   // Verify cron secret (Vercel sets this header)
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
       .select("id")
       .eq("client_id", pref.client_id)
       .eq("status", "scheduled")
-      .gt("start_at", new Date().toISOString())
+      .gt("start_at", nowLocal())
       .limit(1)
       .maybeSingle();
 

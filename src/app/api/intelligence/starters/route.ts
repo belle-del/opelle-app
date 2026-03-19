@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { toLocalISOString } from "@/lib/utils";
 
 export async function GET() {
   const supabase = await createSupabaseServerClient();
@@ -23,8 +24,8 @@ export async function GET() {
     .from("appointments")
     .select("id, start_at, clients(first_name), services(name)")
     .eq("workspace_id", workspace.id)
-    .gte("start_at", now.toISOString())
-    .lte("start_at", tomorrow.toISOString())
+    .gte("start_at", toLocalISOString(now))
+    .lte("start_at", toLocalISOString(tomorrow))
     .order("start_at", { ascending: true })
     .limit(3);
 
@@ -58,7 +59,7 @@ export async function GET() {
     .from("clients")
     .select("id", { count: "exact", head: true })
     .eq("workspace_id", workspace.id)
-    .lt("last_visit_at", sixWeeksAgo.toISOString());
+    .lt("last_visit_at", toLocalISOString(sixWeeksAgo));
 
   if (overdueCount && overdueCount > 0) {
     starters.push(`Who's overdue for a rebook? (${overdueCount} clients)`);

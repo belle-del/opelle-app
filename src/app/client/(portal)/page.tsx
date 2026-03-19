@@ -3,6 +3,7 @@ import { getClientContext } from "@/lib/client-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getPublishedContent } from "@/lib/db/content";
 import { HomeDashboard } from "./_components/HomeDashboard";
+import { nowLocal } from "@/lib/utils";
 
 export default async function ClientHomePage() {
   const ctx = await getClientContext();
@@ -16,7 +17,7 @@ export default async function ClientHomePage() {
     .select("*")
     .eq("client_id", ctx.clientUser.clientId)
     .eq("status", "scheduled")
-    .gt("start_at", new Date().toISOString())
+    .gt("start_at", nowLocal())
     .order("start_at", { ascending: true })
     .limit(1)
     .maybeSingle();

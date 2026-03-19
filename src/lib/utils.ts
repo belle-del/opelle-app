@@ -72,3 +72,20 @@ export function isWithinDays(dateString: string, days: number): boolean {
 export function pluralize(count: number, singular: string, plural?: string): string {
   return count === 1 ? singular : (plural ?? `${singular}s`);
 }
+
+// Format a Date object as a local time string (YYYY-MM-DDTHH:mm:ss) with NO timezone offset.
+// This prevents Supabase timestamptz from converting to UTC on storage.
+const _pad = (n: number) => String(n).padStart(2, "0");
+export function toLocalISOString(date: Date): string {
+  return `${date.getFullYear()}-${_pad(date.getMonth() + 1)}-${_pad(date.getDate())}T${_pad(date.getHours())}:${_pad(date.getMinutes())}:${_pad(date.getSeconds())}`;
+}
+
+// Get current local time as a string suitable for Supabase queries (no Z, no offset)
+export function nowLocal(): string {
+  return toLocalISOString(new Date());
+}
+
+// Format a Date as YYYY-MM-DD in local time (no UTC conversion)
+export function toLocalDateString(date: Date): string {
+  return `${date.getFullYear()}-${_pad(date.getMonth() + 1)}-${_pad(date.getDate())}`;
+}

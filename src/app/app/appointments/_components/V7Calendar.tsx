@@ -82,7 +82,8 @@ function getSavedDate(): Date {
 function makeNewApptUrl(date: Date, hour: number): string {
   const d = new Date(date);
   d.setHours(hour, 0, 0, 0);
-  return `/app/appointments/new?startAt=${d.toISOString().slice(0, 16)}`;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `/app/appointments/new?startAt=${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export function V7Calendar({ appointments, clients }: V7CalendarProps) {

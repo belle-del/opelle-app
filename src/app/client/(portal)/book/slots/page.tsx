@@ -68,7 +68,8 @@ export default function SlotPickerPage() {
       for (let i = 0; i < 7; i++) {
         const d = new Date(startDate);
         d.setDate(d.getDate() + i);
-        const dateStr = d.toISOString().split("T")[0];
+        const pad = (n: number) => String(n).padStart(2, "0");
+        const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
         promises.push(
           fetch(`/api/client/appointments/slots?serviceId=${serviceId}&date=${dateStr}`)
             .then(r => r.json())
@@ -105,7 +106,8 @@ export default function SlotPickerPage() {
   for (let i = 0; i < 7; i++) {
     const d = new Date(weekStart);
     d.setDate(d.getDate() + i);
-    weekDates.push(d.toISOString().split("T")[0]);
+    const pad2 = (n: number) => String(n).padStart(2, "0");
+    weekDates.push(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`);
   }
 
   const slotsForDate = slots.filter(s => s.date === selectedDate);

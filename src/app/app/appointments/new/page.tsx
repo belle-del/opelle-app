@@ -95,7 +95,7 @@ export default function NewAppointmentPage() {
         body: JSON.stringify({
           clientId: formData.get("clientId"),
           serviceName,
-          startAt: new Date(String(formData.get("startAt"))).toISOString(),
+          startAt: String(formData.get("startAt")) + ":00",
           durationMins,
           notes: formData.get("notes") || undefined,
         }),
@@ -116,14 +116,15 @@ export default function NewAppointmentPage() {
     }
   };
 
-  // Default to now + 1 hour, rounded to nearest 30 min
+  // Default to now + 1 hour, rounded to nearest 30 min (local time)
   const defaultDateTime = () => {
     if (preselectedStartAt) return preselectedStartAt;
     const d = new Date();
     d.setHours(d.getHours() + 1);
     d.setMinutes(d.getMinutes() >= 30 ? 30 : 0);
     d.setSeconds(0);
-    return d.toISOString().slice(0, 16);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
   return (

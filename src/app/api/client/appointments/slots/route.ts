@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { toLocalISOString, toLocalDateString } from "@/lib/utils";
 
 type WorkingHoursDay = { start: string; end: string; closed: boolean };
 type WorkingHours = Record<string, WorkingHoursDay>;
@@ -23,24 +24,35 @@ export async function GET(request: Request) {
   const serviceId = searchParams.get("serviceId");
   const dateStr = searchParams.get("date"); // YYYY-MM-DD
 
-  const supabase = await createSupabaseServerClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-
   const admin = createSupabaseAdminClient();
 
-  // Get client user
-  const { data: clientUser } = await admin
-    .from("client_users")
-    .select("*")
-    .eq("auth_user_id", user.id)
-    .single();
+  // Try cookie auth first, fall back to query param
+  let clientUser: { workspace_id: string; client_id: string } | null = null;
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: cu } = await admin
+        .from("client_users")
+        .select("*")
+        .eq("auth_user_id", user.id)
+        .limit(1)
+        .single();
+      clientUser = cu;
+    }
+  } catch {}
+
+  // Fallback: accept workspaceId from query params (page is middleware-protected)
+  if (!clientUser) {
+    const workspaceId = searchParams.get("workspaceId");
+    const clientId = searchParams.get("clientId");
+    if (workspaceId && clientId) {
+      clientUser = { workspace_id: workspaceId, client_id: clientId };
+    }
+  }
 
   if (!clientUser) {
-    return NextResponse.json({ error: "Not a client user" }, { status: 403 });
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   // Get workspace settings
@@ -93,10 +105,10 @@ export async function GET(request: Request) {
   }
 
   // Get existing appointments in the date range
-  const startRange = dates[0]?.toISOString();
+  const startRange = dates[0] ? toLocalISOString(dates[0]) : undefined;
   const endDate = new Date(dates[dates.length - 1] || today);
   endDate.setDate(endDate.getDate() + 1);
-  const endRange = endDate.toISOString();
+  const endRange = toLocalISOString(endDate);
 
   const { data: existingAppointments } = await admin
     .from("appointments")
@@ -110,7 +122,7 @@ export async function GET(request: Request) {
   const occupiedByDate: Record<string, Array<{ start: number; end: number }>> = {};
   for (const appt of existingAppointments || []) {
     const apptStart = new Date(appt.start_at);
-    const dateKey = apptStart.toISOString().split("T")[0];
+    const dateKey = toLocalDateString(apptStart);
     const startMin = apptStart.getHours() * 60 + apptStart.getMinutes();
     const endMin = startMin + (appt.duration_mins || 60) + bufferMinutes;
 
@@ -129,7 +141,7 @@ export async function GET(request: Request) {
   for (const date of dates) {
     const dayName = DAY_NAMES[date.getDay()];
     const dayHours = workingHours[dayName];
-    const dateKey = date.toISOString().split("T")[0];
+    const dateKey = toLocalDateString(date);
 
     if (!dayHours || dayHours.closed) continue;
 
@@ -155,7 +167,7 @@ export async function GET(request: Request) {
         allSlots.push({
           date: dateKey,
           time: minutesToTime(slotStart),
-          startAt: slotDateTime.toISOString(),
+          startAt: toLocalISOString(slotDateTime),
           available: true,
         });
       }

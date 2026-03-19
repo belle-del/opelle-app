@@ -9,6 +9,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import type { Appointment, Client } from "@/lib/types";
 import { getClientDisplayName } from "@/lib/types";
 import { AppointmentModal } from "./AppointmentModal";
+import { toLocalISOString } from "@/lib/utils";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import "./calendar-styles.css";
@@ -131,7 +132,7 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
           appt.id === event.resource.appointment.id
             ? {
                 ...appt,
-                startAt: startDate.toISOString(),
+                startAt: toLocalISOString(startDate),
                 durationMins,
               }
             : appt
@@ -143,7 +144,7 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            startAt: startDate.toISOString(),
+            startAt: toLocalISOString(startDate),
             durationMins,
           }),
         });
@@ -178,7 +179,7 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
           appt.id === event.resource.appointment.id
             ? {
                 ...appt,
-                startAt: startDate.toISOString(),
+                startAt: toLocalISOString(startDate),
                 durationMins,
               }
             : appt
@@ -190,7 +191,7 @@ export function CalendarView({ appointments, clients, onAppointmentUpdate }: Cal
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            startAt: startDate.toISOString(),
+            startAt: toLocalISOString(startDate),
             durationMins,
           }),
         });

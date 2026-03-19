@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createClientNotification } from "@/lib/client-notifications";
+import { toLocalISOString } from "@/lib/utils";
 
 async function getClientUser(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const endAt = new Date(new Date(startAt).getTime() + durationMins * 60000).toISOString();
+  const endAt = toLocalISOString(new Date(new Date(startAt).getTime() + durationMins * 60000));
 
   const admin = createSupabaseAdminClient();
   const { data: appointment, error } = await admin
