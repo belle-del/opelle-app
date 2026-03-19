@@ -180,9 +180,9 @@ export function V7Calendar({ appointments, clients, workingHours }: V7CalendarPr
               </div>
               <div
                 onClick={() => { if (slotAppts.length === 0 && !isClosed) router.push(makeNewApptUrl(current, hour)); }}
-                style={{ borderTop: "1px solid var(--stone-mid)", padding: "4px 0 4px 8px", minHeight: "52px", cursor: slotAppts.length === 0 && !isClosed ? "pointer" : "default", transition: "background 0.15s", position: "relative", background: isClosed ? "rgba(0,0,0,0.04)" : "transparent" }}
+                style={{ borderTop: "1px solid var(--stone-mid)", padding: "4px 0 4px 8px", minHeight: "52px", cursor: slotAppts.length === 0 && !isClosed ? "pointer" : "default", transition: "background 0.15s", position: "relative", background: isClosed ? "rgba(0,0,0,0.08)" : "transparent" }}
                 onMouseEnter={(e) => { if (slotAppts.length === 0 && !isClosed) e.currentTarget.style.background = "rgba(143,173,200,0.06)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = isClosed ? "rgba(0,0,0,0.04)" : "transparent"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = isClosed ? "rgba(0,0,0,0.08)" : "transparent"; }}
                 title={slotAppts.length === 0 && !isClosed ? "Click to add appointment" : isClosed ? "Outside working hours" : undefined}
               >
                 {slotAppts.map((appt) => {
@@ -237,9 +237,9 @@ export function V7Calendar({ appointments, clients, workingHours }: V7CalendarPr
                 <div
                   key={day.toISOString()}
                   onClick={() => { if (slotAppts.length === 0 && !isClosed) router.push(makeNewApptUrl(day, hour)); }}
-                  style={{ borderTop: "1px solid var(--stone-mid)", borderLeft: "1px solid var(--stone-mid)", padding: "3px", minHeight: "44px", cursor: slotAppts.length === 0 && !isClosed ? "pointer" : "default", transition: "background 0.15s", position: "relative", background: isClosed ? "rgba(0,0,0,0.04)" : "transparent" }}
+                  style={{ borderTop: "1px solid var(--stone-mid)", borderLeft: "1px solid var(--stone-mid)", padding: "3px", minHeight: "44px", cursor: slotAppts.length === 0 && !isClosed ? "pointer" : "default", transition: "background 0.15s", position: "relative", background: isClosed ? "rgba(0,0,0,0.08)" : "transparent" }}
                   onMouseEnter={(e) => { if (slotAppts.length === 0 && !isClosed) e.currentTarget.style.background = "rgba(143,173,200,0.06)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = isClosed ? "rgba(0,0,0,0.04)" : "transparent"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = isClosed ? "rgba(0,0,0,0.08)" : "transparent"; }}
                   title={slotAppts.length === 0 ? "Click to add appointment" : undefined}
                 >
                   {slotAppts.map((appt) => {
