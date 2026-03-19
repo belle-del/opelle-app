@@ -12,6 +12,8 @@ type ServiceInfo = {
 
 type Props = {
   serviceTypes: ServiceInfo[];
+  clientId?: string;
+  workspaceId?: string;
 };
 
 function formatDuration(mins: number): string {
@@ -22,7 +24,7 @@ function formatDuration(mins: number): string {
   return `${h}h ${m}m`;
 }
 
-export function ServiceSelector({ serviceTypes }: Props) {
+export function ServiceSelector({ serviceTypes, clientId, workspaceId }: Props) {
   if (serviceTypes.length === 0) {
     return (
       <Card style={{ border: "1px dashed #E8E0D0" }}>
@@ -45,9 +47,10 @@ export function ServiceSelector({ serviceTypes }: Props) {
       </p>
 
       {serviceTypes.map(st => {
+        const ctxParams = clientId && workspaceId ? `&clientId=${clientId}&workspaceId=${workspaceId}` : "";
         const href = st.bookingType === "instant"
-          ? `/client/book/slots?serviceId=${st.id}&serviceName=${encodeURIComponent(st.name)}&duration=${st.durationMins}`
-          : `/client/book/request?serviceId=${st.id}&serviceName=${encodeURIComponent(st.name)}`;
+          ? `/client/book/slots?serviceId=${st.id}&serviceName=${encodeURIComponent(st.name)}&duration=${st.durationMins}${ctxParams}`
+          : `/client/book/request?serviceId=${st.id}&serviceName=${encodeURIComponent(st.name)}${ctxParams}`;
 
         return (
           <Link key={st.id} href={href} style={{ textDecoration: "none", display: "block" }}>

@@ -48,6 +48,8 @@ export default function SlotPickerPage() {
   const serviceId = searchParams.get("serviceId");
   const serviceName = searchParams.get("serviceName") || "Service";
   const duration = parseInt(searchParams.get("duration") || "60");
+  const clientId = searchParams.get("clientId");
+  const workspaceId = searchParams.get("workspaceId");
 
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,6 +127,8 @@ export default function SlotPickerPage() {
           serviceName: decodeURIComponent(serviceName),
           startAt: selectedSlot.startAt,
           durationMins: duration,
+          clientId,
+          workspaceId,
         }),
       });
 

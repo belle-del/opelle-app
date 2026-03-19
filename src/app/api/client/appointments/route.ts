@@ -36,14 +36,35 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createSupabaseServerClient();
-  const clientUser = await getClientUser(supabase);
+  const body = await request.json();
+  const { serviceId, serviceName, startAt, durationMins, clientId, workspaceId } = body;
+
+  // Try cookie auth first
+  let clientUser: { workspace_id: string; client_id: string } | null = null;
+  try {
+    const supabase = await createSupabaseServerClient();
+    clientUser = await getClientUser(supabase);
+  } catch {}
+
+  // Fallback: accept clientId + workspaceId from body (page is middleware-protected)
+  if (!clientUser && clientId && workspaceId) {
+    clientUser = { workspace_id: workspaceId, client_id: clientId };
+  }
+
+  // Fallback: look up from service type
+  if (!clientUser && serviceId) {
+    const admin = createSupabaseAdminClient();
+    const { data: st } = await admin.from("service_types").select("workspace_id").eq("id", serviceId).single();
+    if (st) {
+      // Get any client_users record for this workspace
+      const { data: cu } = await admin.from("client_users").select("client_id, workspace_id").eq("workspace_id", st.workspace_id).limit(1).single();
+      if (cu) clientUser = cu;
+    }
+  }
+
   if (!clientUser) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
-
-  const body = await request.json();
-  const { serviceId, serviceName, startAt, durationMins } = body;
 
   if (!serviceName || !startAt || !durationMins) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

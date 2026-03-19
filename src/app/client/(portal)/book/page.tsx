@@ -31,6 +31,8 @@ export default async function BookPage() {
           durationMins: st.default_duration_mins || 60,
           bookingType: st.booking_type || "request",
         }))}
+        clientId={ctx.clientUser.clientId}
+        workspaceId={ctx.clientUser.workspaceId}
       />
     </div>
   );
