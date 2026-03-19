@@ -6,6 +6,48 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { InspoFollowUp } from "./InspoFollowUp";
 
+// Compress image to max 1200px and JPEG quality 0.8 (~200-400KB per photo)
+function compressImage(file: File): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement("canvas");
+      const MAX = 1024;
+      let w = img.width;
+      let h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * (MAX / w)); w = MAX; }
+        else { w = Math.round(w * (MAX / h)); h = MAX; }
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx?.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const compressed = new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
+              type: "image/jpeg",
+            });
+            resolve(compressed);
+          } else {
+            resolve(file);
+          }
+        },
+        "image/jpeg",
+        0.8
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file); // fallback to original
+    };
+    img.src = url;
+  });
+}
+
 type Props = {
   onSubmitted: () => void;
 };
@@ -152,7 +194,8 @@ export function InspoUploader({ onSubmitted }: Props) {
 
       const indices: number[] = [];
       for (const file of catPhotos.files) {
-        formData.append(`photo${photoIndex}`, file);
+        const compressed = await compressImage(file);
+        formData.append(`photo${photoIndex}`, compressed);
         indices.push(photoIndex);
         photoIndex++;
       }
