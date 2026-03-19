@@ -104,7 +104,7 @@ export function BookingSuggestionModal({
     } finally {
       setLoading(false);
     }
-  }, [workspaceId, request.preferred_dates, notes.preferredTime, notes.timeframe]);
+  }, [workspaceId, request.preferred_dates, notes.preferredTime, notes.timeframe, serviceDuration]);
 
   useEffect(() => {
     fetchSlots();
