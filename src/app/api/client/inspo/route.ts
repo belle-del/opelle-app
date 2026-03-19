@@ -6,6 +6,9 @@ import { publishEvent } from "@/lib/kernel";
 import { analyzeInspoDirect } from "@/lib/ai/inspo-analysis";
 import type { ClientUserRow } from "@/lib/types";
 
+// Allow up to 60s for Claude vision analysis + photo uploads
+export const maxDuration = 60;
+
 // GET — list inspo submissions for the authenticated client
 export async function GET() {
   const supabase = await createSupabaseServerClient();
