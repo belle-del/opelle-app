@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createClientNotification } from "@/lib/client-notifications";
+import { generateStylistIntelligence } from "@/lib/ai/inspo-analysis";
 import type { ClientUserRow, InspoAnalysis } from "@/lib/types";
+
+// Allow up to 60s for Claude intelligence generation
+export const maxDuration = 60;
 
 interface RouteContext {
   params: Promise<{ consultId: string }>;
@@ -92,7 +96,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   // Verify submission belongs to client
   const { data: submission } = await admin
     .from("inspo_submissions")
-    .select("id, workspace_id")
+    .select("id, workspace_id, ai_analysis, client_notes")
     .eq("id", consultId)
     .eq("client_id", cu.client_id)
     .single();
@@ -124,8 +128,63 @@ export async function POST(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "Failed to save answers" }, { status: 500 });
   }
 
-  // Notify stylist via notification (they'll see it in their inspo tab)
-  // Also create a client notification confirming submission
+  // Get the submission's AI analysis to pair questions with answers
+  const aiAnalysis = (submission as unknown as { ai_analysis?: InspoAnalysis }).ai_analysis;
+  const questions = aiAnalysis?.generatedFormQuestions || [];
+
+  // Get client context for the intelligence summary
+  const { data: clientRecord } = await admin
+    .from("clients")
+    .select("first_name, last_name, preference_profile")
+    .eq("id", cu.client_id)
+    .single();
+
+  const { data: formulaEntries } = await admin
+    .from("formula_entries")
+    .select("raw_notes, service_date, general_notes")
+    .eq("client_id", cu.client_id)
+    .eq("workspace_id", cu.workspace_id)
+    .order("service_date", { ascending: false })
+    .limit(3);
+
+  const formulaHistory = (formulaEntries || [])
+    .map((e) => `- ${e.service_date}: ${e.raw_notes}${e.general_notes ? ` (Notes: ${e.general_notes})` : ""}`)
+    .join("\n");
+
+  // Generate stylist intelligence summary using AI
+  try {
+    const intelligence = await generateStylistIntelligence({
+      questions,
+      answers,
+      clientSummary: aiAnalysis?.clientSummary || null,
+      clientNotes: (submission as unknown as { client_notes?: string }).client_notes || null,
+      clientContext: clientRecord?.preference_profile
+        ? {
+            firstName: clientRecord?.first_name ?? undefined,
+            colorDirection: clientRecord.preference_profile.colorDirection,
+            maintenanceLevel: clientRecord.preference_profile.maintenanceLevel,
+            styleNotes: clientRecord.preference_profile.styleNotes,
+          }
+        : null,
+      formulaHistory: formulaHistory || null,
+    });
+
+    // Save intelligence to the submission
+    await admin
+      .from("inspo_submissions")
+      .update({
+        ai_analysis: {
+          ...aiAnalysis,
+          stylistIntelligence: intelligence,
+        },
+      })
+      .eq("id", consultId);
+  } catch (err) {
+    console.error("Stylist intelligence generation failed:", err);
+    // Non-critical — answers are already saved
+  }
+
+  // Notify client
   await createClientNotification({
     workspaceId: cu.workspace_id,
     clientId: cu.client_id,

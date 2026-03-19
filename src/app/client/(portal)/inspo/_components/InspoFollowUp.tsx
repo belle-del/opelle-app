@@ -66,21 +66,23 @@ export function InspoFollowUp({
 
   function selectOption(option: string) {
     if (!currentQ) return;
-    setAnswers((prev) => ({ ...prev, [currentQ.id]: option }));
+    const updated = { ...answers, [currentQ.id]: option };
+    setAnswers(updated);
     setClarifyMode(false);
     setClarifyText("");
-    advance();
+    advance(updated);
   }
 
   function submitClarify() {
     if (!currentQ || !clarifyText.trim()) return;
-    setAnswers((prev) => ({ ...prev, [currentQ.id]: clarifyText.trim() }));
+    const updated = { ...answers, [currentQ.id]: clarifyText.trim() };
+    setAnswers(updated);
     setClarifyMode(false);
     setClarifyText("");
-    advance();
+    advance(updated);
   }
 
-  async function advance() {
+  async function advance(latestAnswers: Record<string, string>) {
     const nextIndex = currentIndex + 1;
 
     if (nextIndex < totalQuestions) {
@@ -94,7 +96,7 @@ export function InspoFollowUp({
       const res = await fetch(`/api/client/inspo/${submissionId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers: latestAnswers }),
       });
 
       if (res.ok) {

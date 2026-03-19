@@ -6,6 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+type StylistIntelligence = {
+  whatWasLearned: string;
+  appointmentPrep: string;
+  keyPreferences: string[];
+  potentialChallenges: string[];
+  productSuggestions: string[];
+};
+
 type InspoSubmission = {
   id: string;
   client_notes: string | null;
@@ -16,6 +24,7 @@ type InspoSubmission = {
     requiresConsult: boolean;
     generatedFormQuestions: { id: string; question: string; type: string; options?: string[] }[];
     demandSignals: { direction: string; productHint?: string; confidence: string }[];
+    stylistIntelligence?: StylistIntelligence;
   } | null;
   stylist_flag: string | null;
   feasibility: string | null;
@@ -257,6 +266,100 @@ export function InspoTab({ clientId, clientName, submissions }: Props) {
                           );
                         })}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Stylist Intelligence Brief */}
+                  {analysis?.stylistIntelligence && (
+                    <div
+                      className="rounded-lg p-4 space-y-3"
+                      style={{
+                        background: "linear-gradient(135deg, rgba(196, 171, 112, 0.08), rgba(196, 171, 112, 0.03))",
+                        border: "1px solid rgba(196, 171, 112, 0.25)",
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brass, #C4AB70)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+                        </svg>
+                        <p
+                          className="text-xs font-semibold uppercase tracking-wide"
+                          style={{ color: "var(--brass, #C4AB70)" }}
+                        >
+                          Stylist Intelligence
+                        </p>
+                      </div>
+
+                      {/* What was learned */}
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium mb-1">
+                          What was learned
+                        </p>
+                        <p className="text-sm" style={{ lineHeight: "1.5" }}>
+                          {analysis.stylistIntelligence.whatWasLearned}
+                        </p>
+                      </div>
+
+                      {/* Appointment prep */}
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium mb-1">
+                          Appointment prep
+                        </p>
+                        <p className="text-sm" style={{ lineHeight: "1.5" }}>
+                          {analysis.stylistIntelligence.appointmentPrep}
+                        </p>
+                      </div>
+
+                      {/* Key preferences */}
+                      {analysis.stylistIntelligence.keyPreferences.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground font-medium mb-1">
+                            Key preferences
+                          </p>
+                          <ul className="space-y-1">
+                            {analysis.stylistIntelligence.keyPreferences.map((pref, i) => (
+                              <li key={i} className="text-sm flex items-start gap-2">
+                                <span style={{ color: "var(--brass, #C4AB70)", flexShrink: 0 }}>•</span>
+                                {pref}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Potential challenges */}
+                      {analysis.stylistIntelligence.potentialChallenges.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground font-medium mb-1">
+                            Watch for
+                          </p>
+                          <ul className="space-y-1">
+                            {analysis.stylistIntelligence.potentialChallenges.map((ch, i) => (
+                              <li key={i} className="text-sm flex items-start gap-2">
+                                <span style={{ color: "var(--garnet, #8B2635)", flexShrink: 0 }}>⚠</span>
+                                {ch}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Product suggestions */}
+                      {analysis.stylistIntelligence.productSuggestions.length > 0 && (
+                        <div>
+                          <p className="text-xs text-muted-foreground font-medium mb-1">
+                            Product direction
+                          </p>
+                          <ul className="space-y-1">
+                            {analysis.stylistIntelligence.productSuggestions.map((prod, i) => (
+                              <li key={i} className="text-sm flex items-start gap-2">
+                                <span style={{ flexShrink: 0 }}>💧</span>
+                                {prod}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   )}
 
