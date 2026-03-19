@@ -96,11 +96,14 @@ export function BookingSuggestionModal({
           durationMins: serviceDuration,
         }),
       });
-      if (!res.ok) throw new Error("Failed to load suggestions");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || errData.error || `HTTP ${res.status}`);
+      }
       const data = await res.json();
       setSlots(data.slots || []);
-    } catch {
-      setError("Could not load suggested times. Please try again.");
+    } catch (err) {
+      setError(`Could not load suggested times: ${err instanceof Error ? err.message : "Unknown error"}. workspaceId=${workspaceId}`);
     } finally {
       setLoading(false);
     }
