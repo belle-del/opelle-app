@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -19,27 +18,14 @@ type Props = {
   submissions: Submission[];
 };
 
-function getStatusBadge(sub: Submission): { label: string; variant: "default" | "success" | "warning" | "danger" } {
-  if (sub.requires_consult && !sub.reviewed_by_stylist) {
-    return { label: "Consult form ready", variant: "warning" };
-  }
+function getStatusBadge(sub: Submission): { label: string; variant: "default" | "success" } {
   if (sub.reviewed_by_stylist) {
     return { label: "Reviewed by stylist", variant: "success" };
   }
-  if (sub.feasibility) {
+  if (sub.client_summary) {
     return { label: "Analyzed", variant: "default" };
   }
   return { label: "Submitted", variant: "default" };
-}
-
-function getFeasibilityLabel(feasibility: string | null): string {
-  switch (feasibility) {
-    case "straightforward": return "Straightforward";
-    case "multi_session": return "Multi-session journey";
-    case "needs_consult": return "Needs consultation";
-    case "not_recommended": return "Alternative recommended";
-    default: return "";
-  }
 }
 
 function formatRelativeDate(dateStr: string): string {
@@ -81,99 +67,60 @@ export function InspoSubmissionsList({ submissions }: Props) {
     <div className="space-y-3">
       {submissions.map((sub) => {
         const status = getStatusBadge(sub);
-        const hasConsultForm = sub.requires_consult && sub.feasibility;
 
         return (
-          <Link
-            key={sub.id}
-            href={hasConsultForm ? `/client/inspo/${sub.id}` : "#"}
-            className={hasConsultForm ? "" : "pointer-events-none"}
-          >
-            <Card
-              style={
-                sub.requires_consult && !sub.reviewed_by_stylist
-                  ? { borderLeft: "3px solid var(--brass)" }
-                  : undefined
-              }
-            >
-              <CardContent className="py-3.5">
-                <div className="flex gap-3">
-                  {/* Thumbnail */}
-                  {sub.photoUrls.length > 0 && (
-                    <div
-                      className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0"
-                      style={{ border: "1px solid var(--stone-mid)" }}
-                    >
-                      <img
-                        src={sub.photoUrls[0]}
-                        alt="Inspo"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-1">
-                      <div>
-                        {sub.feasibility && (
-                          <p
-                            style={{
-                              fontSize: "13px",
-                              color: "var(--text-on-stone)",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {getFeasibilityLabel(sub.feasibility)}
-                          </p>
-                        )}
-                        <p
-                          style={{
-                            fontSize: "11px",
-                            color: "#7A7A72",
-                          }}
-                        >
-                          {formatRelativeDate(sub.created_at)}
-                          {sub.photoUrls.length > 1
-                            ? ` \u00B7 ${sub.photoUrls.length} photos`
-                            : ""}
-                        </p>
-                      </div>
-                      <Badge variant={status.variant}>{status.label}</Badge>
-                    </div>
-
-                    {sub.client_summary && (
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--text-on-stone-faint)",
-                          marginTop: "4px",
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {sub.client_summary}
-                      </p>
-                    )}
-
-                    {hasConsultForm && !sub.reviewed_by_stylist && (
-                      <p
-                        style={{
-                          fontSize: "11px",
-                          color: "var(--brass)",
-                          marginTop: "6px",
-                          fontWeight: 500,
-                        }}
-                      >
-                        Fill out consult form &rarr;
-                      </p>
-                    )}
+          <Card key={sub.id}>
+            <CardContent className="py-3.5">
+              <div className="flex gap-3">
+                {/* Thumbnail */}
+                {sub.photoUrls.length > 0 && (
+                  <div
+                    className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0"
+                    style={{ border: "1px solid var(--stone-mid)" }}
+                  >
+                    <img
+                      src={sub.photoUrls[0]}
+                      alt="Inspo"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between mb-1">
+                    <p
+                      style={{
+                        fontSize: "11px",
+                        color: "#7A7A72",
+                      }}
+                    >
+                      {formatRelativeDate(sub.created_at)}
+                      {sub.photoUrls.length > 1
+                        ? ` \u00B7 ${sub.photoUrls.length} photos`
+                        : ""}
+                    </p>
+                    <Badge variant={status.variant}>{status.label}</Badge>
+                  </div>
+
+                  {sub.client_summary && (
+                    <p
+                      style={{
+                        fontSize: "12px",
+                        color: "var(--text-on-stone-faint)",
+                        marginTop: "4px",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {sub.client_summary}
+                    </p>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
+              </div>
+            </CardContent>
+          </Card>
         );
       })}
     </div>

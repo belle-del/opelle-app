@@ -64,8 +64,6 @@ const CATEGORIES = [
   },
 ] as const;
 
-type CategoryId = (typeof CATEGORIES)[number]["id"];
-
 type CategoryPhotos = {
   files: File[];
   previews: string[];
@@ -180,7 +178,6 @@ export function InspoUploader({ onSubmitted }: Props) {
       const allPreviews = Object.values(photosByCategory).flatMap((c) => c.previews);
 
       const hasQuestions =
-        data.aiAnalysis?.perPhotoQuestions?.length > 0 ||
         data.aiAnalysis?.generatedFormQuestions?.length > 0;
 
       if (hasQuestions) {
@@ -189,10 +186,17 @@ export function InspoUploader({ onSubmitted }: Props) {
           photoUrls: allPreviews,
           aiAnalysis: data.aiAnalysis,
         });
+      } else if (data.aiAnalysisFailed) {
+        // AI failed — show error with retry option
+        setError(
+          data.analysisError
+            ? `Analysis failed: ${data.analysisError}. Your photos were saved — tap to retry.`
+            : "Our AI couldn't analyze your photos right now. Your photos were saved — tap to retry."
+        );
       } else {
         setSuccessInfo({
           clientSummary: data.clientSummary ?? null,
-          aiAnalysisFailed: data.aiAnalysisFailed ?? false,
+          aiAnalysisFailed: false,
         });
       }
     } catch {
