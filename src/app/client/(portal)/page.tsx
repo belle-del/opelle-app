@@ -16,11 +16,19 @@ export default async function ClientHomePage() {
     .from("appointments")
     .select("*")
     .eq("client_id", ctx.clientUser.clientId)
-    .eq("status", "scheduled")
+    .in("status", ["scheduled", "pending_confirmation"])
     .gt("start_at", nowLocal())
     .order("start_at", { ascending: true })
     .limit(1)
     .maybeSingle();
+
+  // Pending confirmation appointments
+  const { data: pendingAppointments } = await admin
+    .from("appointments")
+    .select("*")
+    .eq("client_id", ctx.clientUser.clientId)
+    .eq("status", "pending_confirmation")
+    .order("start_at", { ascending: true });
 
   // Last completed visit
   const { data: lastVisit } = await admin
@@ -68,6 +76,7 @@ export default async function ClientHomePage() {
       unreadNotifications={unreadNotifications || []}
       hasSharedFormula={hasSharedFormula}
       recentContent={recentContent}
+      pendingAppointments={pendingAppointments || []}
     />
   );
 }

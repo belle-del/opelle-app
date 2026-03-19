@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { ContentPost } from "@/lib/types";
 
@@ -27,6 +28,7 @@ type Props = {
   unreadNotifications: NotificationRow[];
   hasSharedFormula: boolean;
   recentContent: ContentPost[];
+  pendingAppointments?: AppointmentRow[];
 };
 
 function formatDate(dateStr: string): string {
@@ -68,9 +70,91 @@ export function HomeDashboard({
   unreadNotifications,
   hasSharedFormula,
   recentContent,
+  pendingAppointments = [],
 }: Props) {
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+
+  async function respondToAppointment(id: string, action: "confirm" | "decline") {
+    setRespondingId(id);
+    try {
+      await fetch("/api/client/appointments", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointmentId: id, action }),
+      });
+      setDismissed((prev) => new Set(prev).add(id));
+    } catch {
+      // silently fail
+    } finally {
+      setRespondingId(null);
+    }
+  }
+
+  const visiblePending = pendingAppointments.filter((a) => !dismissed.has(a.id));
+
   return (
     <div className="space-y-6">
+      {/* Pending appointment confirmations */}
+      {visiblePending.length > 0 && (
+        <div className="space-y-3">
+          {visiblePending.map((appt) => (
+            <div
+              key={appt.id}
+              style={{
+                padding: "16px 20px",
+                borderRadius: "12px",
+                background: "linear-gradient(135deg, #C4AB70 0%, #B89D5C 100%)",
+                color: "#2C2C24",
+              }}
+            >
+              <p style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, marginBottom: "6px" }}>
+                Confirm Your Appointment
+              </p>
+              <p style={{ fontSize: "16px", fontFamily: "'Fraunces', serif", fontWeight: 400, marginBottom: "2px" }}>
+                {appt.service_name}
+              </p>
+              <p style={{ fontSize: "13px", marginBottom: "12px" }}>
+                {formatDate(appt.start_at)} ({appt.duration_mins} min)
+              </p>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={() => respondToAppointment(appt.id, "confirm")}
+                  disabled={respondingId === appt.id}
+                  style={{
+                    padding: "8px 20px",
+                    borderRadius: "8px",
+                    background: "#2C2C24",
+                    color: "#FAF8F3",
+                    border: "none",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  {respondingId === appt.id ? "..." : "Confirm"}
+                </button>
+                <button
+                  onClick={() => respondToAppointment(appt.id, "decline")}
+                  disabled={respondingId === appt.id}
+                  style={{
+                    padding: "8px 20px",
+                    borderRadius: "8px",
+                    background: "transparent",
+                    color: "#2C2C24",
+                    border: "1px solid rgba(44,44,36,0.3)",
+                    fontSize: "12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Decline
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Greeting */}
       <div>
         <h1
