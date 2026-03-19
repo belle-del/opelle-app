@@ -392,15 +392,15 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
                       <div style={{ padding: "4px 4px 0 0", textAlign: "right", fontSize: "8px", fontWeight: isCurrentHour ? 600 : 400, color: isCurrentHour ? "var(--garnet)" : "var(--text-on-stone-ghost)", lineHeight: 1 }}>
                         {fmtHr(hour)}
                       </div>
-                      <div style={{ borderTop: "1px solid var(--stone-mid)", padding: "2px 4px", minHeight: "36px", position: "relative", background: isCurrentHour ? "rgba(68,6,6,0.03)" : "transparent" }}>
+                      <div style={{ borderTop: "1px solid var(--stone-mid)", padding: "2px 4px", minHeight: "44px", position: "relative", background: isCurrentHour ? "rgba(68,6,6,0.05)" : "transparent" }}>
                         {slotAppts.map((appt) => {
                           const isPast = new Date(appt.startAt) < now;
                           const statusClr = appt.status === "completed" ? "var(--status-confirmed)" : appt.status === "cancelled" ? "var(--status-low)" : "var(--garnet-vivid)";
                           return (
                             <Link key={appt.id} href={`/app/appointments/${appt.id}`}>
-                              <div style={{ padding: "3px 6px", borderRadius: "4px", marginBottom: "2px", background: isPast ? "rgba(0,0,0,0.04)" : "var(--garnet-wash)", opacity: isPast ? 0.55 : 1, borderLeft: `2px solid ${statusClr}` }}>
-                                <p style={{ fontSize: "9px", fontWeight: 500, color: "var(--text-on-stone)", lineHeight: 1.3 }}>{getClientName(clients, appt.clientId)}</p>
-                                <p style={{ fontSize: "8px", color: "var(--text-on-stone-faint)", lineHeight: 1.2 }}>
+                              <div style={{ padding: "6px 8px", borderRadius: "5px", marginBottom: "2px", background: isPast ? "rgba(74,26,46,0.08)" : "var(--garnet-wash)", opacity: isPast ? 0.7 : 1, borderLeft: `3px solid ${statusClr}`, minHeight: "36px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-on-stone)", lineHeight: 1.3 }}>{getClientName(clients, appt.clientId)}</p>
+                                <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", lineHeight: 1.2 }}>
                                   {appt.serviceName} · {new Date(appt.startAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
                                 </p>
                               </div>
