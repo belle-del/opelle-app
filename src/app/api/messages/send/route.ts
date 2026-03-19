@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getOrCreateThread, createMessage } from "@/lib/db/messaging";
+import { getCurrentWorkspace } from "@/lib/db/workspaces";
 import { dispatchComms } from "@/lib/kernel";
 import { logActivity } from "@/lib/db/activity-log";
 
@@ -15,34 +16,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const admin = createSupabaseAdminClient();
-    let workspaceId: string | undefined;
-
-    // Try owner first
-    const { data: ownedWs } = await admin
-      .from("workspaces")
-      .select("id")
-      .eq("owner_id", user.id)
-      .maybeSingle();
-
-    if (ownedWs) {
-      workspaceId = ownedWs.id;
-    } else {
-      // Fallback: check workspace_members
-      const { data: membership } = await admin
-        .from("workspace_members")
-        .select("workspace_id")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-      workspaceId = membership?.workspace_id;
-    }
-
-    if (!workspaceId) {
+    const workspace = await getCurrentWorkspace();
+    if (!workspace) {
       return NextResponse.json({ error: "No workspace found" }, { status: 404 });
     }
 
-    const workspace = { id: workspaceId };
+    const admin = createSupabaseAdminClient();
 
     const body = await request.json();
     const { clientId, body: messageBody, templateId } = body;
