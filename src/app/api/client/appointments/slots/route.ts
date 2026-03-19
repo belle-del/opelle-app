@@ -51,6 +51,14 @@ export async function GET(request: Request) {
     }
   }
 
+  // Third fallback: look up workspace from service type (page is middleware-protected)
+  if (!clientUser && serviceId) {
+    const { data: st } = await admin.from("service_types").select("workspace_id").eq("id", serviceId).single();
+    if (st) {
+      clientUser = { workspace_id: st.workspace_id, client_id: "anonymous" };
+    }
+  }
+
   if (!clientUser) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
