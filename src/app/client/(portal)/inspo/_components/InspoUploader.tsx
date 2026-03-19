@@ -255,7 +255,7 @@ export function InspoUploader({ onSubmitted }: Props) {
           <Button
             onClick={onSubmitted}
             className="mt-6"
-            variant="outline"
+            variant="secondary"
             size="sm"
           >
             Done
