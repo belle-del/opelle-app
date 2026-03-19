@@ -87,7 +87,20 @@ export async function GET(request: Request) {
     }
   }
 
-  const workingHours: WorkingHours = workspace.working_hours || {};
+  // Default working hours: Mon-Sat 9am-6pm, Sun closed
+  const DEFAULT_HOURS: WorkingHours = {
+    sunday: { start: "09:00", end: "17:00", closed: true },
+    monday: { start: "09:00", end: "18:00", closed: false },
+    tuesday: { start: "09:00", end: "18:00", closed: false },
+    wednesday: { start: "09:00", end: "18:00", closed: false },
+    thursday: { start: "09:00", end: "18:00", closed: false },
+    friday: { start: "09:00", end: "18:00", closed: false },
+    saturday: { start: "09:00", end: "17:00", closed: false },
+  };
+  const rawHours: WorkingHours = workspace.working_hours && Object.keys(workspace.working_hours).length > 0
+    ? workspace.working_hours
+    : DEFAULT_HOURS;
+  const workingHours: WorkingHours = rawHours;
   const bufferMinutes = workspace.buffer_minutes || 0;
   const bookingWindowDays = workspace.booking_window_days || 60;
 
