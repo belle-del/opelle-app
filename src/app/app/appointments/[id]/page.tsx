@@ -9,6 +9,7 @@ import { getClientDisplayName } from "@/lib/types";
 import { formatDateTime, formatDate } from "@/lib/utils";
 import { ArrowLeft, User, Clock, FileText } from "lucide-react";
 import { AppointmentActions } from "./_components/AppointmentActions";
+import { LocalTime } from "@/components/LocalTime";
 
 interface AppointmentDetailPageProps {
   params: Promise<{ id: string }>;
@@ -49,7 +50,7 @@ export default async function AppointmentDetailPage({ params }: AppointmentDetai
               </Badge>
             </div>
             <p className="text-muted-foreground">
-              {formatDateTime(appointment.startAt)}
+              <LocalTime iso={appointment.startAt} format="datetime" />
             </p>
           </div>
           <AppointmentActions appointment={appointment} />
@@ -101,11 +102,11 @@ export default async function AppointmentDetailPage({ params }: AppointmentDetai
           <CardContent className="space-y-4">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Date</p>
-              <p>{formatDate(appointment.startAt)}</p>
+              <p><LocalTime iso={appointment.startAt} format="date" /></p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Time</p>
-              <p>{new Date(appointment.startAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</p>
+              <p><LocalTime iso={appointment.startAt} format="time" /></p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Duration</p>

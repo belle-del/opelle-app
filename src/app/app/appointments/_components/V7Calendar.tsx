@@ -147,10 +147,10 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
                 title={slotAppts.length === 0 ? "Click to add appointment" : undefined}
               >
                 {slotAppts.map((appt) => (
-                  <Link key={appt.id} href={`/app/appointments/${appt.id}`}>
-                    <div style={{ padding: "6px 10px", borderRadius: "6px", marginBottom: "4px", background: "rgba(0,0,0,0.04)", borderLeft: `3px solid ${statusColor(appt.status)}` }}>
-                      <p style={{ fontSize: "11px", fontWeight: 500, color: "var(--text-on-stone)" }}>{getClientName(clients, appt.clientId)}</p>
-                      <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>{appt.serviceName}</p>
+                  <Link key={appt.id} href={`/app/appointments/${appt.id}`} style={{ display: "block", height: "100%" }}>
+                    <div style={{ padding: "8px 12px", borderRadius: "6px", background: "var(--garnet-wash)", borderLeft: `3px solid ${statusColor(appt.status)}`, height: "100%", minHeight: "44px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                      <p style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-on-stone)" }}>{getClientName(clients, appt.clientId)}</p>
+                      <p style={{ fontSize: "10px", color: "var(--text-on-stone-faint)" }}>{appt.serviceName}</p>
                     </div>
                   </Link>
                 ))}
@@ -195,9 +195,10 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
                   title={slotAppts.length === 0 ? "Click to add appointment" : undefined}
                 >
                   {slotAppts.map((appt) => (
-                    <Link key={appt.id} href={`/app/appointments/${appt.id}`}>
-                      <div style={{ padding: "2px 5px", borderRadius: "4px", marginBottom: "2px", background: "rgba(0,0,0,0.04)", borderLeft: `2px solid ${statusColor(appt.status)}`, fontSize: "9px", color: "var(--text-on-stone)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {getClientName(clients, appt.clientId)}
+                    <Link key={appt.id} href={`/app/appointments/${appt.id}`} style={{ display: "block" }}>
+                      <div style={{ padding: "3px 6px", borderRadius: "4px", background: "var(--garnet-wash)", borderLeft: `2px solid ${statusColor(appt.status)}`, height: "100%", minHeight: "36px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                        <p style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-on-stone)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{getClientName(clients, appt.clientId)}</p>
+                        <p style={{ fontSize: "8px", color: "var(--text-on-stone-faint)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{appt.serviceName}</p>
                       </div>
                     </Link>
                   ))}
