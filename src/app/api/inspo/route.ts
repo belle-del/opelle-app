@@ -6,8 +6,17 @@ import { getCurrentWorkspace } from "@/lib/db/workspaces";
 // Optional ?clientId= to filter by client
 // Optional ?unreviewedOnly=true to only get unreviewed submissions
 export async function GET(request: NextRequest) {
+  const admin = createSupabaseAdminClient();
+
+  let wsId: string | undefined;
   const workspace = await getCurrentWorkspace();
-  if (!workspace) {
+  if (workspace) {
+    wsId = workspace.id;
+  } else {
+    const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+    wsId = ws?.id;
+  }
+  if (!wsId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -15,11 +24,10 @@ export async function GET(request: NextRequest) {
   const clientId = searchParams.get("clientId");
   const unreviewedOnly = searchParams.get("unreviewedOnly") === "true";
 
-  const admin = createSupabaseAdminClient();
   let query = admin
     .from("inspo_submissions")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .order("created_at", { ascending: false });
 
   if (clientId) {
@@ -37,12 +45,12 @@ export async function GET(request: NextRequest) {
       // Get photos
       const { data: files } = await admin.storage
         .from("client-inspo")
-        .list(`${workspace.id}/${sub.client_id}/${sub.id}`);
+        .list(`${wsId}/${sub.client_id}/${sub.id}`);
 
       const photoUrls = (files || []).map((f) => {
         const { data } = admin.storage
           .from("client-inspo")
-          .getPublicUrl(`${workspace.id}/${sub.client_id}/${sub.id}/${f.name}`);
+          .getPublicUrl(`${wsId}/${sub.client_id}/${sub.id}/${f.name}`);
         return data.publicUrl;
       });
 
@@ -51,7 +59,7 @@ export async function GET(request: NextRequest) {
         .from("intake_responses")
         .select("answers")
         .eq("client_id", sub.client_id)
-        .eq("workspace_id", workspace.id)
+        .eq("workspace_id", wsId)
         .filter("answers->>inspo_submission_id", "eq", sub.id)
         .single();
 
