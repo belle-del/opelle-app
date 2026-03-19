@@ -26,6 +26,7 @@ interface Client {
 interface V7CalendarProps {
   appointments: Appointment[];
   clients: Client[];
+  workingHours?: Record<string, { start: string; end: string; closed: boolean }>;
 }
 
 function getClientName(clients: Client[], id: string) {
@@ -97,7 +98,30 @@ function makeNewApptUrl(date: Date, hour: number): string {
   return `/app/appointments/new?startAt=${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export function V7Calendar({ appointments, clients }: V7CalendarProps) {
+export function V7Calendar({ appointments, clients, workingHours }: V7CalendarProps) {
+  // Build working hours lookup from workspace settings (or use defaults)
+  const DAY_NAME_MAP = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const resolvedWorking: Record<number, { open: number; close: number } | null> = {};
+  for (let i = 0; i < 7; i++) {
+    const dayName = DAY_NAME_MAP[i];
+    const wh = workingHours?.[dayName];
+    if (!wh || wh.closed) {
+      resolvedWorking[i] = DEFAULT_WORKING[i]; // fall back to default if no settings
+      if (wh?.closed) resolvedWorking[i] = null; // explicitly closed overrides default
+    } else {
+      const [oh] = wh.start.split(":").map(Number);
+      const [ch] = wh.end.split(":").map(Number);
+      resolvedWorking[i] = { open: oh, close: ch };
+    }
+  }
+  // If workspace has ANY working hours set, don't use defaults for unset days
+  const hasSettings = workingHours && Object.keys(workingHours).length > 0;
+  if (hasSettings) {
+    for (let i = 0; i < 7; i++) {
+      const dayName = DAY_NAME_MAP[i];
+      if (!workingHours[dayName]) resolvedWorking[i] = null; // unset = closed
+    }
+  }
   const router = useRouter();
   const [view, setView] = useState<View>("week");
   const [current, setCurrent] = useState<Date>(new Date());
@@ -147,7 +171,7 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
       <div style={{ display: "grid", gridTemplateColumns: "48px 1fr" }}>
         {HOURS.map((hour) => {
           const slotAppts = dayAppts.filter((a) => new Date(a.startAt).getHours() === hour);
-          const dayWork = DEFAULT_WORKING[current.getDay()];
+          const dayWork = resolvedWorking[current.getDay()];
           const isClosed = !dayWork || hour < dayWork.open || hour >= dayWork.close;
           return (
             <div key={hour} style={{ display: "contents" }}>
@@ -207,7 +231,7 @@ export function V7Calendar({ appointments, clients }: V7CalendarProps) {
             <div style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", textAlign: "right", paddingRight: "8px", paddingTop: "8px" }}>{formatHour(hour)}</div>
             {days.map((day) => {
               const slotAppts = appointments.filter((a) => isSameDay(new Date(a.startAt), day) && new Date(a.startAt).getHours() === hour);
-              const dayWork = DEFAULT_WORKING[day.getDay()];
+              const dayWork = resolvedWorking[day.getDay()];
               const isClosed = !dayWork || hour < dayWork.open || hour >= dayWork.close;
               return (
                 <div

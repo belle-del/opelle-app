@@ -13,12 +13,17 @@ export default async function AppointmentsPage() {
     getCurrentWorkspace(),
   ]);
 
-  // Get workspace ID — fallback to admin query if getCurrentWorkspace failed
+  // Get workspace ID + working hours — fallback to admin query if getCurrentWorkspace failed
   const admin = createSupabaseAdminClient();
   let workspaceId = workspace?.id;
+  let workingHours: Record<string, { start: string; end: string; closed: boolean }> = {};
   if (!workspaceId) {
-    const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+    const { data: ws } = await admin.from("workspaces").select("id, working_hours").limit(1).single();
     workspaceId = ws?.id;
+    if (ws?.working_hours && Object.keys(ws.working_hours).length > 0) workingHours = ws.working_hours;
+  } else {
+    const { data: ws } = await admin.from("workspaces").select("working_hours").eq("id", workspaceId).single();
+    if (ws?.working_hours && Object.keys(ws.working_hours).length > 0) workingHours = ws.working_hours;
   }
 
   // Get rebook requests using admin client to bypass RLS
@@ -59,7 +64,7 @@ export default async function AppointmentsPage() {
 
       <AppointmentsTabs pendingRequestsCount={pendingCount}>
         {{
-          calendar: <V7Calendar appointments={appointments} clients={clients} />,
+          calendar: <V7Calendar appointments={appointments} clients={clients} workingHours={workingHours} />,
           requests: (
             <RebookRequestsList
               requests={rebookRequests}
