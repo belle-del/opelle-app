@@ -20,16 +20,22 @@ export default async function DashboardPage() {
     getCurrentWorkspace(),
   ]);
 
-  // Get working hours
+  // Get working hours + rebook requests
   let workingHours: Record<string, { start: string; end: string; closed: boolean }> = {};
+  let rebookRequests: Array<{ id: string; client_id: string; service_type: string | null; status: string; created_at: string }> = [];
   const admin = createSupabaseAdminClient();
-  const wsId = workspace?.id;
-  if (wsId) {
-    const { data: ws } = await admin.from("workspaces").select("working_hours").eq("id", wsId).single();
+  let wsId = workspace?.id;
+  if (!wsId) {
+    const { data: ws } = await admin.from("workspaces").select("id, working_hours").limit(1).single();
+    wsId = ws?.id;
     if (ws?.working_hours && Object.keys(ws.working_hours).length > 0) workingHours = ws.working_hours;
   } else {
-    const { data: ws } = await admin.from("workspaces").select("working_hours").limit(1).single();
+    const { data: ws } = await admin.from("workspaces").select("working_hours").eq("id", wsId).single();
     if (ws?.working_hours && Object.keys(ws.working_hours).length > 0) workingHours = ws.working_hours;
+  }
+  if (wsId) {
+    const { data } = await admin.from("rebook_requests").select("id, client_id, service_type, status, created_at").eq("workspace_id", wsId).order("created_at", { ascending: false });
+    rebookRequests = data || [];
   }
 
   return (
@@ -43,6 +49,7 @@ export default async function DashboardPage() {
       clients={clients}
       inspoFlags={inspoFlags}
       workingHours={workingHours}
+      rebookRequests={rebookRequests}
     />
     </>
   );

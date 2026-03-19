@@ -8,7 +8,7 @@ import { Trash2, Maximize2, Plus } from "lucide-react";
 import { LiveClock } from "@/components/LiveClock";
 
 // ── Types ──────────────────────────────────────────────────────────────
-type WidgetType = "schedule" | "revenue" | "formulas" | "tasks" | "activity" | "inventory" | "inspoFlags";
+type WidgetType = "schedule" | "revenue" | "formulas" | "tasks" | "activity" | "inventory" | "inspoFlags" | "requests";
 
 interface Widget {
   id: string;
@@ -25,6 +25,7 @@ const ALL_WIDGET_TYPES: { type: WidgetType; label: string; defaultCols: number; 
   { type: "activity", label: "Activity", defaultCols: 4, defaultRows: 5 },
   { type: "inventory", label: "Inventory", defaultCols: 10, defaultRows: 4 },
   { type: "inspoFlags", label: "Inspo Flags", defaultCols: 6, defaultRows: 6 },
+  { type: "requests", label: "Requests", defaultCols: 6, defaultRows: 6 },
 ];
 
 const DEFAULT_WIDGETS: Widget[] = [
@@ -87,6 +88,7 @@ interface WidgetDashboardProps {
   clients: Client[];
   inspoFlags?: InspoFlag[];
   workingHours?: Record<string, { start: string; end: string; closed: boolean }>;
+  rebookRequests?: Array<{ id: string; client_id: string; service_type: string | null; status: string; created_at: string }>;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -295,7 +297,7 @@ function StatWidget({ value, label, change, changePositive, link }: {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────
-export function WidgetDashboard({ appointments, formulas, tasks, products, clients, inspoFlags = [], workingHours }: WidgetDashboardProps) {
+export function WidgetDashboard({ appointments, formulas, tasks, products, clients, inspoFlags = [], workingHours, rebookRequests = [] }: WidgetDashboardProps) {
   const [widgets, setWidgets] = useState<Widget[]>(DEFAULT_WIDGETS);
   const [editMode, setEditMode] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -529,6 +531,36 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
             </div>
           </>
         );
+      case "requests": {
+        const pendingReqs = rebookRequests.filter(r => r.status === "pending");
+        return (
+          <>
+            <WidgetHead title={`Requests${pendingReqs.length > 0 ? ` (${pendingReqs.length})` : ""}`} link="/app/appointments" />
+            <div style={{ padding: "8px 12px" }}>
+              {pendingReqs.length === 0 ? (
+                <p style={{ fontSize: "11px", color: "#7A7A72" }}>No pending requests</p>
+              ) : pendingReqs.slice(0, 6).map((req) => (
+                <Link key={req.id} href="/app/appointments">
+                  <div style={{ display: "flex", gap: "8px", padding: "8px 0", borderBottom: "1px solid var(--stone-mid)", alignItems: "center" }}>
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--garnet-vivid)", flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: "11px", fontWeight: 600, color: "#2C2C2A" }}>
+                        {getClientName(clients, req.client_id)}
+                      </p>
+                      <p style={{ fontSize: "9px", color: "#5A5A52" }}>
+                        {req.service_type || "Service"} · {new Date(req.created_at).toLocaleDateString([], { month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                    <span style={{ padding: "2px 8px", borderRadius: "100px", fontSize: "8px", fontWeight: 600, background: "rgba(74,26,46,0.1)", color: "var(--garnet)", flexShrink: 0 }}>
+                      Pending
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        );
+      }
       default:
         return null;
     }
