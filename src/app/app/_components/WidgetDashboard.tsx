@@ -86,6 +86,7 @@ interface WidgetDashboardProps {
   products: Product[];
   clients: Client[];
   inspoFlags?: InspoFlag[];
+  workingHours?: Record<string, { start: string; end: string; closed: boolean }>;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -294,7 +295,7 @@ function StatWidget({ value, label, change, changePositive, link }: {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────
-export function WidgetDashboard({ appointments, formulas, tasks, products, clients, inspoFlags = [] }: WidgetDashboardProps) {
+export function WidgetDashboard({ appointments, formulas, tasks, products, clients, inspoFlags = [], workingHours }: WidgetDashboardProps) {
   const [widgets, setWidgets] = useState<Widget[]>(DEFAULT_WIDGETS);
   const [editMode, setEditMode] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -376,9 +377,15 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
   const renderContent = (widget: Widget) => {
     switch (widget.type) {
       case "schedule": {
-        const SCHED_HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8AM–7PM
+        const SCHED_HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 8AM–8PM
         const fmtHr = (h: number) => h === 12 ? "12p" : h > 12 ? `${h - 12}p` : `${h}a`;
         const currentHour = now.getHours();
+        const DAY_NAME_MAP_W = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+        const todayDayName = DAY_NAME_MAP_W[now.getDay()];
+        const todayWh = workingHours?.[todayDayName];
+        const todayOpen = todayWh && !todayWh.closed ? parseInt(todayWh.start.split(":")[0]) : 9;
+        const todayClose = todayWh && !todayWh.closed ? parseInt(todayWh.end.split(":")[0]) : 18;
+        const todayClosed = todayWh?.closed || (!workingHours && now.getDay() === 0);
         return (
           <>
             <WidgetHead title="Today's Schedule" link="/app/appointments" />
@@ -387,20 +394,21 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
                 {SCHED_HOURS.map((hour) => {
                   const slotAppts = todayAppts.filter((a) => new Date(a.startAt).getHours() === hour);
                   const isCurrentHour = hour === currentHour;
+                  const isClosedHour = todayClosed || hour < todayOpen || hour >= todayClose;
                   return (
                     <div key={hour} style={{ display: "contents" }}>
-                      <div style={{ padding: "4px 4px 0 0", textAlign: "right", fontSize: "8px", fontWeight: isCurrentHour ? 600 : 400, color: isCurrentHour ? "var(--garnet)" : "var(--text-on-stone-ghost)", lineHeight: 1 }}>
+                      <div style={{ padding: "4px 4px 0 0", textAlign: "right", fontSize: "8px", fontWeight: isCurrentHour ? 600 : 400, color: isCurrentHour ? "var(--garnet)" : isClosedHour ? "var(--text-on-stone-ghost)" : "var(--text-on-stone-faint)", lineHeight: 1 }}>
                         {fmtHr(hour)}
                       </div>
-                      <div style={{ borderTop: "1px solid var(--stone-mid)", padding: "2px 4px", minHeight: "44px", position: "relative", background: isCurrentHour ? "rgba(68,6,6,0.05)" : "transparent" }}>
+                      <div style={{ borderTop: "1px solid var(--stone-mid)", padding: "2px 4px", minHeight: "44px", position: "relative", background: isCurrentHour ? "rgba(68,6,6,0.05)" : isClosedHour ? "rgba(0,0,0,0.06)" : "transparent" }}>
                         {slotAppts.map((appt) => {
                           const isPast = new Date(appt.startAt) < now;
                           const statusClr = appt.status === "completed" ? "var(--status-confirmed)" : appt.status === "cancelled" ? "var(--status-low)" : "var(--garnet-vivid)";
                           return (
                             <Link key={appt.id} href={`/app/appointments/${appt.id}`}>
-                              <div style={{ padding: "6px 8px", borderRadius: "5px", marginBottom: "2px", background: isPast ? "rgba(74,26,46,0.08)" : "var(--garnet-wash)", opacity: isPast ? 0.7 : 1, borderLeft: `3px solid ${statusClr}`, minHeight: "36px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                                <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-on-stone)", lineHeight: 1.3 }}>{getClientName(clients, appt.clientId)}</p>
-                                <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", lineHeight: 1.2 }}>
+                              <div style={{ padding: "8px 10px", borderRadius: "6px", marginBottom: "2px", background: isPast ? "rgba(74,26,46,0.12)" : "rgba(74,26,46,0.15)", opacity: isPast ? 0.75 : 1, borderLeft: `3px solid ${statusClr}`, minHeight: "40px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                <p style={{ fontSize: "12px", fontWeight: 700, color: "#2C2C2A", lineHeight: 1.3 }}>{getClientName(clients, appt.clientId)}</p>
+                                <p style={{ fontSize: "10px", color: "#5A5A52", lineHeight: 1.2 }}>
                                   {appt.serviceName} · {new Date(appt.startAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
                                 </p>
                               </div>
