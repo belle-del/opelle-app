@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
       await admin.from("tasks").insert({
         workspace_id: cu.workspace_id,
         client_id: cu.client_id,
-        title: `Review inspo flag \u2014 ${clientName}`,
+        title: `Review inspo flag — ${clientName}`,
         notes: aiAnalysis.stylistFlag,
         status: "pending",
         due_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
@@ -258,7 +258,7 @@ export async function POST(request: NextRequest) {
         workspaceId: cu.workspace_id,
         clientId: cu.client_id,
         type: "inspo_update",
-        title: "Your consult form is ready \u2014 tap to fill it out",
+        title: "Your consult form is ready — tap to fill it out",
         actionUrl: `/client/inspo/${submission.id}`,
       });
     } else {

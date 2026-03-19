@@ -76,16 +76,17 @@ export async function POST(request: Request) {
 
     const admin = createSupabaseAdminClient();
 
-    // Get workspace working hours
+    // Get workspace working hours and buffer
     const { data: workspace } = await admin
       .from("workspaces")
-      .select("working_hours")
+      .select("working_hours, buffer_minutes")
       .eq("id", workspaceId)
       .single();
 
     const rawHours = workspace?.working_hours as WorkingHours | null;
     const workingHours: WorkingHours =
       rawHours && Object.keys(rawHours).length > 0 ? rawHours : DEFAULT_WORKING_HOURS;
+    const bufferMinutes = (workspace?.buffer_minutes as number) || 0;
 
     // Get existing appointments in the timeframe window
     const now = new Date();
@@ -98,7 +99,7 @@ export async function POST(request: Request) {
       .from("appointments")
       .select("start_at, duration_mins")
       .eq("workspace_id", workspaceId)
-      .in("status", ["scheduled"])
+      .in("status", ["scheduled", "pending_confirmation"])
       .gte("start_at", toLocalISOString(startDate))
       .lte("start_at", toLocalISOString(endDate));
 
@@ -108,7 +109,7 @@ export async function POST(request: Request) {
       const d = new Date(appt.start_at);
       const dateKey = toLocalDateString(d);
       const startMin = d.getHours() * 60 + d.getMinutes();
-      const endMin = startMin + (appt.duration_mins || 60) + 15; // 15 min buffer
+      const endMin = startMin + (appt.duration_mins || 60) + bufferMinutes;
       if (!busyByDate.has(dateKey)) busyByDate.set(dateKey, []);
       busyByDate.get(dateKey)!.push({ start: startMin, end: endMin });
     }

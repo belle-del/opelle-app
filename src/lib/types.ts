@@ -11,6 +11,21 @@ export type Workspace = {
   updatedAt: string;
 };
 
+// Client Permissions
+export type ClientPermissions = {
+  can_self_book: boolean;
+  can_message: boolean;
+  can_upload_inspo: boolean;
+  can_view_formulas: boolean;
+};
+
+export const DEFAULT_CLIENT_PERMISSIONS: ClientPermissions = {
+  can_self_book: false,
+  can_message: false,
+  can_upload_inspo: false,
+  can_view_formulas: false,
+};
+
 // Client
 export type Client = {
   id: string;
@@ -22,6 +37,7 @@ export type Client = {
   email?: string;
   notes?: string;
   tags: string[];
+  permissions?: ClientPermissions;
   preferenceProfile?: ClientPreferenceProfile | null;
   kernelRef?: string | null;
   canonicalClientId?: string;
@@ -54,7 +70,7 @@ export type Service = {
 };
 
 // Appointment
-export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
+export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled' | 'pending_confirmation';
 
 export type Appointment = {
   id: string;
@@ -67,6 +83,8 @@ export type Appointment = {
   durationMins: number;
   status: AppointmentStatus;
   notes?: string;
+  confirmedAt?: string;
+  expiresAt?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -353,6 +371,7 @@ export type ClientRow = {
   email: string | null;
   notes: string | null;
   tags: string[];
+  permissions: ClientPermissions | null;
   preference_profile: ClientPreferenceProfile | null;
   kernel_ref: string | null;
   canonical_client_id: string | null;
@@ -372,6 +391,8 @@ export type AppointmentRow = {
   duration_mins: number;
   status: AppointmentStatus;
   notes: string | null;
+  confirmed_at: string | null;
+  expires_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -497,6 +518,7 @@ export function clientRowToModel(row: ClientRow): Client {
     email: row.email ?? undefined,
     notes: row.notes ?? undefined,
     tags: row.tags ?? [],
+    permissions: row.permissions ?? undefined,
     preferenceProfile: row.preference_profile ?? undefined,
     kernelRef: row.kernel_ref ?? undefined,
     canonicalClientId: row.canonical_client_id ?? undefined,
@@ -517,6 +539,8 @@ export function appointmentRowToModel(row: AppointmentRow): Appointment {
     durationMins: row.duration_mins,
     status: row.status,
     notes: row.notes ?? undefined,
+    confirmedAt: row.confirmed_at ?? undefined,
+    expiresAt: row.expires_at ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

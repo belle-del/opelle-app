@@ -130,7 +130,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     workspaceId: cu.workspace_id,
     clientId: cu.client_id,
     type: "inspo_update",
-    title: "Sent to your stylist \u2014 they'll be in touch soon",
+    title: "Sent to your stylist — they'll be in touch soon",
   });
 
   return NextResponse.json({ success: true });

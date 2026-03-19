@@ -79,7 +79,7 @@ export async function getUpcomingAppointments(limit = 10): Promise<Appointment[]
     .select("*")
     .eq("workspace_id", wsId)
     .gte("start_at", nowLocal())
-    .eq("status", "scheduled")
+    .in("status", ["scheduled", "pending_confirmation"])
     .order("start_at", { ascending: true })
     .limit(limit);
 
@@ -238,6 +238,96 @@ export async function updateAppointment(
   }
 
   return appointment;
+}
+
+export async function createPendingAppointment(input: {
+  clientId: string;
+  serviceName: string;
+  startAt: string;
+  durationMins?: number;
+  notes?: string;
+  serviceId?: string;
+  workspaceId: string;
+}): Promise<Appointment | null> {
+  const admin = createSupabaseAdminClient();
+  const durationMins = input.durationMins || 60;
+  const startDate = new Date(input.startAt);
+  const endDate = new Date(startDate.getTime() + durationMins * 60 * 1000);
+  const endLocal = toLocalISOString(endDate);
+
+  // Expires 24 hours from now
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await admin
+    .from("appointments")
+    .insert({
+      workspace_id: input.workspaceId,
+      client_id: input.clientId,
+      service_name: input.serviceName,
+      start_at: input.startAt,
+      end_at: endLocal,
+      duration_mins: durationMins,
+      notes: input.notes || null,
+      service_id: input.serviceId || null,
+      status: "pending_confirmation",
+      expires_at: expiresAt,
+    })
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return appointmentRowToModel(data as AppointmentRow);
+}
+
+export async function confirmAppointment(id: string): Promise<Appointment | null> {
+  const admin = createSupabaseAdminClient();
+  const now = new Date().toISOString();
+
+  const { data, error } = await admin
+    .from("appointments")
+    .update({
+      status: "scheduled",
+      confirmed_at: now,
+      expires_at: null,
+    })
+    .eq("id", id)
+    .eq("status", "pending_confirmation")
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+
+  const appointment = appointmentRowToModel(data as AppointmentRow);
+
+  publishEvent({
+    event_type: "appointment_scheduled",
+    workspace_id: appointment.workspaceId,
+    timestamp: now,
+    payload: {
+      appointment_id: appointment.id,
+      client_id: appointment.clientId,
+      service_name: appointment.serviceName,
+      start_at: appointment.startAt,
+      duration_mins: appointment.durationMins,
+    },
+  });
+
+  return appointment;
+}
+
+export async function releaseExpiredPendingAppointments(): Promise<number> {
+  const admin = createSupabaseAdminClient();
+  const now = new Date().toISOString();
+
+  const { data, error } = await admin
+    .from("appointments")
+    .update({ status: "cancelled" })
+    .eq("status", "pending_confirmation")
+    .lt("expires_at", now)
+    .select("id");
+
+  if (error || !data) return 0;
+  return data.length;
 }
 
 export async function deleteAppointment(id: string): Promise<boolean> {

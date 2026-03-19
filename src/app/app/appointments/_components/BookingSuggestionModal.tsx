@@ -118,7 +118,7 @@ export function BookingSuggestionModal({
       // Use raw local time string — no UTC conversion
       const startAt = `${selectedSlot.date}T${selectedSlot.startTime}:00`;
 
-      // Create the appointment
+      // Create the appointment as pending_confirmation (client must confirm)
       const apptRes = await fetch("/api/appointments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -129,6 +129,7 @@ export function BookingSuggestionModal({
           durationMins: serviceDuration,
           notes: notes.clientNotes || undefined,
           workspaceId,
+          status: "pending_confirmation",
         }),
       });
 

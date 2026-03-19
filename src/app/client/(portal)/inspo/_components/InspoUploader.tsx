@@ -4,9 +4,32 @@ import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { InspoFollowUp } from "./InspoFollowUp";
 
 type Props = {
   onSubmitted: () => void;
+};
+
+type SubmissionResult = {
+  id: string;
+  photoUrls: string[];
+  aiAnalysis?: {
+    perPhotoQuestions?: Array<{
+      photoIndex: number;
+      questions: Array<{
+        id: string;
+        question: string;
+        type: string;
+        options?: string[];
+      }>;
+    }>;
+    generatedFormQuestions?: Array<{
+      id: string;
+      question: string;
+      type: string;
+      options?: string[];
+    }>;
+  };
 };
 
 export function InspoUploader({ onSubmitted }: Props) {
@@ -16,6 +39,7 @@ export function InspoUploader({ onSubmitted }: Props) {
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState("");
+  const [submission, setSubmission] = useState<SubmissionResult | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleFiles(files: FileList | null) {
@@ -68,13 +92,40 @@ export function InspoUploader({ onSubmitted }: Props) {
         throw new Error("Upload failed");
       }
 
-      onSubmitted();
+      const data = await res.json();
+
+      // Check if AI generated follow-up questions
+      const hasQuestions =
+        data.aiAnalysis?.perPhotoQuestions?.length > 0 ||
+        data.aiAnalysis?.generatedFormQuestions?.length > 0;
+
+      if (hasQuestions) {
+        setSubmission({
+          id: data.id,
+          photoUrls: previews,
+          aiAnalysis: data.aiAnalysis,
+        });
+      } else {
+        onSubmitted();
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setUploading(false);
       setAnalyzing(false);
     }
+  }
+
+  // Show follow-up questions after AI analysis
+  if (submission) {
+    return (
+      <InspoFollowUp
+        submissionId={submission.id}
+        photoUrls={submission.photoUrls}
+        aiAnalysis={submission.aiAnalysis}
+        onComplete={onSubmitted}
+      />
+    );
   }
 
   if (analyzing) {
@@ -233,7 +284,7 @@ export function InspoUploader({ onSubmitted }: Props) {
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Optional \u2014 tell us what caught your eye"
+              placeholder="Optional — tell us what caught your eye"
               rows={3}
             />
           </div>

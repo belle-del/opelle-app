@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createAppointment, listAppointments } from "@/lib/db/appointments";
+import { createAppointment, createPendingAppointment, listAppointments } from "@/lib/db/appointments";
 import { logActivity } from "@/lib/db/activity-log";
 import { emitCommsEvent } from "@/lib/comms-events";
 
@@ -24,15 +24,27 @@ export async function POST(request: Request) {
       );
     }
 
-    const appointment = await createAppointment({
-      clientId: body.clientId,
-      serviceName: body.serviceName,
-      startAt: body.startAt,
-      durationMins: body.durationMins,
-      notes: body.notes,
-      serviceId: body.serviceId,
-      workspaceId: body.workspaceId,
-    });
+    const isPending = body.status === "pending_confirmation";
+
+    const appointment = isPending
+      ? await createPendingAppointment({
+          clientId: body.clientId,
+          serviceName: body.serviceName,
+          startAt: body.startAt,
+          durationMins: body.durationMins,
+          notes: body.notes,
+          serviceId: body.serviceId,
+          workspaceId: body.workspaceId,
+        })
+      : await createAppointment({
+          clientId: body.clientId,
+          serviceName: body.serviceName,
+          startAt: body.startAt,
+          durationMins: body.durationMins,
+          notes: body.notes,
+          serviceId: body.serviceId,
+          workspaceId: body.workspaceId,
+        });
 
     if (!appointment) {
       return NextResponse.json({ error: "Failed to create appointment" }, { status: 500 });
@@ -40,12 +52,25 @@ export async function POST(request: Request) {
 
     await logActivity("appointment.created", "appointment", appointment.id, appointment.serviceName || appointment.startAt || appointment.id);
 
-    emitCommsEvent({
-      event: "appointment.confirmed",
-      workspaceId: appointment.workspaceId,
-      clientId: body.clientId,
-      context: { title: `Your appointment on ${new Date(body.startAt).toLocaleDateString()} is confirmed`, action_url: "/client/book" },
-    });
+    if (isPending) {
+      // Notify client to confirm
+      emitCommsEvent({
+        event: "appointment.pending",
+        workspaceId: appointment.workspaceId,
+        clientId: body.clientId,
+        context: {
+          title: `Your stylist suggested ${new Date(body.startAt).toLocaleDateString()} — tap to confirm`,
+          action_url: "/client/book",
+        },
+      });
+    } else {
+      emitCommsEvent({
+        event: "appointment.confirmed",
+        workspaceId: appointment.workspaceId,
+        clientId: body.clientId,
+        context: { title: `Your appointment on ${new Date(body.startAt).toLocaleDateString()} is confirmed`, action_url: "/client/book" },
+      });
+    }
 
     return NextResponse.json(appointment);
   } catch (error) {

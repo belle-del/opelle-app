@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getThread, createMessage } from "@/lib/db/messaging";
 import { publishEvent } from "@/lib/kernel";
+import { logActivity } from "@/lib/db/activity-log";
 
 async function getClientUser(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>
@@ -54,6 +55,26 @@ export async function POST(request: Request) {
       senderId: clientUser.client_id,
       body: messageBody,
     });
+
+    // Resolve client name for activity log
+    const admin = createSupabaseAdminClient();
+    const { data: client } = await admin
+      .from("clients")
+      .select("first_name, last_name")
+      .eq("id", clientUser.client_id)
+      .single();
+    const clientName = client
+      ? `${client.first_name} ${client.last_name}`.trim()
+      : "Unknown client";
+
+    // Log to activity history
+    logActivity(
+      "message.received",
+      "message",
+      threadId,
+      clientName,
+      { after: { preview: messageBody.substring(0, 80) } }
+    ).catch(() => {});
 
     // Emit event via kernel (fire and forget)
     publishEvent({

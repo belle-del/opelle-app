@@ -28,12 +28,25 @@ export async function POST(req: NextRequest) {
   }
 
   // Gather workspace context for Metis (admin client bypasses RLS)
-  const [clientCount, productCount, recentAppts] = await Promise.all([
+  const now = new Date();
+  const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+
+  const [clientCount, productCount, recentAppts, upcomingAppts, pendingTasks] = await Promise.all([
     admin.from("clients").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
     admin.from("products").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
     admin.from("appointments").select("id, start_at, services(name), clients(first_name, last_name)")
       .eq("workspace_id", workspace.id)
       .order("start_at", { ascending: false })
+      .limit(10),
+    admin.from("appointments").select("id, start_at, service_name, status, clients(first_name, last_name)")
+      .eq("workspace_id", workspace.id)
+      .in("status", ["scheduled", "pending_confirmation"])
+      .gte("start_at", now.toISOString())
+      .lte("start_at", in48h.toISOString())
+      .order("start_at", { ascending: true }),
+    admin.from("tasks").select("id, title, status")
+      .eq("workspace_id", workspace.id)
+      .in("status", ["pending", "in_progress"])
       .limit(10),
   ]);
 
@@ -44,6 +57,16 @@ export async function POST(req: NextRequest) {
       serviceName: (a.services as Record<string, unknown>)?.name as string || "Unknown",
       clientName: `${(a.clients as Record<string, unknown>)?.first_name || ""} ${(a.clients as Record<string, unknown>)?.last_name || ""}`.trim(),
       date: a.start_at as string,
+    })),
+    upcomingAppointments: (upcomingAppts.data || []).map((a: Record<string, unknown>) => ({
+      serviceName: a.service_name as string || "Unknown",
+      clientName: `${(a.clients as Record<string, unknown>)?.first_name || ""} ${(a.clients as Record<string, unknown>)?.last_name || ""}`.trim(),
+      date: a.start_at as string,
+      status: a.status as string,
+    })),
+    pendingTasks: (pendingTasks.data || []).map((t: Record<string, unknown>) => ({
+      title: t.title as string,
+      status: t.status as string,
     })),
   };
 

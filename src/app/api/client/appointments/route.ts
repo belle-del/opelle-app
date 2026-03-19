@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createClientNotification } from "@/lib/client-notifications";
+import { confirmAppointment } from "@/lib/db/appointments";
 import { toLocalISOString } from "@/lib/utils";
 
 async function getClientUser(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>) {
@@ -110,4 +111,70 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({ appointment });
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const clientUser = await getClientUser(supabase);
+    if (!clientUser) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { appointmentId, action } = body;
+
+    if (!appointmentId || !action) {
+      return NextResponse.json(
+        { error: "appointmentId and action required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify appointment belongs to this client
+    const admin = createSupabaseAdminClient();
+    const { data: appt } = await admin
+      .from("appointments")
+      .select("id, client_id, status")
+      .eq("id", appointmentId)
+      .single();
+
+    if (!appt || appt.client_id !== clientUser.client_id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (appt.status !== "pending_confirmation") {
+      return NextResponse.json(
+        { error: "Appointment is not pending confirmation" },
+        { status: 400 }
+      );
+    }
+
+    if (action === "confirm") {
+      const confirmed = await confirmAppointment(appointmentId);
+      if (!confirmed) {
+        return NextResponse.json({ error: "Failed to confirm" }, { status: 500 });
+      }
+      return NextResponse.json({ appointment: confirmed });
+    }
+
+    if (action === "decline") {
+      const { data: declined } = await admin
+        .from("appointments")
+        .update({ status: "cancelled" })
+        .eq("id", appointmentId)
+        .select("*")
+        .single();
+
+      return NextResponse.json({ appointment: declined });
+    }
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  } catch (error) {
+    console.error("Failed to update appointment:", error);
+    return NextResponse.json(
+      { error: "Failed to update appointment" },
+      { status: 500 }
+    );
+  }
 }

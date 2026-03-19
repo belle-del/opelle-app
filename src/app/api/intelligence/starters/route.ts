@@ -76,6 +76,40 @@ export async function GET() {
     starters.push(`I have ${unreadCount} unread message${unreadCount > 1 ? 's' : ''} — summarize them`);
   }
 
+  // Check for unreviewed inspo submissions
+  const { count: inspoCount } = await supabase
+    .from("inspo_submissions")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspace.id)
+    .eq("requires_consult", true)
+    .is("reviewed_at", null);
+
+  if (inspoCount && inspoCount > 0) {
+    starters.push(`I have ${inspoCount} inspo submission${inspoCount > 1 ? 's' : ''} to review`);
+  }
+
+  // Check for pending rebook requests
+  const { count: rebookCount } = await supabase
+    .from("rebook_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspace.id)
+    .eq("status", "pending");
+
+  if (rebookCount && rebookCount > 0) {
+    starters.push(`${rebookCount} booking request${rebookCount > 1 ? 's' : ''} waiting — help me schedule them`);
+  }
+
+  // Check for overdue tasks
+  const { count: taskCount } = await supabase
+    .from("tasks")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspace.id)
+    .in("status", ["pending", "in_progress"]);
+
+  if (taskCount && taskCount > 0) {
+    starters.push(`I have ${taskCount} open task${taskCount > 1 ? 's' : ''} — what should I tackle first?`);
+  }
+
   // Always include some general salon knowledge starters as fallbacks
   const fallbacks = [
     "What's the best way to price a balayage service?",

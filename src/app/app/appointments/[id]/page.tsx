@@ -9,7 +9,9 @@ import { getClientDisplayName } from "@/lib/types";
 import { formatDateTime, formatDate } from "@/lib/utils";
 import { ArrowLeft, User, Clock, FileText } from "lucide-react";
 import { AppointmentActions } from "./_components/AppointmentActions";
+import { AftercareEditor } from "./_components/AftercareEditor";
 import { LocalTime } from "@/components/LocalTime";
+import { getAftercarePlanByAppointment } from "@/lib/db/aftercare";
 
 interface AppointmentDetailPageProps {
   params: Promise<{ id: string }>;
@@ -23,7 +25,10 @@ export default async function AppointmentDetailPage({ params }: AppointmentDetai
     notFound();
   }
 
-  const client = await getClient(appointment.clientId);
+  const [client, aftercarePlan] = await Promise.all([
+    getClient(appointment.clientId),
+    getAftercarePlanByAppointment(id),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -44,7 +49,8 @@ export default async function AppointmentDetailPage({ params }: AppointmentDetai
               <Badge
                 variant={
                   appointment.status === "completed" ? "success" :
-                  appointment.status === "cancelled" ? "danger" : "outline"
+                  appointment.status === "cancelled" ? "danger" :
+                  appointment.status === "pending_confirmation" ? "warning" : "outline"
                 }
               >
                 {appointment.status}
@@ -134,25 +140,12 @@ export default async function AppointmentDetailPage({ params }: AppointmentDetai
         </CardContent>
       </Card>
 
-      {/* Service Log placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Service Log</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Document the service details, formulas used, and learnings.
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-xl border border-dashed border-white/20 p-8 text-center">
-            <p className="text-muted-foreground mb-4">
-              Service log feature coming soon
-            </p>
-            <p className="text-sm text-muted-foreground">
-              You&apos;ll be able to add consultation notes, formulas, photos, and aftercare instructions here.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Aftercare */}
+      <AftercareEditor
+        appointmentId={appointment.id}
+        clientId={appointment.clientId}
+        existingPlan={aftercarePlan}
+      />
     </div>
   );
 }

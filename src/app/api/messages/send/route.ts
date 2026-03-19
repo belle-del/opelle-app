@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getOrCreateThread, createMessage } from "@/lib/db/messaging";
 import { dispatchComms } from "@/lib/kernel";
+import { logActivity } from "@/lib/db/activity-log";
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +15,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const { data: workspace } = await supabase
+    const admin = createSupabaseAdminClient();
+    const { data: workspace } = await admin
       .from("workspaces")
       .select("id")
       .eq("owner_id", user.id)
@@ -51,6 +54,25 @@ export async function POST(request: Request) {
       senderId: user.id,
       body: messageBody || "",
     });
+
+    // Resolve client name for activity log
+    const { data: client } = await admin
+      .from("clients")
+      .select("first_name, last_name")
+      .eq("id", clientId)
+      .single();
+    const clientName = client
+      ? `${client.first_name} ${client.last_name}`.trim()
+      : "Unknown client";
+
+    // Log to activity history
+    logActivity(
+      "message.sent",
+      "message",
+      thread.id,
+      clientName,
+      { after: { preview: (messageBody || "").substring(0, 80) } }
+    ).catch(() => {});
 
     // Dispatch via kernel (fire and forget)
     dispatchComms({

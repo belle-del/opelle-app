@@ -78,7 +78,7 @@ export function InventoryPredictionCard({ productId }: InventoryPredictionCardPr
             <p className="mt-1">
               {prediction.suggestedReorderDate
                 ? new Date(prediction.suggestedReorderDate).toLocaleDateString()
-                : "\u2014"}
+                : "—"}
             </p>
           </div>
           <div>

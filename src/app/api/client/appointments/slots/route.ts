@@ -135,7 +135,7 @@ export async function GET(request: Request) {
     .from("appointments")
     .select("start_at, duration_mins")
     .eq("workspace_id", clientUser.workspace_id)
-    .eq("status", "scheduled")
+    .in("status", ["scheduled", "pending_confirmation"])
     .gte("start_at", startRange)
     .lt("start_at", endRange);
 
