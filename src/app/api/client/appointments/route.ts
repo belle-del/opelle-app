@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     .insert({
       workspace_id: clientUser.workspace_id,
       client_id: clientUser.client_id,
-      service_id: serviceId || null,
+      service_id: null, // service_id FK references 'services' table, not 'service_types'
       service_name: serviceName,
       start_at: startAt,
       end_at: endAt,
