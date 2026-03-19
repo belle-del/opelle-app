@@ -16,15 +16,33 @@ export async function POST(request: Request) {
     }
 
     const admin = createSupabaseAdminClient();
-    const { data: workspace } = await admin
+    let workspaceId: string | undefined;
+
+    // Try owner first
+    const { data: ownedWs } = await admin
       .from("workspaces")
       .select("id")
       .eq("owner_id", user.id)
-      .single();
+      .maybeSingle();
 
-    if (!workspace) {
+    if (ownedWs) {
+      workspaceId = ownedWs.id;
+    } else {
+      // Fallback: check workspace_members
+      const { data: membership } = await admin
+        .from("workspace_members")
+        .select("workspace_id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      workspaceId = membership?.workspace_id;
+    }
+
+    if (!workspaceId) {
       return NextResponse.json({ error: "No workspace found" }, { status: 404 });
     }
+
+    const workspace = { id: workspaceId };
 
     const body = await request.json();
     const { clientId, body: messageBody, templateId } = body;

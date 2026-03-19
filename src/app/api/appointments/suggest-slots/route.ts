@@ -115,7 +115,8 @@ export async function POST(request: Request) {
     }
 
     // Normalize preferred days: handle formats like "Tthu", "Wwed", "monday", "thu"
-    const normalizedPreferredDays = preferredDays.map((d: string) => {
+    const safeDays = Array.isArray(preferredDays) ? preferredDays : [];
+    const normalizedPreferredDays = safeDays.map((d: string) => {
       const clean = d.toLowerCase().replace(/^[^a-z]+/, ""); // strip leading non-alpha
       // Map abbreviations to full day names
       const abbrevMap: Record<string, string> = {
@@ -193,7 +194,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ slots: topSlots });
   } catch (error) {
-    console.error("[suggest-slots] Error:", error);
-    return NextResponse.json({ error: "Failed to suggest slots" }, { status: 500 });
+    console.error("[suggest-slots] Error:", error instanceof Error ? error.message : error);
+    console.error("[suggest-slots] Stack:", error instanceof Error ? error.stack : "no stack");
+    return NextResponse.json({ error: "Failed to suggest slots", detail: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
   }
 }
