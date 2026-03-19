@@ -80,7 +80,7 @@ export default function MentisPage() {
     setActiveConversationId(null);
   }, []);
 
-  /* When MentisChat creates a conversation */
+  /* When MetisChat creates a conversation */
   const handleConversationCreated = useCallback((id: string) => {
     setActiveConversationId(id);
     // Re-fetch list to include the new conversation
@@ -198,7 +198,7 @@ export default function MentisPage() {
                 flex: 1,
               }}
             >
-              Mentis
+              Metis
             </span>
           </div>
 
@@ -378,7 +378,7 @@ export default function MentisPage() {
                 lineHeight: 1.2,
               }}
             >
-              Mentis
+              Metis
             </h1>
             <p style={{ fontSize: "11px", color: TEXT_FAINT, marginTop: "2px" }}>
               Your AI salon copilot

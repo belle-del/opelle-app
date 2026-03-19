@@ -1,18 +1,26 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Product, ProductRow, ProductCategory } from "@/lib/types";
 import { productRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
 import { publishEvent } from "@/lib/kernel";
 
-export async function listProducts(): Promise<Product[]> {
+async function resolveWorkspaceId(): Promise<string | undefined> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  if (workspace) return workspace.id;
+  const admin = createSupabaseAdminClient();
+  const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+  return ws?.id;
+}
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+export async function listProducts(): Promise<Product[]> {
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return [];
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("products")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .order("brand", { ascending: true })
     .order("shade", { ascending: true });
 
@@ -21,15 +29,15 @@ export async function listProducts(): Promise<Product[]> {
 }
 
 export async function getProduct(id: string): Promise<Product | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("products")
     .select("*")
     .eq("id", id)
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .single();
 
   if (error || !data) return null;
@@ -37,16 +45,16 @@ export async function getProduct(id: string): Promise<Product | null> {
 }
 
 export async function searchProducts(query: string): Promise<Product[]> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return [];
 
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
   const searchTerm = `%${query}%`;
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("products")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .or(`brand.ilike.${searchTerm},shade.ilike.${searchTerm},name.ilike.${searchTerm},line.ilike.${searchTerm},barcode.ilike.${searchTerm}`)
     .order("brand", { ascending: true })
     .limit(20);
@@ -56,14 +64,14 @@ export async function searchProducts(query: string): Promise<Product[]> {
 }
 
 export async function getProductByBarcode(barcode: string): Promise<Product | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("products")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .eq("barcode", barcode)
     .single();
 
@@ -85,14 +93,14 @@ export async function createProduct(input: {
   lowStockThreshold?: number;
   notes?: string;
 }): Promise<Product | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("products")
     .insert({
-      workspace_id: workspace.id,
+      workspace_id: wsId,
       brand: input.brand,
       line: input.line || null,
       shade: input.shade,
@@ -116,7 +124,7 @@ export async function createProduct(input: {
   // Fire kernel event (non-blocking)
   publishEvent({
     event_type: "product_added",
-    workspace_id: workspace.id,
+    workspace_id: wsId,
     timestamp: new Date().toISOString(),
     payload: {
       product_id: product.id,
@@ -150,10 +158,10 @@ export async function updateProduct(
     notes?: string;
   }
 ): Promise<Product | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
 
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
 
   const updateData: Record<string, unknown> = {};
   if (input.brand !== undefined) updateData.brand = input.brand;
@@ -169,11 +177,11 @@ export async function updateProduct(
   if (input.lowStockThreshold !== undefined) updateData.low_stock_threshold = input.lowStockThreshold;
   if (input.notes !== undefined) updateData.notes = input.notes || null;
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("products")
     .update(updateData)
     .eq("id", id)
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .select("*")
     .single();
 
@@ -182,15 +190,15 @@ export async function updateProduct(
 }
 
 export async function deleteProduct(id: string): Promise<boolean> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return false;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return false;
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
     .from("products")
     .delete()
     .eq("id", id)
-    .eq("workspace_id", workspace.id);
+    .eq("workspace_id", wsId);
 
   return !error;
 }

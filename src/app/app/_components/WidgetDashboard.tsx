@@ -5,6 +5,7 @@ import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import Link from "next/link";
 import { Trash2, Maximize2, Plus } from "lucide-react";
+import { LiveClock } from "@/components/LiveClock";
 
 // ── Types ──────────────────────────────────────────────────────────────
 type WidgetType = "schedule" | "revenue" | "formulas" | "tasks" | "activity" | "inventory" | "inspoFlags";
@@ -532,6 +533,7 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
         <div>
           <p style={{ fontSize: "9px", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--text-on-bark-faint)" }}>Practitioner Suite</p>
           <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", color: "var(--text-on-bark)", fontWeight: 300, marginTop: "2px" }}>Dashboard</h1>
+          <LiveClock />
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
           {editMode && (

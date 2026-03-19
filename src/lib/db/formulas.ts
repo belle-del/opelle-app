@@ -1,17 +1,25 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Formula, FormulaRow, FormulaServiceType, FormulaStep } from "@/lib/types";
 import { formulaRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
 
-export async function listFormulas(): Promise<Formula[]> {
+async function resolveWorkspaceId(): Promise<string | undefined> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  if (workspace) return workspace.id;
+  const admin = createSupabaseAdminClient();
+  const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+  return ws?.id;
+}
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+export async function listFormulas(): Promise<Formula[]> {
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return [];
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("formulas")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
@@ -19,15 +27,15 @@ export async function listFormulas(): Promise<Formula[]> {
 }
 
 export async function getFormula(id: string): Promise<Formula | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("formulas")
     .select("*")
     .eq("id", id)
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .single();
 
   if (error || !data) return null;
@@ -35,14 +43,14 @@ export async function getFormula(id: string): Promise<Formula | null> {
 }
 
 export async function getFormulasForClient(clientId: string): Promise<Formula[]> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return [];
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("formulas")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .eq("client_id", clientId)
     .order("created_at", { ascending: false });
 
@@ -60,14 +68,14 @@ export async function createFormula(input: {
   clientId?: string;
   appointmentId?: string;
 }): Promise<Formula | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("formulas")
     .insert({
-      workspace_id: workspace.id,
+      workspace_id: wsId,
       title: input.title,
       service_type: input.serviceType,
       color_line: input.colorLine || null,
@@ -97,10 +105,10 @@ export async function updateFormula(
     appointmentId?: string;
   }
 ): Promise<Formula | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
 
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
 
   const updateData: Record<string, unknown> = {};
   if (input.title !== undefined) updateData.title = input.title;
@@ -112,11 +120,11 @@ export async function updateFormula(
   if (input.clientId !== undefined) updateData.client_id = input.clientId || null;
   if (input.appointmentId !== undefined) updateData.appointment_id = input.appointmentId || null;
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("formulas")
     .update(updateData)
     .eq("id", id)
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .select("*")
     .single();
 
@@ -125,15 +133,15 @@ export async function updateFormula(
 }
 
 export async function deleteFormula(id: string): Promise<boolean> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return false;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return false;
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
     .from("formulas")
     .delete()
     .eq("id", id)
-    .eq("workspace_id", workspace.id);
+    .eq("workspace_id", wsId);
 
   return !error;
 }

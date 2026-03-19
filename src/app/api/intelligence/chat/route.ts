@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Message required" }, { status: 400 });
   }
 
-  // Gather workspace context for Mentis (admin client bypasses RLS)
+  // Gather workspace context for Metis (admin client bypasses RLS)
   const [clientCount, productCount, recentAppts] = await Promise.all([
     admin.from("clients").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
     admin.from("products").select("id", { count: "exact", head: true }).eq("workspace_id", workspace.id),
@@ -157,10 +157,10 @@ const result = await mentisChat({
   });
 
   if (!result) {
-    return NextResponse.json({ error: "Mentis unavailable" }, { status: 503 });
+    return NextResponse.json({ error: "Metis unavailable" }, { status: 503 });
   }
 
-  // Log Mentis chat to activity history
+  // Log Metis chat to activity history
   const preview = message.length > 50 ? message.slice(0, 50) + "..." : message;
   await logActivity("mentis.chat", "mentis", "mentis-chat", preview);
 

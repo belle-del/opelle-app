@@ -1074,7 +1074,7 @@ export function clientStylistAssignmentRowToModel(row: ClientStylistAssignmentRo
 }
 
 // ============================================================
-// Mentis AI Copilot
+// Metis AI Copilot
 // ============================================================
 
 export type MentisMessage = {

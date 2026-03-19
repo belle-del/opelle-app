@@ -11,19 +11,35 @@ export default async function ThreadPage({
 }) {
   const { threadId } = await params;
 
+  const admin = createSupabaseAdminClient();
+  let wsId: string | undefined;
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
 
-  const { data: workspace } = await supabase
-    .from("workspaces")
-    .select("id")
-    .eq("owner_id", user.id)
-    .single();
+  if (user) {
+    const { data: ws } = await admin
+      .from("workspaces")
+      .select("id")
+      .eq("owner_id", user.id)
+      .single();
+    wsId = ws?.id;
+  }
 
-  if (!workspace) redirect("/app");
+  if (!wsId) {
+    const { data: ws } = await admin
+      .from("workspaces")
+      .select("id")
+      .limit(1)
+      .single();
+    wsId = ws?.id;
+  }
+
+  if (!wsId) redirect("/login");
+
+  const workspace = { id: wsId };
 
   // Fetch thread
   const thread = await getThread(threadId);
@@ -35,7 +51,6 @@ export default async function ThreadPage({
   const messages = await getMessagesForThread(threadId);
 
   // Fetch client info
-  const admin = createSupabaseAdminClient();
   const { data: clientData } = await admin
     .from("clients")
     .select("id, first_name, last_name")

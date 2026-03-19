@@ -11,6 +11,14 @@ export type ActivityAction =
 
 export type EntityType = "formula" | "client" | "product" | "appointment" | "task" | "mentis";
 
+async function resolveWorkspaceId(): Promise<string | undefined> {
+  const workspace = await getCurrentWorkspace();
+  if (workspace) return workspace.id;
+  const admin = createSupabaseAdminClient();
+  const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+  return ws?.id;
+}
+
 export async function logActivity(
   action: ActivityAction,
   entityType: EntityType,
@@ -19,8 +27,8 @@ export async function logActivity(
   diff?: { before?: Record<string, unknown>; after?: Record<string, unknown> }
 ): Promise<void> {
   try {
-    const workspace = await getCurrentWorkspace();
-    if (!workspace) {
+    const wsId = await resolveWorkspaceId();
+    if (!wsId) {
       console.warn("[activity-log] No workspace found, skipping log");
       return;
     }
@@ -28,7 +36,7 @@ export async function logActivity(
     // Use admin client to bypass RLS — this is a trusted server-side operation
     const admin = createSupabaseAdminClient();
     const { error } = await admin.from("activity_log").insert({
-      workspace_id: workspace.id,
+      workspace_id: wsId,
       action,
       entity_type: entityType,
       entity_id: entityId,
@@ -56,14 +64,14 @@ export type ActivityLogEntry = {
 
 export async function listActivityLog(entityType?: string): Promise<ActivityLogEntry[]> {
   try {
-    const workspace = await getCurrentWorkspace();
-    if (!workspace) return [];
+    const wsId = await resolveWorkspaceId();
+    if (!wsId) return [];
 
     const admin = createSupabaseAdminClient();
     let query = admin
       .from("activity_log")
       .select("*")
-      .eq("workspace_id", workspace.id)
+      .eq("workspace_id", wsId)
       .order("created_at", { ascending: false })
       .limit(200);
 

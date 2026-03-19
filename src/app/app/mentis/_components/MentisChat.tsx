@@ -163,7 +163,7 @@ function ThinkingDots() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "4px 0" }}>
       <span style={{ fontSize: "11px", color: TEXT_FAINT, fontStyle: "italic" }}>
-        Mentis is thinking
+        Metis is thinking
       </span>
       {[0, 1, 2].map((i) => (
         <span
@@ -602,7 +602,7 @@ export default function MentisChat({
               gap: "8px",
             }}
           >
-            {/* Mentis avatar */}
+            {/* Metis avatar */}
             {msg.role === "assistant" && (
               <div
                 style={{
@@ -767,7 +767,7 @@ export default function MentisChat({
             value={input}
             onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask Mentis anything..."
+            placeholder="Ask Metis anything..."
             disabled={sending}
             rows={1}
             style={{

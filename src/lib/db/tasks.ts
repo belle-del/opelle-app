@@ -1,18 +1,26 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Task, TaskRow, TaskStatus } from "@/lib/types";
 import { taskRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
 import { publishEvent } from "@/lib/kernel";
 
-export async function listTasks(): Promise<Task[]> {
+async function resolveWorkspaceId(): Promise<string | undefined> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  if (workspace) return workspace.id;
+  const admin = createSupabaseAdminClient();
+  const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+  return ws?.id;
+}
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+export async function listTasks(): Promise<Task[]> {
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return [];
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("tasks")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
@@ -20,15 +28,15 @@ export async function listTasks(): Promise<Task[]> {
 }
 
 export async function getTask(id: string): Promise<Task | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("tasks")
     .select("*")
     .eq("id", id)
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .single();
 
   if (error || !data) return null;
@@ -36,14 +44,14 @@ export async function getTask(id: string): Promise<Task | null> {
 }
 
 export async function getPendingTasks(): Promise<Task[]> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return [];
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("tasks")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .neq("status", "completed")
     .order("due_at", { ascending: true, nullsFirst: false });
 
@@ -52,19 +60,19 @@ export async function getPendingTasks(): Promise<Task[]> {
 }
 
 export async function getUpcomingReminders(): Promise<Task[]> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return [];
 
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
 
   // Get current time and 24 hours from now
   const now = new Date();
   const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("tasks")
     .select("*")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .eq("reminder_enabled", true)
     .neq("status", "completed")
     .gte("reminder_at", now.toISOString())
@@ -83,14 +91,14 @@ export async function createTask(input: {
   reminderAt?: string;
   reminderEnabled?: boolean;
 }): Promise<Task | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("tasks")
     .insert({
-      workspace_id: workspace.id,
+      workspace_id: wsId,
       title: input.title,
       notes: input.notes || null,
       due_at: input.dueAt || null,
@@ -120,10 +128,10 @@ export async function updateTask(
     attachments?: unknown;
   }
 ): Promise<Task | null> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return null;
 
-  const supabase = await createSupabaseServerClient();
+  const admin = createSupabaseAdminClient();
 
   const updateData: Record<string, unknown> = {};
   if (input.title !== undefined) updateData.title = input.title;
@@ -135,11 +143,11 @@ export async function updateTask(
   if (input.reminderEnabled !== undefined) updateData.reminder_enabled = input.reminderEnabled;
   if (input.attachments !== undefined) updateData.attachments = input.attachments;
 
-  const { data, error } = await supabase
+  const { data, error } = await admin
     .from("tasks")
     .update(updateData)
     .eq("id", id)
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .select("*")
     .single();
 
@@ -151,7 +159,7 @@ export async function updateTask(
   if (input.status === "completed") {
     publishEvent({
       event_type: "task_completed",
-      workspace_id: workspace.id,
+      workspace_id: wsId,
       timestamp: new Date().toISOString(),
       payload: {
         task_id: task.id,
@@ -165,15 +173,15 @@ export async function updateTask(
 }
 
 export async function deleteTask(id: string): Promise<boolean> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return false;
+  const wsId = await resolveWorkspaceId();
+  if (!wsId) return false;
 
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
+  const admin = createSupabaseAdminClient();
+  const { error } = await admin
     .from("tasks")
     .delete()
     .eq("id", id)
-    .eq("workspace_id", workspace.id);
+    .eq("workspace_id", wsId);
 
   return !error;
 }

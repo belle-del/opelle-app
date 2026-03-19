@@ -23,7 +23,7 @@ const ENTITY_FILTERS = [
   { label: "Products", value: "product" },
   { label: "Appointments", value: "appointment" },
   { label: "Tasks", value: "task" },
-  { label: "Mentis", value: "mentis" },
+  { label: "Metis", value: "mentis" },
 ];
 
 const ENTITY_ICONS: Record<string, React.ReactNode> = {
@@ -49,7 +49,7 @@ const ACTION_LABELS: Record<string, string> = {
   "task.created": "Task created",
   "task.updated": "Task updated",
   "task.deleted": "Task deleted",
-  "mentis.chat": "Mentis conversation",
+  "mentis.chat": "Metis conversation",
 };
 
 function relativeTime(iso: string): string {

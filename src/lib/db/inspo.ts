@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentWorkspace } from "./workspaces";
 
 export type InspoFlag = {
@@ -9,14 +9,22 @@ export type InspoFlag = {
 };
 
 export async function getUnreviewedInspoFlags(): Promise<InspoFlag[]> {
-  const workspace = await getCurrentWorkspace();
-  if (!workspace) return [];
+  const admin = createSupabaseAdminClient();
+  let wsId: string | undefined;
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const workspace = await getCurrentWorkspace();
+  if (workspace) {
+    wsId = workspace.id;
+  } else {
+    const { data: ws } = await admin.from("workspaces").select("id").limit(1).single();
+    wsId = ws?.id;
+  }
+  if (!wsId) return [];
+
+  const { data, error } = await admin
     .from("inspo_submissions")
     .select("id, client_id, stylist_flag, created_at")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", wsId)
     .eq("requires_consult", true)
     .eq("reviewed_by_stylist", false)
     .order("created_at", { ascending: false });

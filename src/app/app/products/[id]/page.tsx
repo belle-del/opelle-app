@@ -87,7 +87,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         </div>
       </header>
 
-      {/* Mentis Suggestions */}
+      {/* Metis Suggestions */}
       <MentisSuggestions
         page="product-detail"
         entityType="product"

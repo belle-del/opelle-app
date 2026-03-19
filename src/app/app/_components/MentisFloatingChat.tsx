@@ -36,7 +36,7 @@ export default function MentisFloatingChat() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  // Don't render on the full Mentis page (must be after all hooks)
+  // Don't render on the full Metis page (must be after all hooks)
   if (pathname === "/app/mentis") return null;
 
   return (
@@ -86,11 +86,11 @@ export default function MentisFloatingChat() {
               flex: 1,
             }}
           >
-            Mentis
+            Metis
           </span>
           <button
             onClick={() => setOpen(false)}
-            aria-label="Close Mentis chat"
+            aria-label="Close Metis chat"
             style={{
               background: "transparent",
               border: "none",
@@ -125,7 +125,7 @@ export default function MentisFloatingChat() {
         onClick={() => setOpen((prev) => !prev)}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        aria-label="Open Mentis chat"
+        aria-label="Open Metis chat"
         style={{
           position: "fixed",
           bottom: "24px",

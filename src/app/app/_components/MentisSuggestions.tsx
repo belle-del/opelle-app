@@ -112,7 +112,7 @@ export function MentisSuggestions({ page, entityType, entityData }: MentisSugges
             justifyContent: "center",
             animation: "mentis-pulse 2s ease-in-out infinite",
           }}
-          aria-label="Show more suggestions from Mentis"
+          aria-label="Show more suggestions from Metis"
         >
           <Sparkles size={16} color="#C4AB70" />
           <style>{`

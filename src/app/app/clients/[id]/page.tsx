@@ -123,7 +123,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       {/* Portal Account Status */}
       <PortalAccountCard clientId={client.id} />
 
-      {/* Mentis Suggestions */}
+      {/* Metis Suggestions */}
       <MentisSuggestions
         page="client-detail"
         entityType="client"
