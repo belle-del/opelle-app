@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { InspoTab } from "./InspoTab";
 import { ClientMessagesTab } from "./ClientMessagesTab";
-import type { MessageThread, Message } from "@/lib/types";
+import { HistoryTab } from "./HistoryTab";
+import type { MessageThread, Message, Appointment } from "@/lib/types";
 
 type ThreadWithMessages = {
   thread: MessageThread;
@@ -15,6 +16,7 @@ type Props = {
   clientName: string;
   children: React.ReactNode; // The existing content (formulas, etc.)
   threads?: ThreadWithMessages[];
+  appointments?: Appointment[];
 };
 
 type InspoSubmission = {
@@ -38,8 +40,8 @@ type InspoSubmission = {
   consultAnswers?: Record<string, unknown> | null;
 };
 
-export function ClientDetailTabs({ clientId, clientName, children, threads = [] }: Props) {
-  const [activeTab, setActiveTab] = useState<"formulas" | "inspo" | "messages">("formulas");
+export function ClientDetailTabs({ clientId, clientName, children, threads = [], appointments = [] }: Props) {
+  const [activeTab, setActiveTab] = useState<"formulas" | "inspo" | "messages" | "history">("formulas");
   const [inspoSubmissions, setInspoSubmissions] = useState<InspoSubmission[]>([]);
   const [inspoLoaded, setInspoLoaded] = useState(false);
   const [unreviewedCount, setUnreviewedCount] = useState(0);
@@ -68,6 +70,7 @@ export function ClientDetailTabs({ clientId, clientName, children, threads = [] 
 
   const tabs = [
     { id: "formulas" as const, label: "Formulas" },
+    { id: "history" as const, label: "History" },
     {
       id: "inspo" as const,
       label: "Inspo",
@@ -119,6 +122,13 @@ export function ClientDetailTabs({ clientId, clientName, children, threads = [] 
 
       {/* Tab content */}
       {activeTab === "formulas" && children}
+
+      {activeTab === "history" && (
+        <HistoryTab
+          clientName={clientName}
+          appointments={appointments}
+        />
+      )}
 
       {activeTab === "inspo" && (
         inspoLoaded ? (

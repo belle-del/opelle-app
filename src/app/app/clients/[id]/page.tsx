@@ -353,6 +353,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
             clientId={client.id}
             clientName={getClientDisplayName(client)}
             threads={threadsWithMessages}
+            appointments={appointments}
           >
             <FormulaHistory
               clientId={client.id}
