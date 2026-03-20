@@ -432,3 +432,127 @@ Is this appointment long enough for what they want? Only flag if there's a real 
     nextAppointment: params.nextAppointment,
   };
 }
+
+// --- Inspo-Based Formula Suggestion ---
+// Uses the client's inspo photos, follow-up answers, and formula history
+// to generate an actionable starting-point formula for the stylist.
+
+export type InspoFormulaSuggestion = {
+  suggested_formula: string;
+  reasoning: string;
+  confidence: number;
+  caution?: string;
+  based_on: "inspo";
+};
+
+const INSPO_FORMULA_PROMPT = `You are Metis, an expert colorist AI assistant. A stylist is about to formulate for a client who submitted inspiration photos and answered follow-up questions. You also have the client's color formula history so you understand their hair's starting point.
+
+Your job is to suggest an ACTIONABLE starting-point formula the stylist can use or modify.
+
+Think like a senior colorist:
+- Consider the client's current hair (from their history and answers) as the starting point
+- Consider what they WANT (from the inspo analysis and answers)
+- Bridge the gap with a real formula — bowls, products, developers, volumes, timing, placement
+- If the client's history shows they've been using specific product lines, suggest those same lines when possible
+- If you see potential issues (e.g. going from dark to very light), note them but still give your best formula suggestion
+- Account for hair texture and condition based on what you know
+
+FORMAT YOUR FORMULA like a real salon formula:
+- Bowl 1: [product] + [developer] at [ratio], [placement], [processing time]
+- Bowl 2: [product] + [developer] at [ratio], [placement], [processing time]
+- Toner: [product], [timing]
+- Notes on sectioning, application order, special considerations
+
+Be specific with product categories even if you don't know the exact brand — e.g. "permanent color 7N" or "lightener + 20vol" rather than vague descriptions.
+
+OUTPUT FORMAT — respond with ONLY valid JSON, no markdown fences:
+{
+  "suggested_formula": "The full formula with bowls, products, timing, placement — written how a stylist would write it",
+  "reasoning": "2-3 sentences explaining WHY this formula — what it achieves relative to the client's current hair and inspo goals",
+  "confidence": 0.0-1.0,
+  "caution": "Optional — any warnings about this approach (e.g. 'May need a strand test first' or 'Previous lightening history suggests careful developer choice')"
+}`;
+
+export async function generateInspoFormulaSuggestion(params: {
+  stylistIntelligence: StylistIntelligence;
+  clientSummary: string | null;
+  formulaHistory: string | null;
+  clientContext: {
+    firstName?: string;
+    colorDirection?: string;
+    maintenanceLevel?: string;
+    styleNotes?: string;
+  } | null;
+  questions?: { id: string; question: string; type: string; options?: string[] }[];
+  answers?: Record<string, string>;
+}): Promise<InspoFormulaSuggestion> {
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
+
+  // Build Q&A transcript if available
+  let qaTranscript = "";
+  if (params.questions && params.answers) {
+    qaTranscript = params.questions
+      .map((q) => {
+        const answer = params.answers![q.id] || "Not answered";
+        return `Q: ${q.question}\nA: ${answer}`;
+      })
+      .join("\n\n");
+  }
+
+  let contextBlock = "";
+  if (params.clientSummary) {
+    contextBlock += `\nAI's initial read of their inspo photos: "${params.clientSummary}"`;
+  }
+  if (params.clientContext) {
+    const ctx = params.clientContext;
+    const parts: string[] = [];
+    if (ctx.firstName) parts.push(`Client: ${ctx.firstName}`);
+    if (ctx.colorDirection) parts.push(`Known color direction: ${ctx.colorDirection}`);
+    if (ctx.maintenanceLevel) parts.push(`Maintenance level: ${ctx.maintenanceLevel}`);
+    if (ctx.styleNotes) parts.push(`Style notes: ${ctx.styleNotes}`);
+    if (parts.length > 0) contextBlock += "\nClient profile: " + parts.join(" | ");
+  }
+
+  const intel = params.stylistIntelligence;
+  const userMessage = `Here's everything we know about this client and what they want:
+
+${contextBlock}
+
+STYLIST INTELLIGENCE (from inspo consultation):
+What was learned: ${intel.whatWasLearned}
+Appointment prep: ${intel.appointmentPrep}
+Key preferences: ${intel.keyPreferences.map(p => `- ${p}`).join("\n")}
+Potential challenges: ${intel.potentialChallenges.map(c => `- ${c}`).join("\n")}
+Product suggestions: ${intel.productSuggestions.map(s => `- ${s}`).join("\n")}
+
+${qaTranscript ? `CLIENT Q&A ANSWERS:\n${qaTranscript}` : ""}
+
+${params.formulaHistory ? `FORMULA HISTORY (what's been done before — THIS IS CRITICAL for understanding the client's current hair state):\n${params.formulaHistory}` : "No previous formula history available."}
+
+Based on all of this, suggest an actionable formula to achieve what the client wants.`;
+
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1500,
+    system: INSPO_FORMULA_PROMPT,
+    messages: [{ role: "user", content: userMessage }],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("No text response from Claude");
+  }
+
+  let jsonStr = textBlock.text.trim();
+  if (jsonStr.startsWith("```")) {
+    jsonStr = jsonStr
+      .replace(/^```(?:json)?\n?/, "")
+      .replace(/\n?```$/, "");
+  }
+
+  const result = JSON.parse(jsonStr) as InspoFormulaSuggestion;
+  result.based_on = "inspo";
+  return result;
+}
