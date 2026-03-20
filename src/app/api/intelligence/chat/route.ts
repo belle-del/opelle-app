@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { metisChat } from "@/lib/kernel";
 import { logActivity } from "@/lib/db/activity-log";
+import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 
 export const maxDuration = 30;
 
@@ -16,12 +17,9 @@ export async function POST(req: NextRequest) {
     // Use admin client for data lookups (bypasses RLS)
     const admin = createSupabaseAdminClient();
 
-    const { data: workspace } = await admin
-      .from("workspaces")
-      .select("id")
-      .eq("owner_id", user.id)
-      .single();
-    if (!workspace) return NextResponse.json({ error: "No workspace" }, { status: 403 });
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 403 });
+    const workspace = { id: workspaceId };
 
     const body = await req.json();
     const { message, conversationHistory = [], context = {} } = body;

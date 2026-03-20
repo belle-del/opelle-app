@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { toLocalISOString } from "@/lib/utils";
+import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 
 export async function GET() {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ starters: [] });
 
-  const { data: workspace } = await supabase
-    .from("workspaces")
-    .select("id")
-    .eq("owner_id", user.id)
-    .single();
-  if (!workspace) return NextResponse.json({ starters: [] });
+  const workspaceId = await getWorkspaceId(user.id);
+  if (!workspaceId) return NextResponse.json({ starters: [] });
 
   const starters: string[] = [];
 
@@ -23,7 +20,7 @@ export async function GET() {
   const { data: upcomingAppts } = await supabase
     .from("appointments")
     .select("id, start_at, clients(first_name), services(name)")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", workspaceId)
     .gte("start_at", toLocalISOString(now))
     .lte("start_at", toLocalISOString(tomorrow))
     .order("start_at", { ascending: true })
@@ -42,7 +39,7 @@ export async function GET() {
   const { data: lowStock } = await supabase
     .from("products")
     .select("id, brand, shade, quantity, low_stock_threshold")
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", workspaceId)
     .limit(100);
 
   const lowStockProducts = (lowStock || []).filter(
@@ -58,7 +55,7 @@ export async function GET() {
   const { data: overdueClients, count: overdueCount } = await supabase
     .from("clients")
     .select("id", { count: "exact", head: true })
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", workspaceId)
     .lt("last_visit_at", toLocalISOString(sixWeeksAgo));
 
   if (overdueCount && overdueCount > 0) {
@@ -69,7 +66,7 @@ export async function GET() {
   const { count: unreadCount } = await supabase
     .from("message_threads")
     .select("id", { count: "exact", head: true })
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", workspaceId)
     .gt("unread_stylist", 0);
 
   if (unreadCount && unreadCount > 0) {
@@ -80,7 +77,7 @@ export async function GET() {
   const { count: inspoCount } = await supabase
     .from("inspo_submissions")
     .select("id", { count: "exact", head: true })
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", workspaceId)
     .eq("requires_consult", true)
     .is("reviewed_at", null);
 
@@ -92,7 +89,7 @@ export async function GET() {
   const { count: rebookCount } = await supabase
     .from("rebook_requests")
     .select("id", { count: "exact", head: true })
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", workspaceId)
     .eq("status", "pending");
 
   if (rebookCount && rebookCount > 0) {
@@ -103,7 +100,7 @@ export async function GET() {
   const { count: taskCount } = await supabase
     .from("tasks")
     .select("id", { count: "exact", head: true })
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", workspaceId)
     .in("status", ["pending", "in_progress"]);
 
   if (taskCount && taskCount > 0) {

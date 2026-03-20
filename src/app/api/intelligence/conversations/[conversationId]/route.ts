@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 
 // GET: Get a single conversation with all its messages
 export async function GET(
@@ -15,19 +16,15 @@ export async function GET(
 
   const admin = createSupabaseAdminClient();
 
-  const { data: workspace } = await admin
-    .from("workspaces")
-    .select("id")
-    .eq("owner_id", user.id)
-    .single();
-  if (!workspace) return NextResponse.json({ error: "No workspace" }, { status: 403 });
+  const workspaceId = await getWorkspaceId(user.id);
+  if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 403 });
 
   // Verify conversation belongs to user
   const { data: conversation, error: convError } = await admin
     .from("mentis_conversations")
     .select("id, title, created_at, updated_at")
     .eq("id", conversationId)
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", workspaceId)
     .eq("user_id", user.id)
     .single();
 
@@ -67,19 +64,15 @@ export async function DELETE(
 
   const admin = createSupabaseAdminClient();
 
-  const { data: workspace } = await admin
-    .from("workspaces")
-    .select("id")
-    .eq("owner_id", user.id)
-    .single();
-  if (!workspace) return NextResponse.json({ error: "No workspace" }, { status: 403 });
+  const workspaceId = await getWorkspaceId(user.id);
+  if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 403 });
 
   // Verify ownership before deleting
   const { data: conversation } = await admin
     .from("mentis_conversations")
     .select("id")
     .eq("id", conversationId)
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", workspaceId)
     .eq("user_id", user.id)
     .single();
 
@@ -112,19 +105,15 @@ export async function PATCH(
 
   const admin = createSupabaseAdminClient();
 
-  const { data: workspace } = await admin
-    .from("workspaces")
-    .select("id")
-    .eq("owner_id", user.id)
-    .single();
-  if (!workspace) return NextResponse.json({ error: "No workspace" }, { status: 403 });
+  const workspaceId = await getWorkspaceId(user.id);
+  if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 403 });
 
   // Verify ownership
   const { data: conversation } = await admin
     .from("mentis_conversations")
     .select("id")
     .eq("id", conversationId)
-    .eq("workspace_id", workspace.id)
+    .eq("workspace_id", workspaceId)
     .eq("user_id", user.id)
     .single();
 
