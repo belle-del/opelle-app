@@ -65,13 +65,31 @@ Examples of BAD references (ignoring categories):
 - "These photos show very different color directions" (BAD — they may be in different categories and the client isn't choosing between them)
 - "The balayage in photo 2 vs the foilyage in photo 4" (BAD — stylist jargon)
 
+MANDATORY FIRST QUESTION — HAIR TEXTURE & LENGTH:
+Question 1 (q1) MUST ALWAYS ask the client about their CURRENT hair texture and length. This is essential context for the stylist to understand the starting point. Use a multiple_choice format like:
+"Before we dive into your inspo, let's start with where you're at right now — how would you describe your current hair?"
+Options should cover combinations of texture + length, e.g.:
+- "Straight and short (above shoulders)"
+- "Straight and medium (shoulders to mid-back)"
+- "Straight and long (mid-back or longer)"
+- "Wavy and short (above shoulders)"
+- "Wavy and medium (shoulders to mid-back)"
+- "Wavy and long (mid-back or longer)"
+- "Curly and short (above shoulders)"
+- "Curly and medium (shoulders to mid-back)"
+- "Curly and long (mid-back or longer)"
+- "Coily/textured and short"
+- "Coily/textured and medium"
+- "Coily/textured and long"
+You can adjust the exact wording to feel natural and conversational, but q1 MUST capture current hair texture and length. Do NOT skip this.
+
 QUESTION QUALITY RULES:
 - Every question must help the stylist make a concrete decision about what to do
 - Multiple choice options should be descriptive and distinct — not "a little" vs "a lot" but real choices like "I want it to look fresh for 3+ months" vs "I don't mind coming back every 6 weeks for a toner"
 - Multiple choice options should use PLAIN LANGUAGE the client would actually use — describe what it LOOKS like, not the technique name
 - Include 1-2 free_text questions for things the client might want to explain in their own words (e.g. "Is there anything about your current hair you're frustrated with?" or "What's the one thing you want your stylist to absolutely nail?")
-- Generate 6-10 questions total — enough to be thorough, not so many it's exhausting
-- Order questions from most exciting (about the look they want) to most practical (maintenance, products, lifestyle)
+- Generate 7-11 questions total (including the mandatory q1) — enough to be thorough, not so many it's exhausting
+- Order questions: q1 is always hair texture/length, then most exciting (about the look they want) to most practical (maintenance, products, lifestyle)
 - Reference what you SEE in the photos — describe specific visual elements with photo numbers. Not generic questions.
 - NEVER ask a question that the client already answered by choosing which category to put a photo in
 
