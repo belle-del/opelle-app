@@ -127,12 +127,13 @@ export function InspoUploader({ onSubmitted }: Props) {
     0
   );
 
-  function handleFiles(categoryId: string, files: FileList | null) {
+  async function handleFiles(categoryId: string, files: FileList | null) {
     if (!files) return;
     const current = photosByCategory[categoryId]?.files.length || 0;
     const newFiles = Array.from(files).slice(0, 3 - current);
     const validFiles = newFiles.filter((f) =>
-      ["image/jpeg", "image/png", "image/webp", "image/heic"].includes(f.type)
+      ["image/jpeg", "image/png", "image/webp", "image/heic"].includes(f.type) ||
+      f.name.toLowerCase().endsWith(".heic")
     );
     if (validFiles.length === 0) return;
 
@@ -142,27 +143,38 @@ export function InspoUploader({ onSubmitted }: Props) {
         ...prev,
         [categoryId]: {
           files: [...existing.files, ...validFiles],
-          previews: existing.previews, // updated below via FileReader
+          previews: existing.previews,
         },
       };
     });
 
-    validFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPhotosByCategory((prev) => {
-          const existing = prev[categoryId] || { files: [], previews: [] };
-          return {
-            ...prev,
-            [categoryId]: {
-              ...existing,
-              previews: [...existing.previews, e.target?.result as string],
-            },
-          };
-        });
-      };
-      reader.readAsDataURL(file);
-    });
+    // Generate previews — use object URLs for standard images, compress HEIC first
+    for (const file of validFiles) {
+      let previewUrl: string;
+
+      if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+        // HEIC can't be displayed directly — compress to JPEG first for preview
+        try {
+          const compressed = await compressImage(file);
+          previewUrl = URL.createObjectURL(compressed);
+        } catch {
+          previewUrl = URL.createObjectURL(file);
+        }
+      } else {
+        previewUrl = URL.createObjectURL(file);
+      }
+
+      setPhotosByCategory((prev) => {
+        const existing = prev[categoryId] || { files: [], previews: [] };
+        return {
+          ...prev,
+          [categoryId]: {
+            ...existing,
+            previews: [...existing.previews, previewUrl],
+          },
+        };
+      });
+    }
   }
 
   function removePhoto(categoryId: string, index: number) {
@@ -427,6 +439,18 @@ export function InspoUploader({ onSubmitted }: Props) {
                       src={src}
                       alt={`${cat.label} ${i + 1}`}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = "none";
+                        const parent = target.parentElement;
+                        if (parent && !parent.querySelector(".img-fallback")) {
+                          const fallback = document.createElement("div");
+                          fallback.className = "img-fallback";
+                          fallback.style.cssText = "width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#F5F0E8;font-size:20px;";
+                          fallback.textContent = cat.icon;
+                          parent.prepend(fallback);
+                        }
+                      }}
                     />
                     <button
                       onClick={() => removePhoto(cat.id, i)}
