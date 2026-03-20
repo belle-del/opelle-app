@@ -30,10 +30,10 @@ const ALL_WIDGET_TYPES: { type: WidgetType; label: string; defaultCols: number; 
 
 const DEFAULT_WIDGETS: Widget[] = [
   { id: "w1", type: "schedule", cols: 6, rows: 10 },
-  { id: "w2", type: "revenue", cols: 4, rows: 4 },
+  { id: "w2", type: "activity", cols: 4, rows: 5 },
   { id: "w3", type: "formulas", cols: 4, rows: 4 },
-  { id: "w4", type: "tasks", cols: 6, rows: 6 },
-  { id: "w5", type: "activity", cols: 4, rows: 5 },
+  { id: "w4", type: "inspoFlags", cols: 6, rows: 6 },
+  { id: "w5", type: "tasks", cols: 6, rows: 6 },
   { id: "w6", type: "inventory", cols: 10, rows: 4 },
 ];
 
@@ -511,46 +511,97 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
           </>
         );
       }
-      case "inspoFlags":
+      case "inspoFlags": {
+        const totalCount = inspoFlags.length + appointmentAlerts.length;
         return (
           <>
-            <WidgetHead title={`Inspo Flags${inspoFlags.length > 0 ? ` (${inspoFlags.length})` : ""}`} link="/app/formulas" />
-            <div style={{ padding: "8px 12px", height: "calc(100% - 37px)", overflow: "auto" }}>
-              {inspoFlags.length === 0 ? (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "8px", opacity: 0.6 }}>
+            <WidgetHead title={`Inspo Flags${totalCount > 0 ? ` (${totalCount})` : ""}`} link="/app/formulas" />
+            <div style={{ padding: "0", height: "calc(100% - 37px)", overflow: "auto" }}>
+              {/* Appointment time alerts */}
+              {appointmentAlerts.map((alert) => (
+                <Link key={alert.id} href={`/app/clients/${alert.clientId}`} style={{ textDecoration: "none", display: "block" }}>
+                  <div
+                    style={{
+                      padding: "10px 12px",
+                      borderBottom: "1px solid var(--stone-mid)",
+                      background: alert.severity === "critical" ? "rgba(74,26,46,0.10)" : "rgba(74,26,46,0.05)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--garnet)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                        <path d="M12 9v4" />
+                        <path d="M12 17h.01" />
+                      </svg>
+                      <span style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--garnet)" }}>
+                        Review Appointment Time
+                      </span>
+                      {alert.severity === "critical" && (
+                        <span style={{ padding: "1px 5px", borderRadius: "100px", fontSize: "7px", fontWeight: 700, background: "var(--garnet)", color: "var(--stone-lightest)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          Urgent
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: "11px", color: "var(--text-on-stone)", lineHeight: "1.4", marginBottom: "4px" }}>
+                      {alert.message}
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ padding: "1px 6px", borderRadius: "100px", fontSize: "8px", fontWeight: 600, background: "var(--garnet-wash, rgba(74,26,46,0.12))", color: "var(--garnet)" }}>
+                        {getClientName(clients, alert.clientId)}
+                      </span>
+                      <span style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>
+                        {alert.nextAppointment.serviceName} — {alert.nextAppointment.durationMins} min on{" "}
+                        {new Date(alert.nextAppointment.startAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+
+              {/* Inspo review flags */}
+              {inspoFlags.length > 0 && (
+                <div style={{ padding: "0 12px" }}>
+                  {inspoFlags.slice(0, 5).map((flag) => (
+                    <Link key={flag.id} href={`/app/clients/${flag.clientId}`} style={{ textDecoration: "none", display: "block" }}>
+                      <div style={{ display: "flex", gap: "8px", padding: "8px 0", borderBottom: "1px solid var(--stone-mid)", alignItems: "flex-start" }}>
+                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "var(--garnet-wash, rgba(74,26,46,0.12))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
+                          <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--garnet)" }}>
+                            {getClientName(clients, flag.clientId).charAt(0)}
+                          </span>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: "10px", fontWeight: 500, color: "var(--text-on-stone)" }}>
+                            {getClientName(clients, flag.clientId)}
+                          </p>
+                          {flag.stylistFlag && (
+                            <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {flag.stylistFlag}
+                            </p>
+                          )}
+                        </div>
+                        <span style={{ padding: "2px 6px", borderRadius: "100px", fontSize: "8px", fontWeight: 600, background: "var(--garnet-wash, rgba(74,26,46,0.12))", color: "var(--garnet)", flexShrink: 0, marginTop: "2px" }}>
+                          Review
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {/* Empty state */}
+              {totalCount === 0 && (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "8px", opacity: 0.6, padding: "12px" }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-on-stone-faint)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                     <polyline points="22 4 12 14.01 9 11.01" />
                   </svg>
-                  <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)", textAlign: "center" }}>No pending inspo flags</p>
+                  <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)", textAlign: "center" }}>No pending flags</p>
                 </div>
-              ) : inspoFlags.slice(0, 5).map((flag) => (
-                <Link key={flag.id} href={`/app/clients/${flag.clientId}`} style={{ textDecoration: "none", display: "block" }}>
-                  <div style={{ display: "flex", gap: "8px", padding: "6px 0", borderBottom: "1px solid var(--stone-mid)", alignItems: "flex-start" }}>
-                    <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "var(--garnet-wash, rgba(74,26,46,0.12))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
-                      <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--garnet)" }}>
-                        {getClientName(clients, flag.clientId).charAt(0)}
-                      </span>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: "10px", fontWeight: 500, color: "var(--text-on-stone)" }}>
-                        {getClientName(clients, flag.clientId)}
-                      </p>
-                      {flag.stylistFlag && (
-                        <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                          {flag.stylistFlag}
-                        </p>
-                      )}
-                    </div>
-                    <span style={{ padding: "2px 6px", borderRadius: "100px", fontSize: "8px", fontWeight: 600, background: "var(--garnet-wash, rgba(74,26,46,0.12))", color: "var(--garnet)", flexShrink: 0, marginTop: "2px" }}>
-                      Review
-                    </span>
-                  </div>
-                </Link>
-              ))}
+              )}
             </div>
           </>
         );
+      }
       case "requests": {
         const pendingReqs = rebookRequests.filter(r => r.status === "pending");
         return (
@@ -606,114 +657,6 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
           </button>
         </div>
       </div>
-
-      {/* Appointment Time Alerts — prominent banner above everything */}
-      {appointmentAlerts.length > 0 && (
-        <div style={{ marginBottom: "16px" }} className="space-y-3">
-          {appointmentAlerts.map((alert) => (
-            <Link key={alert.id} href={`/app/clients/${alert.clientId}`} style={{ textDecoration: "none", display: "block" }}>
-              <div
-                style={{
-                  borderRadius: "12px",
-                  padding: "16px 20px",
-                  background: alert.severity === "critical"
-                    ? "linear-gradient(135deg, rgba(74,26,46,0.18) 0%, rgba(74,26,46,0.08) 100%)"
-                    : "linear-gradient(135deg, rgba(74,26,46,0.12) 0%, rgba(74,26,46,0.05) 100%)",
-                  border: alert.severity === "critical"
-                    ? "2px solid var(--garnet)"
-                    : "1.5px solid rgba(74,26,46,0.3)",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "14px",
-                }}
-              >
-                <div
-                  style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "50%",
-                    background: "var(--garnet-wash, rgba(74,26,46,0.15))",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                    marginTop: "2px",
-                  }}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="var(--garnet)"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-                    <path d="M12 9v4" />
-                    <path d="M12 17h.01" />
-                  </svg>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                    <span
-                      style={{
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.1em",
-                        color: "var(--garnet)",
-                      }}
-                    >
-                      {alert.severity === "critical" ? "Review Appointment Time" : "Review Appointment Time"}
-                    </span>
-                    <span
-                      style={{
-                        padding: "2px 8px",
-                        borderRadius: "100px",
-                        fontSize: "9px",
-                        fontWeight: 600,
-                        background: "var(--garnet-wash, rgba(74,26,46,0.12))",
-                        color: "var(--garnet)",
-                      }}
-                    >
-                      {getClientName(clients, alert.clientId)}
-                    </span>
-                    {alert.severity === "critical" && (
-                      <span
-                        style={{
-                          padding: "2px 6px",
-                          borderRadius: "100px",
-                          fontSize: "8px",
-                          fontWeight: 700,
-                          background: "var(--garnet)",
-                          color: "var(--stone-lightest)",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.05em",
-                        }}
-                      >
-                        Urgent
-                      </span>
-                    )}
-                  </div>
-                  <p style={{ fontSize: "13px", color: "var(--text-on-stone)", lineHeight: "1.5", marginBottom: "6px" }}>
-                    {alert.message}
-                  </p>
-                  <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>
-                    Booked: {alert.nextAppointment.serviceName} — {alert.nextAppointment.durationMins} min on{" "}
-                    {new Date(alert.nextAppointment.startAt).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
 
       {/* Add Widget Menu */}
       {showAddMenu && (
