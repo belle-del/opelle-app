@@ -18,7 +18,10 @@ export async function POST(req: NextRequest) {
     const admin = createSupabaseAdminClient();
 
     const workspaceId = await getWorkspaceId(user.id);
-    if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 403 });
+    if (!workspaceId) {
+      console.error("METIS-DIAG: workspace lookup failed for user", user.id, user.email);
+      return NextResponse.json({ error: "METIS-ERR-WS: No workspace found for user " + user.id }, { status: 403 });
+    }
     const workspace = { id: workspaceId };
 
     const body = await req.json();
@@ -180,7 +183,8 @@ export async function POST(req: NextRequest) {
     });
 
     if (!result) {
-      return NextResponse.json({ error: "Metis unavailable" }, { status: 503 });
+      console.error("METIS-DIAG: kernel returned null for message:", message.substring(0, 50));
+      return NextResponse.json({ error: "METIS-ERR-KERNEL: Kernel returned null. Check KERNEL_ENABLED and KERNEL_API_KEY env vars on Vercel." }, { status: 503 });
     }
 
     // Log Metis chat to activity history

@@ -396,7 +396,8 @@ export default function MetisChat({
         });
 
         if (!res.ok) {
-          throw new Error(`Status ${res.status}`);
+          const errorBody = await res.text();
+          throw new Error(`METIS-ERR-${res.status}: ${errorBody}`);
         }
 
         const data = await res.json();
@@ -428,11 +429,12 @@ export default function MetisChat({
         if (data.suggestedFollowUps?.length) {
           setSuggestedFollowUps(data.suggestedFollowUps);
         }
-      } catch {
+      } catch (err) {
+        const errorDetail = err instanceof Error ? err.message : "Unknown error";
         const errorMsg: Message = {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: "Sorry, I couldn't reach the server. Please check your connection and try again.",
+          content: `Connection error: ${errorDetail}`,
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, errorMsg]);

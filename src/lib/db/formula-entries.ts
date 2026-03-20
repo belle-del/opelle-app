@@ -85,7 +85,10 @@ export async function createFormulaEntry(input: {
   serviceDate?: string;
 }): Promise<FormulaEntry | null> {
   const workspace = await getCurrentWorkspace();
-  if (!workspace) return null;
+  if (!workspace) {
+    console.error("FORMULA-DIAG: getCurrentWorkspace returned null");
+    return null;
+  }
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
@@ -101,7 +104,10 @@ export async function createFormulaEntry(input: {
     .select("*")
     .single();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    console.error("FORMULA-DIAG: insert error:", error?.message, error?.code, "workspace:", workspace.id);
+    return null;
+  }
 
   const entry = formulaEntryRowToModel(data as FormulaEntryRow);
 

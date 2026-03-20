@@ -303,10 +303,15 @@ async function kernelPost(
   timeoutMs = 10000
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any | null> {
-  if (!isKernelEnabled() || !getKernelKey()) return null;
+  if (!isKernelEnabled() || !getKernelKey()) {
+    console.error(`KERNEL-DIAG: disabled or no key. KERNEL_ENABLED=${process.env.KERNEL_ENABLED}, hasKey=${!!getKernelKey()}`);
+    return null;
+  }
 
   try {
-    const res = await fetch(`${getKernelUrl()}${path}`, {
+    const url = `${getKernelUrl()}${path}`;
+    console.log(`KERNEL-DIAG: POST ${url} (timeout: ${timeoutMs}ms)`);
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -316,9 +321,14 @@ async function kernelPost(
       signal: AbortSignal.timeout(timeoutMs),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`KERNEL-DIAG: POST ${path} failed ${res.status}: ${errText.substring(0, 200)}`);
+      return null;
+    }
     return await res.json();
-  } catch {
+  } catch (err) {
+    console.error(`KERNEL-DIAG: POST ${path} exception:`, err);
     return null;
   }
 }
