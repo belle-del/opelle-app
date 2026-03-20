@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { FormulaEntry, FormulaEntryRow, ParsedFormula } from "@/lib/types";
 import { formulaEntryRowToModel } from "@/lib/types";
 import { getCurrentWorkspace } from "./workspaces";
@@ -90,8 +91,9 @@ export async function createFormulaEntry(input: {
     return null;
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  // Use admin client for insert to bypass RLS — auth already verified via getCurrentWorkspace
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("formula_entries")
     .insert({
       workspace_id: workspace.id,

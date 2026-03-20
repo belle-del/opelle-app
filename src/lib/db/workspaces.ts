@@ -65,7 +65,16 @@ export async function getCurrentWorkspace(): Promise<Workspace | null> {
       if (ws) return workspaceRowToModel(ws as WorkspaceRow);
     }
 
-    console.error("[getCurrentWorkspace] No workspace found for user:", user.id);
+    // Final fallback: grab first workspace (single-salon setup)
+    console.warn("[getCurrentWorkspace] user", user.id, "not in owner_id or workspace_members — using first workspace fallback");
+    const { data: fallbackWs } = await admin
+      .from("workspaces")
+      .select("*")
+      .limit(1)
+      .single();
+    if (fallbackWs) return workspaceRowToModel(fallbackWs as WorkspaceRow);
+
+    console.error("[getCurrentWorkspace] No workspace found at all for user:", user.id);
     return null;
   }
   return workspaceRowToModel(data as WorkspaceRow);

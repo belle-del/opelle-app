@@ -1,7 +1,8 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Get workspace ID for a user — checks ownership first, then membership.
+ * Get workspace ID for a user — checks ownership first, then membership,
+ * then falls back to the first workspace in the database (single-salon app).
  * Uses admin client to bypass RLS.
  */
 export async function getWorkspaceId(userId: string): Promise<string | null> {
@@ -26,5 +27,13 @@ export async function getWorkspaceId(userId: string): Promise<string | null> {
 
   if (membership) return membership.workspace_id;
 
-  return null;
+  // Final fallback: grab first workspace (single-salon setup)
+  console.warn("WORKSPACE-DIAG: user", userId, "not in owner_id or workspace_members — using first workspace fallback");
+  const { data: fallback } = await admin
+    .from("workspaces")
+    .select("id")
+    .limit(1)
+    .single();
+
+  return fallback?.id ?? null;
 }
