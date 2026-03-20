@@ -514,14 +514,20 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
       case "inspoFlags":
         return (
           <>
-            <WidgetHead title="Inspo Flags" link="/app/formulas" />
-            <div style={{ padding: "8px 12px" }}>
+            <WidgetHead title={`Inspo Flags${inspoFlags.length > 0 ? ` (${inspoFlags.length})` : ""}`} link="/app/formulas" />
+            <div style={{ padding: "8px 12px", height: "calc(100% - 37px)", overflow: "auto" }}>
               {inspoFlags.length === 0 ? (
-                <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>No pending inspo flags</p>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "8px", opacity: 0.6 }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-on-stone-faint)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)", textAlign: "center" }}>No pending inspo flags</p>
+                </div>
               ) : inspoFlags.slice(0, 5).map((flag) => (
-                <Link key={flag.id} href={`/app/clients/${flag.clientId}`}>
+                <Link key={flag.id} href={`/app/clients/${flag.clientId}`} style={{ textDecoration: "none", display: "block" }}>
                   <div style={{ display: "flex", gap: "8px", padding: "6px 0", borderBottom: "1px solid var(--stone-mid)", alignItems: "flex-start" }}>
-                    <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "var(--garnet-wash)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
+                    <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "var(--garnet-wash, rgba(74,26,46,0.12))", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>
                       <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--garnet)" }}>
                         {getClientName(clients, flag.clientId).charAt(0)}
                       </span>
@@ -536,8 +542,8 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
                         </p>
                       )}
                     </div>
-                    <span style={{ padding: "2px 6px", borderRadius: "100px", fontSize: "8px", fontWeight: 600, background: "var(--garnet-wash)", color: "var(--garnet)", flexShrink: 0, marginTop: "2px" }}>
-                      Needs Review
+                    <span style={{ padding: "2px 6px", borderRadius: "100px", fontSize: "8px", fontWeight: 600, background: "var(--garnet-wash, rgba(74,26,46,0.12))", color: "var(--garnet)", flexShrink: 0, marginTop: "2px" }}>
+                      Review
                     </span>
                   </div>
                 </Link>
@@ -611,11 +617,11 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
                   borderRadius: "12px",
                   padding: "16px 20px",
                   background: alert.severity === "critical"
-                    ? "linear-gradient(135deg, rgba(139,38,53,0.2) 0%, rgba(139,38,53,0.1) 100%)"
-                    : "linear-gradient(135deg, rgba(180,130,20,0.15) 0%, rgba(180,130,20,0.08) 100%)",
+                    ? "linear-gradient(135deg, rgba(74,26,46,0.18) 0%, rgba(74,26,46,0.08) 100%)"
+                    : "linear-gradient(135deg, rgba(74,26,46,0.12) 0%, rgba(74,26,46,0.05) 100%)",
                   border: alert.severity === "critical"
-                    ? "2px solid rgba(139,38,53,0.5)"
-                    : "2px solid rgba(180,130,20,0.4)",
+                    ? "2px solid var(--garnet)"
+                    : "1.5px solid rgba(74,26,46,0.3)",
                   display: "flex",
                   alignItems: "flex-start",
                   gap: "14px",
@@ -626,9 +632,7 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
                     width: "36px",
                     height: "36px",
                     borderRadius: "50%",
-                    background: alert.severity === "critical"
-                      ? "rgba(139,38,53,0.3)"
-                      : "rgba(180,130,20,0.25)",
+                    background: "var(--garnet-wash, rgba(74,26,46,0.15))",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -641,7 +645,7 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
                     height="20"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke={alert.severity === "critical" ? "#8B2635" : "#B48214"}
+                    stroke="var(--garnet)"
                     strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -659,10 +663,10 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
                         fontWeight: 700,
                         textTransform: "uppercase",
                         letterSpacing: "0.1em",
-                        color: alert.severity === "critical" ? "#8B2635" : "#B48214",
+                        color: "var(--garnet)",
                       }}
                     >
-                      {alert.severity === "critical" ? "Appointment Time Conflict" : "Review Appointment Time"}
+                      {alert.severity === "critical" ? "Review Appointment Time" : "Review Appointment Time"}
                     </span>
                     <span
                       style={{
@@ -670,12 +674,28 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
                         borderRadius: "100px",
                         fontSize: "9px",
                         fontWeight: 600,
-                        background: alert.severity === "critical" ? "rgba(139,38,53,0.2)" : "rgba(180,130,20,0.15)",
-                        color: alert.severity === "critical" ? "#8B2635" : "#B48214",
+                        background: "var(--garnet-wash, rgba(74,26,46,0.12))",
+                        color: "var(--garnet)",
                       }}
                     >
                       {getClientName(clients, alert.clientId)}
                     </span>
+                    {alert.severity === "critical" && (
+                      <span
+                        style={{
+                          padding: "2px 6px",
+                          borderRadius: "100px",
+                          fontSize: "8px",
+                          fontWeight: 700,
+                          background: "var(--garnet)",
+                          color: "var(--stone-lightest)",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                        }}
+                      >
+                        Urgent
+                      </span>
+                    )}
                   </div>
                   <p style={{ fontSize: "13px", color: "var(--text-on-stone)", lineHeight: "1.5", marginBottom: "6px" }}>
                     {alert.message}

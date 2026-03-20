@@ -187,20 +187,18 @@ export function InspoTab({ clientId, clientName, submissions }: Props) {
                   className="mt-3 rounded-lg p-4"
                   style={{
                     background: analysis.appointmentFlag.severity === "critical"
-                      ? "rgba(139, 38, 53, 0.15)"
-                      : "rgba(180, 130, 20, 0.12)",
+                      ? "rgba(74, 26, 46, 0.18)"
+                      : "rgba(74, 26, 46, 0.10)",
                     border: analysis.appointmentFlag.severity === "critical"
-                      ? "2px solid #8B2635"
-                      : "2px solid #B48214",
+                      ? "2px solid var(--garnet)"
+                      : "1.5px solid rgba(74, 26, 46, 0.3)",
                   }}
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
                       style={{
-                        background: analysis.appointmentFlag.severity === "critical"
-                          ? "rgba(139, 38, 53, 0.25)"
-                          : "rgba(180, 130, 20, 0.2)",
+                        background: "var(--garnet-wash, rgba(74, 26, 46, 0.15))",
                       }}
                     >
                       <svg
@@ -208,7 +206,7 @@ export function InspoTab({ clientId, clientName, submissions }: Props) {
                         height="18"
                         viewBox="0 0 24 24"
                         fill="none"
-                        stroke={analysis.appointmentFlag.severity === "critical" ? "#8B2635" : "#B48214"}
+                        stroke="var(--garnet)"
                         strokeWidth="2.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -222,11 +220,11 @@ export function InspoTab({ clientId, clientName, submissions }: Props) {
                       <p
                         className="text-xs font-bold uppercase tracking-wide mb-1"
                         style={{
-                          color: analysis.appointmentFlag.severity === "critical" ? "#8B2635" : "#B48214",
+                          color: "var(--garnet)",
                         }}
                       >
                         {analysis.appointmentFlag.severity === "critical"
-                          ? "APPOINTMENT TIME CONFLICT"
+                          ? "REVIEW APPOINTMENT TIME"
                           : "REVIEW APPOINTMENT TIME"}
                       </p>
                       <p className="text-sm" style={{ lineHeight: "1.5" }}>
@@ -411,7 +409,7 @@ export function InspoTab({ clientId, clientName, submissions }: Props) {
                           <ul className="space-y-1">
                             {analysis.stylistIntelligence.potentialChallenges.map((ch, i) => (
                               <li key={i} className="text-sm flex items-start gap-2">
-                                <span style={{ color: "var(--garnet, #8B2635)", flexShrink: 0 }}>⚠</span>
+                                <span style={{ color: "var(--garnet)", flexShrink: 0 }}>⚠</span>
                                 {ch}
                               </li>
                             ))}
