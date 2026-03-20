@@ -80,6 +80,19 @@ interface InspoFlag {
   createdAt: string;
 }
 
+interface AppointmentAlert {
+  id: string;
+  clientId: string;
+  severity: "warning" | "critical";
+  message: string;
+  nextAppointment: {
+    serviceName: string;
+    durationMins: number;
+    startAt: string;
+  };
+  createdAt: string;
+}
+
 interface WidgetDashboardProps {
   appointments: Appointment[];
   formulas: Formula[];
@@ -87,6 +100,7 @@ interface WidgetDashboardProps {
   products: Product[];
   clients: Client[];
   inspoFlags?: InspoFlag[];
+  appointmentAlerts?: AppointmentAlert[];
   workingHours?: Record<string, { start: string; end: string; closed: boolean }>;
   rebookRequests?: Array<{ id: string; client_id: string; service_type: string | null; status: string; created_at: string }>;
 }
@@ -297,7 +311,7 @@ function StatWidget({ value, label, change, changePositive, link }: {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────
-export function WidgetDashboard({ appointments, formulas, tasks, products, clients, inspoFlags = [], workingHours, rebookRequests = [] }: WidgetDashboardProps) {
+export function WidgetDashboard({ appointments, formulas, tasks, products, clients, inspoFlags = [], appointmentAlerts = [], workingHours, rebookRequests = [] }: WidgetDashboardProps) {
   const [widgets, setWidgets] = useState<Widget[]>(DEFAULT_WIDGETS);
   const [editMode, setEditMode] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -586,6 +600,100 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
           </button>
         </div>
       </div>
+
+      {/* Appointment Time Alerts — prominent banner above everything */}
+      {appointmentAlerts.length > 0 && (
+        <div style={{ marginBottom: "16px" }} className="space-y-3">
+          {appointmentAlerts.map((alert) => (
+            <Link key={alert.id} href={`/app/clients/${alert.clientId}`} style={{ textDecoration: "none", display: "block" }}>
+              <div
+                style={{
+                  borderRadius: "12px",
+                  padding: "16px 20px",
+                  background: alert.severity === "critical"
+                    ? "linear-gradient(135deg, rgba(139,38,53,0.2) 0%, rgba(139,38,53,0.1) 100%)"
+                    : "linear-gradient(135deg, rgba(180,130,20,0.15) 0%, rgba(180,130,20,0.08) 100%)",
+                  border: alert.severity === "critical"
+                    ? "2px solid rgba(139,38,53,0.5)"
+                    : "2px solid rgba(180,130,20,0.4)",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "14px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "50%",
+                    background: alert.severity === "critical"
+                      ? "rgba(139,38,53,0.3)"
+                      : "rgba(180,130,20,0.25)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    marginTop: "2px",
+                  }}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={alert.severity === "critical" ? "#8B2635" : "#B48214"}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                    <path d="M12 9v4" />
+                    <path d="M12 17h.01" />
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                        color: alert.severity === "critical" ? "#8B2635" : "#B48214",
+                      }}
+                    >
+                      {alert.severity === "critical" ? "Appointment Time Conflict" : "Review Appointment Time"}
+                    </span>
+                    <span
+                      style={{
+                        padding: "2px 8px",
+                        borderRadius: "100px",
+                        fontSize: "9px",
+                        fontWeight: 600,
+                        background: alert.severity === "critical" ? "rgba(139,38,53,0.2)" : "rgba(180,130,20,0.15)",
+                        color: alert.severity === "critical" ? "#8B2635" : "#B48214",
+                      }}
+                    >
+                      {getClientName(clients, alert.clientId)}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: "13px", color: "var(--text-on-stone)", lineHeight: "1.5", marginBottom: "6px" }}>
+                    {alert.message}
+                  </p>
+                  <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>
+                    Booked: {alert.nextAppointment.serviceName} — {alert.nextAppointment.durationMins} min on{" "}
+                    {new Date(alert.nextAppointment.startAt).toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Add Widget Menu */}
       {showAddMenu && (

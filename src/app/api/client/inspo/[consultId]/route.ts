@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createClientNotification } from "@/lib/client-notifications";
-import { generateStylistIntelligence } from "@/lib/ai/inspo-analysis";
+import { generateStylistIntelligence, generateAppointmentFlag } from "@/lib/ai/inspo-analysis";
 import type { ClientUserRow, InspoAnalysis } from "@/lib/types";
 
 // Allow up to 60s for Claude intelligence generation
@@ -169,13 +169,48 @@ export async function POST(request: NextRequest, context: RouteContext) {
       formulaHistory: formulaHistory || null,
     });
 
-    // Save intelligence to the submission
+    // Check if next appointment time might not align with what was learned
+    let appointmentFlag: { severity: "warning" | "critical"; message: string; nextAppointment: { serviceName: string; durationMins: number; startAt: string } } | null = null;
+
+    try {
+      // Get next upcoming appointment for this client
+      const { data: nextAppts } = await admin
+        .from("appointments")
+        .select("*")
+        .eq("client_id", cu.client_id)
+        .eq("workspace_id", cu.workspace_id)
+        .in("status", ["scheduled", "pending_confirmation"])
+        .gte("start_at", new Date().toISOString())
+        .order("start_at", { ascending: true })
+        .limit(1);
+
+      const nextAppt = nextAppts?.[0];
+      if (nextAppt) {
+        // Use AI to check if appointment time aligns with the inspo
+        appointmentFlag = await generateAppointmentFlag({
+          intelligenceSummary: intelligence.whatWasLearned,
+          appointmentPrep: intelligence.appointmentPrep,
+          potentialChallenges: intelligence.potentialChallenges,
+          nextAppointment: {
+            serviceName: nextAppt.service_name,
+            durationMins: nextAppt.duration_mins,
+            startAt: nextAppt.start_at,
+          },
+        });
+      }
+    } catch (err) {
+      console.error("Appointment flag check failed:", err);
+      // Non-critical
+    }
+
+    // Save intelligence + flag to the submission
     await admin
       .from("inspo_submissions")
       .update({
         ai_analysis: {
           ...aiAnalysis,
           stylistIntelligence: intelligence,
+          ...(appointmentFlag ? { appointmentFlag } : {}),
         },
       })
       .eq("id", consultId);

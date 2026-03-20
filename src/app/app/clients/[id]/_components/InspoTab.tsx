@@ -14,6 +14,16 @@ type StylistIntelligence = {
   productSuggestions: string[];
 };
 
+type AppointmentFlag = {
+  severity: "warning" | "critical";
+  message: string;
+  nextAppointment: {
+    serviceName: string;
+    durationMins: number;
+    startAt: string;
+  };
+};
+
 type InspoSubmission = {
   id: string;
   client_notes: string | null;
@@ -25,6 +35,7 @@ type InspoSubmission = {
     generatedFormQuestions: { id: string; question: string; type: string; options?: string[] }[];
     demandSignals: { direction: string; productHint?: string; confidence: string }[];
     stylistIntelligence?: StylistIntelligence;
+    appointmentFlag?: AppointmentFlag;
   } | null;
   stylist_flag: string | null;
   feasibility: string | null;
@@ -169,6 +180,70 @@ export function InspoTab({ clientId, clientName, submissions }: Props) {
                   <path d="m6 9 6 6 6-6" />
                 </svg>
               </div>
+
+              {/* Appointment time mismatch flag — shown OUTSIDE expanded view so it's always visible */}
+              {analysis?.appointmentFlag && (
+                <div
+                  className="mt-3 rounded-lg p-4"
+                  style={{
+                    background: analysis.appointmentFlag.severity === "critical"
+                      ? "rgba(139, 38, 53, 0.15)"
+                      : "rgba(180, 130, 20, 0.12)",
+                    border: analysis.appointmentFlag.severity === "critical"
+                      ? "2px solid #8B2635"
+                      : "2px solid #B48214",
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{
+                        background: analysis.appointmentFlag.severity === "critical"
+                          ? "rgba(139, 38, 53, 0.25)"
+                          : "rgba(180, 130, 20, 0.2)",
+                      }}
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke={analysis.appointmentFlag.severity === "critical" ? "#8B2635" : "#B48214"}
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                        <path d="M12 9v4" />
+                        <path d="M12 17h.01" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p
+                        className="text-xs font-bold uppercase tracking-wide mb-1"
+                        style={{
+                          color: analysis.appointmentFlag.severity === "critical" ? "#8B2635" : "#B48214",
+                        }}
+                      >
+                        {analysis.appointmentFlag.severity === "critical"
+                          ? "APPOINTMENT TIME CONFLICT"
+                          : "REVIEW APPOINTMENT TIME"}
+                      </p>
+                      <p className="text-sm" style={{ lineHeight: "1.5" }}>
+                        {analysis.appointmentFlag.message}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1.5">
+                        Booked: {analysis.appointmentFlag.nextAppointment.serviceName} — {analysis.appointmentFlag.nextAppointment.durationMins} min on{" "}
+                        {new Date(analysis.appointmentFlag.nextAppointment.startAt).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Expanded view */}
               {isExpanded && (

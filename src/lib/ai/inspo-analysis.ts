@@ -305,3 +305,97 @@ Generate the stylist intelligence brief.`;
 
   return JSON.parse(jsonStr) as StylistIntelligence;
 }
+
+// --- Appointment Flag ---
+// After generating stylist intelligence, check if the client's next appointment
+// has enough time for what the inspo analysis suggests they want.
+
+export type AppointmentFlag = {
+  severity: "warning" | "critical";
+  message: string;
+  nextAppointment: {
+    serviceName: string;
+    durationMins: number;
+    startAt: string;
+  };
+} | null;
+
+export async function generateAppointmentFlag(params: {
+  intelligenceSummary: string;
+  appointmentPrep: string;
+  potentialChallenges: string[];
+  nextAppointment: {
+    serviceName: string;
+    durationMins: number;
+    startAt: string;
+  };
+}): Promise<AppointmentFlag> {
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
+
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 500,
+    system: `You are a salon scheduling assistant. A client just completed an inspo consultation where they described what they want for their next visit. You need to check if their next booked appointment has enough time for the work described.
+
+Think like an experienced stylist:
+- A simple toner or gloss: 60-90 min
+- Single-process color: 90-120 min
+- Partial highlights or balayage: 120-180 min
+- Full highlights: 180-240 min
+- Major color transformation (going significantly lighter, corrective color): 240-360+ min
+- Cut + color combo: add 30-45 min to the color time
+- If the inspo suggests a dramatic change from their current hair, err on the side of more time needed
+
+Only flag if there is a genuine mismatch. If the appointment seems reasonable for the work described, return null.
+
+OUTPUT FORMAT — respond with ONLY valid JSON, no markdown fences:
+If there IS a mismatch:
+{ "severity": "warning" or "critical", "message": "A clear 1-2 sentence explanation of why the timing might not work and what you'd suggest instead" }
+
+If there is NO mismatch (appointment time seems fine):
+null
+
+Use "critical" when the appointment is clearly way too short (e.g. 2-hour slot for a major transformation). Use "warning" when it might be tight but could work with perfect efficiency.`,
+    messages: [{
+      role: "user",
+      content: `Here's what the client wants based on their inspo consultation:
+
+WHAT WAS LEARNED:
+${params.intelligenceSummary}
+
+APPOINTMENT PREP NOTES:
+${params.appointmentPrep}
+
+POTENTIAL CHALLENGES:
+${params.potentialChallenges.map(c => `- ${c}`).join("\n")}
+
+THEIR NEXT BOOKED APPOINTMENT:
+- Service: ${params.nextAppointment.serviceName}
+- Duration: ${params.nextAppointment.durationMins} minutes
+- Date: ${new Date(params.nextAppointment.startAt).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+
+Is this appointment long enough for what they want? Only flag if there's a real timing concern.`,
+    }],
+  });
+
+  const textBlock = response.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") return null;
+
+  let jsonStr = textBlock.text.trim();
+  if (jsonStr.startsWith("```")) {
+    jsonStr = jsonStr
+      .replace(/^```(?:json)?\n?/, "")
+      .replace(/\n?```$/, "");
+  }
+
+  const result = JSON.parse(jsonStr);
+  if (!result) return null;
+
+  return {
+    severity: result.severity,
+    message: result.message,
+    nextAppointment: params.nextAppointment,
+  };
+}

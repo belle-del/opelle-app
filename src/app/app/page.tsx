@@ -3,20 +3,21 @@ import { listAppointments } from "@/lib/db/appointments";
 import { listFormulas } from "@/lib/db/formulas";
 import { getPendingTasks } from "@/lib/db/tasks";
 import { listProducts } from "@/lib/db/products";
-import { getUnreviewedInspoFlags } from "@/lib/db/inspo";
+import { getUnreviewedInspoFlags, getInspoAppointmentAlerts } from "@/lib/db/inspo";
 import { getCurrentWorkspace } from "@/lib/db/workspaces";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { WidgetDashboard } from "./_components/WidgetDashboard";
 import { MentisSuggestions } from "./_components/MentisSuggestions";
 
 export default async function DashboardPage() {
-  const [clients, allAppointments, formulas, tasks, products, inspoFlags, workspace] = await Promise.all([
+  const [clients, allAppointments, formulas, tasks, products, inspoFlags, appointmentAlerts, workspace] = await Promise.all([
     listClients(),
     listAppointments(),
     listFormulas(),
     getPendingTasks(),
     listProducts(),
     getUnreviewedInspoFlags(),
+    getInspoAppointmentAlerts(),
     getCurrentWorkspace(),
   ]);
 
@@ -48,6 +49,7 @@ export default async function DashboardPage() {
       products={products}
       clients={clients}
       inspoFlags={inspoFlags}
+      appointmentAlerts={appointmentAlerts}
       workingHours={workingHours}
       rebookRequests={rebookRequests}
     />
