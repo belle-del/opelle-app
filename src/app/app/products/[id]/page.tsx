@@ -158,17 +158,17 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Quantity</p>
                 <p className="text-2xl font-semibold">
                   <span
-                    className={
-                      product.quantity <= product.lowStockThreshold
-                        ? "text-amber-400"
-                        : "text-emerald-400"
-                    }
+                    style={{
+                      color: product.quantity <= product.lowStockThreshold
+                        ? "var(--brass-warm)"
+                        : "var(--brass)"
+                    }}
                   >
                     {product.quantity}
                   </span>
                 </p>
                 {product.quantity <= product.lowStockThreshold && product.quantity > 0 && (
-                  <p className="text-xs text-amber-400 mt-1">Low stock</p>
+                  <p className="text-xs mt-1" style={{ color: "var(--brass-warm)" }}>Low stock</p>
                 )}
                 {product.quantity === 0 && (
                   <p className="text-xs text-red-400 mt-1">Out of stock</p>
@@ -216,9 +216,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
       {/* Product Intelligence (Kernel-powered — only shows when data exists) */}
       {enrichment && (
-        <Card className="border-emerald-500/20 bg-emerald-500/5">
+        <Card className="" style={{ borderColor: "var(--stone-warm)", backgroundColor: "rgba(74,26,46,0.05)" }}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-emerald-400">
+            <CardTitle className="flex items-center gap-2" style={{ color: "var(--brass)" }}>
               <Sparkles className="w-5 h-5" />
               Product Intelligence
             </CardTitle>

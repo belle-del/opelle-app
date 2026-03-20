@@ -125,11 +125,12 @@ export function ProductSearch({ onSelect, placeholder, defaultValue }: ProductSe
                 </div>
                 {product.quantity > 0 && (
                   <span
-                    className={`text-xs font-medium ${
-                      product.quantity <= product.lowStockThreshold
-                        ? "text-amber-400"
-                        : "text-emerald-400"
-                    }`}
+                    className="text-xs font-medium"
+                    style={{
+                      color: product.quantity <= product.lowStockThreshold
+                        ? "var(--brass-warm)"
+                        : "var(--brass)"
+                    }}
                   >
                     Qty: {product.quantity}
                   </span>

@@ -177,9 +177,10 @@ export default function NewAppointmentPage() {
               </Select>
               {clients.length === 0 && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  <Link href="/app/clients/new" className="text-emerald-400 hover:underline">
+                  <Link href="/app/clients/new" className="hover:underline" style={{ color: "var(--brass)" }}>
                     Add a client first
                   </Link>
+
                 </p>
               )}
             </div>

@@ -128,7 +128,7 @@ export function CommsPrefsSection({ clientId }: CommsPrefsProps) {
               type="checkbox"
               checked={emailEnabled}
               onChange={(e) => setEmailEnabled(e.target.checked)}
-              className="h-4 w-4 rounded border-white/20 bg-transparent accent-emerald-500"
+              className="h-4 w-4 rounded border-white/20 bg-transparent accent-[var(--garnet)]"
             />
             <div>
               <p className="text-sm font-medium">Email Notifications</p>
@@ -147,7 +147,7 @@ export function CommsPrefsSection({ clientId }: CommsPrefsProps) {
               type="checkbox"
               checked={smsEnabled}
               onChange={(e) => setSmsEnabled(e.target.checked)}
-              className="h-4 w-4 rounded border-white/20 bg-transparent accent-emerald-500"
+              className="h-4 w-4 rounded border-white/20 bg-transparent accent-[var(--garnet)]"
             />
             <div>
               <p className="text-sm font-medium">SMS Notifications</p>
@@ -196,7 +196,7 @@ export function CommsPrefsSection({ clientId }: CommsPrefsProps) {
             {saving ? "Saving..." : "Save Preferences"}
           </Button>
           {saved && (
-            <span className="text-sm text-emerald-400">Saved!</span>
+            <span className="text-sm" style={{ color: "var(--brass)" }}>Saved!</span>
           )}
         </div>
       </CardContent>

@@ -145,7 +145,7 @@ export function AppointmentModal({
                     onChange={(e) =>
                       setFormData({ ...formData, clientId: e.target.value })
                     }
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--brass)]"
                   >
                     {clients.map((c) => (
                       <option key={c.id} value={c.id}>
@@ -224,21 +224,21 @@ export function AppointmentModal({
                 {/* Appointment Info */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-sm">
-                    <Calendar className="w-4 h-4 text-emerald-400" />
+                    <Calendar className="w-4 h-4" style={{ color: "var(--brass)" }} />
                     <span className="text-muted-foreground">Date & Time:</span>
                     <span className="font-medium">
                       {formatDateTime(appointment.startAt)}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <Clock className="w-4 h-4 text-emerald-400" />
+                    <Clock className="w-4 h-4" style={{ color: "var(--brass)" }} />
                     <span className="text-muted-foreground">Duration:</span>
                     <span className="font-medium">
                       {appointment.durationMins} minutes
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <FileText className="w-4 h-4 text-emerald-400" />
+                    <FileText className="w-4 h-4" style={{ color: "var(--brass)" }} />
                     <span className="text-muted-foreground">Service:</span>
                     <span className="font-medium">{appointment.serviceName}</span>
                   </div>

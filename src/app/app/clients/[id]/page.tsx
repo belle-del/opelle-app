@@ -209,9 +209,9 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
 
       {/* Stylist Intelligence (Kernel-powered — only shows when data exists) */}
       {kernelProfile && (
-        <Card className="border-emerald-500/20 bg-emerald-500/5">
+        <Card className="border-[rgba(74,26,46,0.15)]" style={{ backgroundColor: "rgba(74,26,46,0.05)" }}>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-emerald-400">
+            <CardTitle className="flex items-center gap-2" style={{ color: "var(--brass)" }}>
               <Sparkles className="w-5 h-5" />
               Stylist Intelligence
             </CardTitle>
@@ -256,8 +256,8 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
               </div>
             )}
             {kernelProfile.nextVisitSuggestion && (
-              <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3">
-                <p className="text-xs text-emerald-400 uppercase tracking-wide font-medium">Next Visit Suggestion</p>
+              <div className="rounded-lg p-3" style={{ backgroundColor: "rgba(74,26,46,0.05)", border: "1px solid rgba(74,26,46,0.15)" }}>
+                <p className="text-xs uppercase tracking-wide font-medium" style={{ color: "var(--brass)" }}>Next Visit Suggestion</p>
                 <p className="mt-1">{kernelProfile.nextVisitSuggestion}</p>
               </div>
             )}

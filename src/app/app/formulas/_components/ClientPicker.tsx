@@ -86,7 +86,7 @@ export function ClientPicker({ value, onChange }: ClientPickerProps) {
           }}
           onFocus={() => setIsOpen(true)}
           placeholder="Search for a client..."
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[rgba(74,26,46,0.3)] focus:border-[rgba(74,26,46,0.3)]"
         />
       )}
 

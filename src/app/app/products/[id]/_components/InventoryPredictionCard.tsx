@@ -39,9 +39,9 @@ export function InventoryPredictionCard({ productId }: InventoryPredictionCardPr
 
   const trendColor =
     prediction.usageTrend === "increasing"
-      ? "text-amber-400"
+      ? "text-[var(--brass-warm)]"
       : prediction.usageTrend === "decreasing"
-        ? "text-emerald-400"
+        ? "text-[var(--brass)]"
         : "text-muted-foreground";
 
   const isUrgent =
@@ -49,9 +49,9 @@ export function InventoryPredictionCard({ productId }: InventoryPredictionCardPr
     prediction.estimatedDaysUntilDepletion <= 14;
 
   return (
-    <Card className={isUrgent ? "border-amber-500/30 bg-amber-500/5" : ""} style={!isUrgent ? { borderColor: "rgba(143,173,200,0.2)", backgroundColor: "rgba(143,173,200,0.05)" } : undefined}>
+    <Card className="" style={isUrgent ? { borderColor: "var(--stone-warm)", backgroundColor: "var(--garnet-wash)" } : { borderColor: "rgba(143,173,200,0.2)", backgroundColor: "rgba(143,173,200,0.05)" }}>
       <CardHeader>
-        <CardTitle className={`flex items-center gap-2 ${isUrgent ? "text-amber-400" : ""}`} style={!isUrgent ? { color: "var(--blue)" } : undefined}>
+        <CardTitle className="flex items-center gap-2" style={{ color: isUrgent ? "var(--brass-warm)" : "var(--blue)" }}>
           {isUrgent ? <AlertTriangle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
           Inventory Prediction
           <span className="text-xs font-normal text-muted-foreground ml-auto">
@@ -65,7 +65,7 @@ export function InventoryPredictionCard({ productId }: InventoryPredictionCardPr
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
               Days Until Depletion
             </p>
-            <p className={`mt-1 text-lg font-semibold ${isUrgent ? "text-amber-400" : ""}`}>
+            <p className="mt-1 text-lg font-semibold" style={isUrgent ? { color: "var(--brass-warm)" } : undefined}>
               {prediction.estimatedDaysUntilDepletion != null
                 ? `~${prediction.estimatedDaysUntilDepletion} days`
                 : "Insufficient data"}

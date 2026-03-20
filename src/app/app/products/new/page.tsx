@@ -130,7 +130,7 @@ export default function NewProductPage() {
             )}
 
             {barcode && (
-              <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-400">
+              <div className="rounded-xl p-4 text-sm" style={{ backgroundColor: "rgba(74,26,46,0.05)", borderWidth: "1px", borderStyle: "solid", borderColor: "var(--stone-warm)", color: "var(--brass)" }}>
                 Barcode scanned: {barcode}
               </div>
             )}

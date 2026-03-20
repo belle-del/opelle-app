@@ -88,7 +88,7 @@ export function FormulaSuggestion({
               type="button"
               variant="secondary"
               onClick={() => setShowPicker(true)}
-              className="text-emerald-400 border-emerald-500/30"
+              className="border-[var(--stone-warm)]" style={{ color: "var(--brass)" }}
             >
               <Sparkles className="w-4 h-4 mr-2" />
               Suggest Formula
@@ -215,42 +215,110 @@ export function FormulaSuggestion({
       )}
 
       {suggestion && (
-        <Card className="border-emerald-500/20 bg-emerald-500/5">
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-emerald-400 flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
+        <div
+          style={{
+            border: "1px solid var(--stone-warm)",
+            borderRadius: "10px",
+            overflow: "hidden",
+            background: "var(--stone-card)",
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "10px 14px",
+              borderBottom: "1px solid var(--stone-mid)",
+              background: "rgba(74,26,46,0.04)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Sparkles size={14} style={{ color: "var(--brass)" }} />
+              <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-on-stone)", fontFamily: "'Fraunces', serif" }}>
                 Suggested Formula
-                <span className="text-xs text-muted-foreground font-normal">
-                  {suggestion.suggestion.based_on === "inspo"
-                    ? `(from inspo · ${suggestion.suggestion.inspo_date
-                        ? new Date(suggestion.suggestion.inspo_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                        : "recent"})`
-                    : suggestion.suggestion.based_on_visits
-                      ? `(based on ${suggestion.suggestion.based_on_visits} visits)`
-                      : ""}
-                </span>
-              </p>
-              <button
-                onClick={() => { setSuggestion(null); setActiveSource(null); }}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              </span>
+              <span style={{ fontSize: "10px", color: "var(--text-on-stone-faint)" }}>
+                {suggestion.suggestion.based_on === "inspo"
+                  ? `from inspo · ${suggestion.suggestion.inspo_date
+                      ? new Date(suggestion.suggestion.inspo_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      : "recent"}`
+                  : suggestion.suggestion.based_on_visits
+                    ? `based on ${suggestion.suggestion.based_on_visits} visits`
+                    : ""}
+              </span>
             </div>
-            <p className="text-sm whitespace-pre-wrap">
-              {suggestion.suggestion.suggested_formula}
-            </p>
-            <p className="text-xs text-muted-foreground">
+            <button
+              onClick={() => { setSuggestion(null); setActiveSource(null); }}
+              style={{ color: "var(--text-on-stone-faint)", cursor: "pointer", background: "none", border: "none", padding: "2px" }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* Formula steps */}
+          <div style={{ padding: "12px 14px" }}>
+            {suggestion.suggestion.suggested_formula
+              .split("\n")
+              .filter((line) => line.trim())
+              .map((line, i) => {
+                const isStep = /^(Bowl|Toner|Gloss|Application|Notes|Root|Mid|Ends|Step)/i.test(line.trim());
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      padding: "6px 0",
+                      borderBottom: i < suggestion.suggestion.suggested_formula.split("\n").filter(l => l.trim()).length - 1
+                        ? "1px solid var(--stone-mid)"
+                        : "none",
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    {isStep && (
+                      <span
+                        style={{
+                          fontSize: "9px",
+                          fontWeight: 700,
+                          color: "var(--brass)",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          minWidth: "fit-content",
+                          marginTop: "2px",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {line.split(":")[0].trim()}:
+                      </span>
+                    )}
+                    <span style={{ fontSize: "12px", color: "var(--text-on-stone)", lineHeight: "1.5" }}>
+                      {isStep ? line.split(":").slice(1).join(":").trim() : line.trim()}
+                    </span>
+                  </div>
+                );
+              })}
+          </div>
+
+          {/* Reasoning */}
+          <div
+            style={{
+              padding: "10px 14px",
+              borderTop: "1px solid var(--stone-mid)",
+              background: "rgba(74,26,46,0.03)",
+            }}
+          >
+            <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)", lineHeight: "1.5" }}>
               {suggestion.suggestion.reasoning}
             </p>
             {suggestion.suggestion.caution && (
-              <p className="text-xs text-amber-400">
-                Note: {suggestion.suggestion.caution}
+              <p style={{ fontSize: "11px", color: "var(--garnet)", marginTop: "6px", lineHeight: "1.5" }}>
+                ⚠ {suggestion.suggestion.caution}
               </p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -107,15 +107,16 @@ export function ClientMessagesTab({ threads, clientId }: Props) {
               <div
                 className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
                   msg.senderType === "stylist"
-                    ? "bg-emerald-600/20 text-foreground rounded-br-md"
+                    ? "text-foreground rounded-br-md"
                     : "bg-white/10 text-foreground rounded-bl-md"
                 }`}
+                style={msg.senderType === "stylist" ? { backgroundColor: "rgba(74,26,46,0.12)" } : undefined}
               >
                 <p className="whitespace-pre-wrap">{msg.body}</p>
                 <p
                   className={`text-[10px] mt-1 ${
                     msg.senderType === "stylist"
-                      ? "text-emerald-400/60 text-right"
+                      ? "text-right opacity-60"
                       : "text-muted-foreground/60"
                   }`}
                 >
@@ -159,13 +160,17 @@ export function ClientMessagesTab({ threads, clientId }: Props) {
             }
           }}
           placeholder="Type a message..."
-          className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/30"
+          className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:border-[var(--stone-warm)]"
+          style={{ "--tw-ring-color": "rgba(74,26,46,0.3)" } as React.CSSProperties}
           disabled={sending}
         />
         <button
           onClick={handleSend}
           disabled={!body.trim() || sending}
-          className="rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium text-white transition-colors flex items-center gap-2"
+          className="rounded-xl disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium text-white transition-colors flex items-center gap-2"
+          style={{ backgroundColor: "var(--garnet)", }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--brass-warm)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "var(--garnet)"; }}
         >
           <Send className="w-4 h-4" />
           {sending ? "Sending..." : "Send"}

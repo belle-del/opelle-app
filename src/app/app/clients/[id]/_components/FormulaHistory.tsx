@@ -16,7 +16,7 @@ interface FormulaHistoryProps {
 function BowlCard({ bowl }: { bowl: ParsedBowl }) {
   return (
     <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2">
-      <p className="text-sm font-medium text-emerald-400">{bowl.label}</p>
+      <p className="text-sm font-medium" style={{ color: "var(--brass)" }}>{bowl.label}</p>
       <div className="space-y-1">
         {bowl.products.map((p, i) => (
           <p key={i} className="text-sm">
@@ -85,8 +85,8 @@ function EntryCard({ entry }: { entry: FormulaEntry }) {
       )}
 
       {entry.generalNotes && (
-        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-          <p className="text-xs text-amber-400 uppercase tracking-wide mb-1">Notes</p>
+        <div className="rounded-lg p-3" style={{ border: "1px solid var(--stone-warm)", backgroundColor: "rgba(74,26,46,0.05)" }}>
+          <p className="text-xs uppercase tracking-wide mb-1" style={{ color: "var(--garnet)" }}>Notes</p>
           <p className="text-sm">{entry.generalNotes}</p>
         </div>
       )}
@@ -161,7 +161,7 @@ export function FormulaHistory({ clientId, entries, serviceTypes }: FormulaHisto
               >
                 <div className="flex items-center gap-3">
                   {isOpen ? (
-                    <ChevronDown className="w-4 h-4 text-emerald-400" />
+                    <ChevronDown className="w-4 h-4" style={{ color: "var(--brass)" }} />
                   ) : (
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   )}
