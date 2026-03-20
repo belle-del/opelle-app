@@ -293,6 +293,24 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         </Card>
       )}
 
+      {/* Formula History + Inspo Tabs */}
+      <Card>
+        <CardContent className="p-6">
+          <ClientDetailTabs
+            clientId={client.id}
+            clientName={getClientDisplayName(client)}
+            threads={threadsWithMessages}
+            appointments={appointments}
+          >
+            <FormulaHistory
+              clientId={client.id}
+              entries={formulaEntries}
+              serviceTypes={serviceTypes}
+            />
+          </ClientDetailTabs>
+        </CardContent>
+      </Card>
+
       {/* Appointments */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -343,24 +361,6 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Formula History + Inspo Tabs */}
-      <Card>
-        <CardContent className="p-6">
-          <ClientDetailTabs
-            clientId={client.id}
-            clientName={getClientDisplayName(client)}
-            threads={threadsWithMessages}
-            appointments={appointments}
-          >
-            <FormulaHistory
-              clientId={client.id}
-              entries={formulaEntries}
-              serviceTypes={serviceTypes}
-            />
-          </ClientDetailTabs>
         </CardContent>
       </Card>
     </div>
