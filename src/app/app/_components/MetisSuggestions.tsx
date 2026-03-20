@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Sparkles } from "lucide-react";
-import { MentisSuggestionCard } from "./MentisSuggestionCard";
+import { MetisSuggestionCard } from "./MetisSuggestionCard";
 
 interface Suggestion {
   id: string;
@@ -13,13 +13,13 @@ interface Suggestion {
   actionUrl?: string;
 }
 
-interface MentisSuggestionsProps {
+interface MetisSuggestionsProps {
   page: string;
   entityType?: "client" | "product" | "formula" | "dashboard";
   entityData?: Record<string, unknown>;
 }
 
-const DISMISSED_KEY = "mentis-dismissed";
+const DISMISSED_KEY = "metis-dismissed";
 
 function getDismissedSet(): Set<string> {
   try {
@@ -39,7 +39,7 @@ function saveDismissedSet(set: Set<string>) {
   }
 }
 
-export function MentisSuggestions({ page, entityType, entityData }: MentisSuggestionsProps) {
+export function MetisSuggestions({ page, entityType, entityData }: MetisSuggestionsProps) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
@@ -94,7 +94,7 @@ export function MentisSuggestions({ page, entityType, entityData }: MentisSugges
   return (
     <div style={{ marginBottom: "8px" }}>
       {proactive.map((s) => (
-        <MentisSuggestionCard key={s.id} suggestion={s} onDismiss={handleDismiss} />
+        <MetisSuggestionCard key={s.id} suggestion={s} onDismiss={handleDismiss} />
       ))}
 
       {quiet.length > 0 && !showQuiet && (
@@ -110,13 +110,13 @@ export function MentisSuggestions({ page, entityType, entityData }: MentisSugges
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            animation: "mentis-pulse 2s ease-in-out infinite",
+            animation: "metis-pulse 2s ease-in-out infinite",
           }}
           aria-label="Show more suggestions from Metis"
         >
           <Sparkles size={16} color="#C4AB70" />
           <style>{`
-            @keyframes mentis-pulse {
+            @keyframes metis-pulse {
               0%, 100% { opacity: 1; transform: scale(1); }
               50% { opacity: 0.6; transform: scale(1.1); }
             }
@@ -125,7 +125,7 @@ export function MentisSuggestions({ page, entityType, entityData }: MentisSugges
       )}
 
       {showQuiet && quiet.map((s) => (
-        <MentisSuggestionCard key={s.id} suggestion={s} onDismiss={handleDismiss} />
+        <MetisSuggestionCard key={s.id} suggestion={s} onDismiss={handleDismiss} />
       ))}
     </div>
   );

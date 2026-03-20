@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Plus, MessageSquare, Trash2, Menu, Sparkles } from "lucide-react";
-import MentisChat from "./_components/MentisChat";
+import MetisChat from "./_components/MetisChat";
 
 /* ─── Types ──────────────────────────────────────────────────────── */
 
@@ -43,7 +43,7 @@ function relativeDate(iso: string): string {
 
 /* ─── Page Component ─────────────────────────────────────────────── */
 
-export default function MentisPage() {
+export default function MetisPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -388,7 +388,7 @@ export default function MentisPage() {
 
         {/* Chat component */}
         <div style={{ flex: 1, overflow: "hidden" }}>
-          <MentisChat
+          <MetisChat
             fullPage
             conversationId={activeConversationId}
             onConversationCreated={handleConversationCreated}

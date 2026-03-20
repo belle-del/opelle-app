@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { AppNav } from "./_components/AppNav";
-import MentisFloatingChat from "./_components/MentisFloatingChat";
+import MetisFloatingChat from "./_components/MetisFloatingChat";
 
 export const metadata: Metadata = {
   title: "Practitioner Suite",
@@ -39,7 +39,7 @@ export default async function AppLayout({
         </div>
       </main>
 
-      <MentisFloatingChat />
+      <MetisFloatingChat />
     </div>
   );
 }

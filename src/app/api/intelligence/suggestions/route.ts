@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { mentisSuggestions } from "@/lib/kernel";
+import { metisSuggestions } from "@/lib/kernel";
 
 export async function POST(req: NextRequest) {
   const supabase = await createSupabaseServerClient();
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   const { page, entityType, entityData } = await req.json();
 
-  const result = await mentisSuggestions({ page, entityType, entityData });
+  const result = await metisSuggestions({ page, entityType, entityData });
   if (!result) {
     return NextResponse.json({ suggestions: [] });
   }

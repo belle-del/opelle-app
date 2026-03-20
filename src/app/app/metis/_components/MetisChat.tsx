@@ -12,7 +12,7 @@ interface Message {
   timestamp: string;
 }
 
-interface MentisChatContext {
+interface MetisChatContext {
   page?: string;
   clientId?: string;
   clientName?: string;
@@ -21,9 +21,9 @@ interface MentisChatContext {
   formulaId?: string;
 }
 
-interface MentisChatProps {
+interface MetisChatProps {
   fullPage?: boolean;
-  context?: MentisChatContext;
+  context?: MetisChatContext;
   conversationId?: string | null;
   onConversationCreated?: (id: string) => void;
   onMessageSent?: () => void;
@@ -174,12 +174,12 @@ function ThinkingDots() {
             borderRadius: "50%",
             backgroundColor: BRASS,
             display: "inline-block",
-            animation: `mentisPulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+            animation: `metisPulse 1.2s ease-in-out ${i * 0.2}s infinite`,
           }}
         />
       ))}
       <style>{`
-        @keyframes mentisPulse {
+        @keyframes metisPulse {
           0%, 60%, 100% { opacity: 0.25; transform: scale(0.8); }
           30% { opacity: 1; transform: scale(1.2); }
         }
@@ -261,13 +261,13 @@ async function loadConversationMessages(conversationId: string): Promise<Message
 
 /* ─── Main Component ─────────────────────────────────────────────── */
 
-export default function MentisChat({
+export default function MetisChat({
   fullPage = false,
   context,
   conversationId: externalConversationId = null,
   onConversationCreated,
   onMessageSent,
-}: MentisChatProps) {
+}: MetisChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -476,7 +476,7 @@ export default function MentisChat({
   return (
     <div style={containerStyle}>
       <style>{`
-        @keyframes mentisShimmer {
+        @keyframes metisShimmer {
           0%, 100% { opacity: 0.3; }
           50% { opacity: 0.6; }
         }
@@ -554,7 +554,7 @@ export default function MentisChat({
                         padding: "12px 14px",
                         height: "56px",
                         opacity: 0.5,
-                        animation: "mentisShimmer 1.5s ease-in-out infinite",
+                        animation: "metisShimmer 1.5s ease-in-out infinite",
                         animationDelay: `${i * 0.15}s`,
                       }}
                     />

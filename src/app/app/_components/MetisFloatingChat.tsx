@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Sparkles, X } from "lucide-react";
-import MentisChat from "@/app/app/mentis/_components/MentisChat";
+import MetisChat from "@/app/app/metis/_components/MetisChat";
 
-export default function MentisFloatingChat() {
+export default function MetisFloatingChat() {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
   const pathname = usePathname();
@@ -37,7 +37,7 @@ export default function MentisFloatingChat() {
   }, [open]);
 
   // Don't render on the full Metis page (must be after all hooks)
-  if (pathname === "/app/mentis") return null;
+  if (pathname === "/app/metis") return null;
 
   return (
     <>
@@ -115,7 +115,7 @@ export default function MentisFloatingChat() {
 
         {/* Panel Body */}
         <div style={{ flex: 1, overflow: "hidden" }}>
-          {open && <MentisChat fullPage={false} context={context} />}
+          {open && <MetisChat fullPage={false} context={context} />}
         </div>
       </div>
 

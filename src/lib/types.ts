@@ -1101,15 +1101,15 @@ export function clientStylistAssignmentRowToModel(row: ClientStylistAssignmentRo
 // Metis AI Copilot
 // ============================================================
 
-export type MentisMessage = {
+export type MetisMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: string;
-  context?: MentisContext;
+  context?: MetisContext;
 };
 
-export type MentisContext = {
+export type MetisContext = {
   page?: string;
   clientId?: string;
   clientName?: string;
@@ -1118,18 +1118,18 @@ export type MentisContext = {
   formulaId?: string;
 };
 
-export type MentisChatRequest = {
+export type MetisChatRequest = {
   message: string;
   conversationHistory: { role: "user" | "assistant"; content: string }[];
-  context?: MentisContext;
+  context?: MetisContext;
 };
 
-export type MentisChatResponse = {
+export type MetisChatResponse = {
   reply: string;
   suggestedFollowUps?: string[];
 };
 
-export type MentisSuggestion = {
+export type MetisSuggestion = {
   id: string;
   priority: "proactive" | "quiet";
   title: string;
@@ -1138,6 +1138,6 @@ export type MentisSuggestion = {
   actionUrl?: string;
 };
 
-export type MentisSuggestionsResult = {
-  suggestions: MentisSuggestion[];
+export type MetisSuggestionsResult = {
+  suggestions: MetisSuggestion[];
 };

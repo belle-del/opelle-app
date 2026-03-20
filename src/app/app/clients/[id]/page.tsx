@@ -15,7 +15,7 @@ import { ClientDetailTabs } from "./_components/ClientDetailTabs";
 import { getClientDisplayName } from "@/lib/types";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { ArrowLeft, Edit, Calendar, Plus, Sparkles } from "lucide-react";
-import { MentisSuggestions } from "../../_components/MentisSuggestions";
+import { MetisSuggestions } from "../../_components/MetisSuggestions";
 import { PortalAccountCard } from "./_components/PortalAccountCard";
 import { PortalPermissions } from "./_components/PortalPermissions";
 import { DEFAULT_CLIENT_PERMISSIONS } from "@/lib/types";
@@ -133,7 +133,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
       />
 
       {/* Metis Suggestions */}
-      <MentisSuggestions
+      <MetisSuggestions
         page="client-detail"
         entityType="client"
         entityData={{

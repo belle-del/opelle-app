@@ -23,7 +23,7 @@ const ENTITY_FILTERS = [
   { label: "Products", value: "product" },
   { label: "Appointments", value: "appointment" },
   { label: "Tasks", value: "task" },
-  { label: "Metis", value: "mentis" },
+  { label: "Metis", value: "metis" },
   { label: "Messages", value: "message" },
 ];
 
@@ -33,7 +33,7 @@ const ENTITY_ICONS: Record<string, React.ReactNode> = {
   product: <Package style={{ width: "14px", height: "14px" }} />,
   appointment: <Calendar style={{ width: "14px", height: "14px" }} />,
   task: <CheckSquare style={{ width: "14px", height: "14px" }} />,
-  mentis: <Sparkles style={{ width: "14px", height: "14px" }} />,
+  metis: <Sparkles style={{ width: "14px", height: "14px" }} />,
   message: <MessageSquare style={{ width: "14px", height: "14px" }} />,
 };
 
@@ -51,7 +51,7 @@ const ACTION_LABELS: Record<string, string> = {
   "task.created": "Task created",
   "task.updated": "Task updated",
   "task.deleted": "Task deleted",
-  "mentis.chat": "Metis conversation",
+  "metis.chat": "Metis conversation",
   "message.sent": "Message sent",
   "message.received": "Message received",
 };

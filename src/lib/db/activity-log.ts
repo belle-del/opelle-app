@@ -7,10 +7,10 @@ export type ActivityAction =
   | "product.created" | "product.updated" | "product.deleted"
   | "appointment.created" | "appointment.updated" | "appointment.deleted"
   | "task.created" | "task.updated" | "task.deleted"
-  | "mentis.chat"
+  | "metis.chat"
   | "message.sent" | "message.received";
 
-export type EntityType = "formula" | "client" | "product" | "appointment" | "task" | "mentis" | "message";
+export type EntityType = "formula" | "client" | "product" | "appointment" | "task" | "metis" | "message";
 
 async function resolveWorkspaceId(): Promise<string | undefined> {
   const workspace = await getCurrentWorkspace();

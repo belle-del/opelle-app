@@ -12,12 +12,12 @@ interface Suggestion {
   actionUrl?: string;
 }
 
-interface MentisSuggestionCardProps {
+interface MetisSuggestionCardProps {
   suggestion: Suggestion;
   onDismiss: (id: string) => void;
 }
 
-export function MentisSuggestionCard({ suggestion, onDismiss }: MentisSuggestionCardProps) {
+export function MetisSuggestionCard({ suggestion, onDismiss }: MetisSuggestionCardProps) {
   return (
     <div
       style={{

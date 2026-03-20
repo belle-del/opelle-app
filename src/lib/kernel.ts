@@ -2,7 +2,7 @@
 // All communication with MetisOS Opelle Kernel goes through this file.
 // If the Kernel is unavailable, all functions return null — never throw.
 
-import type { ClientPreferenceProfile, ProductEnrichment, InspoAnalysis, ParsedFormula, InventoryPredictionsResult, MentisChatResponse, MentisSuggestionsResult } from "@/lib/types";
+import type { ClientPreferenceProfile, ProductEnrichment, InspoAnalysis, ParsedFormula, InventoryPredictionsResult, MetisChatResponse, MetisSuggestionsResult } from "@/lib/types";
 
 function getKernelUrl() {
   return process.env.KERNEL_API_URL || process.env.KERNEL_WEBHOOK_URL || "https://opelle.dominusfoundry.com";
@@ -230,9 +230,9 @@ export async function parseFormula(
   }, 30000); // 30s timeout for AI parsing
 }
 
-// --- MENTIS AI COPILOT ---
+// --- METIS AI COPILOT ---
 
-export async function mentisChat(params: {
+export async function metisChat(params: {
   message: string;
   conversationHistory: { role: "user" | "assistant"; content: string }[];
   context?: {
@@ -250,7 +250,7 @@ export async function mentisChat(params: {
     matchedClient?: Record<string, unknown>;
     productInventory?: Record<string, unknown>;
   };
-}): Promise<MentisChatResponse | null> {
+}): Promise<MetisChatResponse | null> {
   const result = await kernelPost("/api/v1/ai/chat", {
     message: params.message,
     conversation_history: params.conversationHistory,
@@ -260,11 +260,11 @@ export async function mentisChat(params: {
   return result ?? null;
 }
 
-export async function mentisSuggestions(params: {
+export async function metisSuggestions(params: {
   page: string;
   entityType?: "client" | "product" | "formula" | "dashboard";
   entityData?: Record<string, unknown>;
-}): Promise<MentisSuggestionsResult | null> {
+}): Promise<MetisSuggestionsResult | null> {
   const result = await kernelPost("/api/v1/ai/suggestions", {
     page: params.page,
     entity_type: params.entityType,

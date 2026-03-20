@@ -7,7 +7,7 @@ import { getUnreviewedInspoFlags, getInspoAppointmentAlerts } from "@/lib/db/ins
 import { getCurrentWorkspace } from "@/lib/db/workspaces";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { WidgetDashboard } from "./_components/WidgetDashboard";
-import { MentisSuggestions } from "./_components/MentisSuggestions";
+import { MetisSuggestions } from "./_components/MetisSuggestions";
 
 export default async function DashboardPage() {
   const [clients, allAppointments, formulas, tasks, products, inspoFlags, appointmentAlerts, workspace] = await Promise.all([
@@ -41,7 +41,7 @@ export default async function DashboardPage() {
 
   return (
     <>
-    <MentisSuggestions page="dashboard" entityType="dashboard" />
+    <MetisSuggestions page="dashboard" entityType="dashboard" />
     <WidgetDashboard
       appointments={allAppointments}
       formulas={formulas}
