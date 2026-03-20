@@ -520,40 +520,21 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
               {/* Appointment time alerts */}
               {appointmentAlerts.map((alert) => (
                 <Link key={alert.id} href={`/app/clients/${alert.clientId}`} style={{ textDecoration: "none", display: "block" }}>
-                  <div
-                    style={{
-                      padding: "10px 12px",
-                      borderBottom: "1px solid var(--stone-mid)",
-                      background: alert.severity === "critical" ? "rgba(74,26,46,0.10)" : "rgba(74,26,46,0.05)",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--garnet)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-                        <path d="M12 9v4" />
-                        <path d="M12 17h.01" />
-                      </svg>
-                      <span style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--garnet)" }}>
-                        Review Appointment Time
-                      </span>
-                      {alert.severity === "critical" && (
-                        <span style={{ padding: "1px 5px", borderRadius: "100px", fontSize: "7px", fontWeight: 700, background: "var(--garnet)", color: "var(--stone-lightest)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                          Urgent
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ fontSize: "11px", color: "var(--text-on-stone)", lineHeight: "1.4", marginBottom: "4px" }}>
-                      {alert.message}
-                    </p>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <span style={{ padding: "1px 6px", borderRadius: "100px", fontSize: "8px", fontWeight: 600, background: "var(--garnet-wash, rgba(74,26,46,0.12))", color: "var(--garnet)" }}>
+                  <div style={{ display: "flex", gap: "8px", padding: "8px 12px", borderBottom: "1px solid var(--stone-mid)", alignItems: "center" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--garnet)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                      <path d="M12 9v4" />
+                      <path d="M12 17h.01" />
+                    </svg>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-on-stone)" }}>
                         {getClientName(clients, alert.clientId)}
-                      </span>
-                      <span style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>
-                        {alert.nextAppointment.serviceName} — {alert.nextAppointment.durationMins} min on{" "}
-                        {new Date(alert.nextAppointment.startAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                      </span>
+                      </p>
+                      <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>Appointment Flag</p>
                     </div>
+                    <span style={{ padding: "2px 6px", borderRadius: "100px", fontSize: "8px", fontWeight: 600, background: "var(--garnet-wash, rgba(74,26,46,0.12))", color: "var(--garnet)", flexShrink: 0 }}>
+                      Review
+                    </span>
                   </div>
                 </Link>
               ))}
