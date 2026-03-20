@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, MessageSquare, Trash2, Menu, Sparkles } from "lucide-react";
+import { Plus, MessageSquare, Trash2, Menu, Sparkles, BookOpen } from "lucide-react";
+import Link from "next/link";
 import MetisChat from "./_components/MetisChat";
 
 /* ─── Types ──────────────────────────────────────────────────────── */
@@ -232,6 +233,31 @@ export default function MetisPage() {
               <Plus size={16} />
               New Chat
             </button>
+          </div>
+
+          {/* Memory link */}
+          <div style={{ padding: "0 12px 8px" }}>
+            <Link
+              href="/app/metis/lessons"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                border: `1px solid ${STONE}`,
+                background: "transparent",
+                color: TEXT_PRIMARY,
+                fontSize: "12px",
+                textDecoration: "none",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = `${BRASS}10`; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              <BookOpen size={14} style={{ color: BRASS }} />
+              Metis Memory
+            </Link>
           </div>
 
           {/* Conversation list */}

@@ -1141,3 +1141,98 @@ export type MetisSuggestion = {
 export type MetisSuggestionsResult = {
   suggestions: MetisSuggestion[];
 };
+
+// ── Metis Feedback / Learning ──────────────────────────────
+
+export type MetisFeedbackSource = 'chat' | 'suggestion' | 'formula';
+export type MetisFeedbackType = 'correction' | 'note' | 'preference';
+export type MetisEntityType = 'client' | 'product' | 'formula' | 'general';
+export type MetisLessonCategory = 'client_preference' | 'product_knowledge' | 'technique' | 'business';
+
+export type MetisFeedback = {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  source: MetisFeedbackSource;
+  sourceId?: string;
+  originalContent?: string;
+  correction?: string;
+  feedbackType: MetisFeedbackType;
+  entityType?: MetisEntityType;
+  entityId?: string;
+  createdAt: string;
+};
+
+export type MetisLesson = {
+  id: string;
+  workspaceId: string;
+  lesson: string;
+  category: MetisLessonCategory;
+  entityType?: MetisEntityType;
+  entityId?: string;
+  sourceFeedbackIds: string[];
+  confidence: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MetisFeedbackRow = {
+  id: string;
+  workspace_id: string;
+  user_id: string;
+  source: string;
+  source_id: string | null;
+  original_content: string | null;
+  correction: string | null;
+  feedback_type: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  created_at: string;
+};
+
+export type MetisLessonRow = {
+  id: string;
+  workspace_id: string;
+  lesson: string;
+  category: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  source_feedback_ids: string[] | null;
+  confidence: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export function metisFeedbackRowToModel(row: MetisFeedbackRow): MetisFeedback {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    userId: row.user_id,
+    source: row.source as MetisFeedbackSource,
+    sourceId: row.source_id ?? undefined,
+    originalContent: row.original_content ?? undefined,
+    correction: row.correction ?? undefined,
+    feedbackType: row.feedback_type as MetisFeedbackType,
+    entityType: row.entity_type as MetisEntityType ?? undefined,
+    entityId: row.entity_id ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+export function metisLessonRowToModel(row: MetisLessonRow): MetisLesson {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    lesson: row.lesson,
+    category: row.category as MetisLessonCategory,
+    entityType: row.entity_type as MetisEntityType ?? undefined,
+    entityId: row.entity_id ?? undefined,
+    sourceFeedbackIds: row.source_feedback_ids ?? [],
+    confidence: row.confidence,
+    active: row.active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}

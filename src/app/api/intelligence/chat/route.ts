@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { metisChat } from "@/lib/kernel";
 import { logActivity } from "@/lib/db/activity-log";
 import { getWorkspaceId } from "@/lib/db/get-workspace-id";
+import { getActiveLessonsForContext } from "@/lib/db/metis-feedback";
 
 export const maxDuration = 30;
 
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) {
       console.error("METIS-DIAG: workspace lookup failed for user", user.id, user.email);
-      return NextResponse.json({ error: "METIS-ERR-WS: No workspace found for user " + user.id }, { status: 403 });
+      return NextResponse.json({ error: "No workspace" }, { status: 403 });
     }
     const workspace = { id: workspaceId };
 
@@ -169,10 +170,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Fetch active lessons to include in context
+    const matchedEntityType = clientContext ? "client" : productContext ? "product" : undefined;
+    const matchedEntityId = clientContext ? (clientContext.clientId as string) : undefined;
+    const activeLessons = await getActiveLessonsForContext(
+      matchedEntityType as "client" | "product" | "formula" | "general" | undefined,
+      matchedEntityId
+    );
+
     const fullWorkspaceContext = {
       ...workspaceContext,
       ...(clientContext ? { matchedClient: clientContext } : {}),
       ...(productContext ? { productInventory: productContext } : {}),
+      ...(activeLessons.length > 0 ? { stylistLessons: activeLessons } : {}),
     };
 
     const result = await metisChat({
@@ -184,7 +194,7 @@ export async function POST(req: NextRequest) {
 
     if (!result) {
       console.error("METIS-DIAG: kernel returned null for message:", message.substring(0, 50));
-      return NextResponse.json({ error: "METIS-ERR-KERNEL: Kernel returned null. Check KERNEL_ENABLED and KERNEL_API_KEY env vars on Vercel." }, { status: 503 });
+      return NextResponse.json({ error: "Metis unavailable" }, { status: 503 });
     }
 
     // Log Metis chat to activity history

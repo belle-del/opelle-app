@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent, type ChangeEvent } from "react";
-import { Sparkles, Send } from "lucide-react";
+import { Sparkles, Send, MessageSquarePlus, Check, X } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────── */
 
@@ -276,11 +276,44 @@ export default function MetisChat({
   const [startersLoading, setStartersLoading] = useState(true);
   const [activeConvId, setActiveConvId] = useState<string | null>(externalConversationId ?? null);
   const [loadingConversation, setLoadingConversation] = useState(false);
+  const [feedbackMsgId, setFeedbackMsgId] = useState<string | null>(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackType, setFeedbackType] = useState<"correction" | "note" | "preference">("note");
+  const [feedbackSending, setFeedbackSending] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState<Set<string>>(new Set());
   const hasAutoTitled = useRef(false);
   const justCreatedConvId = useRef<string | null>(null); // Track self-created conversations
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /* Submit feedback on a message */
+  const submitFeedback = useCallback(async (messageId: string, originalContent: string) => {
+    if (!feedbackText.trim() || feedbackSending) return;
+    setFeedbackSending(true);
+    try {
+      await fetch("/api/intelligence/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "chat",
+          sourceId: messageId,
+          originalContent,
+          correction: feedbackText.trim(),
+          feedbackType,
+          entityType: context?.clientId ? "client" : "general",
+          entityId: context?.clientId || undefined,
+        }),
+      });
+      setFeedbackSent((prev) => new Set(prev).add(messageId));
+      setFeedbackMsgId(null);
+      setFeedbackText("");
+    } catch {
+      // Silently fail
+    } finally {
+      setFeedbackSending(false);
+    }
+  }, [feedbackText, feedbackType, feedbackSending, context]);
 
   /* Track external conversationId changes */
   useEffect(() => {
@@ -396,8 +429,7 @@ export default function MetisChat({
         });
 
         if (!res.ok) {
-          const errorBody = await res.text();
-          throw new Error(`METIS-ERR-${res.status}: ${errorBody}`);
+          throw new Error("Server error");
         }
 
         const data = await res.json();
@@ -429,12 +461,11 @@ export default function MetisChat({
         if (data.suggestedFollowUps?.length) {
           setSuggestedFollowUps(data.suggestedFollowUps);
         }
-      } catch (err) {
-        const errorDetail = err instanceof Error ? err.message : "Unknown error";
+      } catch {
         const errorMsg: Message = {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: `Connection error: ${errorDetail}`,
+          content: "Sorry, I couldn't reach the server. Please check your connection and try again.",
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, errorMsg]);
@@ -647,18 +678,162 @@ export default function MetisChat({
               >
                 {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
               </div>
-              <p
+              <div
                 style={{
-                  fontSize: "9px",
-                  color: TEXT_FAINT,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
                   marginTop: "4px",
-                  textAlign: msg.role === "user" ? "right" : "left",
                   paddingLeft: msg.role === "assistant" ? "4px" : 0,
                   paddingRight: msg.role === "user" ? "4px" : 0,
                 }}
               >
-                {formatTimestamp(msg.timestamp)}
-              </p>
+                <p
+                  style={{
+                    fontSize: "9px",
+                    color: TEXT_FAINT,
+                    textAlign: msg.role === "user" ? "right" : "left",
+                    flex: msg.role === "user" ? 1 : undefined,
+                  }}
+                >
+                  {formatTimestamp(msg.timestamp)}
+                </p>
+                {msg.role === "assistant" && !feedbackSent.has(msg.id) && (
+                  <button
+                    onClick={() => {
+                      setFeedbackMsgId(feedbackMsgId === msg.id ? null : msg.id);
+                      setFeedbackText("");
+                      setFeedbackType("note");
+                    }}
+                    title="Teach Metis"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "1px 4px",
+                      borderRadius: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "3px",
+                      fontSize: "9px",
+                      color: feedbackMsgId === msg.id ? BRASS : TEXT_FAINT,
+                      transition: "color 0.15s",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = BRASS; }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = feedbackMsgId === msg.id ? BRASS : TEXT_FAINT;
+                    }}
+                  >
+                    <MessageSquarePlus size={10} />
+                    <span>Teach</span>
+                  </button>
+                )}
+                {msg.role === "assistant" && feedbackSent.has(msg.id) && (
+                  <span style={{ fontSize: "9px", color: BRASS, display: "flex", alignItems: "center", gap: "2px" }}>
+                    <Check size={10} /> Noted
+                  </span>
+                )}
+              </div>
+
+              {/* Inline feedback form */}
+              {msg.role === "assistant" && feedbackMsgId === msg.id && (
+                <div
+                  style={{
+                    marginTop: "6px",
+                    background: "#FAFAF5",
+                    border: `1px solid ${STONE}`,
+                    borderRadius: "8px",
+                    padding: "8px 10px",
+                  }}
+                >
+                  <div style={{ display: "flex", gap: "4px", marginBottom: "6px" }}>
+                    {(["correction", "note", "preference"] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setFeedbackType(t)}
+                        style={{
+                          background: feedbackType === t ? BRASS : "transparent",
+                          color: feedbackType === t ? "#fff" : TEXT_PRIMARY,
+                          border: `1px solid ${feedbackType === t ? BRASS : STONE}`,
+                          borderRadius: "12px",
+                          padding: "2px 8px",
+                          fontSize: "9px",
+                          cursor: "pointer",
+                          textTransform: "capitalize",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: "4px", alignItems: "flex-end" }}>
+                    <textarea
+                      value={feedbackText}
+                      onChange={(e) => setFeedbackText(e.target.value)}
+                      placeholder={
+                        feedbackType === "correction"
+                          ? "What should Metis have said instead?"
+                          : feedbackType === "preference"
+                            ? "What preference should Metis remember?"
+                            : "Add a note for Metis to learn from..."
+                      }
+                      rows={2}
+                      style={{
+                        flex: 1,
+                        border: `1px solid ${STONE}`,
+                        borderRadius: "6px",
+                        padding: "6px 8px",
+                        fontSize: "11px",
+                        fontFamily: "'DM Sans', sans-serif",
+                        resize: "none",
+                        outline: "none",
+                        background: CREAM,
+                        color: TEXT_PRIMARY,
+                      }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = BRASS; }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = STONE; }}
+                    />
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                      <button
+                        onClick={() => submitFeedback(msg.id, msg.content)}
+                        disabled={!feedbackText.trim() || feedbackSending}
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          borderRadius: "6px",
+                          border: "none",
+                          background: feedbackText.trim() && !feedbackSending ? BRASS : STONE,
+                          color: feedbackText.trim() && !feedbackSending ? "#fff" : TEXT_FAINT,
+                          cursor: feedbackText.trim() && !feedbackSending ? "pointer" : "default",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Check size={12} />
+                      </button>
+                      <button
+                        onClick={() => { setFeedbackMsgId(null); setFeedbackText(""); }}
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          borderRadius: "6px",
+                          border: `1px solid ${STONE}`,
+                          background: "transparent",
+                          color: TEXT_FAINT,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}

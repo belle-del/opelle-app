@@ -7,7 +7,7 @@ export type ActivityAction =
   | "product.created" | "product.updated" | "product.deleted"
   | "appointment.created" | "appointment.updated" | "appointment.deleted"
   | "task.created" | "task.updated" | "task.deleted"
-  | "metis.chat"
+  | "metis.chat" | "metis.feedback" | "metis.lesson_created" | "metis.lessons_distilled"
   | "message.sent" | "message.received";
 
 export type EntityType = "formula" | "client" | "product" | "appointment" | "task" | "metis" | "message";

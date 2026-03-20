@@ -260,6 +260,31 @@ export async function metisChat(params: {
   return result ?? null;
 }
 
+export async function distillLessons(params: {
+  feedbackItems: {
+    source: string;
+    originalContent: string | null;
+    correction: string | null;
+    feedbackType: string;
+    entityType: string | null;
+    entityId: string | null;
+  }[];
+  existingLessons: string[];
+}): Promise<{
+  lessons: {
+    lesson: string;
+    category: string;
+    entityType: string | null;
+    entityId: string | null;
+    confidence: number;
+  }[];
+} | null> {
+  return kernelPost("/api/v1/ai/distill-lessons", {
+    feedback_items: params.feedbackItems,
+    existing_lessons: params.existingLessons,
+  }, 30000);
+}
+
 export async function metisSuggestions(params: {
   page: string;
   entityType?: "client" | "product" | "formula" | "dashboard";
@@ -310,7 +335,6 @@ async function kernelPost(
 
   try {
     const url = `${getKernelUrl()}${path}`;
-    console.log(`KERNEL-DIAG: POST ${url} (timeout: ${timeoutMs}ms)`);
     const res = await fetch(url, {
       method: "POST",
       headers: {
