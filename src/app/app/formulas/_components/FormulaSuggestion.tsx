@@ -97,7 +97,8 @@ export function FormulaSuggestion({
       }
 
       if (!res.ok) {
-        setError("Could not get suggestion right now.");
+        const errData = await res.json().catch(() => null);
+        setError(errData?.error || "Could not get suggestion right now.");
         return;
       }
 

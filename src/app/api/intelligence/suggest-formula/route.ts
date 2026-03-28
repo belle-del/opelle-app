@@ -41,8 +41,8 @@ export async function POST(request: Request) {
 
     if (!suggestion) {
       return NextResponse.json(
-        { error: "No suggestion available" },
-        { status: 404 }
+        { error: "Metis couldn't generate a suggestion right now — the intelligence service may be temporarily unavailable." },
+        { status: 503 }
       );
     }
 
