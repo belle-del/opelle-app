@@ -279,6 +279,7 @@ export default function MetisChat({
   const [feedbackMsgId, setFeedbackMsgId] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackType, setFeedbackType] = useState<"correction" | "note" | "preference">("note");
+  const [feedbackScope, setFeedbackScope] = useState<"client" | "general">("general");
   const [feedbackSending, setFeedbackSending] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState<Set<string>>(new Set());
   const hasAutoTitled = useRef(false);
@@ -301,8 +302,8 @@ export default function MetisChat({
           originalContent,
           correction: feedbackText.trim(),
           feedbackType,
-          entityType: context?.clientId ? "client" : "general",
-          entityId: context?.clientId || undefined,
+          entityType: feedbackScope === "client" && context?.clientId ? "client" : "general",
+          entityId: feedbackScope === "client" && context?.clientId ? context.clientId : undefined,
         }),
       });
       setFeedbackSent((prev) => new Set(prev).add(messageId));
@@ -704,6 +705,7 @@ export default function MetisChat({
                       setFeedbackMsgId(feedbackMsgId === msg.id ? null : msg.id);
                       setFeedbackText("");
                       setFeedbackType("note");
+                      setFeedbackScope(context?.clientId ? "client" : "general");
                     }}
                     title="Teach Metis"
                     style={{
@@ -746,7 +748,7 @@ export default function MetisChat({
                     padding: "8px 10px",
                   }}
                 >
-                  <div style={{ display: "flex", gap: "4px", marginBottom: "6px" }}>
+                  <div style={{ display: "flex", gap: "4px", marginBottom: "6px", flexWrap: "wrap" }}>
                     {(["correction", "note", "preference"] as const).map((t) => (
                       <button
                         key={t}
@@ -764,6 +766,25 @@ export default function MetisChat({
                         }}
                       >
                         {t}
+                      </button>
+                    ))}
+                    <span style={{ width: "1px", background: STONE, margin: "0 2px" }} />
+                    {(["general", ...(context?.clientId ? ["client" as const] : [])] as const).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setFeedbackScope(s as "client" | "general")}
+                        style={{
+                          background: feedbackScope === s ? GARNET : "transparent",
+                          color: feedbackScope === s ? "#fff" : TEXT_FAINT,
+                          border: `1px solid ${feedbackScope === s ? GARNET : STONE}`,
+                          borderRadius: "12px",
+                          padding: "2px 8px",
+                          fontSize: "9px",
+                          cursor: "pointer",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        {s === "general" ? "For everyone" : "For this client"}
                       </button>
                     ))}
                   </div>

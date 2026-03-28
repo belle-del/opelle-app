@@ -1147,7 +1147,7 @@ export type MetisSuggestionsResult = {
 export type MetisFeedbackSource = 'chat' | 'suggestion' | 'formula';
 export type MetisFeedbackType = 'correction' | 'note' | 'preference';
 export type MetisEntityType = 'client' | 'product' | 'formula' | 'general';
-export type MetisLessonCategory = 'client_preference' | 'product_knowledge' | 'technique' | 'business';
+export type MetisLessonCategory = 'client_preference' | 'product_knowledge' | 'technique' | 'business' | 'preference' | 'general';
 
 export type MetisFeedback = {
   id: string;

@@ -42,6 +42,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   product_knowledge: "Product Knowledge",
   technique: "Technique",
   business: "Business",
+  preference: "Preference",
+  general: "General",
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -49,6 +51,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   product_knowledge: "#C4AB70",
   technique: "#6B2737",
   business: "#555744",
+  preference: "#8FADC8",
+  general: "#8A8A7A",
 };
 
 /* ─── Page ───────────────────────────────────────────────────────── */

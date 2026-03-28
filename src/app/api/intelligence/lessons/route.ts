@@ -61,35 +61,65 @@ export async function POST(req: NextRequest) {
       }
 
       const existingLessons = await listLessons({ activeOnly: true });
-      const existingTexts = existingLessons.map((l) => l.lesson);
+      const existingTexts = existingLessons.map((l) => l.lesson.toLowerCase());
 
-      const result = await distillLessons({
-        feedbackItems: feedback.map((f) => ({
-          source: f.source,
-          originalContent: f.originalContent ?? null,
-          correction: f.correction ?? null,
-          feedbackType: f.feedbackType,
-          entityType: f.entityType ?? null,
-          entityId: f.entityId ?? null,
-        })),
-        existingLessons: existingTexts,
-      });
+      // Try AI-powered distillation via kernel, fall back to direct creation
+      let created: Awaited<ReturnType<typeof createLesson>>[] = [];
+      try {
+        const result = await distillLessons({
+          feedbackItems: feedback.map((f) => ({
+            source: f.source,
+            originalContent: f.originalContent ?? null,
+            correction: f.correction ?? null,
+            feedbackType: f.feedbackType,
+            entityType: f.entityType ?? null,
+            entityId: f.entityId ?? null,
+          })),
+          existingLessons: existingLessons.map((l) => l.lesson),
+        });
 
-      if (!result?.lessons?.length) {
-        return NextResponse.json({ lessons: [], message: "No new lessons distilled" });
+        if (result?.lessons?.length) {
+          for (const l of result.lessons) {
+            const lesson = await createLesson({
+              lesson: l.lesson,
+              category: l.category as MetisLessonCategory,
+              entityType: l.entityType as MetisEntityType | undefined,
+              entityId: l.entityId ?? undefined,
+              confidence: l.confidence,
+              sourceFeedbackIds: feedback.map((f) => f.id),
+            });
+            if (lesson) created.push(lesson);
+          }
+        }
+      } catch {
+        // Kernel unavailable — fall back to creating lessons directly from feedback
+        const categoryMap: Record<string, MetisLessonCategory> = {
+          correction: "technique",
+          preference: "preference",
+          note: "general",
+        };
+
+        for (const f of feedback) {
+          const text = f.correction?.trim();
+          if (!text || existingTexts.includes(text.toLowerCase())) continue;
+
+          const lesson = await createLesson({
+            lesson: text,
+            category: categoryMap[f.feedbackType] || "general",
+            entityType: (f.entityType as MetisEntityType) || undefined,
+            entityId: f.entityId || undefined,
+            sourceFeedbackIds: [f.id],
+            confidence: 0.8,
+          });
+          if (lesson) {
+            created.push(lesson);
+            existingTexts.push(text.toLowerCase());
+          }
+        }
       }
 
-      const created = [];
-      for (const l of result.lessons) {
-        const lesson = await createLesson({
-          lesson: l.lesson,
-          category: l.category as MetisLessonCategory,
-          entityType: l.entityType as MetisEntityType | undefined,
-          entityId: l.entityId ?? undefined,
-          confidence: l.confidence,
-          sourceFeedbackIds: feedback.map((f) => f.id),
-        });
-        if (lesson) created.push(lesson);
+      if (created.length === 0) {
+        return NextResponse.json({ lessons: [], message: "No new lessons distilled" });
       }
 
       await logActivity("metis.lessons_distilled", "metis", "distill", `${created.length} lessons created`);

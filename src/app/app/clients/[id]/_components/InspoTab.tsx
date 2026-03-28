@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MessageSquarePlus, Check, X } from "lucide-react";
 
 type StylistIntelligence = {
   whatWasLearned: string;
@@ -79,6 +80,39 @@ function formatDate(dateStr: string) {
 export function InspoTab({ clientId, clientName, submissions }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [markingReviewed, setMarkingReviewed] = useState<string | null>(null);
+  const [teachOpenId, setTeachOpenId] = useState<string | null>(null);
+  const [teachText, setTeachText] = useState("");
+  const [teachType, setTeachType] = useState<"correction" | "note" | "preference">("note");
+  const [teachScope, setTeachScope] = useState<"client" | "general">("client");
+  const [teachSending, setTeachSending] = useState(false);
+  const [teachSentIds, setTeachSentIds] = useState<Set<string>>(new Set());
+
+  async function submitInspoTeach(subId: string, originalContent: string) {
+    if (!teachText.trim() || teachSending) return;
+    setTeachSending(true);
+    try {
+      await fetch("/api/intelligence/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "inspo_intelligence",
+          sourceId: subId,
+          originalContent,
+          correction: teachText.trim(),
+          feedbackType: teachType,
+          entityType: teachScope === "client" ? "client" : "general",
+          entityId: teachScope === "client" ? clientId : undefined,
+        }),
+      });
+      setTeachSentIds((prev) => new Set(prev).add(subId));
+      setTeachOpenId(null);
+      setTeachText("");
+    } catch {
+      // silently fail
+    } finally {
+      setTeachSending(false);
+    }
+  }
 
   async function handleMarkReviewed(submissionId: string) {
     setMarkingReviewed(submissionId);
@@ -433,6 +467,145 @@ export function InspoTab({ clientId, clientName, submissions }: Props) {
                           </ul>
                         </div>
                       )}
+
+                      {/* Teach Metis button */}
+                      <div style={{ borderTop: "1px solid rgba(196, 171, 112, 0.2)", paddingTop: "8px" }}>
+                        {!teachSentIds.has(sub.id) ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setTeachOpenId(teachOpenId === sub.id ? null : sub.id);
+                              setTeachText("");
+                              setTeachType("note");
+                              setTeachScope("client");
+                            }}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              fontSize: "10px",
+                              color: teachOpenId === sub.id ? "var(--brass, #C4AB70)" : "var(--text-on-stone-faint, #8A8A7A)",
+                              padding: "2px 4px",
+                              borderRadius: "4px",
+                              transition: "color 0.15s",
+                            }}
+                          >
+                            <MessageSquarePlus size={12} />
+                            Teach Metis
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: "10px", color: "var(--brass, #C4AB70)", display: "flex", alignItems: "center", gap: "3px" }}>
+                            <Check size={12} /> Noted
+                          </span>
+                        )}
+                        {teachOpenId === sub.id && (
+                          <div style={{ marginTop: "8px" }} onClick={(e) => e.stopPropagation()}>
+                            <div style={{ display: "flex", gap: "4px", marginBottom: "6px", flexWrap: "wrap" }}>
+                              {(["correction", "note", "preference"] as const).map((t) => (
+                                <button
+                                  key={t}
+                                  onClick={() => setTeachType(t)}
+                                  style={{
+                                    background: teachType === t ? "var(--brass, #C4AB70)" : "transparent",
+                                    color: teachType === t ? "#fff" : "var(--text-on-stone, #3A3A32)",
+                                    border: `1px solid ${teachType === t ? "var(--brass, #C4AB70)" : "rgba(196,171,112,0.3)"}`,
+                                    borderRadius: "12px",
+                                    padding: "2px 8px",
+                                    fontSize: "9px",
+                                    cursor: "pointer",
+                                    textTransform: "capitalize",
+                                  }}
+                                >
+                                  {t}
+                                </button>
+                              ))}
+                              <span style={{ width: "1px", background: "rgba(196,171,112,0.3)", margin: "0 2px" }} />
+                              {(["client", "general"] as const).map((s) => (
+                                <button
+                                  key={s}
+                                  onClick={() => setTeachScope(s)}
+                                  style={{
+                                    background: teachScope === s ? "var(--garnet, #6B2737)" : "transparent",
+                                    color: teachScope === s ? "#fff" : "var(--text-on-stone-faint, #8A8A7A)",
+                                    border: `1px solid ${teachScope === s ? "var(--garnet, #6B2737)" : "rgba(196,171,112,0.3)"}`,
+                                    borderRadius: "12px",
+                                    padding: "2px 8px",
+                                    fontSize: "9px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {s === "general" ? "For everyone" : "For this client"}
+                                </button>
+                              ))}
+                            </div>
+                            <div style={{ display: "flex", gap: "4px", alignItems: "flex-end" }}>
+                              <textarea
+                                value={teachText}
+                                onChange={(e) => setTeachText(e.target.value)}
+                                placeholder={
+                                  teachType === "correction"
+                                    ? "What should Metis know differently?"
+                                    : teachType === "preference"
+                                      ? "What preference should Metis remember?"
+                                      : "Add a note for Metis to learn from..."
+                                }
+                                rows={2}
+                                style={{
+                                  flex: 1,
+                                  border: "1px solid rgba(196,171,112,0.3)",
+                                  borderRadius: "6px",
+                                  padding: "6px 8px",
+                                  fontSize: "11px",
+                                  fontFamily: "'DM Sans', sans-serif",
+                                  resize: "none",
+                                  outline: "none",
+                                  background: "rgba(196,171,112,0.05)",
+                                }}
+                              />
+                              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                <button
+                                  onClick={() => submitInspoTeach(sub.id, JSON.stringify(analysis.stylistIntelligence))}
+                                  disabled={!teachText.trim() || teachSending}
+                                  style={{
+                                    width: "24px",
+                                    height: "24px",
+                                    borderRadius: "6px",
+                                    border: "none",
+                                    background: teachText.trim() && !teachSending ? "var(--brass, #C4AB70)" : "rgba(196,171,112,0.3)",
+                                    color: teachText.trim() && !teachSending ? "#fff" : "var(--text-on-stone-faint, #8A8A7A)",
+                                    cursor: teachText.trim() && !teachSending ? "pointer" : "default",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  <Check size={12} />
+                                </button>
+                                <button
+                                  onClick={() => { setTeachOpenId(null); setTeachText(""); }}
+                                  style={{
+                                    width: "24px",
+                                    height: "24px",
+                                    borderRadius: "6px",
+                                    border: "1px solid rgba(196,171,112,0.3)",
+                                    background: "transparent",
+                                    color: "var(--text-on-stone-faint, #8A8A7A)",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 

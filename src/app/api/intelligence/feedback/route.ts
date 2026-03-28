@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createFeedback, listFeedback, deleteFeedback } from "@/lib/db/metis-feedback";
+import { createFeedback, listFeedback, deleteFeedback, createLesson } from "@/lib/db/metis-feedback";
 import { logActivity } from "@/lib/db/activity-log";
-import type { MetisFeedbackSource, MetisFeedbackType, MetisEntityType } from "@/lib/types";
+import type { MetisFeedbackSource, MetisFeedbackType, MetisEntityType, MetisLessonCategory } from "@/lib/types";
 
 export async function GET(req: NextRequest) {
   try {
@@ -59,7 +59,23 @@ export async function POST(req: NextRequest) {
 
     await logActivity("metis.feedback", "metis", feedback.id, `${feedbackType}: ${(correction || "").substring(0, 50)}`);
 
-    return NextResponse.json({ feedback });
+    // Auto-create a lesson from this feedback
+    const categoryMap: Record<string, MetisLessonCategory> = {
+      correction: "technique",
+      preference: "preference",
+      note: "general",
+    };
+    const lessonCategory = categoryMap[feedbackType] || "general";
+    const lesson = await createLesson({
+      lesson: correction || "",
+      category: lessonCategory,
+      entityType: entityType || undefined,
+      entityId: entityId || undefined,
+      sourceFeedbackIds: [feedback.id],
+      confidence: 0.9,
+    });
+
+    return NextResponse.json({ feedback, lesson });
   } catch (err) {
     console.error("Feedback create error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

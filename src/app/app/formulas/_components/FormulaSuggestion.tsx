@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Loader2, X, Image, History } from "lucide-react";
+import { Sparkles, Loader2, X, Image, History, MessageSquarePlus, Check } from "lucide-react";
 
 interface FormulaSuggestionProps {
   clientId: string;
@@ -32,6 +32,38 @@ export function FormulaSuggestion({
   const [error, setError] = useState<string | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [activeSource, setActiveSource] = useState<SuggestionSource>(null);
+  const [teachOpen, setTeachOpen] = useState(false);
+  const [teachText, setTeachText] = useState("");
+  const [teachType, setTeachType] = useState<"correction" | "note" | "preference">("note");
+  const [teachScope, setTeachScope] = useState<"client" | "general">("client");
+  const [teachSending, setTeachSending] = useState(false);
+  const [teachSent, setTeachSent] = useState(false);
+
+  async function submitTeach() {
+    if (!teachText.trim() || teachSending) return;
+    setTeachSending(true);
+    try {
+      await fetch("/api/intelligence/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "formula_suggestion",
+          originalContent: suggestion?.suggestion?.suggested_formula || "",
+          correction: teachText.trim(),
+          feedbackType: teachType,
+          entityType: teachScope === "client" ? "client" : "general",
+          entityId: teachScope === "client" ? clientId : undefined,
+        }),
+      });
+      setTeachSent(true);
+      setTeachOpen(false);
+      setTeachText("");
+    } catch {
+      // silently fail
+    } finally {
+      setTeachSending(false);
+    }
+  }
 
   async function fetchSuggestion(source: SuggestionSource) {
     if (!clientId || !source) return;
@@ -318,6 +350,145 @@ export function FormulaSuggestion({
               </p>
             )}
           </div>
+
+          {/* Teach Metis */}
+          <div style={{ padding: "8px 14px", borderTop: "1px solid var(--stone-mid)", display: "flex", alignItems: "center", gap: "8px" }}>
+            {!teachSent ? (
+              <button
+                type="button"
+                onClick={() => setTeachOpen(!teachOpen)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  fontSize: "10px",
+                  color: teachOpen ? "var(--brass)" : "var(--text-on-stone-faint)",
+                  padding: "2px 4px",
+                  borderRadius: "4px",
+                  transition: "color 0.15s",
+                }}
+              >
+                <MessageSquarePlus size={12} />
+                Teach Metis
+              </button>
+            ) : (
+              <span style={{ fontSize: "10px", color: "var(--brass)", display: "flex", alignItems: "center", gap: "3px" }}>
+                <Check size={12} /> Noted
+              </span>
+            )}
+          </div>
+          {teachOpen && (
+            <div style={{ padding: "0 14px 12px" }}>
+              <div style={{ display: "flex", gap: "4px", marginBottom: "6px", flexWrap: "wrap" }}>
+                {(["correction", "note", "preference"] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTeachType(t)}
+                    style={{
+                      background: teachType === t ? "var(--brass)" : "transparent",
+                      color: teachType === t ? "#fff" : "var(--text-on-stone)",
+                      border: `1px solid ${teachType === t ? "var(--brass)" : "var(--stone-warm)"}`,
+                      borderRadius: "12px",
+                      padding: "2px 8px",
+                      fontSize: "9px",
+                      cursor: "pointer",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {t}
+                  </button>
+                ))}
+                <span style={{ width: "1px", background: "var(--stone-warm)", margin: "0 2px" }} />
+                {(["client", "general"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setTeachScope(s)}
+                    style={{
+                      background: teachScope === s ? "var(--garnet)" : "transparent",
+                      color: teachScope === s ? "#fff" : "var(--text-on-stone-faint)",
+                      border: `1px solid ${teachScope === s ? "var(--garnet)" : "var(--stone-warm)"}`,
+                      borderRadius: "12px",
+                      padding: "2px 8px",
+                      fontSize: "9px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {s === "general" ? "For everyone" : "For this client"}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: "4px", alignItems: "flex-end" }}>
+                <textarea
+                  value={teachText}
+                  onChange={(e) => setTeachText(e.target.value)}
+                  placeholder={
+                    teachType === "correction"
+                      ? "What should Metis have suggested instead?"
+                      : teachType === "preference"
+                        ? "What preference should Metis remember?"
+                        : "Add a note for Metis to learn from..."
+                  }
+                  rows={2}
+                  style={{
+                    flex: 1,
+                    border: "1px solid var(--stone-warm)",
+                    borderRadius: "6px",
+                    padding: "6px 8px",
+                    fontSize: "11px",
+                    fontFamily: "'DM Sans', sans-serif",
+                    resize: "none",
+                    outline: "none",
+                    background: "var(--stone-light, #FAFAF5)",
+                    color: "var(--text-on-stone)",
+                  }}
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                  <button
+                    type="button"
+                    onClick={submitTeach}
+                    disabled={!teachText.trim() || teachSending}
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "6px",
+                      border: "none",
+                      background: teachText.trim() && !teachSending ? "var(--brass)" : "var(--stone-warm)",
+                      color: teachText.trim() && !teachSending ? "#fff" : "var(--text-on-stone-faint)",
+                      cursor: teachText.trim() && !teachSending ? "pointer" : "default",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Check size={12} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setTeachOpen(false); setTeachText(""); }}
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "6px",
+                      border: "1px solid var(--stone-warm)",
+                      background: "transparent",
+                      color: "var(--text-on-stone-faint)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
