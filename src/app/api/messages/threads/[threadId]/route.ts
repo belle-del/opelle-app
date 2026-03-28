@@ -24,12 +24,12 @@ export async function GET(
       .single();
 
     if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 404 });
+      return NextResponse.json({ thread: null, messages: [] });
     }
 
     const thread = await getThread(threadId);
     if (!thread || thread.workspaceId !== workspace.id) {
-      return NextResponse.json({ error: "Thread not found" }, { status: 404 });
+      return NextResponse.json({ thread: null, messages: [] });
     }
 
     const messages = await getMessagesForThread(threadId);
