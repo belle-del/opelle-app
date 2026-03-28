@@ -1,5 +1,5 @@
 // src/lib/ai/inspo-analysis.ts
-// All AI calls routed through the Kernel (Immutable Rule 2)
+// All AI calls routed through the Kernel — no direct SDK usage.
 
 import {
   analyzeInspoVision,
@@ -49,7 +49,7 @@ export type InspoFormulaSuggestion = {
   based_on: "inspo";
 };
 
-// ── Analyze inspo photos (vision) ───────────────────────────
+// ── 1. Analyze inspo photos (vision) ─────────────────────────
 
 export async function analyzeInspoDirect(params: {
   images: { mediaType: string; base64: string }[];
@@ -74,10 +74,9 @@ export async function analyzeInspoDirect(params: {
   });
 
   if (!result || !result.questions) {
-    throw new Error("Kernel returned no analysis");
+    throw new Error("Kernel returned no analysis — ensure the kernel has the /api/v1/ai/analyze-inspo-vision endpoint");
   }
 
-  // Normalize IDs and types
   result.questions = result.questions.map((q, i) => ({
     ...q,
     id: q.id || `q${i + 1}`,
@@ -87,7 +86,7 @@ export async function analyzeInspoDirect(params: {
   return result as InspoAnalysisResult;
 }
 
-// ── Generate stylist intelligence brief ─────────────────────
+// ── 2. Stylist intelligence brief ────────────────────────────
 
 export async function generateStylistIntelligence(params: {
   questions: { id: string; question: string; type: string; options?: string[] }[];
@@ -112,13 +111,13 @@ export async function generateStylistIntelligence(params: {
   });
 
   if (!result) {
-    throw new Error("Kernel returned no intelligence");
+    throw new Error("Kernel returned no intelligence — ensure the kernel has the /api/v1/ai/stylist-intelligence endpoint");
   }
 
   return result;
 }
 
-// ── Generate appointment time flag ──────────────────────────
+// ── 3. Appointment time flag ─────────────────────────────────
 
 export async function generateAppointmentFlag(params: {
   intelligenceSummary: string;
@@ -146,7 +145,7 @@ export async function generateAppointmentFlag(params: {
   };
 }
 
-// ── Generate formula suggestion from inspo ──────────────────
+// ── 4. Formula suggestion from inspo ─────────────────────────
 
 export async function generateInspoFormulaSuggestion(params: {
   stylistIntelligence: StylistIntelligence;
@@ -171,7 +170,7 @@ export async function generateInspoFormulaSuggestion(params: {
   });
 
   if (!result) {
-    throw new Error("Kernel returned no formula suggestion");
+    throw new Error("Kernel returned no formula suggestion — ensure the kernel has the /api/v1/ai/inspo-formula-suggestion endpoint");
   }
 
   result.based_on = "inspo";
