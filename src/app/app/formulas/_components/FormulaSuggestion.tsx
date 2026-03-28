@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Loader2, X, Image, History, MessageSquarePlus, Check } from "lucide-react";
+import { Sparkles, Loader2, X, Image, History, MessageSquarePlus, Check, Send } from "lucide-react";
 
 interface FormulaSuggestionProps {
   clientId: string;
@@ -38,6 +38,92 @@ export function FormulaSuggestion({
   const [teachScope, setTeachScope] = useState<"client" | "general">("client");
   const [teachSending, setTeachSending] = useState(false);
   const [teachSent, setTeachSent] = useState(false);
+
+  // Ask Metis follow-up chat
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessages, setChatMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [chatSending, setChatSending] = useState(false);
+  const [chatConvId, setChatConvId] = useState<string | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  async function askMetis() {
+    const q = chatInput.trim();
+    if (!q || chatSending) return;
+
+    setChatSending(true);
+    setChatInput("");
+
+    // Build context: include the formula suggestion as conversation history on first message
+    const formulaContext = suggestion?.suggestion?.suggested_formula || "";
+    const reasoning = suggestion?.suggestion?.reasoning || "";
+    const isFirst = chatMessages.length === 0;
+
+    const newUserMsg = { role: "user" as const, content: q };
+    setChatMessages((prev) => [...prev, newUserMsg]);
+
+    try {
+      // Create a conversation if first message
+      let convId = chatConvId;
+      if (!convId) {
+        const convRes = await fetch("/api/intelligence/conversations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: `Formula Q: ${q.length > 40 ? q.slice(0, 40) + "..." : q}` }),
+        });
+        if (convRes.ok) {
+          const convData = await convRes.json();
+          convId = convData.conversation?.id || null;
+          setChatConvId(convId);
+        }
+      }
+
+      // Build history — on first message, prepend formula context as assistant message
+      const history = isFirst
+        ? [
+            { role: "assistant" as const, content: `Here's the formula I suggested:\n\n${formulaContext}\n\nReasoning: ${reasoning}` },
+            newUserMsg,
+          ]
+        : [...chatMessages, newUserMsg];
+
+      const res = await fetch("/api/intelligence/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: q,
+          conversationHistory: history,
+          context: { page: "formula_suggestion", clientId },
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const reply = data.reply || "Sorry, I couldn't generate a response.";
+        setChatMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+
+        // Persist both messages to conversation
+        if (convId) {
+          fetch(`/api/intelligence/conversations/${convId}/messages`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role: "user", content: q }),
+          });
+          fetch(`/api/intelligence/conversations/${convId}/messages`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role: "assistant", content: reply }),
+          });
+        }
+      } else {
+        setChatMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I couldn't reach Metis right now." }]);
+      }
+    } catch {
+      setChatMessages((prev) => [...prev, { role: "assistant", content: "Connection error. Please try again." }]);
+    } finally {
+      setChatSending(false);
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    }
+  }
 
   async function submitTeach() {
     if (!teachText.trim() || teachSending) return;
@@ -490,6 +576,144 @@ export function FormulaSuggestion({
               </div>
             </div>
           )}
+
+          {/* Ask Metis follow-up */}
+          <div style={{ padding: "8px 14px", borderTop: "1px solid var(--stone-mid)" }}>
+            {!chatOpen ? (
+              <button
+                type="button"
+                onClick={() => setChatOpen(true)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  fontSize: "10px",
+                  color: "var(--text-on-stone-faint)",
+                  padding: "2px 4px",
+                  borderRadius: "4px",
+                  transition: "color 0.15s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "var(--brass)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-on-stone-faint)"; }}
+              >
+                <Sparkles size={12} />
+                Ask Metis about this formula
+              </button>
+            ) : (
+              <div>
+                {/* Chat messages */}
+                {chatMessages.length > 0 && (
+                  <div style={{
+                    maxHeight: "200px",
+                    overflowY: "auto",
+                    marginBottom: "8px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
+                  }}>
+                    {chatMessages.map((msg, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
+                        }}
+                      >
+                        <div style={{
+                          maxWidth: "85%",
+                          padding: "6px 10px",
+                          borderRadius: msg.role === "user" ? "10px 10px 2px 10px" : "10px 10px 10px 2px",
+                          background: msg.role === "user" ? "var(--stone-warm, #E5E3D3)" : "var(--cream, #F1EFE0)",
+                          borderLeft: msg.role === "assistant" ? "2px solid var(--brass, #C4AB70)" : "none",
+                          fontSize: "11px",
+                          lineHeight: "1.5",
+                          color: "var(--text-on-stone, #3A3A32)",
+                          whiteSpace: "pre-wrap",
+                        }}>
+                          {msg.content}
+                        </div>
+                      </div>
+                    ))}
+                    {chatSending && (
+                      <div style={{ fontSize: "10px", color: "var(--text-on-stone-faint)", fontStyle: "italic" }}>
+                        Metis is thinking...
+                      </div>
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+                )}
+
+                {/* Chat input */}
+                <div style={{ display: "flex", gap: "4px", alignItems: "flex-end" }}>
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askMetis(); } }}
+                    placeholder="Ask a follow-up about this formula..."
+                    style={{
+                      flex: 1,
+                      border: "1px solid var(--stone-warm)",
+                      borderRadius: "8px",
+                      padding: "6px 10px",
+                      fontSize: "11px",
+                      fontFamily: "'DM Sans', sans-serif",
+                      outline: "none",
+                      background: "var(--stone-light, #FAFAF5)",
+                      color: "var(--text-on-stone)",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={askMetis}
+                    disabled={!chatInput.trim() || chatSending}
+                    style={{
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "6px",
+                      border: "none",
+                      background: chatInput.trim() && !chatSending ? "var(--brass)" : "var(--stone-warm)",
+                      color: chatInput.trim() && !chatSending ? "#fff" : "var(--text-on-stone-faint)",
+                      cursor: chatInput.trim() && !chatSending ? "pointer" : "default",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Send size={12} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setChatOpen(false); }}
+                    style={{
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "6px",
+                      border: "1px solid var(--stone-warm)",
+                      background: "transparent",
+                      color: "var(--text-on-stone-faint)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+                {chatConvId && chatMessages.length > 0 && (
+                  <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", marginTop: "4px" }}>
+                    Saved to Metis chat history
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

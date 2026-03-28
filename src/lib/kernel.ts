@@ -126,12 +126,14 @@ export async function getFormulaSuggestion(params: {
     parsed_formula?: unknown;
   }[];
   clientPreferences?: ClientPreferenceProfile | null;
+  productCatalog?: string[] | null;
 }) {
   return kernelPost("/api/v1/ai/suggest-formula", {
     client_name: params.clientName,
     service_type_name: params.serviceTypeName,
     formula_history: params.formulaHistory,
     client_preferences: params.clientPreferences ?? null,
+    product_catalog: params.productCatalog ?? null,
   }, 20000);
 }
 
@@ -394,6 +396,7 @@ export async function generateInspoFormula(params: {
   } | null;
   questions?: { id: string; question: string; type: string; options?: string[] }[];
   answers?: Record<string, string>;
+  productCatalog?: string[] | null;
 }): Promise<{
   suggested_formula: string;
   reasoning: string;
@@ -408,6 +411,7 @@ export async function generateInspoFormula(params: {
     client_context: params.clientContext,
     questions: params.questions ?? null,
     answers: params.answers ?? null,
+    product_catalog: params.productCatalog ?? null,
   }, 30000);
 }
 

@@ -159,6 +159,7 @@ export async function generateInspoFormulaSuggestion(params: {
   } | null;
   questions?: { id: string; question: string; type: string; options?: string[] }[];
   answers?: Record<string, string>;
+  productCatalog?: string[] | null;
 }): Promise<InspoFormulaSuggestion> {
   const result = await generateInspoFormula({
     stylistIntelligence: params.stylistIntelligence,
@@ -167,6 +168,7 @@ export async function generateInspoFormulaSuggestion(params: {
     clientContext: params.clientContext,
     questions: params.questions,
     answers: params.answers,
+    productCatalog: params.productCatalog,
   });
 
   if (!result) {

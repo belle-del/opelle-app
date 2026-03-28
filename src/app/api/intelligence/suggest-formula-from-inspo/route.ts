@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getClient } from "@/lib/db/clients";
 import { getFormulaEntriesForClient } from "@/lib/db/formula-entries";
+import { listProducts } from "@/lib/db/products";
 import { generateInspoFormulaSuggestion, type StylistIntelligence } from "@/lib/ai/inspo-analysis";
 
 // The ai_analysis JSON column has these fields added dynamically
@@ -27,9 +28,10 @@ export async function POST(request: Request) {
     const admin = createSupabaseAdminClient();
 
     // Get client + latest inspo submission with completed answers
-    const [client, formulaEntries] = await Promise.all([
+    const [client, formulaEntries, products] = await Promise.all([
       getClient(clientId),
       getFormulaEntriesForClient(clientId),
+      listProducts(),
     ]);
 
     if (!client) {
@@ -75,6 +77,11 @@ export async function POST(request: Request) {
         ).join("\n")
       : null;
 
+    // Build product catalog so the AI only references products we carry
+    const productCatalog = products.length > 0
+      ? products.map((p) => `${p.brand || ""} ${p.line || ""} ${p.shade || ""} ${p.name || ""}`.trim()).filter(Boolean)
+      : null;
+
     const suggestion = await generateInspoFormulaSuggestion({
       stylistIntelligence: intel,
       clientSummary: aiAnalysis.clientSummary || null,
@@ -89,6 +96,7 @@ export async function POST(request: Request) {
         : { firstName: client.firstName ?? undefined },
       questions: aiAnalysis.generatedFormQuestions || [],
       answers: intakeResponse?.answers || {},
+      productCatalog,
     });
 
     return NextResponse.json({

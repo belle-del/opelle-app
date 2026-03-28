@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getFormulaSuggestion } from "@/lib/kernel";
 import { getClient } from "@/lib/db/clients";
 import { getFormulaEntriesForClient } from "@/lib/db/formula-entries";
+import { listProducts } from "@/lib/db/products";
 import { getClientDisplayName } from "@/lib/types";
 
 export async function POST(request: Request) {
@@ -15,9 +16,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const [client, formulaEntries] = await Promise.all([
+    const [client, formulaEntries, products] = await Promise.all([
       getClient(clientId),
       getFormulaEntriesForClient(clientId),
+      listProducts(),
     ]);
 
     if (!client || formulaEntries.length < 2) {
@@ -26,6 +28,11 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+
+    // Build product catalog so the AI only references products we carry
+    const productCatalog = products.length > 0
+      ? products.map((p) => `${p.brand || ""} ${p.line || ""} ${p.shade || ""} ${p.name || ""}`.trim()).filter(Boolean)
+      : null;
 
     const suggestion = await getFormulaSuggestion({
       clientName: getClientDisplayName(client),
@@ -37,6 +44,7 @@ export async function POST(request: Request) {
         parsed_formula: fe.parsedFormula,
       })),
       clientPreferences: client.preferenceProfile ?? null,
+      productCatalog,
     });
 
     if (!suggestion) {
