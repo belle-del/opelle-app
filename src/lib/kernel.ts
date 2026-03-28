@@ -298,6 +298,119 @@ export async function metisSuggestions(params: {
   return result ?? null;
 }
 
+// --- INSPO ANALYSIS (vision + intelligence — routed through kernel) ---
+
+export async function analyzeInspoVision(params: {
+  images: { mediaType: string; base64: string }[];
+  categoryMeta?: { category: string; photoIndices: number[] }[];
+  clientNotes: string | null;
+  clientContext: {
+    firstName?: string;
+    lastName?: string;
+    colorDirection?: string;
+    maintenanceLevel?: string;
+    styleNotes?: string;
+    processingPreferences?: string;
+  } | null;
+  formulaHistory: string | null;
+}): Promise<{
+  questions: { id: string; question: string; type: string; options?: string[]; photoIndex?: number }[];
+  clientSummary: string;
+} | null> {
+  return kernelPost("/api/v1/ai/analyze-inspo-vision", {
+    images: params.images,
+    category_meta: params.categoryMeta ?? null,
+    client_notes: params.clientNotes,
+    client_context: params.clientContext,
+    formula_history: params.formulaHistory,
+  }, 60000); // 60s for vision
+}
+
+export async function generateStylistIntel(params: {
+  questions: { id: string; question: string; type: string; options?: string[] }[];
+  answers: Record<string, string>;
+  clientSummary: string | null;
+  clientNotes: string | null;
+  clientContext: {
+    firstName?: string;
+    colorDirection?: string;
+    maintenanceLevel?: string;
+    styleNotes?: string;
+  } | null;
+  formulaHistory: string | null;
+}): Promise<{
+  whatWasLearned: string;
+  appointmentPrep: string;
+  keyPreferences: string[];
+  potentialChallenges: string[];
+  productSuggestions: string[];
+} | null> {
+  return kernelPost("/api/v1/ai/stylist-intelligence", {
+    questions: params.questions,
+    answers: params.answers,
+    client_summary: params.clientSummary,
+    client_notes: params.clientNotes,
+    client_context: params.clientContext,
+    formula_history: params.formulaHistory,
+  }, 30000);
+}
+
+export async function generateApptFlag(params: {
+  intelligenceSummary: string;
+  appointmentPrep: string;
+  potentialChallenges: string[];
+  nextAppointment: {
+    serviceName: string;
+    durationMins: number;
+    startAt: string;
+  };
+}): Promise<{
+  severity: "warning" | "critical";
+  message: string;
+} | null> {
+  return kernelPost("/api/v1/ai/appointment-flag", {
+    intelligence_summary: params.intelligenceSummary,
+    appointment_prep: params.appointmentPrep,
+    potential_challenges: params.potentialChallenges,
+    next_appointment: params.nextAppointment,
+  }, 15000);
+}
+
+export async function generateInspoFormula(params: {
+  stylistIntelligence: {
+    whatWasLearned: string;
+    appointmentPrep: string;
+    keyPreferences: string[];
+    potentialChallenges: string[];
+    productSuggestions: string[];
+  };
+  clientSummary: string | null;
+  formulaHistory: string | null;
+  clientContext: {
+    firstName?: string;
+    colorDirection?: string;
+    maintenanceLevel?: string;
+    styleNotes?: string;
+  } | null;
+  questions?: { id: string; question: string; type: string; options?: string[] }[];
+  answers?: Record<string, string>;
+}): Promise<{
+  suggested_formula: string;
+  reasoning: string;
+  confidence: number;
+  caution?: string;
+  based_on: "inspo";
+} | null> {
+  return kernelPost("/api/v1/ai/inspo-formula-suggestion", {
+    stylist_intelligence: params.stylistIntelligence,
+    client_summary: params.clientSummary,
+    formula_history: params.formulaHistory,
+    client_context: params.clientContext,
+    questions: params.questions ?? null,
+    answers: params.answers ?? null,
+  }, 30000);
+}
+
 // --- INTERNAL HELPERS ---
 
 async function kernelGet(

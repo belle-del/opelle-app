@@ -20,7 +20,7 @@ export async function GET() {
       .single();
 
     if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 404 });
+      return NextResponse.json({ threads: [] });
     }
 
     const threads = await getThreadsForWorkspace(workspace.id);
