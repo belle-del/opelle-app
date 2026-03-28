@@ -78,19 +78,20 @@ export function FormulaSuggestion({
         }
       }
 
-      // Build history — on first message, prepend formula context as assistant message
+      // On first message, embed formula context in the user's message
+      const fullMessage = isFirst
+        ? `Regarding this suggested formula:\n\n${formulaContext}\n\nReasoning: ${reasoning}\n\nMy question: ${q}`
+        : q;
+
       const history = isFirst
-        ? [
-            { role: "assistant" as const, content: `Here's the formula I suggested:\n\n${formulaContext}\n\nReasoning: ${reasoning}` },
-            newUserMsg,
-          ]
-        : [...chatMessages, newUserMsg];
+        ? []
+        : chatMessages.map((m) => ({ role: m.role, content: m.content }));
 
       const res = await fetch("/api/intelligence/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: q,
+          message: fullMessage,
           conversationHistory: history,
           context: { page: "formula_suggestion", clientId },
         }),
@@ -106,7 +107,7 @@ export function FormulaSuggestion({
           fetch(`/api/intelligence/conversations/${convId}/messages`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ role: "user", content: q }),
+            body: JSON.stringify({ role: "user", content: fullMessage }),
           });
           fetch(`/api/intelligence/conversations/${convId}/messages`, {
             method: "POST",
