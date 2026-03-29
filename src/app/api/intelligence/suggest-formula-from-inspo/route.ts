@@ -77,10 +77,17 @@ export async function POST(request: Request) {
         ).join("\n")
       : null;
 
-    // Build product catalog so the AI only references products we carry
-    const productCatalog = products.length > 0
+    // Build product catalog with instructions for the AI
+    const productNames = products.length > 0
       ? products.map((p) => `${p.brand || ""} ${p.line || ""} ${p.shade || ""} ${p.name || ""}`.trim()).filter(Boolean)
-      : null;
+      : [];
+    const productCatalog = [
+      "PRODUCT RULES: The salon carries ONLY the products listed below. Reference these by name when they apply.",
+      "If the formula needs a product NOT in this list, use generic industry terms (e.g. 'lightener', '20 vol developer', 'demi-permanent gloss', '10AV toner').",
+      "NEVER reference specific brand names or product lines that are not in the list below.",
+      "---",
+      ...(productNames.length > 0 ? productNames : ["(No products in inventory — use only generic industry terms for all products)"]),
+    ];
 
     const suggestion = await generateInspoFormulaSuggestion({
       stylistIntelligence: intel,

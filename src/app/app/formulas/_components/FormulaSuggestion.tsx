@@ -116,7 +116,9 @@ export function FormulaSuggestion({
           });
         }
       } else {
-        setChatMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I couldn't reach Metis right now." }]);
+        const errData = await res.json().catch(() => null);
+        const detail = errData?.error || `HTTP ${res.status}`;
+        setChatMessages((prev) => [...prev, { role: "assistant", content: `Metis error: ${detail}` }]);
       }
     } catch {
       setChatMessages((prev) => [...prev, { role: "assistant", content: "Connection error. Please try again." }]);
