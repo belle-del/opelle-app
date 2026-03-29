@@ -193,8 +193,12 @@ export async function POST(req: NextRequest) {
     });
 
     if (!result) {
-      console.error("METIS-DIAG: kernel returned null for message:", message.substring(0, 50));
-      return NextResponse.json({ error: "Metis unavailable" }, { status: 503 });
+      const kernelEnabled = process.env.KERNEL_ENABLED;
+      const hasKey = !!(process.env.KERNEL_AUTH_KEY || process.env.KERNEL_API_KEY);
+      const kernelUrl = process.env.KERNEL_API_URL || process.env.KERNEL_WEBHOOK_URL || "(default)";
+      const diag = `kernel_enabled=${kernelEnabled}, has_key=${hasKey}, url=${kernelUrl}`;
+      console.error("METIS-DIAG: kernel returned null.", diag, "message:", message.substring(0, 50));
+      return NextResponse.json({ error: `Metis unavailable — ${diag}` }, { status: 503 });
     }
 
     // Log Metis chat to activity history
