@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Loader2, X, Image, History, MessageSquarePlus, Check, Send } from "lucide-react";
+import { Sparkles, Loader2, X, Image, History, MessageSquarePlus, Check, Send, Eye } from "lucide-react";
 
 interface FormulaSuggestionProps {
   clientId: string;
@@ -38,6 +38,10 @@ export function FormulaSuggestion({
   const [teachScope, setTeachScope] = useState<"client" | "general">("client");
   const [teachSending, setTeachSending] = useState(false);
   const [teachSent, setTeachSent] = useState(false);
+
+  // Inspo photo popup
+  const [inspoPhotos, setInspoPhotos] = useState<string[]>([]);
+  const [showInspoModal, setShowInspoModal] = useState(false);
 
   // Ask Metis follow-up chat
   const [chatOpen, setChatOpen] = useState(false);
@@ -191,7 +195,11 @@ export function FormulaSuggestion({
         return;
       }
 
-      setSuggestion(await res.json());
+      const data = await res.json();
+      setSuggestion(data);
+      if (source === "inspo" && data?.suggestion?.photoUrls) {
+        setInspoPhotos(data.suggestion.photoUrls);
+      }
     } catch {
       setError("Could not reach intelligence service.");
     } finally {
@@ -370,6 +378,38 @@ export function FormulaSuggestion({
                     ? `based on ${suggestion.suggestion.based_on_visits} visits`
                     : ""}
               </span>
+              {inspoPhotos.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowInspoModal(true)}
+                  style={{
+                    background: "none",
+                    border: "1px solid var(--stone-warm)",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "3px",
+                    padding: "2px 8px",
+                    fontSize: "9px",
+                    color: "var(--brass)",
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontWeight: 500,
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "var(--garnet-wash, rgba(74,26,46,0.08))";
+                    e.currentTarget.style.borderColor = "var(--brass)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "none";
+                    e.currentTarget.style.borderColor = "var(--stone-warm)";
+                  }}
+                >
+                  <Eye size={10} />
+                  View Inspo
+                </button>
+              )}
             </div>
             <button
               onClick={() => { setSuggestion(null); setActiveSource(null); }}
@@ -716,6 +756,77 @@ export function FormulaSuggestion({
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {/* Inspo photo modal */}
+      {showInspoModal && inspoPhotos.length > 0 && (
+        <div
+          onClick={() => setShowInspoModal(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "var(--stone-card, #F5F3E8)",
+              borderRadius: "12px",
+              maxWidth: "520px",
+              width: "100%",
+              maxHeight: "80vh",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "12px 16px",
+              borderBottom: "1px solid var(--stone-mid)",
+            }}>
+              <span style={{ fontSize: "13px", fontWeight: 600, fontFamily: "'Fraunces', serif", color: "var(--text-on-stone)" }}>
+                Inspo Reference Photos
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowInspoModal(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-on-stone-faint)", padding: "2px" }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div style={{
+              padding: "16px",
+              overflowY: "auto",
+              display: "grid",
+              gridTemplateColumns: inspoPhotos.length === 1 ? "1fr" : "1fr 1fr",
+              gap: "10px",
+            }}>
+              {inspoPhotos.map((url, i) => (
+                <img
+                  key={i}
+                  src={url}
+                  alt={`Inspo photo ${i + 1}`}
+                  style={{
+                    width: "100%",
+                    borderRadius: "8px",
+                    objectFit: "cover",
+                    aspectRatio: "1",
+                    border: "1px solid var(--stone-warm)",
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}

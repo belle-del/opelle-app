@@ -106,10 +106,25 @@ export async function POST(request: Request) {
       productCatalog,
     });
 
+    // Fetch inspo photos for the submission
+    const { data: files } = await admin.storage
+      .from("client-inspo")
+      .list(`${latestWithIntel.workspace_id}/${clientId}/${latestWithIntel.id}`);
+
+    const photoUrls = (files || [])
+      .filter((f) => !f.name.startsWith("."))
+      .map((f) => {
+        const { data } = admin.storage
+          .from("client-inspo")
+          .getPublicUrl(`${latestWithIntel.workspace_id}/${clientId}/${latestWithIntel.id}/${f.name}`);
+        return data.publicUrl;
+      });
+
     return NextResponse.json({
       suggestion: {
         ...suggestion,
         inspo_date: latestWithIntel.created_at,
+        photoUrls,
       },
     });
   } catch (error) {

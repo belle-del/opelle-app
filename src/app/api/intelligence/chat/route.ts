@@ -185,35 +185,15 @@ export async function POST(req: NextRequest) {
       ...(activeLessons.length > 0 ? { stylistLessons: activeLessons } : {}),
     };
 
-    // Call kernel with inline diagnostics so we can see the actual HTTP response
-    const kernelUrl = process.env.KERNEL_API_URL || process.env.KERNEL_WEBHOOK_URL || "https://opelle.dominusfoundry.com";
-    const kernelKey = process.env.KERNEL_AUTH_KEY || process.env.KERNEL_API_KEY || "";
-    let result = null;
-    let kernelDiag = "";
-    try {
-      const kernelRes = await fetch(`${kernelUrl}/api/v1/ai/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Kernel-Auth": kernelKey },
-        body: JSON.stringify({
-          message,
-          conversation_history: conversationHistory,
-          context,
-          workspace_context: fullWorkspaceContext,
-        }),
-        signal: AbortSignal.timeout(30000),
-      });
-      if (kernelRes.ok) {
-        result = await kernelRes.json();
-      } else {
-        const errText = await kernelRes.text().catch(() => "");
-        kernelDiag = `HTTP ${kernelRes.status}: ${errText.substring(0, 200)}`;
-      }
-    } catch (err) {
-      kernelDiag = `Exception: ${err instanceof Error ? err.message : String(err)}`;
-    }
+    const result = await metisChat({
+      message,
+      conversationHistory,
+      context,
+      workspaceContext: fullWorkspaceContext,
+    });
 
     if (!result) {
-      return NextResponse.json({ error: `Metis unavailable — ${kernelDiag || "kernel returned null"}` }, { status: 503 });
+      return NextResponse.json({ error: "Sorry, I couldn't reach Metis right now." }, { status: 503 });
     }
 
     // Log Metis chat to activity history
