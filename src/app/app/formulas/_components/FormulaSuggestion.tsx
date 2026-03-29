@@ -41,6 +41,7 @@ export function FormulaSuggestion({
 
   // Inspo photo popup
   const [inspoPhotos, setInspoPhotos] = useState<string[]>([]);
+  const [categoryMeta, setCategoryMeta] = useState<{ category: string; photoIndices: number[] }[] | null>(null);
   const [showInspoModal, setShowInspoModal] = useState(false);
 
   // Ask Metis follow-up chat
@@ -197,8 +198,9 @@ export function FormulaSuggestion({
 
       const data = await res.json();
       setSuggestion(data);
-      if (source === "inspo" && data?.suggestion?.photoUrls) {
-        setInspoPhotos(data.suggestion.photoUrls);
+      if (source === "inspo") {
+        if (data?.suggestion?.photoUrls) setInspoPhotos(data.suggestion.photoUrls);
+        if (data?.suggestion?.categoryMeta) setCategoryMeta(data.suggestion.categoryMeta);
       }
     } catch {
       setError("Could not reach intelligence service.");
@@ -812,20 +814,42 @@ export function FormulaSuggestion({
               gridTemplateColumns: inspoPhotos.length === 1 ? "1fr" : "1fr 1fr",
               gap: "10px",
             }}>
-              {inspoPhotos.map((url, i) => (
-                <img
-                  key={i}
-                  src={url}
-                  alt={`Inspo photo ${i + 1}`}
-                  style={{
-                    width: "100%",
-                    borderRadius: "8px",
-                    objectFit: "cover",
-                    aspectRatio: "1",
-                    border: "1px solid var(--stone-warm)",
-                  }}
-                />
-              ))}
+              {inspoPhotos.map((url, i) => {
+                const cat = categoryMeta?.find((c) => c.photoIndices.includes(i));
+                return (
+                  <div key={i} style={{ position: "relative" }}>
+                    <img
+                      src={url}
+                      alt={`Inspo photo ${i + 1}`}
+                      style={{
+                        width: "100%",
+                        borderRadius: "8px",
+                        objectFit: "cover",
+                        aspectRatio: "1",
+                        border: "1px solid var(--stone-warm)",
+                      }}
+                    />
+                    {cat && (
+                      <span style={{
+                        position: "absolute",
+                        bottom: "6px",
+                        left: "6px",
+                        background: "rgba(0,0,0,0.65)",
+                        color: "#fff",
+                        fontSize: "9px",
+                        fontWeight: 600,
+                        padding: "2px 8px",
+                        borderRadius: "4px",
+                        fontFamily: "'DM Sans', sans-serif",
+                        letterSpacing: "0.02em",
+                        textTransform: "capitalize",
+                      }}>
+                        {cat.category}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

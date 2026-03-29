@@ -10,6 +10,7 @@ interface StoredAiAnalysis {
   clientSummary?: string;
   generatedFormQuestions?: { id: string; question: string; type: string; options?: string[] }[];
   stylistIntelligence?: StylistIntelligence;
+  categoryMeta?: { category: string; photoIndices: number[] }[];
 }
 
 export const maxDuration = 60;
@@ -125,6 +126,7 @@ export async function POST(request: Request) {
         ...suggestion,
         inspo_date: latestWithIntel.created_at,
         photoUrls,
+        categoryMeta: aiAnalysis.categoryMeta || null,
       },
     });
   } catch (error) {

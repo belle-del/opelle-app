@@ -197,6 +197,7 @@ export async function POST(request: NextRequest) {
         ai_analysis: {
           generatedFormQuestions: analysisResult.questions,
           clientSummary: analysisResult.clientSummary,
+          categoryMeta: categoryMeta || null,
         },
         client_summary: analysisResult.clientSummary,
       })
