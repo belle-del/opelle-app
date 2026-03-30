@@ -11,7 +11,7 @@ ALTER TABLE products
 
 -- 2. Stock movements — immutable audit trail
 CREATE TABLE IF NOT EXISTS stock_movements (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   workspace_id UUID REFERENCES workspaces(id) NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   movement_type VARCHAR(30) NOT NULL,
@@ -28,11 +28,12 @@ CREATE TABLE IF NOT EXISTS stock_movements (
 ALTER TABLE stock_movements ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "workspace_owner_all_stock_movements" ON stock_movements
-  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()))
+  WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
 
 -- 3. Service product usage templates
 CREATE TABLE IF NOT EXISTS service_product_usage (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   workspace_id UUID REFERENCES workspaces(id) NOT NULL,
   service_category_id UUID REFERENCES service_categories(id) ON DELETE CASCADE NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
@@ -44,11 +45,12 @@ CREATE TABLE IF NOT EXISTS service_product_usage (
 ALTER TABLE service_product_usage ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "workspace_owner_all_service_product_usage" ON service_product_usage
-  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()))
+  WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
 
 -- 4. Stock alerts
 CREATE TABLE IF NOT EXISTS stock_alerts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   workspace_id UUID REFERENCES workspaces(id) NOT NULL,
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   alert_type VARCHAR(30) NOT NULL,
@@ -61,7 +63,8 @@ CREATE TABLE IF NOT EXISTS stock_alerts (
 ALTER TABLE stock_alerts ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "workspace_owner_all_stock_alerts" ON stock_alerts
-  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()))
+  WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
 
 -- Index for fast alert lookups
 CREATE INDEX IF NOT EXISTS idx_stock_alerts_workspace_product
@@ -71,3 +74,9 @@ CREATE INDEX IF NOT EXISTS idx_stock_alerts_workspace_product
 -- Index for movement history
 CREATE INDEX IF NOT EXISTS idx_stock_movements_product
   ON stock_movements(product_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_stock_movements_workspace
+  ON stock_movements(workspace_id);
+
+CREATE INDEX IF NOT EXISTS idx_service_product_usage_workspace
+  ON service_product_usage(workspace_id);
