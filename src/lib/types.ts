@@ -581,7 +581,7 @@ export function productRowToModel(row: ProductRow): Product {
     unitCost: row.unit_cost ?? undefined,
     retailPrice: row.retail_price ?? undefined,
     reorderQuantity: row.reorder_quantity ?? undefined,
-    active: row.active ?? true,
+    active: row.active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -686,6 +686,17 @@ export type ServiceProductUsage = {
   estimatedQuantity: number;
   isRequired: boolean;
 };
+
+export function serviceProductUsageRowToModel(row: ServiceProductUsageRow): ServiceProductUsage {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    serviceCategoryId: row.service_category_id,
+    productId: row.product_id,
+    estimatedQuantity: row.estimated_quantity,
+    isRequired: row.is_required,
+  };
+}
 
 export function formulaRowToModel(row: FormulaRow): Formula {
   return {
