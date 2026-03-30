@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getWorkspaceId } from "@/lib/db/get-workspace-id";
+import { createStockMovement, upsertStockAlert, listServiceProductUsage } from "@/lib/db/inventory";
+import { publishEvent } from "@/lib/kernel";
 
 export async function POST(req: NextRequest) {
   try {
@@ -65,6 +67,64 @@ export async function POST(req: NextRequest) {
         completed_count: 1,
         last_completed_at: now,
       });
+    }
+
+    // 3. Inventory deduction (Rule 9, Step 3)
+    const usageTemplates = await listServiceProductUsage(categoryId, workspaceId);
+
+    for (const usage of usageTemplates) {
+      // Fetch current product stock
+      const { data: product } = await admin
+        .from("products")
+        .select("id, quantity, low_stock_threshold, brand, shade")
+        .eq("id", usage.productId)
+        .eq("workspace_id", workspaceId)
+        .single();
+
+      if (!product) continue;
+
+      const previousStock = product.quantity as number;
+      const newStock = Math.max(0, previousStock - usage.estimatedQuantity);
+
+      // Deduct from product
+      await admin
+        .from("products")
+        .update({ quantity: newStock, updated_at: now })
+        .eq("id", usage.productId);
+
+      // Create movement record
+      await createStockMovement({
+        workspaceId,
+        productId: usage.productId,
+        movementType: "service_deduct",
+        quantityChange: -(usage.estimatedQuantity),
+        previousStock,
+        newStock,
+        serviceCompletionId: completion?.id,
+        createdBy: user.id,
+      });
+
+      // Check for low-stock / out-of-stock alert
+      const threshold = product.low_stock_threshold as number;
+      if (newStock <= threshold) {
+        const alertType = newStock === 0 ? "out_of_stock" : "low_stock";
+        await upsertStockAlert({ workspaceId, productId: usage.productId, alertType });
+
+        // Fire kernel event (non-blocking)
+        publishEvent({
+          event_type: "inventory.low_stock",
+          workspace_id: workspaceId,
+          timestamp: now,
+          payload: {
+            product_id: usage.productId,
+            brand: product.brand,
+            shade: product.shade,
+            quantity: newStock,
+            low_stock_threshold: threshold,
+            alert_type: alertType,
+          },
+        });
+      }
     }
 
     return NextResponse.json({
