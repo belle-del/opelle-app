@@ -84,7 +84,7 @@ export async function upsertStockAlert(input: {
   // Check for existing unacknowledged alert of same type
   const { data: existing } = await admin
     .from("stock_alerts")
-    .select("id")
+    .select("*")
     .eq("workspace_id", input.workspaceId)
     .eq("product_id", input.productId)
     .eq("alert_type", input.alertType)
@@ -92,13 +92,7 @@ export async function upsertStockAlert(input: {
     .single();
 
   if (existing) {
-    // Already have an active alert — don't duplicate
-    const { data } = await admin
-      .from("stock_alerts")
-      .select("*")
-      .eq("id", existing.id)
-      .single();
-    return data ? stockAlertRowToModel(data as StockAlertRow) : null;
+    return stockAlertRowToModel(existing as StockAlertRow);
   }
 
   const { data, error } = await admin
@@ -139,16 +133,19 @@ export async function acknowledgeAlert(
   if (!wsId) return false;
 
   const admin = createSupabaseAdminClient();
-  const { error } = await admin
+  const { error, count } = await admin
     .from("stock_alerts")
-    .update({
-      acknowledged_at: new Date().toISOString(),
-      acknowledged_by: userId,
-    })
+    .update(
+      {
+        acknowledged_at: new Date().toISOString(),
+        acknowledged_by: userId,
+      },
+      { count: "exact" }
+    )
     .eq("id", id)
     .eq("workspace_id", wsId);
 
-  return !error;
+  return !error && (count ?? 0) > 0;
 }
 
 // ─── Service Product Usage ────────────────────────────────────────────────
