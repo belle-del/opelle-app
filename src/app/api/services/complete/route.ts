@@ -69,6 +69,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // NOTE: Stock deductions are not atomic (read-then-write). For a school environment
+    // with low concurrency this is acceptable. If concurrent completions become an issue,
+    // replace with a Postgres RPC using UPDATE ... RETURNING for atomic decrement.
     // 3. Inventory deduction (Rule 9, Step 3)
     const usageTemplates = await listServiceProductUsage(categoryId, workspaceId);
 
@@ -83,7 +86,7 @@ export async function POST(req: NextRequest) {
 
       if (!product) continue;
 
-      const previousStock = product.quantity as number;
+      const previousStock = Number(product.quantity) || 0;
       const newStock = Math.max(0, previousStock - usage.estimatedQuantity);
 
       // Deduct from product
@@ -104,9 +107,9 @@ export async function POST(req: NextRequest) {
         createdBy: user.id,
       });
 
-      // Check for low-stock / out-of-stock alert
-      const threshold = product.low_stock_threshold as number;
-      if (newStock <= threshold) {
+      // Check for low-stock / out-of-stock alert (skip if no threshold configured)
+      const threshold = Number(product.low_stock_threshold) || 0;
+      if (threshold > 0 && newStock <= threshold) {
         const alertType = newStock === 0 ? "out_of_stock" : "low_stock";
         await upsertStockAlert({ workspaceId, productId: usage.productId, alertType });
 
