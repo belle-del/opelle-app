@@ -69,20 +69,6 @@ export async function POST(req: NextRequest) {
       pageContext: fullContext.pageContext,
     };
 
-    // Diagnostic object — returned in response temporarily for debugging
-    const _diag = {
-      frontendContext: context,
-      resolvedClient: fullContext.client?.name || "none",
-      resolvedClientId: fullContext.client?.id || "none",
-      formulaCount: fullContext.recentFormulas?.length || 0,
-      formulas: (fullContext.recentFormulas || []).map(f => ({ date: f.date, preview: f.rawNotes?.slice(0, 80) })),
-      inspoCount: fullContext.inspoPhotos?.length || 0,
-      productCount: fullContext.products?.length || 0,
-      workspaceType: fullContext.workspace?.type,
-      pageContext: fullContext.pageContext,
-    };
-    console.log("METIS-DIAG:", JSON.stringify(_diag, null, 2));
-
     const result = await metisChat({
       message,
       conversationHistory,
@@ -90,28 +76,15 @@ export async function POST(req: NextRequest) {
       workspaceContext,
     });
 
-    // Prepend diagnostic info to the reply so it shows in the chat bubble
-    const diagText = [
-      `--- DIAG (remove later) ---`,
-      `Frontend clientId: ${context.clientId || "NONE"}`,
-      `Resolved client: ${fullContext.client?.name || "NONE"}`,
-      `Formulas found: ${fullContext.recentFormulas?.length || 0}`,
-      ...(fullContext.recentFormulas || []).map(f => `  - ${f.date}: ${(f.rawNotes || "").slice(0, 60)}`),
-      `Inspo found: ${fullContext.inspoPhotos?.length || 0}`,
-      `Products found: ${fullContext.products?.length || 0}`,
-      `Page: ${fullContext.pageContext?.page || "unknown"}`,
-      `---`,
-    ].join("\n");
-
     if (!result) {
-      return NextResponse.json({ reply: diagText + "\n\nSorry, I couldn't reach Metis right now." }, { status: 200 });
+      return NextResponse.json({ error: "Sorry, I couldn't reach Metis right now." }, { status: 503 });
     }
 
     // Log Metis chat to activity history
     const preview = message.length > 50 ? message.slice(0, 50) + "..." : message;
     await logActivity("metis.chat", "metis", "metis-chat", preview);
 
-    return NextResponse.json({ ...result, reply: diagText + "\n\n" + (result.reply || "") });
+    return NextResponse.json(result);
   } catch (err) {
     console.error("Metis chat route error:", err);
     return NextResponse.json(
