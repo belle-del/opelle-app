@@ -121,6 +121,12 @@ export type Product = {
   notes?: string;
   enrichment?: ProductEnrichment | null;
   kernelRef?: string | null;
+  sku?: string;
+  unitOfMeasure?: string;
+  unitCost?: number;
+  retailPrice?: number;
+  reorderQuantity?: number;
+  active: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -425,6 +431,12 @@ export type ProductRow = {
   notes: string | null;
   enrichment: ProductEnrichment | null;
   kernel_ref: string | null;
+  sku: string | null;
+  unit_of_measure: string | null;
+  unit_cost: number | null;
+  retail_price: number | null;
+  reorder_quantity: number | null;
+  active: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -564,10 +576,116 @@ export function productRowToModel(row: ProductRow): Product {
     notes: row.notes ?? undefined,
     enrichment: row.enrichment ?? undefined,
     kernelRef: row.kernel_ref ?? undefined,
+    sku: row.sku ?? undefined,
+    unitOfMeasure: row.unit_of_measure ?? undefined,
+    unitCost: row.unit_cost ?? undefined,
+    retailPrice: row.retail_price ?? undefined,
+    reorderQuantity: row.reorder_quantity ?? undefined,
+    active: row.active ?? true,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
+
+// ─── Inventory Management Types ───────────────────────────────────────────
+
+export type StockMovementType = 'service_deduct' | 'manual_adjust' | 'received' | 'waste' | 'return';
+
+export type StockMovementRow = {
+  id: string;
+  workspace_id: string;
+  product_id: string;
+  movement_type: StockMovementType;
+  quantity_change: number;
+  previous_stock: number;
+  new_stock: number;
+  service_completion_id: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type StockMovement = {
+  id: string;
+  workspaceId: string;
+  productId: string;
+  movementType: StockMovementType;
+  quantityChange: number;
+  previousStock: number;
+  newStock: number;
+  serviceCompletionId: string | null;
+  notes: string | null;
+  createdBy: string | null;
+  createdAt: string;
+};
+
+export function stockMovementRowToModel(row: StockMovementRow): StockMovement {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    productId: row.product_id,
+    movementType: row.movement_type,
+    quantityChange: row.quantity_change,
+    previousStock: row.previous_stock,
+    newStock: row.new_stock,
+    serviceCompletionId: row.service_completion_id,
+    notes: row.notes,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+  };
+}
+
+export type StockAlertType = 'low_stock' | 'out_of_stock';
+
+export type StockAlertRow = {
+  id: string;
+  workspace_id: string;
+  product_id: string;
+  alert_type: StockAlertType;
+  triggered_at: string;
+  acknowledged_at: string | null;
+  acknowledged_by: string | null;
+};
+
+export type StockAlert = {
+  id: string;
+  workspaceId: string;
+  productId: string;
+  alertType: StockAlertType;
+  triggeredAt: string;
+  acknowledgedAt: string | null;
+  acknowledgedBy: string | null;
+};
+
+export function stockAlertRowToModel(row: StockAlertRow): StockAlert {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    productId: row.product_id,
+    alertType: row.alert_type,
+    triggeredAt: row.triggered_at,
+    acknowledgedAt: row.acknowledged_at,
+    acknowledgedBy: row.acknowledged_by,
+  };
+}
+
+export type ServiceProductUsageRow = {
+  id: string;
+  workspace_id: string;
+  service_category_id: string;
+  product_id: string;
+  estimated_quantity: number;
+  is_required: boolean;
+};
+
+export type ServiceProductUsage = {
+  id: string;
+  workspaceId: string;
+  serviceCategoryId: string;
+  productId: string;
+  estimatedQuantity: number;
+  isRequired: boolean;
+};
 
 export function formulaRowToModel(row: FormulaRow): Formula {
   return {
