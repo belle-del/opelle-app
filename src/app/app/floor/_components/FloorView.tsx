@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Coffee, LogIn, LogOut, UserCheck, Users, RefreshCw } from "lucide-react";
+import { StudentProfilePanel } from "./StudentProfilePanel";
 
 /* ─── Design tokens ───────────────────────────────────────── */
 const BRASS = "#C4AB70";
@@ -49,6 +50,7 @@ export function FloorView({ initialStudents, clients }: { initialStudents: Stude
   const [filter, setFilter] = useState<FilterTab>("all");
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [assigningStudent, setAssigningStudent] = useState<string | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   // Refresh data from server
   const refresh = useCallback(async () => {
@@ -150,6 +152,14 @@ export function FloorView({ initialStudents, clients }: { initialStudents: Stude
 
   return (
     <div>
+      {/* Student profile slide-out */}
+      {selectedStudentId && (
+        <StudentProfilePanel
+          studentId={selectedStudentId}
+          onClose={() => setSelectedStudentId(null)}
+        />
+      )}
+
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
@@ -238,7 +248,14 @@ export function FloorView({ initialStudents, clients }: { initialStudents: Stude
                     }}>
                       {student.studentName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
                     </div>
-                    <span style={{ fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 500, color: TEXT_MAIN }}>
+                    <span
+                      onClick={() => setSelectedStudentId(student.studentId)}
+                      style={{
+                        fontFamily: "'Fraunces', serif", fontSize: 16, fontWeight: 500, color: TEXT_MAIN,
+                        cursor: "pointer", textDecoration: "underline", textDecorationColor: STONE_MID,
+                        textUnderlineOffset: 3,
+                      }}
+                    >
                       {student.studentName}
                     </span>
                   </div>
