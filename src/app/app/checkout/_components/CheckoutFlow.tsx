@@ -41,7 +41,7 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
   const [studentId, setStudentId] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [clientId, setClientId] = useState("");
-  const [servicePrice, setServicePrice] = useState("65.00");
+  const [servicePrice, setServicePrice] = useState("");
 
   // Payment
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
@@ -84,8 +84,8 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
         body: JSON.stringify({ studentId, status: "available" }),
       });
 
-      // Fake processing delay for demo effect
-      await new Promise((r) => setTimeout(r, 1500));
+      // Brief processing delay for demo effect
+      await new Promise((r) => setTimeout(r, 800));
 
       setResult({
         studentName: student?.studentName || "Student",
@@ -108,7 +108,7 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
     setStudentId("");
     setCategoryId("");
     setClientId("");
-    setServicePrice("65.00");
+    setServicePrice("");
     setPaymentMethod("card");
     setTipPreset(20);
     setCustomTip("");
@@ -130,10 +130,10 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
         <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 600, color: TEXT_MAIN, margin: "0 0 8px" }}>
           Payment Complete
         </h1>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, color: TEXT_FAINT, margin: "0 0 4px" }}>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, color: TEXT_MAIN, margin: "0 0 4px", fontWeight: 600 }}>
           ${result.total}
         </p>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: TEXT_FAINT, margin: "0 0 32px" }}>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: TEXT_MAIN, margin: "0 0 32px" }}>
           Service by {result.studentName} logged. Hours and progress updated.
         </p>
         <button
@@ -195,6 +195,7 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
               <DollarSign size={14} style={{ position: "absolute", left: 10, top: 11, color: TEXT_FAINT }} />
               <input
                 type="number"
+                placeholder="0.00"
                 value={servicePrice}
                 onChange={(e) => setServicePrice(e.target.value)}
                 style={{ ...selectStyle, paddingLeft: 28 }}

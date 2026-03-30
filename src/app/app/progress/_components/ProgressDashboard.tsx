@@ -211,7 +211,7 @@ export function ProgressDashboard({ initialCategories, initialStudents, initialC
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-            gap: 12,
+            gap: 16,
             marginBottom: 32,
           }}>
             {students.map((student) => {
