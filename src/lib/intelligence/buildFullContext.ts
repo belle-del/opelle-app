@@ -135,7 +135,6 @@ export async function buildFullContext(params: ContextParams): Promise<FullConte
       .from("products")
       .select("id, name, brand, shade, line, category, quantity, low_stock_threshold")
       .eq("workspace_id", workspaceId)
-      .eq("active", true)
       .order("quantity", { ascending: true })
       .limit(50),
 
