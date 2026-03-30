@@ -24,6 +24,7 @@ import {
   Monitor,
   Timer,
   GraduationCap,
+  ShoppingCart,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
@@ -35,6 +36,7 @@ const NAV_SECTIONS = [
       { href: "/app/floor", label: "Floor View", icon: Monitor },
       { href: "/app/hours", label: "Hours", icon: Timer },
       { href: "/app/progress", label: "Progress", icon: GraduationCap },
+      { href: "/app/checkout", label: "Checkout", icon: ShoppingCart },
       { href: "/app/appointments", label: "Appointments", icon: Calendar },
       { href: "/app/clients", label: "Clients", icon: Users },
     ],
