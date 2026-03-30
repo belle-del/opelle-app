@@ -71,11 +71,17 @@ export async function POST(request: Request) {
       .filter("answers->>inspo_submission_id", "eq", latestWithIntel.id)
       .single();
 
-    // Build formula history string
+    // Build formula history string — framed as hair condition context, NOT a template to repeat
     const formulaHistory = formulaEntries.length > 0
-      ? formulaEntries.slice(0, 10).map((e) =>
-          `- ${e.serviceDate}: ${e.rawNotes}${e.generalNotes ? ` (Notes: ${e.generalNotes})` : ""}`
-        ).join("\n")
+      ? [
+          "IMPORTANT: This history shows what the hair has been through recently (for condition/damage awareness).",
+          "Do NOT repeat or base the new formula on these past formulas.",
+          "The NEW formula must target the inspo photos and client's desired direction — even if it's completely different from what was done before.",
+          "---",
+          ...formulaEntries.slice(0, 10).map((e) =>
+            `- ${e.serviceDate}: ${e.rawNotes}${e.generalNotes ? ` (Notes: ${e.generalNotes})` : ""}`
+          ),
+        ].join("\n")
       : null;
 
     // Build product catalog with instructions for the AI
