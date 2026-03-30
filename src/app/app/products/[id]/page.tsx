@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,9 +39,10 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   }
 
   // Get workspace ID for movements
-  const supabase2 = await createSupabaseServerClient();
-  const { data: { user } } = await supabase2.auth.getUser();
-  const workspaceId = user ? await getWorkspaceId(user.id) : null;
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const workspaceId = await getWorkspaceId(user.id);
   const movements = workspaceId ? await listMovements({ workspaceId, productId: id, limit: 50 }) : [];
 
   // Use DB-stored enrichment first, fall back to live kernel query

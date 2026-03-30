@@ -23,6 +23,7 @@ export function QuickAdjustButton({ productId, productName, currentStock }: Quic
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const adj = parseFloat(adjustment) || 0;
   const preview = Math.max(0, currentStock + adj);
@@ -45,6 +46,9 @@ export function QuickAdjustButton({ productId, productName, currentStock }: Quic
           setNotes("");
           window.location.reload();
         }, 800);
+      } else {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error ?? "Failed to save adjustment. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -115,7 +119,7 @@ export function QuickAdjustButton({ productId, productName, currentStock }: Quic
             <input
               type="number"
               value={adjustment}
-              onChange={(e) => setAdjustment(e.target.value)}
+              onChange={(e) => { setAdjustment(e.target.value); setError(null); }}
               placeholder="-3 or +10"
               style={{
                 width: "100%", padding: "8px 12px", borderRadius: "6px",
@@ -161,6 +165,12 @@ export function QuickAdjustButton({ productId, productName, currentStock }: Quic
                 fontSize: "13px", marginBottom: "20px", boxSizing: "border-box",
               }}
             />
+
+            {error && (
+              <p style={{ fontSize: "11px", color: "var(--color-garnet, #8B3A3A)", marginBottom: "12px" }}>
+                {error}
+              </p>
+            )}
 
             <button
               onClick={submit}
