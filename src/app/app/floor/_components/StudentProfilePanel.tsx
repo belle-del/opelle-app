@@ -209,50 +209,72 @@ export function StudentProfilePanel({ studentId, onClose }: Props) {
                 }}>
                   <DollarSign size={16} /> Earnings
                 </h3>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
-                  <div style={{ textAlign: "center" }}>
+                {/* Student take-home */}
+                <div style={{
+                  textAlign: "center", padding: "10px 0 14px",
+                  borderBottom: `1px solid ${STONE_MID}`, marginBottom: 10,
+                }}>
+                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: TEXT_FAINT, margin: "0 0 2px", letterSpacing: "0.06em" }}>
+                    STUDENT TAKE-HOME (TIPS)
+                  </p>
+                  <p style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 600, color: GREEN, margin: 0 }}>
+                    ${data.earnings.totalTips.toFixed(2)}
+                  </p>
+                  <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: TEXT_FAINT, margin: "4px 0 0" }}>
+                    across {data.earnings.transactionCount} service{data.earnings.transactionCount !== 1 ? "s" : ""}
+                  </p>
+                </div>
+
+                {/* School / student split */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                  <div style={{
+                    textAlign: "center", padding: "8px 0",
+                    background: CREAM, borderRadius: 8,
+                  }}>
                     <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: TEXT_FAINT, margin: "0 0 2px", letterSpacing: "0.04em" }}>
-                      SERVICE
+                      SCHOOL REVENUE
                     </p>
-                    <p style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 600, color: TEXT_MAIN, margin: 0 }}>
+                    <p style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 600, color: TEXT_MAIN, margin: 0 }}>
                       ${data.earnings.totalService.toFixed(0)}
                     </p>
                   </div>
-                  <div style={{ textAlign: "center" }}>
+                  <div style={{
+                    textAlign: "center", padding: "8px 0",
+                    background: CREAM, borderRadius: 8,
+                  }}>
                     <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: TEXT_FAINT, margin: "0 0 2px", letterSpacing: "0.04em" }}>
-                      TIPS
+                      TOTAL GENERATED
                     </p>
-                    <p style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 600, color: GREEN, margin: 0 }}>
-                      ${data.earnings.totalTips.toFixed(0)}
-                    </p>
-                  </div>
-                  <div style={{ textAlign: "center" }}>
-                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: TEXT_FAINT, margin: "0 0 2px", letterSpacing: "0.04em" }}>
-                      NET
-                    </p>
-                    <p style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 600, color: BRASS, margin: 0 }}>
+                    <p style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 600, color: BRASS, margin: 0 }}>
                       ${data.earnings.totalNet.toFixed(0)}
                     </p>
                   </div>
                 </div>
                 {data.earnings.recent.length > 0 && (
                   <div style={{ borderTop: `1px solid ${STONE_MID}`, paddingTop: 8 }}>
-                    {data.earnings.recent.map((e) => {
-                      const d = new Date(e.date);
-                      return (
-                        <div key={e.id} style={{
-                          display: "flex", justifyContent: "space-between", alignItems: "center",
-                          padding: "4px 0", fontSize: 12, fontFamily: "'DM Sans', sans-serif",
-                        }}>
-                          <span style={{ color: TEXT_MAIN }}>
-                            {e.serviceCategory || "Service"} — {e.clientName || "Walk-in"}
+                    {data.earnings.recent.map((e) => (
+                      <div key={e.id} style={{
+                        display: "flex", justifyContent: "space-between", alignItems: "center",
+                        padding: "5px 0", fontSize: 12, fontFamily: "'DM Sans', sans-serif",
+                      }}>
+                        <div>
+                          <span style={{ color: TEXT_MAIN, fontWeight: 500 }}>
+                            {e.serviceCategory || "Service"}
                           </span>
-                          <span style={{ color: BRASS, fontWeight: 600 }}>
-                            ${e.totalAmount.toFixed(0)} <span style={{ color: GREEN, fontWeight: 400, fontSize: 11 }}>+${e.tipAmount.toFixed(0)} tip</span>
+                          <span style={{ color: TEXT_FAINT, marginLeft: 6 }}>
+                            {e.clientName || "Walk-in"}
                           </span>
                         </div>
-                      );
-                    })}
+                        <div style={{ textAlign: "right" }}>
+                          <span style={{ color: TEXT_FAINT, fontSize: 11 }}>
+                            ${e.serviceAmount.toFixed(0)} school
+                          </span>
+                          <span style={{ color: GREEN, fontWeight: 600, marginLeft: 8 }}>
+                            ${e.tipAmount.toFixed(0)} tip
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
