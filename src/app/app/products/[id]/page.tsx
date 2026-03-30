@@ -4,12 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getProduct } from "@/lib/db/products";
+import { listMovements } from "@/lib/db/inventory";
 import { getProductEnrichment } from "@/lib/kernel";
 import { formatDate } from "@/lib/utils";
 import { ArrowLeft, Edit, Package, Barcode, DollarSign, Sparkles } from "lucide-react";
 import { ProductActions } from "./_components/ProductActions";
 import { MetisSuggestions } from "../../_components/MetisSuggestions";
 import { InventoryPredictionCard } from "./_components/InventoryPredictionCard";
+import { MovementHistory } from "./_components/MovementHistory";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>;
@@ -33,6 +37,12 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   if (!product) {
     notFound();
   }
+
+  // Get workspace ID for movements
+  const supabase2 = await createSupabaseServerClient();
+  const { data: { user } } = await supabase2.auth.getUser();
+  const workspaceId = user ? await getWorkspaceId(user.id) : null;
+  const movements = workspaceId ? await listMovements({ workspaceId, productId: id, limit: 50 }) : [];
 
   // Use DB-stored enrichment first, fall back to live kernel query
   const kernelEnrichment = !product.enrichment
@@ -276,6 +286,16 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           ) : (
             <p className="text-sm text-muted-foreground">No notes</p>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Movement History */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Stock History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <MovementHistory movements={movements} />
         </CardContent>
       </Card>
     </div>
