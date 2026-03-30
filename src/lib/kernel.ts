@@ -245,13 +245,7 @@ export async function metisChat(params: {
     productName?: string;
     formulaId?: string;
   };
-  workspaceContext?: {
-    totalClients?: number;
-    totalProducts?: number;
-    recentAppointments?: { serviceName: string; clientName: string; date: string }[];
-    matchedClient?: Record<string, unknown>;
-    productInventory?: Record<string, unknown>;
-  };
+  workspaceContext?: Record<string, unknown>;
 }): Promise<MetisChatResponse | null> {
   const result = await kernelPost("/api/v1/ai/chat", {
     message: params.message,
