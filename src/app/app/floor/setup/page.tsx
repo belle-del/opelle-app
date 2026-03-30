@@ -13,6 +13,7 @@ const TEXT_FAINT = "#8A7F6E";
 export default function FloorSetupPage() {
   const [seedStatus, setSeedStatus] = useState<string | null>(null);
   const [resetStatus, setResetStatus] = useState<string | null>(null);
+  const [catStatus, setCatStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function seedStudents() {
@@ -122,13 +123,51 @@ export default function FloorSetupPage() {
         )}
       </div>
 
+      {/* Seed Categories */}
+      <div style={{
+        background: CREAM, border: `1px solid ${STONE_MID}`, borderRadius: 12,
+        padding: 24, marginBottom: 16,
+      }}>
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 500, color: TEXT_MAIN, margin: "0 0 8px" }}>
+          3. Seed Service Categories
+        </h2>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: TEXT_FAINT, margin: "0 0 16px" }}>
+          Adds 8 default service categories (Haircut, Color, Highlight, etc.) with curriculum requirements.
+        </p>
+        <button
+          onClick={async () => {
+            setLoading(true); setCatStatus(null);
+            try {
+              const res = await fetch("/api/services/categories/seed", { method: "POST" });
+              const data = await res.json();
+              setCatStatus(data.success ? `Added ${data.count} categories: ${data.categories.join(", ")}` : data.message || `Error: ${data.error}`);
+            } catch { setCatStatus("Failed to reach server"); }
+            finally { setLoading(false); }
+          }}
+          disabled={loading}
+          style={{
+            padding: "10px 20px", borderRadius: 8, border: "none",
+            background: GARNET, color: "#fff", fontSize: 14, fontWeight: 500,
+            cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1,
+            fontFamily: "'DM Sans', sans-serif",
+          }}
+        >
+          {loading ? "Working..." : "Seed Categories"}
+        </button>
+        {catStatus && (
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: BRASS, marginTop: 12 }}>
+            {catStatus}
+          </p>
+        )}
+      </div>
+
       {/* Go to views */}
       <div style={{
         background: CREAM, border: `1px solid ${STONE_MID}`, borderRadius: 12,
         padding: 24,
       }}>
         <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 500, color: TEXT_MAIN, margin: "0 0 8px" }}>
-          3. Open Views
+          4. Open Views
         </h2>
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: TEXT_FAINT, margin: "0 0 16px" }}>
           Once students are seeded, use these views for the demo.
@@ -153,6 +192,16 @@ export default function FloorSetupPage() {
           }}
         >
           Hour Tracking →
+        </a>
+        <a
+          href="/app/progress"
+          style={{
+            display: "inline-block", padding: "10px 20px", borderRadius: 8, border: `1px solid ${STONE_MID}`,
+            background: "transparent", color: TEXT_MAIN, fontSize: 14, fontWeight: 500,
+            textDecoration: "none", fontFamily: "'DM Sans', sans-serif",
+          }}
+        >
+          Progress →
         </a>
         </div>
       </div>
