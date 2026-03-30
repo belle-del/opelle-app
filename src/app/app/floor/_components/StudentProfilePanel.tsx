@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
-import { X, Clock, CheckCircle, GraduationCap } from "lucide-react";
+import { X, Clock, CheckCircle, GraduationCap, DollarSign } from "lucide-react";
 
 const BRASS = "#C4AB70";
 const CREAM = "#F1EFE0";
@@ -38,6 +38,24 @@ interface Completion {
   categoryName: string;
 }
 
+interface EarningEntry {
+  id: string;
+  serviceAmount: number;
+  tipAmount: number;
+  totalAmount: number;
+  serviceCategory: string;
+  clientName: string;
+  date: string;
+}
+
+interface Earnings {
+  totalService: number;
+  totalTips: number;
+  totalNet: number;
+  transactionCount: number;
+  recent: EarningEntry[];
+}
+
 interface StudentData {
   studentName: string;
   status: string;
@@ -47,6 +65,7 @@ interface StudentData {
   categories: CategoryProgress[];
   recentEntries: TimeEntry[];
   recentCompletions: Completion[];
+  earnings: Earnings;
 }
 
 interface Props {
@@ -177,6 +196,67 @@ export function StudentProfilePanel({ studentId, onClose }: Props) {
                 {hoursPct.toFixed(1)}% complete — {(HOURS_REQUIRED - data.totalHours).toFixed(1)} hrs remaining
               </p>
             </div>
+
+            {/* Earnings */}
+            {data.earnings && data.earnings.transactionCount > 0 && (
+              <div style={{
+                background: STONE, borderRadius: 10, padding: 16, marginBottom: 16,
+              }}>
+                <h3 style={{
+                  fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 500,
+                  color: TEXT_MAIN, margin: "0 0 12px",
+                  display: "flex", alignItems: "center", gap: 6,
+                }}>
+                  <DollarSign size={16} /> Earnings
+                </h3>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+                  <div style={{ textAlign: "center" }}>
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: TEXT_FAINT, margin: "0 0 2px", letterSpacing: "0.04em" }}>
+                      SERVICE
+                    </p>
+                    <p style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 600, color: TEXT_MAIN, margin: 0 }}>
+                      ${data.earnings.totalService.toFixed(0)}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: TEXT_FAINT, margin: "0 0 2px", letterSpacing: "0.04em" }}>
+                      TIPS
+                    </p>
+                    <p style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 600, color: GREEN, margin: 0 }}>
+                      ${data.earnings.totalTips.toFixed(0)}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: TEXT_FAINT, margin: "0 0 2px", letterSpacing: "0.04em" }}>
+                      NET
+                    </p>
+                    <p style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 600, color: BRASS, margin: 0 }}>
+                      ${data.earnings.totalNet.toFixed(0)}
+                    </p>
+                  </div>
+                </div>
+                {data.earnings.recent.length > 0 && (
+                  <div style={{ borderTop: `1px solid ${STONE_MID}`, paddingTop: 8 }}>
+                    {data.earnings.recent.map((e) => {
+                      const d = new Date(e.date);
+                      return (
+                        <div key={e.id} style={{
+                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                          padding: "4px 0", fontSize: 12, fontFamily: "'DM Sans', sans-serif",
+                        }}>
+                          <span style={{ color: TEXT_MAIN }}>
+                            {e.serviceCategory || "Service"} — {e.clientName || "Walk-in"}
+                          </span>
+                          <span style={{ color: BRASS, fontWeight: 600 }}>
+                            ${e.totalAmount.toFixed(0)} <span style={{ color: GREEN, fontWeight: 400, fontSize: 11 }}>+${e.tipAmount.toFixed(0)} tip</span>
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Curriculum Progress */}
             {data.categories.length > 0 && (

@@ -77,7 +77,23 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
         }),
       });
 
-      // 2. Set student back to available (if they were with_client)
+      // 2. Record earnings
+      const category = categories.find((c) => c.id === categoryId);
+      const client = clients.find((c) => c.id === clientId);
+      await fetch("/api/earnings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId,
+          studentName: student?.studentName || "",
+          serviceAmount: price,
+          tipAmount: tipAmount,
+          serviceCategory: category?.name || "",
+          clientName: client?.name || "Walk-in",
+        }),
+      });
+
+      // 3. Set student back to available (if they were with_client)
       await fetch("/api/floor/status", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

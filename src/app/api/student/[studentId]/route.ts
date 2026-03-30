@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ stud
     const { studentId } = await params;
     const admin = createSupabaseAdminClient();
 
-    const [floorResult, totalsResult, entriesResult, categoriesResult, progressResult, completionsResult] = await Promise.all([
+    const [floorResult, totalsResult, entriesResult, categoriesResult, progressResult, completionsResult, earningsResult] = await Promise.all([
       admin.from("floor_status")
         .select("student_name, status, clocked_in_at, status_changed_at")
         .eq("workspace_id", workspaceId).eq("student_id", studentId).single(),
@@ -42,6 +42,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ stud
         .select("id, completed_at, verified, service_categories(name)")
         .eq("workspace_id", workspaceId).eq("student_id", studentId)
         .order("completed_at", { ascending: false }).limit(10),
+
+      admin.from("student_earnings")
+        .select("id, service_amount, tip_amount, total_amount, service_category, client_name, created_at")
+        .eq("workspace_id", workspaceId).eq("student_id", studentId)
+        .order("created_at", { ascending: false }).limit(10),
     ]);
 
     const progressMap: Record<string, { completed: number; verified: number }> = {};
@@ -71,6 +76,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ stud
         id: c.id, completedAt: c.completed_at, verified: c.verified,
         categoryName: (c.service_categories as Record<string, unknown>)?.name || "Unknown",
       })),
+      earnings: {
+        totalService: (earningsResult.data || []).reduce((sum: number, e: Record<string, unknown>) => sum + (Number(e.service_amount) || 0), 0),
+        totalTips: (earningsResult.data || []).reduce((sum: number, e: Record<string, unknown>) => sum + (Number(e.tip_amount) || 0), 0),
+        totalNet: (earningsResult.data || []).reduce((sum: number, e: Record<string, unknown>) => sum + (Number(e.total_amount) || 0), 0),
+        transactionCount: (earningsResult.data || []).length,
+        recent: (earningsResult.data || []).slice(0, 5).map((e: Record<string, unknown>) => ({
+          id: e.id,
+          serviceAmount: Number(e.service_amount) || 0,
+          tipAmount: Number(e.tip_amount) || 0,
+          totalAmount: Number(e.total_amount) || 0,
+          serviceCategory: e.service_category,
+          clientName: e.client_name,
+          date: e.created_at,
+        })),
+      },
     });
   } catch (err) {
     console.error("Student profile error:", err);
