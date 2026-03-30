@@ -29,6 +29,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const adjustmentNum = Number(adjustment);
+    if (!Number.isFinite(adjustmentNum) || adjustmentNum === 0) {
+      return NextResponse.json(
+        { error: "adjustment must be a non-zero finite number" },
+        { status: 400 }
+      );
+    }
+
     const movementType: StockMovementType =
       VALID_REASONS.includes(reason) ? reason : "manual_adjust";
 
@@ -46,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     const previousStock = Number(product.quantity) || 0;
-    const newStock = Math.max(0, previousStock + Number(adjustment));
+    const newStock = Math.max(0, previousStock + adjustmentNum);
     const now = new Date().toISOString();
 
     const { error: updateError } = await admin
@@ -63,7 +71,7 @@ export async function POST(req: NextRequest) {
       workspaceId,
       productId: product_id,
       movementType,
-      quantityChange: Number(adjustment),
+      quantityChange: adjustmentNum,
       previousStock,
       newStock,
       notes: notes || undefined,
@@ -71,7 +79,7 @@ export async function POST(req: NextRequest) {
     });
 
     const threshold = Number(product.low_stock_threshold) || 0;
-    if (threshold > 0 && Number(adjustment) < 0 && newStock <= threshold) {
+    if (threshold > 0 && adjustmentNum < 0 && newStock <= threshold) {
       const alertType = newStock === 0 ? "out_of_stock" : "low_stock";
       await upsertStockAlert({ workspaceId, productId: product_id, alertType });
 

@@ -12,7 +12,7 @@ export async function GET() {
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 403 });
 
-    const alerts = await listActiveAlerts();
+    const alerts = await listActiveAlerts(workspaceId);
     return NextResponse.json({ alerts });
   } catch (err) {
     console.error("List alerts error:", err);

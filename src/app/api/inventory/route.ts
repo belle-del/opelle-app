@@ -47,7 +47,7 @@ export async function GET() {
       categoryBreakdown[cat].value += costCents * p.quantity;
     }
 
-    const activeAlerts = await listActiveAlerts();
+    const activeAlerts = await listActiveAlerts(workspaceId);
 
     return NextResponse.json({
       summary: {

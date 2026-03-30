@@ -49,10 +49,11 @@ export async function createStockMovement(input: {
 }
 
 export async function listMovements(options?: {
+  workspaceId?: string;
   productId?: string;
   limit?: number;
 }): Promise<StockMovement[]> {
-  const wsId = await resolveWorkspaceId();
+  const wsId = options?.workspaceId ?? await resolveWorkspaceId();
   if (!wsId) return [];
 
   const admin = createSupabaseAdminClient();
@@ -109,15 +110,12 @@ export async function upsertStockAlert(input: {
   return stockAlertRowToModel(data as StockAlertRow);
 }
 
-export async function listActiveAlerts(): Promise<StockAlert[]> {
-  const wsId = await resolveWorkspaceId();
-  if (!wsId) return [];
-
+export async function listActiveAlerts(workspaceId: string): Promise<StockAlert[]> {
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("stock_alerts")
     .select("*")
-    .eq("workspace_id", wsId)
+    .eq("workspace_id", workspaceId)
     .is("acknowledged_at", null)
     .order("triggered_at", { ascending: false });
 
