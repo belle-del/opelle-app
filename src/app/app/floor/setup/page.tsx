@@ -4,6 +4,7 @@ import { useState } from "react";
 
 const BRASS = "#C4AB70";
 const CREAM = "#F1EFE0";
+const STONE = "#E5E3D3";
 const STONE_MID = "#D4D0C0";
 const GARNET = "#6B2737";
 const TEXT_MAIN = "#2C2416";
@@ -121,17 +122,18 @@ export default function FloorSetupPage() {
         )}
       </div>
 
-      {/* Go to Floor View */}
+      {/* Go to views */}
       <div style={{
         background: CREAM, border: `1px solid ${STONE_MID}`, borderRadius: 12,
         padding: 24,
       }}>
         <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 500, color: TEXT_MAIN, margin: "0 0 8px" }}>
-          3. Open Floor View
+          3. Open Views
         </h2>
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: TEXT_FAINT, margin: "0 0 16px" }}>
-          Once students are seeded, go to the floor view to demo.
+          Once students are seeded, use these views for the demo.
         </p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <a
           href="/app/floor"
           style={{
@@ -140,8 +142,96 @@ export default function FloorSetupPage() {
             textDecoration: "none", fontFamily: "'DM Sans', sans-serif",
           }}
         >
-          Go to Floor View →
+          Floor View →
         </a>
+        <a
+          href="/app/hours"
+          style={{
+            display: "inline-block", padding: "10px 20px", borderRadius: 8, border: "none",
+            background: GARNET, color: "#fff", fontSize: 14, fontWeight: 500,
+            textDecoration: "none", fontFamily: "'DM Sans', sans-serif",
+          }}
+        >
+          Hour Tracking →
+        </a>
+        </div>
+      </div>
+
+      {/* Migration SQL */}
+      <div style={{
+        background: CREAM, border: `1px solid ${STONE_MID}`, borderRadius: 12,
+        padding: 24, marginTop: 16,
+      }}>
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 500, color: TEXT_MAIN, margin: "0 0 8px" }}>
+          SQL Migrations
+        </h2>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: TEXT_FAINT, margin: "0 0 12px" }}>
+          Run these in Supabase SQL Editor if the tables don&apos;t exist yet.
+        </p>
+        <details style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: TEXT_FAINT }}>
+          <summary style={{ cursor: "pointer", marginBottom: 8, fontWeight: 500 }}>Floor Status Table</summary>
+          <pre style={{ background: STONE, padding: 12, borderRadius: 8, overflow: "auto", fontSize: 11 }}>{`CREATE TABLE IF NOT EXISTS floor_status (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  workspace_id UUID REFERENCES workspaces(id) NOT NULL,
+  student_id UUID NOT NULL,
+  student_name VARCHAR(100) NOT NULL DEFAULT '',
+  status VARCHAR(20) DEFAULT 'clocked_out'
+    CHECK (status IN ('clocked_out', 'available', 'with_client', 'on_break')),
+  current_client_id UUID REFERENCES clients(id),
+  current_service VARCHAR(100),
+  status_changed_at TIMESTAMPTZ DEFAULT NOW(),
+  clocked_in_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(workspace_id, student_id)
+);
+ALTER TABLE floor_status ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "workspace_owner_select" ON floor_status
+  FOR SELECT USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+CREATE POLICY "workspace_owner_all" ON floor_status
+  FOR ALL USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+CREATE INDEX idx_floor_status_workspace ON floor_status(workspace_id);
+CREATE INDEX idx_floor_status_student ON floor_status(workspace_id, student_id);
+ALTER PUBLICATION supabase_realtime ADD TABLE floor_status;`}</pre>
+        </details>
+        <details style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: TEXT_FAINT, marginTop: 8 }}>
+          <summary style={{ cursor: "pointer", marginBottom: 8, fontWeight: 500 }}>Time Entries + Hour Totals Tables</summary>
+          <pre style={{ background: STONE, padding: 12, borderRadius: 8, overflow: "auto", fontSize: 11 }}>{`CREATE TABLE IF NOT EXISTS time_entries (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  workspace_id UUID REFERENCES workspaces(id) NOT NULL,
+  student_id UUID NOT NULL,
+  student_name VARCHAR(100) NOT NULL DEFAULT '',
+  clock_in TIMESTAMPTZ NOT NULL,
+  clock_out TIMESTAMPTZ,
+  duration_minutes INTEGER,
+  verified BOOLEAN DEFAULT false,
+  verified_by UUID,
+  verified_at TIMESTAMPTZ,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE time_entries ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "workspace_owner_all" ON time_entries
+  FOR ALL USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+CREATE INDEX idx_time_entries_workspace ON time_entries(workspace_id);
+CREATE INDEX idx_time_entries_student ON time_entries(workspace_id, student_id);
+
+CREATE TABLE IF NOT EXISTS hour_totals (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  workspace_id UUID REFERENCES workspaces(id) NOT NULL,
+  student_id UUID NOT NULL,
+  student_name VARCHAR(100) NOT NULL DEFAULT '',
+  total_hours DECIMAL(8,2) DEFAULT 0,
+  verified_hours DECIMAL(8,2) DEFAULT 0,
+  hours_by_category JSONB DEFAULT '{}',
+  last_updated TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(workspace_id, student_id)
+);
+ALTER TABLE hour_totals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "workspace_owner_all" ON hour_totals
+  FOR ALL USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+CREATE INDEX idx_hour_totals_workspace ON hour_totals(workspace_id);`}</pre>
+        </details>
       </div>
     </div>
   );

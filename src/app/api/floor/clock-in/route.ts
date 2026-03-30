@@ -18,6 +18,15 @@ export async function POST(req: NextRequest) {
     const admin = createSupabaseAdminClient();
     const now = new Date().toISOString();
 
+    // Get student name for time entry
+    const { data: floorRow } = await admin
+      .from("floor_status")
+      .select("student_name")
+      .eq("workspace_id", workspaceId)
+      .eq("student_id", studentId)
+      .single();
+
+    // 1. Update floor status
     const { error } = await admin
       .from("floor_status")
       .update({
@@ -35,6 +44,14 @@ export async function POST(req: NextRequest) {
       console.error("Clock-in error:", error);
       return NextResponse.json({ error: "Failed to clock in" }, { status: 500 });
     }
+
+    // 2. Create time entry
+    await admin.from("time_entries").insert({
+      workspace_id: workspaceId,
+      student_id: studentId,
+      student_name: floorRow?.student_name || "",
+      clock_in: now,
+    });
 
     return NextResponse.json({ success: true, status: "available" });
   } catch (err) {
