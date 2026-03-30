@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         unit_of_measure: unitOfMeasure || "pieces",
         retail_price: retailPrice || null,
         reorder_quantity: reorderQuantity || null,
-      }).eq("id", product.id);
+      }).eq("id", product.id).eq("workspace_id", workspaceId);
     }
 
     return NextResponse.json({ success: true, product }, { status: 201 });
