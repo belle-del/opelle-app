@@ -117,7 +117,7 @@ export async function GET(request: Request) {
     if (ws?.owner_id) stylistId = ws.owner_id as string;
   }
 
-  console.log("[slots DIAG]", { allowIndividual, stylistId, workspaceId: clientUser.workspace_id, dateStr });
+  console.log(`[slots DIAG] allowIndividual=${allowIndividual} stylistId=${stylistId} wsId=${clientUser.workspace_id} date=${dateStr}`);
 
   // If individual availability is enabled and a stylist is specified, check their patterns
   let effectiveHours: WorkingHours = workingHours;
@@ -155,7 +155,7 @@ export async function GET(request: Request) {
       .lte("effective_from", todayStr)
       .or(`effective_to.is.null,effective_to.gte.${todayStr}`);
 
-    console.log("[slots DIAG] patterns found:", patterns?.length ?? 0, "todayStr:", toLocalDateString(today));
+    console.log(`[slots DIAG] patterns=${patterns?.length ?? 0} todayStr=${toLocalDateString(today)} stylistId=${stylistId}`);
     if (patterns && patterns.length > 0) {
       // Build WorkingHours-shaped object from stylist patterns
       const stylistHours: WorkingHours = {};
