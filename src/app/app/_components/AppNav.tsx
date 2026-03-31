@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { DevContext } from "@/lib/dev-context";
+import type { ViewMode } from "@/lib/dev-context";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -29,6 +31,27 @@ import {
   Images,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+
+// Which modes can see each nav item. 'god' always sees everything.
+const NAV_VISIBILITY: Record<string, ViewMode[]> = {
+  "/app":              ["god", "school", "salon", "practitioner"],
+  "/app/floor":        ["god", "school"],
+  "/app/hours":        ["god", "school"],
+  "/app/progress":     ["god", "school"],
+  "/app/checkout":     ["god", "school"],
+  "/app/appointments": ["god", "school", "salon", "practitioner"],
+  "/app/availability": ["god", "school", "salon", "practitioner"],
+  "/app/clients":      ["god", "school", "salon", "practitioner"],
+  "/app/formulas":     ["god", "school", "practitioner"],
+  "/app/portfolio":    ["god", "school", "practitioner"],
+  "/app/products":     ["god", "school", "salon", "practitioner"],
+  "/app/messages":     ["god", "school", "salon", "practitioner"],
+  "/app/content":      ["god", "salon", "practitioner"],
+  "/app/metis":        ["god", "school", "salon", "practitioner"],
+  "/app/tasks":        ["god", "school", "salon", "practitioner"],
+  "/app/history":      ["god", "school"],
+  "/app/settings":     ["god", "school", "salon", "practitioner"],
+};
 
 const NAV_SECTIONS = [
   {
@@ -115,6 +138,9 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
 
+  const devCtx = useContext(DevContext);
+  const viewMode: ViewMode = devCtx?.viewMode ?? "god";
+
   const handleSignOut = async () => {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
@@ -192,7 +218,13 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
               {section.label}
             </p>
             <div className="space-y-0.5">
-              {section.items.map((item) => {
+              {section.items
+                .filter((item) => {
+                  const allowed = NAV_VISIBILITY[item.href];
+                  if (!allowed) return true; // unknown items always show
+                  return viewMode === "god" || allowed.includes(viewMode);
+                })
+                .map((item) => {
                 const isActive =
                   pathname === item.href ||
                   (item.href !== "/app" && pathname.startsWith(item.href));
