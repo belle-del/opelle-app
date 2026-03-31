@@ -66,7 +66,7 @@ export async function GET(request: Request) {
   // Get workspace settings
   const { data: workspace } = await admin
     .from("workspaces")
-    .select("working_hours, buffer_minutes, booking_window_days")
+    .select("working_hours, buffer_minutes, booking_window_days, allow_individual_availability")
     .eq("id", clientUser.workspace_id)
     .single();
 
@@ -104,6 +104,12 @@ export async function GET(request: Request) {
   const bufferMinutes = workspace.buffer_minutes || 0;
   const bookingWindowDays = workspace.booking_window_days || 60;
 
+  const stylistId = searchParams.get("stylist_id");
+  const allowIndividual = (workspace as Record<string, unknown>).allow_individual_availability as boolean | null;
+
+  // If individual availability is enabled and a stylist is specified, check their patterns
+  let effectiveHours: WorkingHours = workingHours;
+
   // Generate slots for the requested date or the next 7 days
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -122,6 +128,39 @@ export async function GET(request: Request) {
       const d = new Date(today);
       d.setDate(d.getDate() + i);
       if (d <= maxDate) dates.push(d);
+    }
+  }
+
+  if (allowIndividual && stylistId) {
+    // Get today's date string for effective pattern lookup
+    const todayStr = toLocalDateString(today);
+
+    const { data: patterns } = await admin
+      .from("availability_patterns")
+      .select("day_of_week, start_time, end_time")
+      .eq("workspace_id", clientUser.workspace_id)
+      .eq("user_id", stylistId)
+      .lte("effective_from", todayStr)
+      .or(`effective_to.is.null,effective_to.gte.${todayStr}`);
+
+    if (patterns && patterns.length > 0) {
+      // Build WorkingHours-shaped object from stylist patterns
+      const stylistHours: WorkingHours = {};
+      for (const p of patterns) {
+        const dayName = DAY_NAMES[p.day_of_week as number];
+        stylistHours[dayName] = {
+          start: (p.start_time as string).slice(0, 5),
+          end: (p.end_time as string).slice(0, 5),
+          closed: false,
+        };
+      }
+      // Fill remaining days as closed
+      for (const day of DAY_NAMES) {
+        if (!stylistHours[day]) {
+          stylistHours[day] = { start: "09:00", end: "18:00", closed: true };
+        }
+      }
+      effectiveHours = stylistHours;
     }
   }
 
@@ -159,10 +198,42 @@ export async function GET(request: Request) {
     available: boolean;
   }> = [];
 
+  // Fetch overrides for stylist if applicable
+  const overridesByDate: Record<string, { is_available: boolean; start_time: string | null; end_time: string | null }> = {};
+  if (allowIndividual && stylistId) {
+    const startRange2 = toLocalDateString(dates[0] || today);
+    const endRange2 = toLocalDateString(dates[dates.length - 1] || today);
+    const { data: overrideRows } = await admin
+      .from("availability_overrides")
+      .select("override_date, is_available, start_time, end_time")
+      .eq("workspace_id", clientUser.workspace_id)
+      .eq("user_id", stylistId)
+      .gte("override_date", startRange2)
+      .lte("override_date", endRange2);
+
+    for (const ov of overrideRows || []) {
+      overridesByDate[ov.override_date as string] = ov as { is_available: boolean; start_time: string | null; end_time: string | null };
+    }
+  }
+
   for (const date of dates) {
     const dayName = DAY_NAMES[date.getDay()];
-    const dayHours = workingHours[dayName];
     const dateKey = toLocalDateString(date);
+
+    // Check for a date-specific override
+    const override = overridesByDate[dateKey];
+    let dayHours: WorkingHours[string];
+
+    if (override) {
+      if (!override.is_available) continue; // blocked day
+      dayHours = {
+        start: override.start_time?.slice(0, 5) ?? "09:00",
+        end: override.end_time?.slice(0, 5) ?? "18:00",
+        closed: false,
+      };
+    } else {
+      dayHours = effectiveHours[dayName];
+    }
 
     if (!dayHours || dayHours.closed) continue;
 
