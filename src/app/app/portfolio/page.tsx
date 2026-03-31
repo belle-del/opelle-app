@@ -87,10 +87,10 @@ export default function PortfolioPage() {
         <CardContent className="p-5">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
             <div>
-              <p style={{ fontSize: "14px", color: "var(--stone-lightest, #FAF8F3)", fontWeight: 500 }}>
+              <p style={{ fontSize: "14px", color: "#2C2C24", fontWeight: 500, fontFamily: "'DM Sans', sans-serif" }}>
                 Make portfolio public
               </p>
-              <p style={{ fontSize: "12px", color: "rgba(241,239,224,0.4)", marginTop: "2px" }}>
+              <p style={{ fontSize: "12px", color: "#8A8778", marginTop: "2px", fontFamily: "'DM Sans', sans-serif" }}>
                 Anyone with the link can view your work
               </p>
             </div>
@@ -100,9 +100,10 @@ export default function PortfolioPage() {
               style={{
                 width: "44px", height: "24px", borderRadius: "12px",
                 border: "none", cursor: "pointer",
-                background: data?.portfolioPublic ? "var(--brass, #C4AB70)" : "rgba(241,239,224,0.12)",
+                background: data?.portfolioPublic ? "#C4AB70" : "#D4D0C8",
                 transition: "background 0.2s",
                 position: "relative", flexShrink: 0,
+                opacity: toggling ? 0.6 : 1,
               }}
             >
               <span style={{
@@ -112,6 +113,7 @@ export default function PortfolioPage() {
                 borderRadius: "50%", background: "#fff",
                 transition: "left 0.2s",
                 display: "block",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
               }} />
             </button>
           </div>
@@ -119,10 +121,10 @@ export default function PortfolioPage() {
           {data?.portfolioPublic && userId && (
             <div style={{
               marginTop: "16px", padding: "10px 14px", borderRadius: "8px",
-              background: "rgba(196,171,112,0.06)", border: "1px solid rgba(196,171,112,0.15)",
+              background: "rgba(196,171,112,0.08)", border: "1px solid rgba(196,171,112,0.25)",
               display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
             }}>
-              <span style={{ fontSize: "12px", color: "rgba(241,239,224,0.6)", wordBreak: "break-all" }}>
+              <span style={{ fontSize: "12px", color: "#5C5A4F", wordBreak: "break-all", fontFamily: "'DM Sans', sans-serif" }}>
                 {publicUrl}
               </span>
               <button
