@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 import type { PhotoPair } from "@/lib/types";
 
 interface RouteParams {
@@ -12,21 +13,26 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const { userId } = await params;
     const admin = createSupabaseAdminClient();
 
-    // Resolve workspace for this userId (they must be the owner)
+    // Resolve workspace using the same fallback logic as all other routes
+    const workspaceId = await getWorkspaceId(userId);
+    if (!workspaceId) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     const { data: workspace } = await admin
       .from("workspaces")
       .select("id, name, portfolio_public, owner_id")
-      .eq("owner_id", userId)
+      .eq("id", workspaceId)
       .single();
 
     if (!workspace) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Check auth — authenticated owner can always see; others need portfolio_public
+    // Check auth — the user whose portfolio this is can always see it; others need portfolio_public
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const isOwner = user?.id === workspace.owner_id;
+    const isOwner = user?.id === userId;
 
     if (!workspace.portfolio_public && !isOwner) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
