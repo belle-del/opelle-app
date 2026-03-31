@@ -48,7 +48,7 @@ export function ClientDetailTabs({ clientId, clientName, children, threads = [],
   const [unreviewedCount, setUnreviewedCount] = useState(0);
   const [photoPairs, setPhotoPairs] = useState<import("@/lib/types").PhotoPair[]>([]);
   const [photosLoaded, setPhotosLoaded] = useState(false);
-  const [photosLoading, setPhotosLoading] = useState(false);
+  const photosLoading = activeTab === "photos" && !photosLoaded;
 
   useEffect(() => {
     // Fetch inspo data
@@ -68,19 +68,21 @@ export function ClientDetailTabs({ clientId, clientName, children, threads = [],
 
   useEffect(() => {
     if (activeTab !== "photos" || photosLoaded) return;
-    setPhotosLoading(true);
+    let cancelled = false;
     fetch(`/api/clients/${clientId}/photos`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.pairs && Array.isArray(data.pairs)) {
-          setPhotoPairs(data.pairs);
+        if (!cancelled) {
+          if (data.pairs && Array.isArray(data.pairs)) {
+            setPhotoPairs(data.pairs);
+          }
+          setPhotosLoaded(true);
         }
       })
-      .catch(() => {})
-      .finally(() => {
-        setPhotosLoaded(true);
-        setPhotosLoading(false);
+      .catch(() => {
+        if (!cancelled) setPhotosLoaded(true);
       });
+    return () => { cancelled = true; };
   }, [activeTab, clientId, photosLoaded]);
 
   // Count unread messages from clients

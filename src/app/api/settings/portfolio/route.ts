@@ -23,7 +23,8 @@ export async function PATCH(request: Request) {
     const { error } = await admin
       .from("workspaces")
       .update({ portfolio_public: portfolioPublic })
-      .eq("id", workspaceId);
+      .eq("id", workspaceId)
+      .eq("owner_id", user.id);
 
     if (error) {
       console.error("[settings/portfolio] update error:", error.message);
