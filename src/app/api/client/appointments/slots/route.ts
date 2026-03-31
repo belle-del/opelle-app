@@ -283,5 +283,6 @@ export async function GET(request: Request) {
     slots: allSlots,
     durationMins,
     bookingWindowDays,
+    _debug: { allowIndividual, stylistId, workspaceId: clientUser.workspace_id },
   });
 }
