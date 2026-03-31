@@ -17,7 +17,7 @@ export async function GET() {
     const [categoriesResult, progressResult, completionsResult, studentsResult] = await Promise.all([
       admin
         .from("service_categories")
-        .select("id, name, code, required_count, sort_order")
+        .select("id, name, code, required_count, sort_order, requires_photos")
         .eq("workspace_id", workspaceId)
         .eq("active", true)
         .order("sort_order", { ascending: true }),
@@ -69,6 +69,7 @@ export async function GET() {
         name: c.name,
         code: c.code,
         requiredCount: c.required_count,
+        requires_photos: c.requires_photos as boolean,
       })),
       students: Object.values(studentMap),
       recentCompletions: completions.map((c: Record<string, unknown>) => ({
