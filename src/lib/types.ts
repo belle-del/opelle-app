@@ -270,6 +270,70 @@ export type Photo = {
   createdAt: string;
 };
 
+// PhotoPair — shared shape for before/after gallery components
+export type PhotoPair = {
+  id: string;              // service_completion id
+  beforePhotoUrl: string | null;
+  afterPhotoUrl: string | null;
+  completedAt: string;
+  categoryName: string;
+  studentName?: string;    // omitted on public portfolio
+  notes?: string;
+};
+
+// Formula History (Module 8 — linked to service completions)
+export type FormulaSharingLevel = 'private' | 'client_visible' | 'portable';
+
+export type FormulaHistory = {
+  id: string;
+  workspaceId: string;
+  clientId: string;
+  serviceCompletionId?: string;
+  formula: Record<string, unknown>;
+  beforePhotoUrl?: string;
+  afterPhotoUrl?: string;
+  stylistNotes?: string;
+  resultNotes?: string;
+  clientSatisfaction?: number;
+  sharingLevel: FormulaSharingLevel;
+  kernelFeedbackId?: string;
+  createdAt: string;
+};
+
+export type FormulaHistoryRow = {
+  id: string;
+  workspace_id: string;
+  client_id: string;
+  service_completion_id: string | null;
+  formula: Record<string, unknown>;
+  before_photo_url: string | null;
+  after_photo_url: string | null;
+  stylist_notes: string | null;
+  result_notes: string | null;
+  client_satisfaction: number | null;
+  sharing_level: FormulaSharingLevel;
+  kernel_feedback_id: string | null;
+  created_at: string;
+};
+
+export function formulaHistoryRowToModel(row: FormulaHistoryRow): FormulaHistory {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    clientId: row.client_id,
+    serviceCompletionId: row.service_completion_id ?? undefined,
+    formula: row.formula,
+    beforePhotoUrl: row.before_photo_url ?? undefined,
+    afterPhotoUrl: row.after_photo_url ?? undefined,
+    stylistNotes: row.stylist_notes ?? undefined,
+    resultNotes: row.result_notes ?? undefined,
+    clientSatisfaction: row.client_satisfaction ?? undefined,
+    sharingLevel: row.sharing_level,
+    kernelFeedbackId: row.kernel_feedback_id ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
 // Task (education)
 export type TaskStatus = 'pending' | 'in_progress' | 'completed';
 
