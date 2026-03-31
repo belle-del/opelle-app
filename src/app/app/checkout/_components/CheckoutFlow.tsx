@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle, CreditCard, DollarSign, Banknote } from "lucide-react";
+import BeforeAfterCapture from "@/components/BeforeAfterCapture";
 
 const BRASS = "#C4AB70";
 const CREAM = "#F1EFE0";
@@ -49,6 +50,16 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
   const [tipPreset, setTipPreset] = useState<TipPreset>(20);
   const [customTip, setCustomTip] = useState("");
 
+  // Photos
+  const [photosRequired, setPhotosRequired] = useState(false);
+  const [capturedPhotos, setCapturedPhotos] = useState<{
+    beforePhotoUrl?: string;
+    afterPhotoUrl?: string;
+  }>({});
+
+  const photosReady = !photosRequired
+    || (!!capturedPhotos.beforePhotoUrl && !!capturedPhotos.afterPhotoUrl);
+
   // State
   const [processing, setProcessing] = useState(false);
   const [completed, setCompleted] = useState(false);
@@ -75,6 +86,8 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
           studentName: student?.studentName || "",
           categoryId,
           clientId: clientId || undefined,
+          beforePhotoUrl: capturedPhotos.beforePhotoUrl,
+          afterPhotoUrl: capturedPhotos.afterPhotoUrl,
         }),
       });
 
@@ -131,6 +144,8 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
     setCustomTip("");
     setCompleted(false);
     setResult(null);
+    setPhotosRequired(false);
+    setCapturedPhotos({});
   }
 
   // Success screen
@@ -194,11 +209,27 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
           </div>
           <div>
             <label style={labelStyle}>Service Type</label>
-            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} style={selectStyle}>
+            <select value={categoryId} onChange={(e) => {
+              const newId = e.target.value;
+              setCategoryId(newId);
+              const cat = categories.find((c) => c.id === newId);
+              setPhotosRequired(cat?.requires_photos ?? false);
+              setCapturedPhotos({});
+            }} style={selectStyle}>
               <option value="">Select service...</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
+          {photosRequired && (
+            <div>
+              <label style={labelStyle}>Before & After Photos <span style={{ color: "#9E5A5A" }}>*</span></label>
+              <BeforeAfterCapture
+                clientId={clientId || undefined}
+                required={photosRequired}
+                onPhotosChange={setCapturedPhotos}
+              />
+            </div>
+          )}
           <div>
             <label style={labelStyle}>Client (optional)</label>
             <select value={clientId} onChange={(e) => setClientId(e.target.value)} style={selectStyle}>
@@ -322,17 +353,21 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
       {/* Complete Button */}
       <button
         onClick={completePayment}
-        disabled={processing || !studentId || !categoryId}
+        disabled={processing || !studentId || !categoryId || !photosReady}
         style={{
           width: "100%", padding: "14px 20px", borderRadius: 10, border: "none",
-          background: (!studentId || !categoryId) ? STONE_MID : BRASS,
+          background: (!studentId || !categoryId || !photosReady) ? STONE_MID : BRASS,
           color: "#fff", fontSize: 16, fontWeight: 600, cursor: processing ? "not-allowed" : "pointer",
           fontFamily: "'DM Sans', sans-serif",
           opacity: processing ? 0.7 : 1,
           transition: "all 0.2s ease",
         }}
       >
-        {processing ? "Processing..." : "Complete Payment"}
+        {processing
+          ? "Processing..."
+          : (photosRequired && !photosReady)
+            ? "Add Photos to Continue"
+            : "Complete Payment"}
       </button>
     </div>
   );
