@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { RefreshCw, CheckCircle, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import BeforeAfterCapture from "@/components/BeforeAfterCapture";
 
 const BRASS = "#C4AB70";
 const CREAM = "#F1EFE0";
@@ -51,6 +52,14 @@ export function ProgressDashboard({ initialCategories, initialStudents, initialC
   const [logStudentId, setLogStudentId] = useState("");
   const [logCategoryId, setLogCategoryId] = useState("");
   const [logLoading, setLogLoading] = useState(false);
+  const [photosRequired, setPhotosRequired] = useState(false);
+  const [capturedPhotos, setCapturedPhotos] = useState<{
+    beforePhotoUrl?: string;
+    afterPhotoUrl?: string;
+  }>({});
+
+  const photosReady = !photosRequired
+    || (!!capturedPhotos.beforePhotoUrl && !!capturedPhotos.afterPhotoUrl);
 
   const refresh = useCallback(async () => {
     try {
@@ -76,12 +85,16 @@ export function ProgressDashboard({ initialCategories, initialStudents, initialC
           studentId: logStudentId,
           studentName: student?.studentName || "",
           categoryId: logCategoryId,
+          beforePhotoUrl: capturedPhotos.beforePhotoUrl,
+          afterPhotoUrl: capturedPhotos.afterPhotoUrl,
         }),
       });
       await refresh();
       setLogOpen(false);
       setLogStudentId("");
       setLogCategoryId("");
+      setPhotosRequired(false);
+      setCapturedPhotos({});
     } finally {
       setLogLoading(false);
     }
@@ -112,7 +125,13 @@ export function ProgressDashboard({ initialCategories, initialStudents, initialC
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button
-            onClick={() => setLogOpen(!logOpen)}
+            onClick={() => {
+              if (logOpen) {
+                setPhotosRequired(false);
+                setCapturedPhotos({});
+              }
+              setLogOpen(!logOpen);
+            }}
             style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "8px 14px", borderRadius: 8, border: "none",
@@ -167,7 +186,13 @@ export function ProgressDashboard({ initialCategories, initialStudents, initialC
               <label style={{ display: "block", fontSize: 11, color: TEXT_FAINT, marginBottom: 4, fontFamily: "'DM Sans', sans-serif" }}>Service Category</label>
               <select
                 value={logCategoryId}
-                onChange={(e) => setLogCategoryId(e.target.value)}
+                onChange={(e) => {
+                  const newId = e.target.value;
+                  setLogCategoryId(newId);
+                  const cat = categories.find((c) => c.id === newId);
+                  setPhotosRequired(cat?.requires_photos ?? false);
+                  setCapturedPhotos({});
+                }}
                 style={{
                   padding: "8px 12px", borderRadius: 6, border: `1px solid ${STONE_MID}`,
                   background: "#fff", fontSize: 13, fontFamily: "'DM Sans', sans-serif",
@@ -180,18 +205,37 @@ export function ProgressDashboard({ initialCategories, initialStudents, initialC
                 ))}
               </select>
             </div>
+            {photosRequired && (
+              <div style={{ marginTop: 12 }}>
+                <p style={{
+                  fontSize: "11px", fontWeight: 600, textTransform: "uppercase",
+                  letterSpacing: "0.08em", color: "#8A8778", marginBottom: "8px",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}>
+                  Before &amp; After Photos <span style={{ color: "#9E5A5A" }}>*</span>
+                </p>
+                <BeforeAfterCapture
+                  required={photosRequired}
+                  onPhotosChange={setCapturedPhotos}
+                />
+              </div>
+            )}
             <button
               onClick={logCompletion}
-              disabled={logLoading || !logStudentId || !logCategoryId}
+              disabled={logLoading || !logStudentId || !logCategoryId || !photosReady}
               style={{
                 padding: "8px 16px", borderRadius: 6, border: "none",
                 background: BRASS, color: "#fff", fontSize: 13, fontWeight: 500,
                 cursor: logLoading ? "not-allowed" : "pointer",
-                opacity: (!logStudentId || !logCategoryId) ? 0.5 : 1,
+                opacity: (!logStudentId || !logCategoryId || !photosReady) ? 0.5 : 1,
                 fontFamily: "'DM Sans', sans-serif",
               }}
             >
-              {logLoading ? "Logging..." : "Log Completion"}
+              {logLoading
+                ? "Logging..."
+                : (photosRequired && !photosReady)
+                  ? "Add Photos to Continue"
+                  : "Log Service"}
             </button>
           </div>
         </div>
