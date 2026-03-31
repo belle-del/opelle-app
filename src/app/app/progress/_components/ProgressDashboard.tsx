@@ -205,21 +205,6 @@ export function ProgressDashboard({ initialCategories, initialStudents, initialC
                 ))}
               </select>
             </div>
-            {photosRequired && (
-              <div style={{ marginTop: 12 }}>
-                <p style={{
-                  fontSize: "11px", fontWeight: 600, textTransform: "uppercase",
-                  letterSpacing: "0.08em", color: "#8A8778", marginBottom: "8px",
-                  fontFamily: "'DM Sans', sans-serif",
-                }}>
-                  Before &amp; After Photos <span style={{ color: "#9E5A5A" }}>*</span>
-                </p>
-                <BeforeAfterCapture
-                  required={photosRequired}
-                  onPhotosChange={setCapturedPhotos}
-                />
-              </div>
-            )}
             <button
               onClick={logCompletion}
               disabled={logLoading || !logStudentId || !logCategoryId || !photosReady}
@@ -238,6 +223,21 @@ export function ProgressDashboard({ initialCategories, initialStudents, initialC
                   : "Log Service"}
             </button>
           </div>
+          {photosRequired && (
+            <div style={{ marginTop: 12 }}>
+              <label style={{
+                display: "block", fontSize: 11, color: TEXT_FAINT,
+                marginBottom: 4, fontFamily: "'DM Sans', sans-serif",
+              }}>
+                Before &amp; After Photos <span style={{ color: "#9E5A5A" }}>*</span>
+              </label>
+              <BeforeAfterCapture
+                key={logCategoryId}
+                required={photosRequired}
+                onPhotosChange={setCapturedPhotos}
+              />
+            </div>
+          )}
         </div>
       )}
 
