@@ -57,10 +57,11 @@ export function WeeklyScheduleEditor({ workspaceId: _workspaceId, userId, initia
     setDays(prev => ({ ...prev, [dayOfWeek]: { ...prev[dayOfWeek], ...patch } }));
   }
 
-  async function saveDay(dayOfWeek: number) {
+  async function saveDay(dayOfWeek: number, nextEnabled?: boolean) {
     const day = days[dayOfWeek];
+    const isEnabled = nextEnabled !== undefined ? nextEnabled : day.enabled;
 
-    if (!day.enabled) {
+    if (!isEnabled) {
       if (day.patternId) {
         update(dayOfWeek, { saving: true, error: undefined });
         const res = await fetch(`/api/booking/availability/patterns/${day.patternId}`, { method: "DELETE" });
@@ -128,9 +129,9 @@ export function WeeklyScheduleEditor({ workspaceId: _workspaceId, userId, initia
               <button
                 type="button"
                 onClick={() => {
-                  update(value, { enabled: !day.enabled });
-                  // save after state update is flushed
-                  setTimeout(() => saveDay(value), 0);
+                  const newEnabled = !day.enabled;
+                  update(value, { enabled: newEnabled });
+                  saveDay(value, newEnabled);
                 }}
                 style={{
                   width: 36,

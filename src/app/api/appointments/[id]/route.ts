@@ -49,12 +49,15 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
 
     if (status === "scheduled") {
-      const admin = createSupabaseAdminClient();
-      await admin
+      const admin2 = createSupabaseAdminClient();
+      const { error: confirmedAtError } = await admin2
         .from("appointments")
         .update({ confirmed_at: new Date().toISOString() })
         .eq("id", id)
         .eq("workspace_id", appointment.workspaceId);
+      if (confirmedAtError) {
+        console.error("[appointments/[id] PATCH] Failed to set confirmed_at:", confirmedAtError.message);
+      }
     }
 
     await logActivity("appointment.updated", "appointment", id, body.serviceName || id, { after: body });
