@@ -37,9 +37,10 @@ type Props = {
   initialBookingWindow: number;
   initialBufferMinutes: number;
   initialWorkingHours: WorkingHours;
+  initialAllowIndividualAvailability: boolean;
 };
 
-export function BookingConfig({ workspaceId, initialBookingWindow, initialBufferMinutes, initialWorkingHours }: Props) {
+export function BookingConfig({ workspaceId, initialBookingWindow, initialBufferMinutes, initialWorkingHours, initialAllowIndividualAvailability }: Props) {
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [loading, setLoading] = useState(true);
   const [bookingWindow, setBookingWindow] = useState(initialBookingWindow || 60);
@@ -55,6 +56,7 @@ export function BookingConfig({ workspaceId, initialBookingWindow, initialBuffer
     });
     return defaults;
   });
+  const [allowIndividualAvailability, setAllowIndividualAvailability] = useState(initialAllowIndividualAvailability);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -101,6 +103,7 @@ export function BookingConfig({ workspaceId, initialBookingWindow, initialBuffer
           bookingWindowDays: bookingWindow,
           bufferMinutes,
           workingHours,
+          allowIndividualAvailability,
         }),
       });
       setSaved(true);
@@ -294,6 +297,49 @@ export function BookingConfig({ workspaceId, initialBookingWindow, initialBuffer
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Individual Stylist Availability */}
+      <div style={{ borderTop: "1px solid var(--stone-200, #e0ddd6)", paddingTop: 16, marginTop: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500, color: "var(--text-on-stone, #2C2C2A)" }}>
+              Individual Stylist Availability
+            </p>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "var(--text-on-stone-faint, #8a8880)", marginTop: 2 }}>
+              Allow stylists to set their own schedule that overrides workspace hours
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAllowIndividualAvailability(prev => !prev)}
+            style={{
+              width: 44,
+              height: 24,
+              borderRadius: 12,
+              background: allowIndividualAvailability ? "var(--garnet, #8B3A3A)" : "var(--stone-300, #ccc)",
+              border: "none",
+              cursor: "pointer",
+              position: "relative",
+              transition: "background 0.2s",
+              flexShrink: 0,
+            }}
+            aria-label="Toggle individual availability"
+          >
+            <span
+              style={{
+                position: "absolute",
+                top: 2,
+                left: allowIndividualAvailability ? 22 : 2,
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                background: "white",
+                transition: "left 0.2s",
+              }}
+            />
+          </button>
         </div>
       </div>
 

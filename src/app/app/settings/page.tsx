@@ -111,6 +111,7 @@ export default async function SettingsPage() {
             initialBookingWindow={workspace?.booking_window_days ?? 60}
             initialBufferMinutes={workspace?.buffer_minutes ?? 0}
             initialWorkingHours={workspace?.working_hours ?? {}}
+            initialAllowIndividualAvailability={workspace?.allow_individual_availability ?? false}
           />
         </CardContent>
       </Card>

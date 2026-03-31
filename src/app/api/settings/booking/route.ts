@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function PATCH(request: Request) {
-  const { workspaceId, bookingWindowDays, bufferMinutes, workingHours } = await request.json();
+  const { workspaceId, bookingWindowDays, bufferMinutes, workingHours, allowIndividualAvailability } = await request.json();
 
   if (!workspaceId) {
     return NextResponse.json({ error: "Missing workspaceId" }, { status: 400 });
@@ -14,6 +14,7 @@ export async function PATCH(request: Request) {
   if (bookingWindowDays !== undefined) updates.booking_window_days = bookingWindowDays;
   if (bufferMinutes !== undefined) updates.buffer_minutes = bufferMinutes;
   if (workingHours !== undefined) updates.working_hours = workingHours;
+  if (allowIndividualAvailability !== undefined) updates.allow_individual_availability = allowIndividualAvailability;
 
   const { error } = await admin
     .from("workspaces")
