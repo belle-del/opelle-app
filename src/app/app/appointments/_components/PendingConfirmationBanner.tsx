@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type PendingAppointment = {
   id: string;
@@ -17,6 +17,11 @@ export function PendingConfirmationBanner({ pending }: Props) {
   const [dismissed, setDismissed] = useState(false);
   const [actioning, setActioning] = useState<string | null>(null);
   const [localPending, setLocalPending] = useState<PendingAppointment[]>(pending);
+
+  // Sync if parent re-renders with updated pending list (e.g. after external confirmation)
+  useEffect(() => {
+    setLocalPending(pending);
+  }, [pending]);
 
   if (dismissed || localPending.length === 0) return null;
 

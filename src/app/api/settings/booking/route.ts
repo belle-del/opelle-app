@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 
 export async function PATCH(request: Request) {
-  const { workspaceId, bookingWindowDays, bufferMinutes, workingHours, allowIndividualAvailability } = await request.json();
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (!workspaceId) {
-    return NextResponse.json({ error: "Missing workspaceId" }, { status: 400 });
-  }
+  const workspaceId = await getWorkspaceId(user.id);
+  if (!workspaceId) return NextResponse.json({ error: "No workspace found" }, { status: 404 });
+
+  const body = await request.json();
+  const { bookingWindowDays, bufferMinutes, workingHours, allowIndividualAvailability } = body;
 
   const admin = createSupabaseAdminClient();
 

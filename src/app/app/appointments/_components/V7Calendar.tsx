@@ -248,7 +248,6 @@ export function V7Calendar({ appointments: initialAppointments, clients, working
   useEffect(() => {
     setView(getSavedView());
     setHydrated(true);
-    console.log("[V7Calendar] hydrated, appointments:", appointments.length, "clients:", clients.length);
   }, []);
 
   // Persist view and date to localStorage

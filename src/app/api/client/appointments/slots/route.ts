@@ -113,6 +113,7 @@ export async function GET(request: Request) {
       .from("availability_patterns")
       .select("user_id")
       .eq("workspace_id", clientUser.workspace_id)
+      .order("created_at", { ascending: true })
       .limit(1)
       .single();
     if (anyPattern?.user_id) stylistId = anyPattern.user_id as string;
@@ -153,13 +154,16 @@ export async function GET(request: Request) {
       .eq("workspace_id", clientUser.workspace_id)
       .eq("user_id", stylistId)
       .lte("effective_from", todayStr)
-      .or(`effective_to.is.null,effective_to.gte.${todayStr}`);
+      .or(`effective_to.is.null,effective_to.gte.${todayStr}`)
+      .order("effective_from", { ascending: false }); // newest pattern wins per day
 
     if (patterns && patterns.length > 0) {
       // Build WorkingHours-shaped object from stylist patterns
+      // Iterating newest-first so earlier entries don't overwrite the latest per day
       const stylistHours: WorkingHours = {};
       for (const p of patterns) {
         const dayName = DAY_NAMES[p.day_of_week as number];
+        if (stylistHours[dayName]) continue; // already set by a newer pattern for this day
         stylistHours[dayName] = {
           start: (p.start_time as string).slice(0, 5),
           end: (p.end_time as string).slice(0, 5),
