@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAppointment, updateAppointment, deleteAppointment } from "@/lib/db/appointments";
 import { logActivity } from "@/lib/db/activity-log";
 import { emitCommsEvent } from "@/lib/comms-events";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -27,6 +28,12 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
     const body = await request.json();
+    const { status } = body;
+
+    const validStatuses = ["scheduled", "completed", "cancelled", "pending_confirmation"];
+    if (status && !validStatuses.includes(status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
 
     const appointment = await updateAppointment(id, {
       clientId: body.clientId,
@@ -39,6 +46,15 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     if (!appointment) {
       return NextResponse.json({ error: "Failed to update appointment" }, { status: 500 });
+    }
+
+    if (status === "scheduled") {
+      const admin = createSupabaseAdminClient();
+      await admin
+        .from("appointments")
+        .update({ confirmed_at: new Date().toISOString() })
+        .eq("id", id)
+        .eq("workspace_id", appointment.workspaceId);
     }
 
     await logActivity("appointment.updated", "appointment", id, body.serviceName || id, { after: body });

@@ -5,6 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { V7Calendar } from "./_components/V7Calendar";
 import { RebookRequestsList } from "./_components/RebookRequestsList";
 import { AppointmentsTabs } from "./_components/AppointmentsTabs";
+import { PendingConfirmationBanner } from "./_components/PendingConfirmationBanner";
 
 export default async function AppointmentsPage() {
   const [appointments, clients, workspace] = await Promise.all([
@@ -51,6 +52,37 @@ export default async function AppointmentsPage() {
 
   const pendingCount = rebookRequests.filter(r => r.status === "pending").length;
 
+  // Query pending appointments
+  let pendingForBanner: Array<{ id: string; clientName: string; serviceName: string; startAt: string }> = [];
+  if (workspaceId) {
+    const { data: pendingAppts } = await admin
+      .from("appointments")
+      .select("id, service_name, start_at, client_id")
+      .eq("workspace_id", workspaceId)
+      .eq("status", "pending_confirmation")
+      .order("start_at", { ascending: true });
+
+    // Fetch client names for pending
+    const pendingClientIds = [...new Set((pendingAppts || []).map(a => a.client_id as string))];
+    const clientNamesMap: Record<string, string> = {};
+    if (pendingClientIds.length > 0) {
+      const { data: pendingClients } = await admin
+        .from("clients")
+        .select("id, first_name, last_name")
+        .in("id", pendingClientIds);
+      for (const c of pendingClients || []) {
+        clientNamesMap[c.id as string] = `${c.first_name} ${c.last_name || ""}`.trim();
+      }
+    }
+
+    pendingForBanner = (pendingAppts || []).map(a => ({
+      id: a.id as string,
+      clientName: clientNamesMap[a.client_id as string] || "Client",
+      serviceName: a.service_name as string,
+      startAt: a.start_at as string,
+    }));
+  }
+
   return (
     <div>
       <div style={{ marginBottom: "16px" }}>
@@ -61,6 +93,8 @@ export default async function AppointmentsPage() {
           Appointments
         </h2>
       </div>
+
+      <PendingConfirmationBanner pending={pendingForBanner} />
 
       <AppointmentsTabs pendingRequestsCount={pendingCount}>
         {{
