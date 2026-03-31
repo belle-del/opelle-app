@@ -202,7 +202,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4 relative z-10">
+      <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4 relative z-10 min-h-0">
         {NAV_SECTIONS.map((section) => (
           <div key={section.label}>
             <p

@@ -53,8 +53,8 @@ export function DevPanel({ userId, workspaceId, workspaceName }: {
         onClick={() => setPanelOpen(!panelOpen)}
         style={{
           position: "fixed",
-          bottom: "20px",
-          right: "20px",
+          bottom: "90px",
+          right: "28px",
           zIndex: 9999,
           width: "40px",
           height: "40px",
