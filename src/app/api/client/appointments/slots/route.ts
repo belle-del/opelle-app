@@ -106,18 +106,18 @@ export async function GET(request: Request) {
 
   const allowIndividual = (workspace as Record<string, unknown>).allow_individual_availability as boolean | null;
 
-  // Resolve stylist: explicit param, or fall back to workspace owner when individual availability is on
+  // Resolve stylist: explicit param, or find whoever has patterns for this workspace
   let stylistId = searchParams.get("stylist_id");
   if (allowIndividual && !stylistId) {
-    const { data: ws } = await admin
-      .from("workspaces")
-      .select("owner_id")
-      .eq("id", clientUser.workspace_id)
+    const { data: anyPattern } = await admin
+      .from("availability_patterns")
+      .select("user_id")
+      .eq("workspace_id", clientUser.workspace_id)
+      .limit(1)
       .single();
-    if (ws?.owner_id) stylistId = ws.owner_id as string;
+    if (anyPattern?.user_id) stylistId = anyPattern.user_id as string;
   }
 
-  console.log(`[slots DIAG] allowIndividual=${allowIndividual} stylistId=${stylistId} wsId=${clientUser.workspace_id} date=${dateStr}`);
 
   // If individual availability is enabled and a stylist is specified, check their patterns
   let effectiveHours: WorkingHours = workingHours;
@@ -155,7 +155,6 @@ export async function GET(request: Request) {
       .lte("effective_from", todayStr)
       .or(`effective_to.is.null,effective_to.gte.${todayStr}`);
 
-    console.log(`[slots DIAG] patterns=${patterns?.length ?? 0} todayStr=${toLocalDateString(today)} stylistId=${stylistId}`);
     if (patterns && patterns.length > 0) {
       // Build WorkingHours-shaped object from stylist patterns
       const stylistHours: WorkingHours = {};
@@ -283,6 +282,5 @@ export async function GET(request: Request) {
     slots: allSlots,
     durationMins,
     bookingWindowDays,
-    _debug: { allowIndividual, stylistId, workspaceId: clientUser.workspace_id },
   });
 }
