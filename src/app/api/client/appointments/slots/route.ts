@@ -104,8 +104,18 @@ export async function GET(request: Request) {
   const bufferMinutes = workspace.buffer_minutes || 0;
   const bookingWindowDays = workspace.booking_window_days || 60;
 
-  const stylistId = searchParams.get("stylist_id");
   const allowIndividual = (workspace as Record<string, unknown>).allow_individual_availability as boolean | null;
+
+  // Resolve stylist: explicit param, or fall back to workspace owner when individual availability is on
+  let stylistId = searchParams.get("stylist_id");
+  if (allowIndividual && !stylistId) {
+    const { data: ws } = await admin
+      .from("workspaces")
+      .select("owner_id")
+      .eq("id", clientUser.workspace_id)
+      .single();
+    if (ws?.owner_id) stylistId = ws.owner_id as string;
+  }
 
   // If individual availability is enabled and a stylist is specified, check their patterns
   let effectiveHours: WorkingHours = workingHours;
