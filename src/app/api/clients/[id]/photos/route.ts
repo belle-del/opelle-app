@@ -41,8 +41,15 @@ export async function GET(_request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Query failed" }, { status: 500 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pairs: PhotoPair[] = (data ?? []).map((row: any) => ({
+    const pairs: PhotoPair[] = (data ?? []).map((row: {
+      id: string;
+      before_photo_url: string | null;
+      after_photo_url: string | null;
+      completed_at: string;
+      student_name: string | null;
+      notes: string | null;
+      service_categories: { name: string } | { name: string }[] | null;
+    }) => ({
       id: row.id,
       beforePhotoUrl: row.before_photo_url,
       afterPhotoUrl: row.after_photo_url,
