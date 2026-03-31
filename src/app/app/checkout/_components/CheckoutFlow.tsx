@@ -224,6 +224,7 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
             <div>
               <label style={labelStyle}>Before & After Photos <span style={{ color: "#9E5A5A" }}>*</span></label>
               <BeforeAfterCapture
+                key={categoryId}
                 clientId={clientId || undefined}
                 required={photosRequired}
                 onPhotosChange={setCapturedPhotos}
@@ -365,9 +366,11 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
       >
         {processing
           ? "Processing..."
-          : (photosRequired && !photosReady)
-            ? "Add Photos to Continue"
-            : "Complete Payment"}
+          : (!studentId || !categoryId)
+            ? "Complete Payment"
+            : (photosRequired && !photosReady)
+              ? "Add Photos to Continue"
+              : "Complete Payment"}
       </button>
     </div>
   );
