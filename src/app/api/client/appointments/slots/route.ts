@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { toLocalISOString, toLocalDateString } from "@/lib/utils";
 
-type WorkingHoursDay = { start: string; end: string; closed: boolean };
+type WorkingHoursDay = { start: string; end: string; closed: boolean; breakStart?: string; breakEnd?: string };
 type WorkingHours = Record<string, WorkingHoursDay>;
 
 const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -150,7 +150,7 @@ export async function GET(request: Request) {
 
     const { data: patterns } = await admin
       .from("availability_patterns")
-      .select("day_of_week, start_time, end_time")
+      .select("day_of_week, start_time, end_time, break_start, break_end")
       .eq("workspace_id", clientUser.workspace_id)
       .eq("user_id", stylistId)
       .lte("effective_from", todayStr)
@@ -168,6 +168,8 @@ export async function GET(request: Request) {
           start: (p.start_time as string).slice(0, 5),
           end: (p.end_time as string).slice(0, 5),
           closed: false,
+          breakStart: p.break_start ? (p.break_start as string).slice(0, 5) : undefined,
+          breakEnd: p.break_end ? (p.break_end as string).slice(0, 5) : undefined,
         };
       }
       // Fill remaining days as closed
@@ -256,6 +258,8 @@ export async function GET(request: Request) {
     const openMin = timeToMinutes(dayHours.start);
     const closeMin = timeToMinutes(dayHours.end);
     const occupied = occupiedByDate[dateKey] || [];
+    const breakStartMin = dayHours.breakStart ? timeToMinutes(dayHours.breakStart) : null;
+    const breakEndMin = dayHours.breakEnd ? timeToMinutes(dayHours.breakEnd) : null;
 
     // Generate 30-min increment slots
     for (let slotStart = openMin; slotStart + durationMins <= closeMin; slotStart += 30) {
@@ -266,12 +270,17 @@ export async function GET(request: Request) {
         o => slotStart < o.end && slotEnd > o.start
       );
 
+      // Check if slot overlaps with the stylist's break window
+      const isDuringBreak =
+        breakStartMin !== null && breakEndMin !== null &&
+        slotStart < breakEndMin && slotEnd > breakStartMin;
+
       // Check if slot is in the past
       const now = new Date();
       const slotDateTime = new Date(dateKey + "T" + minutesToTime(slotStart) + ":00");
       const isPast = slotDateTime <= now;
 
-      if (!isOccupied && !isPast) {
+      if (!isOccupied && !isDuringBreak && !isPast) {
         allSlots.push({
           date: dateKey,
           time: minutesToTime(slotStart),

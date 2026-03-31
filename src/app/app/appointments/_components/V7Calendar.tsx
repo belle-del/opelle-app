@@ -217,25 +217,18 @@ export function V7Calendar({ appointments: initialAppointments, clients, working
   );
   // Build working hours lookup from workspace settings (or use defaults)
   const DAY_NAME_MAP = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const hasSettings = workingHours && Object.keys(workingHours).length > 0;
   const resolvedWorking: Record<number, { open: number; close: number } | null> = {};
   for (let i = 0; i < 7; i++) {
     const dayName = DAY_NAME_MAP[i];
     const wh = workingHours?.[dayName];
-    if (!wh || wh.closed) {
-      resolvedWorking[i] = DEFAULT_WORKING[i]; // fall back to default if no settings
-      if (wh?.closed) resolvedWorking[i] = null; // explicitly closed overrides default
-    } else {
+    if (wh && !wh.closed) {
       const [oh] = wh.start.split(":").map(Number);
       const [ch] = wh.end.split(":").map(Number);
       resolvedWorking[i] = { open: oh, close: ch };
-    }
-  }
-  // If workspace has ANY working hours set, don't use defaults for unset days
-  const hasSettings = workingHours && Object.keys(workingHours).length > 0;
-  if (hasSettings) {
-    for (let i = 0; i < 7; i++) {
-      const dayName = DAY_NAME_MAP[i];
-      if (!workingHours[dayName]) resolvedWorking[i] = null; // unset = closed
+    } else {
+      // Explicitly closed or not set: null if settings exist, else fall back to app default
+      resolvedWorking[i] = (hasSettings || wh?.closed) ? null : DEFAULT_WORKING[i];
     }
   }
   const router = useRouter();
