@@ -2,12 +2,18 @@ import { listAppointments } from "@/lib/db/appointments";
 import { listClients } from "@/lib/db/clients";
 import { getCurrentWorkspace } from "@/lib/db/workspaces";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { V7Calendar } from "./_components/V7Calendar";
 import { RebookRequestsList } from "./_components/RebookRequestsList";
 import { AppointmentsTabs } from "./_components/AppointmentsTabs";
 import { PendingConfirmationBanner } from "./_components/PendingConfirmationBanner";
 
+const DAY_NAME_MAP = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+
 export default async function AppointmentsPage() {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   const [appointments, clients, workspace] = await Promise.all([
     listAppointments(),
     listClients(),
@@ -18,13 +24,43 @@ export default async function AppointmentsPage() {
   const admin = createSupabaseAdminClient();
   let workspaceId = workspace?.id;
   let workingHours: Record<string, { start: string; end: string; closed: boolean }> = {};
+  let allowIndividual = false;
   if (!workspaceId) {
-    const { data: ws } = await admin.from("workspaces").select("id, working_hours").limit(1).single();
+    const { data: ws } = await admin.from("workspaces").select("id, working_hours, allow_individual_availability").limit(1).single();
     workspaceId = ws?.id;
+    allowIndividual = ws?.allow_individual_availability ?? false;
     if (ws?.working_hours && Object.keys(ws.working_hours).length > 0) workingHours = ws.working_hours;
   } else {
-    const { data: ws } = await admin.from("workspaces").select("working_hours").eq("id", workspaceId).single();
+    const { data: ws } = await admin.from("workspaces").select("working_hours, allow_individual_availability").eq("id", workspaceId).single();
+    allowIndividual = ws?.allow_individual_availability ?? false;
     if (ws?.working_hours && Object.keys(ws.working_hours).length > 0) workingHours = ws.working_hours;
+  }
+
+  // If individual availability is on, override workingHours with the current user's patterns
+  if (allowIndividual && user && workspaceId) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const { data: patterns } = await admin
+      .from("availability_patterns")
+      .select("day_of_week, start_time, end_time")
+      .eq("workspace_id", workspaceId)
+      .eq("user_id", user.id)
+      .lte("effective_from", todayStr)
+      .or(`effective_to.is.null,effective_to.gte.${todayStr}`);
+
+    if (patterns && patterns.length > 0) {
+      // Build workingHours from patterns — all 7 days, closed=true for days without a pattern
+      const patternByDay: Record<number, { start_time: string; end_time: string }> = {};
+      for (const p of patterns) patternByDay[p.day_of_week as number] = p as { start_time: string; end_time: string };
+
+      const stylistHours: Record<string, { start: string; end: string; closed: boolean }> = {};
+      for (let i = 0; i < 7; i++) {
+        const p = patternByDay[i];
+        stylistHours[DAY_NAME_MAP[i]] = p
+          ? { start: (p.start_time as string).slice(0, 5), end: (p.end_time as string).slice(0, 5), closed: false }
+          : { start: "09:00", end: "18:00", closed: true };
+      }
+      workingHours = stylistHours;
+    }
   }
 
   // Get rebook requests using admin client to bypass RLS
