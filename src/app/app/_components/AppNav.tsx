@@ -26,6 +26,7 @@ import {
   Timer,
   GraduationCap,
   ShoppingCart,
+  Images,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
@@ -47,6 +48,7 @@ const NAV_SECTIONS = [
     label: "Practice",
     items: [
       { href: "/app/formulas", label: "Formulas", icon: FlaskConical },
+      { href: "/app/portfolio", label: "Portfolio", icon: Images },
       { href: "/app/products", label: "Products", icon: Package },
       { href: "/app/messages", label: "Messages", icon: MessageCircle },
       { href: "/app/content", label: "Content", icon: FileText },
