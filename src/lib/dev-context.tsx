@@ -5,7 +5,6 @@ import {
   useContext,
   useState,
   useEffect,
-  useRef,
   useCallback,
   type ReactNode,
 } from "react";
@@ -48,12 +47,19 @@ const MAX_ENTRIES = 100;
 let _entryId = 0;
 function nextId() { return ++_entryId; }
 
+// Module-scope guard — survives React Strict Mode remounts
+let _patchCallbacks: {
+  appendConsole: ((e: ConsoleEntry) => void) | null;
+  appendNetwork: ((e: NetworkEntry) => void) | null;
+  updateNetwork: ((id: number, status: number, duration: number) => void) | null;
+} = { appendConsole: null, appendNetwork: null, updateNetwork: null };
+let _patched = false;
+
 export function DevProvider({ children }: { children: ReactNode }) {
   const [viewMode, setViewModeState] = useState<ViewMode>("god");
   const [consoleLogs, setConsoleLogs] = useState<ConsoleEntry[]>([]);
   const [networkLogs, setNetworkLogs] = useState<NetworkEntry[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
-  const patchedRef = useRef(false);
 
   // Restore viewMode from localStorage
   useEffect(() => {
@@ -95,54 +101,65 @@ export function DevProvider({ children }: { children: ReactNode }) {
     setNetworkLogs([]);
   }, []);
 
-  // Monkey-patch console and fetch once
+  // Wire up the module-scope patch callbacks to this provider instance
   useEffect(() => {
-    if (patchedRef.current) return;
-    patchedRef.current = true;
+    // Update callbacks so the active provider receives log entries
+    _patchCallbacks.appendConsole = appendConsole;
+    _patchCallbacks.appendNetwork = appendNetwork;
+    _patchCallbacks.updateNetwork = updateNetwork;
 
-    // ── Console ──
-    const levels: LogLevel[] = ["log", "warn", "error", "info"];
-    const origConsole: Partial<Record<LogLevel, typeof console.log>> = {};
+    // Patch once at module scope — survives React Strict Mode remounts
+    if (!_patched) {
+      _patched = true;
 
-    levels.forEach((level) => {
-      origConsole[level] = console[level].bind(console);
-      console[level] = (...args: unknown[]) => {
-        origConsole[level]!(...args);
-        const message = args
-          .map((a) => {
-            try { return typeof a === "object" ? JSON.stringify(a) : String(a); }
-            catch { return String(a); }
-          })
-          .join(" ");
-        appendConsole({ id: nextId(), level, message, timestamp: Date.now() });
+      // ── Console ──
+      const levels: LogLevel[] = ["log", "warn", "error", "info"];
+      levels.forEach((level) => {
+        const orig = console[level].bind(console);
+        console[level] = (...args: unknown[]) => {
+          orig(...args);
+          const message = args
+            .map((a) => {
+              if (a === null) return "null";
+              try { return typeof a === "object" ? JSON.stringify(a) : String(a); }
+              catch { return String(a); }
+            })
+            .join(" ");
+          _patchCallbacks.appendConsole?.({ id: nextId(), level, message, timestamp: Date.now() });
+        };
+      });
+
+      // ── Fetch ──
+      const origFetch = window.fetch.bind(window);
+      window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = typeof input === "string"
+          ? input
+          : input instanceof URL
+          ? input.href
+          : (input as Request).url;
+        const method = (init?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
+        const id = nextId();
+        const start = Date.now();
+
+        _patchCallbacks.appendNetwork?.({ id, method, url, status: null, duration: null, timestamp: start });
+
+        try {
+          const response = await origFetch(input, init);
+          _patchCallbacks.updateNetwork?.(id, response.status, Date.now() - start);
+          return response;
+        } catch (err) {
+          _patchCallbacks.updateNetwork?.(id, -1, Date.now() - start);  // -1 = network error (not a real HTTP status)
+          throw err;
+        }
       };
-    });
+    }
 
-    // ── Fetch ──
-    const origFetch = window.fetch.bind(window);
-    window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === "string"
-        ? input
-        : input instanceof URL
-        ? input.href
-        : (input as Request).url;
-      const method = (init?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
-      const id = nextId();
-      const start = Date.now();
-
-      appendNetwork({ id, method, url, status: null, duration: null, timestamp: start });
-
-      try {
-        const response = await origFetch(input, init);
-        updateNetwork(id, response.status, Date.now() - start);
-        return response;
-      } catch (err) {
-        updateNetwork(id, 0, Date.now() - start);
-        throw err;
-      }
+    // Cleanup: disconnect this provider's callbacks when it unmounts
+    return () => {
+      _patchCallbacks.appendConsole = null;
+      _patchCallbacks.appendNetwork = null;
+      _patchCallbacks.updateNetwork = null;
     };
-
-    // No cleanup — monkey-patches persist for the session
   }, [appendConsole, appendNetwork, updateNetwork]);
 
   return (
