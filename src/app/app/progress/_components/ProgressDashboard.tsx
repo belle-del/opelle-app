@@ -18,6 +18,7 @@ interface Category {
   name: string;
   code: string;
   requiredCount: number;
+  requires_photos: boolean;
 }
 
 interface StudentProgress {

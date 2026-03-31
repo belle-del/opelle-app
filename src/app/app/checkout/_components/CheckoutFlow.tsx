@@ -20,6 +20,7 @@ interface StudentOption {
 interface CategoryOption {
   id: string;
   name: string;
+  requires_photos: boolean;
 }
 
 interface ClientOption {

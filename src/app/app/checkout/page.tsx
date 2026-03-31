@@ -17,7 +17,7 @@ export default async function CheckoutPage() {
   const [studentsResult, categoriesResult, clientsResult] = await Promise.all([
     admin.from("floor_status").select("student_id, student_name")
       .eq("workspace_id", workspaceId).order("student_name", { ascending: true }),
-    admin.from("service_categories").select("id, name")
+    admin.from("service_categories").select("id, name, requires_photos")
       .eq("workspace_id", workspaceId).eq("active", true).order("sort_order", { ascending: true }),
     admin.from("clients").select("id, first_name, last_name")
       .eq("workspace_id", workspaceId).order("first_name", { ascending: true }),
@@ -31,6 +31,7 @@ export default async function CheckoutPage() {
   const categories = (categoriesResult.data || []).map((c: Record<string, unknown>) => ({
     id: c.id as string,
     name: c.name as string,
+    requires_photos: c.requires_photos as boolean,
   }));
 
   const clients = (clientsResult.data || []).map((c: Record<string, unknown>) => ({

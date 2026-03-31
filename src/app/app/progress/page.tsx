@@ -15,7 +15,7 @@ export default async function ProgressPage() {
   const admin = createSupabaseAdminClient();
 
   const [categoriesResult, progressResult, completionsResult, studentsResult] = await Promise.all([
-    admin.from("service_categories").select("id, name, code, required_count, sort_order")
+    admin.from("service_categories").select("id, name, code, required_count, sort_order, requires_photos")
       .eq("workspace_id", workspaceId).eq("active", true).order("sort_order", { ascending: true }),
     admin.from("curriculum_progress").select("student_id, category_id, completed_count, verified_count")
       .eq("workspace_id", workspaceId),
@@ -29,6 +29,7 @@ export default async function ProgressPage() {
   const categories = (categoriesResult.data || []).map((c: Record<string, unknown>) => ({
     id: c.id as string, name: c.name as string, code: c.code as string,
     requiredCount: c.required_count as number,
+    requires_photos: c.requires_photos as boolean,
   }));
 
   const studentMap: Record<string, { studentId: string; studentName: string; categories: Record<string, { completed: number; verified: number }> }> = {};
