@@ -19,52 +19,67 @@ function highlightMatch(text: string, search: string): React.ReactNode[] {
   );
 }
 
-function FormulaCard({ entry, search, clientNames, serviceTypeNames }: {
+function FormulaCard({ entry, search, clientNames, serviceTypeNames, afterPhotoUrl }: {
   entry: FormulaEntry;
   search: string;
   clientNames: Map<string, string>;
   serviceTypeNames: Map<string, string>;
+  afterPhotoUrl?: string;
 }) {
   const clientName = clientNames.get(entry.clientId) || "Unknown client";
   const serviceTypeName = serviceTypeNames.get(entry.serviceTypeId) || "";
   const preview = entry.rawNotes.slice(0, 220);
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px", flexWrap: "wrap", gap: "6px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            <Link
-              href={`/app/clients/${entry.clientId}`}
-              style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-on-stone)", textDecoration: "none" }}
-            >
-              {clientName}
-            </Link>
-            {serviceTypeName && (
-              <span style={{
-                fontSize: "10px", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase",
-                color: "var(--text-on-stone-faint)", padding: "2px 8px", borderRadius: "100px",
-                border: "1px solid var(--stone-mid)",
-              }}>
-                {serviceTypeName}
-              </span>
+    <Link href={`/app/formulas/${entry.id}`} style={{ textDecoration: "none", display: "block" }}>
+      <Card style={{ cursor: "pointer" }}>
+        <CardContent className="p-4">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px", flexWrap: "wrap", gap: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              <Link
+                href={`/app/clients/${entry.clientId}`}
+                style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-on-stone)", textDecoration: "none" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {clientName}
+              </Link>
+              {serviceTypeName && (
+                <span style={{
+                  fontSize: "10px", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase",
+                  color: "var(--text-on-stone-faint)", padding: "2px 8px", borderRadius: "100px",
+                  border: "1px solid var(--stone-mid)",
+                }}>
+                  {serviceTypeName}
+                </span>
+              )}
+            </div>
+            <span style={{ fontSize: "12px", color: "var(--text-on-stone-ghost)" }}>
+              {formatDate(entry.serviceDate)}
+            </span>
+            {afterPhotoUrl && (
+              <img
+                src={afterPhotoUrl}
+                alt="After"
+                style={{
+                  width: "48px", height: "48px", borderRadius: "8px",
+                  objectFit: "cover", border: "1px solid rgba(196,171,112,0.2)",
+                  flexShrink: 0,
+                }}
+              />
             )}
           </div>
-          <span style={{ fontSize: "12px", color: "var(--text-on-stone-ghost)" }}>
-            {formatDate(entry.serviceDate)}
-          </span>
-        </div>
-        <p style={{ fontSize: "13px", color: "var(--text-on-stone-dim)", fontFamily: "monospace", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-          {highlightMatch(preview, search)}
-          {entry.rawNotes.length > 220 && <span style={{ color: "var(--text-on-stone-ghost)" }}>…</span>}
-        </p>
-        {entry.generalNotes && (
-          <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", marginTop: "8px", fontStyle: "italic", borderTop: "1px solid var(--stone-mid)", paddingTop: "8px" }}>
-            {entry.generalNotes}
+          <p style={{ fontSize: "13px", color: "var(--text-on-stone-dim)", fontFamily: "monospace", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+            {highlightMatch(preview, search)}
+            {entry.rawNotes.length > 220 && <span style={{ color: "var(--text-on-stone-ghost)" }}>…</span>}
           </p>
-        )}
-      </CardContent>
-    </Card>
+          {entry.generalNotes && (
+            <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", marginTop: "8px", fontStyle: "italic", borderTop: "1px solid var(--stone-mid)", paddingTop: "8px" }}>
+              {entry.generalNotes}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
@@ -74,6 +89,7 @@ export default function FormulasPage() {
   const [serviceTypeNames, setServiceTypeNames] = useState<Map<string, string>>(new Map());
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [photoMap, setPhotoMap] = useState<Map<string, string>>(new Map()); // entryId → afterPhotoUrl
 
   const [search, setSearch] = useState("");
   const [serviceTypeId, setServiceTypeId] = useState("");
@@ -127,6 +143,27 @@ export default function FormulasPage() {
   }, [serviceTypeId, dateFrom, dateTo, debouncedSearch]);
 
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
+
+  useEffect(() => {
+    if (entries.length === 0) return;
+    let cancelled = false;
+    Promise.all(
+      entries.map((e) =>
+        fetch(`/api/formula-entries/${e.id}/photos`)
+          .then((r) => r.json())
+          .then((data) => ({ id: e.id, url: (data?.afterPhotoUrl as string | null) ?? null }))
+          .catch(() => ({ id: e.id, url: null }))
+      )
+    ).then((results) => {
+      if (cancelled) return;
+      const map = new Map<string, string>();
+      for (const { id, url } of results) {
+        if (url) map.set(id, url);
+      }
+      setPhotoMap(map);
+    });
+    return () => { cancelled = true; };
+  }, [entries]);
 
   const hasFilters = !!(debouncedSearch || serviceTypeId || dateFrom || dateTo);
 
@@ -201,6 +238,7 @@ export default function FormulasPage() {
               search={debouncedSearch}
               clientNames={clientNames}
               serviceTypeNames={serviceTypeNames}
+              afterPhotoUrl={photoMap.get(entry.id)}
             />
           ))}
         </div>
