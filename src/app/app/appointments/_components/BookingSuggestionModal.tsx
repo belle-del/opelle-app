@@ -74,9 +74,9 @@ export function BookingSuggestionModal({
   useEffect(() => {
     fetch(`/api/service-types?workspaceId=${workspaceId}`)
       .then(r => r.json())
-      .then((types: Array<{ name: string; defaultDurationMins?: number }>) => {
+      .then((types: Array<{ name: string; durationMinutes?: number }>) => {
         const match = types.find(t => t.name === request.service_type);
-        if (match?.defaultDurationMins) setServiceDuration(match.defaultDurationMins);
+        if (match?.durationMinutes) setServiceDuration(match.durationMinutes);
       })
       .catch(() => {});
   }, [workspaceId, request.service_type]);

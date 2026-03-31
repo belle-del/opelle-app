@@ -7,6 +7,10 @@ export type Workspace = {
   id: string;
   ownerId: string;
   name: string;
+  bookingWindowDays: number;
+  bufferMinutes: number;
+  workingHours: Record<string, { start: string; end: string; closed: boolean }> | null;
+  allowIndividualAvailability: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -207,7 +211,9 @@ export type ServiceType = {
   workspaceId: string;
   name: string;
   sortOrder: number;
-  defaultDurationMins?: number;
+  durationMinutes?: number;
+  bufferMinutes: number;
+  depositRequired: boolean;
   bookingType?: BookingType;
   createdAt: string;
 };
@@ -363,6 +369,10 @@ export type WorkspaceRow = {
   id: string;
   owner_id: string;
   name: string;
+  booking_window_days: number | null;
+  buffer_minutes: number | null;
+  working_hours: Record<string, { start: string; end: string; closed: boolean }> | null;
+  allow_individual_availability: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -461,7 +471,9 @@ export type ServiceTypeRow = {
   workspace_id: string;
   name: string;
   sort_order: number;
-  default_duration_mins: number | null;
+  duration_minutes: number | null;
+  buffer_minutes: number | null;
+  deposit_required: boolean;
   booking_type: string | null;
   created_at: string;
 };
@@ -514,6 +526,10 @@ export function workspaceRowToModel(row: WorkspaceRow): Workspace {
     id: row.id,
     ownerId: row.owner_id,
     name: row.name,
+    bookingWindowDays: row.booking_window_days ?? 60,
+    bufferMinutes: row.buffer_minutes ?? 0,
+    workingHours: row.working_hours ?? null,
+    allowIndividualAvailability: row.allow_individual_availability,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -721,8 +737,10 @@ export function serviceTypeRowToModel(row: ServiceTypeRow): ServiceType {
     workspaceId: row.workspace_id,
     name: row.name,
     sortOrder: row.sort_order,
-    defaultDurationMins: row.default_duration_mins ?? undefined,
-    bookingType: (row.booking_type as BookingType) ?? undefined,
+    durationMinutes: row.duration_minutes ?? undefined,
+    bufferMinutes: row.buffer_minutes ?? 0,
+    depositRequired: row.deposit_required,
+    bookingType: row.booking_type as BookingType | undefined,
     createdAt: row.created_at,
   };
 }
@@ -1361,6 +1379,96 @@ export function metisLessonRowToModel(row: MetisLessonRow): MetisLesson {
     sourceFeedbackIds: row.source_feedback_ids ?? [],
     confidence: row.confidence,
     active: row.active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+// Availability Patterns
+export type AvailabilityPatternRow = {
+  id: string;
+  workspace_id: string;
+  user_id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  break_start: string | null;
+  break_end: string | null;
+  effective_from: string;
+  effective_to: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AvailabilityPattern = {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  breakStart: string | null;
+  breakEnd: string | null;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function availabilityPatternRowToModel(row: AvailabilityPatternRow): AvailabilityPattern {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    userId: row.user_id,
+    dayOfWeek: row.day_of_week,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    breakStart: row.break_start,
+    breakEnd: row.break_end,
+    effectiveFrom: row.effective_from,
+    effectiveTo: row.effective_to,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+// Availability Overrides
+export type AvailabilityOverrideRow = {
+  id: string;
+  workspace_id: string;
+  user_id: string;
+  override_date: string;
+  is_available: boolean;
+  start_time: string | null;
+  end_time: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AvailabilityOverride = {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  overrideDate: string;
+  isAvailable: boolean;
+  startTime: string | null;
+  endTime: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function availabilityOverrideRowToModel(row: AvailabilityOverrideRow): AvailabilityOverride {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    userId: row.user_id,
+    overrideDate: row.override_date,
+    isAvailable: row.is_available,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    notes: row.notes,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

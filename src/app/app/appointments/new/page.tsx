@@ -12,8 +12,8 @@ import { Select } from "@/components/ui/select";
 import { ArrowLeft, X, ChevronDown } from "lucide-react";
 import type { Client, ServiceType } from "@/lib/types";
 
-// Service type with optional default duration
-type ServiceTypeWithDuration = ServiceType & { defaultDurationMins?: number };
+// Service type with optional duration (uses durationMinutes from ServiceType)
+type ServiceTypeWithDuration = ServiceType;
 
 export default function NewAppointmentPage() {
   const router = useRouter();
@@ -57,7 +57,7 @@ export default function NewAppointmentPage() {
     if (durationManuallySet || selectedServices.length === 0) return;
     const total = selectedServices.reduce((sum, name) => {
       const st = serviceTypes.find((t) => t.name === name);
-      return sum + (st?.defaultDurationMins || 60);
+      return sum + (st?.durationMinutes || 60);
     }, 0);
     setDurationMins(total);
   }, [selectedServices, serviceTypes, durationManuallySet]);
@@ -303,9 +303,9 @@ export default function NewAppointmentPage() {
                               )}
                             </div>
                             <span style={{ flex: 1 }}>{st.name}</span>
-                            {st.defaultDurationMins && (
+                            {st.durationMinutes && (
                               <span style={{ fontSize: "10px", color: "var(--text-on-stone-ghost)" }}>
-                                {st.defaultDurationMins}min
+                                {st.durationMinutes}min
                               </span>
                             )}
                           </button>

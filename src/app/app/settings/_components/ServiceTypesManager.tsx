@@ -48,7 +48,7 @@ export function ServiceTypesManager({ workspaceId }: { workspaceId?: string }) {
       const res = await fetch("/api/service-types", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim(), defaultDurationMins: 60, workspaceId }),
+        body: JSON.stringify({ name: newName.trim(), durationMinutes: 60, workspaceId }),
       });
 
       if (res.ok) {
@@ -87,13 +87,13 @@ export function ServiceTypesManager({ workspaceId }: { workspaceId?: string }) {
   const handleDurationChange = async (id: string, durationMins: number) => {
     // Optimistic update
     setTypes((prev) =>
-      prev.map((t) => t.id === id ? { ...t, defaultDurationMins: durationMins } : t)
+      prev.map((t) => t.id === id ? { ...t, durationMinutes: durationMins } : t)
     );
 
     await fetch(`/api/service-types/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ defaultDurationMins: durationMins, workspaceId }),
+      body: JSON.stringify({ durationMinutes: durationMins, workspaceId }),
     });
   };
 
@@ -138,7 +138,7 @@ export function ServiceTypesManager({ workspaceId }: { workspaceId?: string }) {
           <div style={{ display: "flex", alignItems: "center", gap: "4px", width: "100px" }}>
             <Clock size={11} style={{ color: "var(--text-on-stone-ghost)", flexShrink: 0 }} />
             <select
-              value={st.defaultDurationMins || 60}
+              value={st.durationMinutes || 60}
               onChange={(e) => handleDurationChange(st.id, parseInt(e.target.value))}
               style={{
                 background: "transparent",

@@ -19,16 +19,7 @@ export async function listServiceTypes(): Promise<ServiceType[]> {
     if (error) console.error("[service-types] List failed:", error.message);
     return [];
   }
-  // Safely map rows — handle missing columns
-  return data.map((row) => ({
-    id: row.id,
-    workspaceId: row.workspace_id,
-    name: row.name,
-    sortOrder: row.sort_order,
-    defaultDurationMins: row.default_duration_mins ?? undefined,
-    bookingType: row.booking_type ?? undefined,
-    createdAt: row.created_at,
-  }));
+  return (data as ServiceTypeRow[]).map(serviceTypeRowToModel);
 }
 
 export async function getServiceType(id: string): Promise<ServiceType | null> {
@@ -50,7 +41,7 @@ export async function getServiceType(id: string): Promise<ServiceType | null> {
 export async function createServiceType(input: {
   name: string;
   sortOrder?: number;
-  defaultDurationMins?: number;
+  durationMinutes?: number;
 }): Promise<ServiceType | null> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
@@ -75,8 +66,8 @@ export async function createServiceType(input: {
     name: input.name,
     sort_order: sortOrder,
   };
-  if (input.defaultDurationMins !== undefined) {
-    insertData.default_duration_mins = input.defaultDurationMins;
+  if (input.durationMinutes !== undefined) {
+    insertData.duration_minutes = input.durationMinutes;
   }
 
   let { data, error } = await admin
@@ -85,10 +76,10 @@ export async function createServiceType(input: {
     .select("*")
     .single();
 
-  // If default_duration_mins column doesn't exist, retry without it
-  if (error && error.message?.includes("default_duration_mins")) {
-    console.warn("[service-types] default_duration_mins column missing, retrying without it");
-    delete insertData.default_duration_mins;
+  // If duration_minutes column doesn't exist, retry without it
+  if (error && error.message?.includes("duration_minutes")) {
+    console.warn("[service-types] duration_minutes column missing, retrying without it");
+    delete insertData.duration_minutes;
     const retry = await admin
       .from("service_types")
       .insert(insertData)
@@ -107,7 +98,7 @@ export async function createServiceType(input: {
 
 export async function updateServiceType(
   id: string,
-  input: { name?: string; sortOrder?: number; defaultDurationMins?: number | null; bookingType?: string }
+  input: { name?: string; sortOrder?: number; durationMinutes?: number | null; bookingType?: string }
 ): Promise<ServiceType | null> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) return null;
@@ -116,7 +107,7 @@ export async function updateServiceType(
   const updateData: Record<string, unknown> = {};
   if (input.name !== undefined) updateData.name = input.name;
   if (input.sortOrder !== undefined) updateData.sort_order = input.sortOrder;
-  if (input.defaultDurationMins !== undefined) updateData.default_duration_mins = input.defaultDurationMins;
+  if (input.durationMinutes !== undefined) updateData.duration_minutes = input.durationMinutes;
   if (input.bookingType !== undefined) updateData.booking_type = input.bookingType;
 
   let { data, error } = await admin
@@ -127,10 +118,10 @@ export async function updateServiceType(
     .select("*")
     .single();
 
-  // If default_duration_mins column doesn't exist, retry without it
-  if (error && error.message?.includes("default_duration_mins")) {
-    console.warn("[service-types] default_duration_mins column missing, retrying without it");
-    delete updateData.default_duration_mins;
+  // If duration_minutes column doesn't exist, retry without it
+  if (error && error.message?.includes("duration_minutes")) {
+    console.warn("[service-types] duration_minutes column missing, retrying without it");
+    delete updateData.duration_minutes;
     if (Object.keys(updateData).length > 0) {
       const retry = await admin
         .from("service_types")

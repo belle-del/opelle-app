@@ -8,7 +8,9 @@ function mapRow(row: Record<string, unknown>): ServiceType {
     workspaceId: row.workspace_id as string,
     name: row.name as string,
     sortOrder: (row.sort_order as number) || 0,
-    defaultDurationMins: (row.default_duration_mins as number) ?? undefined,
+    durationMinutes: (row.duration_minutes as number) ?? undefined,
+    bufferMinutes: (row.buffer_minutes as number) ?? 0,
+    depositRequired: (row.deposit_required as boolean) ?? false,
     bookingType: (row.booking_type as BookingType) ?? undefined,
     createdAt: row.created_at as string,
   };
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
       .single();
     const sortOrder = ((maxRow?.sort_order as number) ?? -1) + 1;
 
-    // Insert without default_duration_mins first (column may not exist in prod)
+    // Insert without duration_minutes first (column may not exist in prod)
     const insertData: Record<string, unknown> = {
       workspace_id: body.workspaceId,
       name: body.name.trim(),
@@ -81,10 +83,10 @@ export async function POST(request: Request) {
       .single();
 
     // If that succeeded and we have a duration to set, try updating it separately
-    if (!error && data && body.defaultDurationMins !== undefined) {
+    if (!error && data && body.durationMinutes !== undefined) {
       const { data: updated, error: updateErr } = await admin
         .from("service_types")
-        .update({ default_duration_mins: body.defaultDurationMins })
+        .update({ duration_minutes: body.durationMinutes })
         .eq("id", (data as Record<string, unknown>).id)
         .select("*")
         .single();

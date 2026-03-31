@@ -79,11 +79,11 @@ export async function GET(request: Request) {
   if (serviceId) {
     const { data: service } = await admin
       .from("service_types")
-      .select("default_duration_mins")
+      .select("duration_minutes")
       .eq("id", serviceId)
       .single();
-    if (service?.default_duration_mins) {
-      durationMins = service.default_duration_mins;
+    if (service?.duration_minutes) {
+      durationMins = service.duration_minutes;
     }
   }
 

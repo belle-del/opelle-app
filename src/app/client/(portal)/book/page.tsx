@@ -46,7 +46,7 @@ export default async function BookPage() {
         serviceTypes={(serviceTypes || []).map(st => ({
           id: st.id,
           name: st.name,
-          durationMins: st.default_duration_mins || 60,
+          durationMins: st.duration_minutes || 60,
           bookingType: st.booking_type || "request",
         }))}
         clientId={ctx.clientUser.clientId}

@@ -18,7 +18,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const admin = createSupabaseAdminClient();
 
     // Separate duration update from other fields (column may not exist in prod)
-    const hasDuration = body.defaultDurationMins !== undefined;
+    const hasDuration = body.durationMinutes !== undefined;
     const updateData: Record<string, unknown> = {};
     if (body.name !== undefined) updateData.name = body.name;
     if (body.sortOrder !== undefined) updateData.sort_order = body.sortOrder;
@@ -44,7 +44,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (hasDuration && !error) {
       const { data: updated, error: durErr } = await admin
         .from("service_types")
-        .update({ default_duration_mins: body.defaultDurationMins })
+        .update({ duration_minutes: body.durationMinutes })
         .eq("id", id)
         .eq("workspace_id", workspaceId)
         .select("*")

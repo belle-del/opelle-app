@@ -14,12 +14,12 @@ export async function GET() {
     ? { error: stError.message, code: stError.code }
     : { exists: true, sampleColumns: stData?.[0] ? Object.keys(stData[0]) : "empty table", rowCount: stData?.length };
 
-  // Check if default_duration_mins column exists by trying to query it
+  // Check if duration_minutes column exists by trying to query it
   const { error: durErr } = await admin
     .from("service_types")
-    .select("default_duration_mins")
+    .select("duration_minutes")
     .limit(1);
-  results.has_default_duration_mins = durErr ? { error: durErr.message } : true;
+  results.has_duration_minutes = durErr ? { error: durErr.message } : true;
 
   // Check if booking_type column exists
   const { error: btErr } = await admin
