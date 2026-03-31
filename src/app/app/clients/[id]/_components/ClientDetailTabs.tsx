@@ -5,6 +5,7 @@ import { InspoTab } from "./InspoTab";
 import { ClientMessagesTab } from "./ClientMessagesTab";
 import { HistoryTab } from "./HistoryTab";
 import type { MessageThread, Message, Appointment } from "@/lib/types";
+import { BeforeAfterGallery } from "@/components/BeforeAfterGallery";
 
 type ThreadWithMessages = {
   thread: MessageThread;
@@ -41,10 +42,13 @@ type InspoSubmission = {
 };
 
 export function ClientDetailTabs({ clientId, clientName, children, threads = [], appointments = [] }: Props) {
-  const [activeTab, setActiveTab] = useState<"formulas" | "inspo" | "messages" | "history">("formulas");
+  const [activeTab, setActiveTab] = useState<"formulas" | "photos" | "inspo" | "messages" | "history">("formulas");
   const [inspoSubmissions, setInspoSubmissions] = useState<InspoSubmission[]>([]);
   const [inspoLoaded, setInspoLoaded] = useState(false);
   const [unreviewedCount, setUnreviewedCount] = useState(0);
+  const [photoPairs, setPhotoPairs] = useState<import("@/lib/types").PhotoPair[]>([]);
+  const [photosLoaded, setPhotosLoaded] = useState(false);
+  const [photosLoading, setPhotosLoading] = useState(false);
 
   useEffect(() => {
     // Fetch inspo data
@@ -62,6 +66,23 @@ export function ClientDetailTabs({ clientId, clientName, children, threads = [],
       .finally(() => setInspoLoaded(true));
   }, [clientId]);
 
+  useEffect(() => {
+    if (activeTab !== "photos" || photosLoaded) return;
+    setPhotosLoading(true);
+    fetch(`/api/clients/${clientId}/photos`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.pairs && Array.isArray(data.pairs)) {
+          setPhotoPairs(data.pairs);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setPhotosLoaded(true);
+        setPhotosLoading(false);
+      });
+  }, [activeTab, clientId, photosLoaded]);
+
   // Count unread messages from clients
   const unreadMessages = threads.reduce(
     (sum, t) => sum + (t.thread.unreadStylist ?? 0),
@@ -70,6 +91,7 @@ export function ClientDetailTabs({ clientId, clientName, children, threads = [],
 
   const tabs = [
     { id: "formulas" as const, label: "Formulas" },
+    { id: "photos" as const, label: "Photos" },
     { id: "history" as const, label: "History" },
     {
       id: "inspo" as const,
@@ -122,6 +144,19 @@ export function ClientDetailTabs({ clientId, clientName, children, threads = [],
 
       {/* Tab content */}
       {activeTab === "formulas" && children}
+
+      {activeTab === "photos" && (
+        photosLoading ? (
+          <div style={{ textAlign: "center", padding: "48px", color: "rgba(241,239,224,0.4)", fontSize: "14px" }}>
+            Loading photos…
+          </div>
+        ) : (
+          <BeforeAfterGallery
+            pairs={photoPairs}
+            emptyMessage="No photos yet — photos from color and chemical services appear here after completion."
+          />
+        )
+      )}
 
       {activeTab === "history" && (
         <HistoryTab
