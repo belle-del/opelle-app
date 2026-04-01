@@ -24,13 +24,13 @@ export default async function TeamPage() {
     <div className="space-y-6">
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--brass, #C4AB70)", marginBottom: "4px" }}>
+          <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#6B5D4A", marginBottom: "4px" }}>
             Manage
           </p>
-          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "var(--stone-lightest, #FAF8F3)", fontWeight: 300 }}>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "#2C2C24", fontWeight: 300 }}>
             Team
           </h2>
-          <p style={{ fontSize: "12px", color: "rgba(241,239,224,0.5)", marginTop: "4px" }}>
+          <p style={{ fontSize: "12px", color: "#7A7060", marginTop: "4px" }}>
             {members.length} member{members.length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -43,10 +43,10 @@ export default async function TeamPage() {
           background: "rgba(241,239,224,0.03)", borderRadius: "12px",
           border: "1px solid rgba(241,239,224,0.06)",
         }}>
-          <p style={{ fontSize: "14px", color: "rgba(241,239,224,0.5)", marginBottom: "8px" }}>
+          <p style={{ fontSize: "14px", color: "#7A7060", marginBottom: "8px" }}>
             No team members yet
           </p>
-          <p style={{ fontSize: "12px", color: "rgba(241,239,224,0.3)" }}>
+          <p style={{ fontSize: "12px", color: "#9A9485" }}>
             Invite your first team member to get started
           </p>
         </div>

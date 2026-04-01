@@ -76,6 +76,7 @@ export function ClientPortalShell({ clientFirstName, stylistName, children }: Pr
 
   const moreItems = [
     { label: "History", href: "/client/history", icon: "clock" },
+    { label: "My Formulas", href: "/client/formulas", icon: "flask" },
     { label: "Products", href: "/client/products", icon: "package" },
     { label: "Profile", href: "/client/profile", icon: "user" },
     { label: "Messages", href: "/client/messages", icon: "message" },
@@ -275,6 +276,13 @@ function MoreIcon({ icon, active }: { icon: string; active: boolean }) {
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+        </svg>
+      );
+    case "flask":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 2v7.31" /><path d="M14 9.3V1.99" /><path d="M8.5 2h7" />
+          <path d="M14 9.3a6.5 6.5 0 1 1-4 0" />
         </svg>
       );
     case "pen":

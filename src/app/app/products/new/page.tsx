@@ -85,13 +85,13 @@ export default function NewProductPage() {
         <Link
           href="/app/products"
           className="inline-flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
-          style={{ color: "var(--text-on-bark, #F5F0E8)" }}
+          style={{ color: "#6B5D4A" }}
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Products
         </Link>
         <div>
-          <h2 className="text-3xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest, #FAF8F3)" }}>Add Product</h2>
+          <h2 className="text-3xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: "#2C2C24" }}>Add Product</h2>
           <p className="text-muted-foreground">
             Scan a barcode or enter product details manually.
           </p>

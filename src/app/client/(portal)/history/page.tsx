@@ -3,6 +3,16 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
+type VisitPhoto = {
+  url: string;
+  photo_type: string;
+};
+
+type CompletionPhotos = {
+  before_photo_url: string | null;
+  after_photo_url: string | null;
+};
+
 type AppointmentRow = {
   id: string;
   service_name: string;
@@ -11,6 +21,8 @@ type AppointmentRow = {
   duration_mins: number;
   status: string;
   notes: string | null;
+  photos?: VisitPhoto[];
+  completion_photos?: CompletionPhotos | null;
 };
 
 function formatDate(dateStr: string): string {
@@ -62,12 +74,19 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/client/appointments")
+    // Fetch from history API which includes before/after photos
+    fetch("/api/client/history")
       .then((res) => res.json())
       .then((data) => {
-        setAppointments(data.appointments || []);
+        setAppointments(data.visits || []);
       })
-      .catch(() => {})
+      .catch(() => {
+        // Fallback to appointments API if history not available
+        fetch("/api/client/appointments")
+          .then((res) => res.json())
+          .then((data) => setAppointments(data.appointments || []))
+          .catch(() => {});
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -240,6 +259,9 @@ export default function HistoryPage() {
                   <div className="space-y-2">
                     {appts.map((appt) => {
                       const badge = getStatusBadge(appt.status);
+                      const beforeUrl = appt.completion_photos?.before_photo_url;
+                      const afterUrl = appt.completion_photos?.after_photo_url;
+                      const hasPhotos = beforeUrl || afterUrl;
                       return (
                         <Card key={appt.id}>
                           <CardContent style={{ padding: "14px 16px" }}>
@@ -286,6 +308,54 @@ export default function HistoryPage() {
                                 {badge.label}
                               </span>
                             </div>
+                            {hasPhotos && (
+                              <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+                                {beforeUrl && (
+                                  <div style={{ flex: 1 }}>
+                                    <p style={{
+                                      fontSize: "9px",
+                                      fontWeight: 600,
+                                      textTransform: "uppercase",
+                                      color: "#8A8778",
+                                      marginBottom: "3px",
+                                      fontFamily: "'DM Sans', sans-serif",
+                                    }}>Before</p>
+                                    <img
+                                      src={beforeUrl}
+                                      alt="Before"
+                                      style={{
+                                        width: "100%",
+                                        aspectRatio: "4/3",
+                                        objectFit: "cover",
+                                        borderRadius: "6px",
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                                {afterUrl && (
+                                  <div style={{ flex: 1 }}>
+                                    <p style={{
+                                      fontSize: "9px",
+                                      fontWeight: 600,
+                                      textTransform: "uppercase",
+                                      color: "#8A8778",
+                                      marginBottom: "3px",
+                                      fontFamily: "'DM Sans', sans-serif",
+                                    }}>After</p>
+                                    <img
+                                      src={afterUrl}
+                                      alt="After"
+                                      style={{
+                                        width: "100%",
+                                        aspectRatio: "4/3",
+                                        objectFit: "cover",
+                                        borderRadius: "6px",
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </CardContent>
                         </Card>
                       );

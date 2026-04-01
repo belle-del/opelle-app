@@ -71,13 +71,13 @@ export default function PortfolioPage() {
   return (
     <div className="space-y-6">
       <header>
-        <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--brass, #C4AB70)", marginBottom: "4px" }}>
+        <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#6B5D4A", marginBottom: "4px" }}>
           Practice
         </p>
-        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "var(--stone-lightest, #FAF8F3)", fontWeight: 300 }}>
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "#2C2C24", fontWeight: 300 }}>
           Portfolio
         </h2>
-        <p style={{ fontSize: "12px", color: "rgba(241,239,224,0.5)", marginTop: "4px" }}>
+        <p style={{ fontSize: "12px", color: "#7A7060", marginTop: "4px" }}>
           {loading ? "Loading…" : `${data?.pairs.length ?? 0} photos`}
         </p>
       </header>
@@ -146,7 +146,7 @@ export default function PortfolioPage() {
 
       {/* Gallery */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "48px", color: "rgba(241,239,224,0.4)", fontSize: "14px" }}>
+        <div style={{ textAlign: "center", padding: "48px", color: "#8A8778", fontSize: "14px" }}>
           Loading portfolio…
         </div>
       ) : (

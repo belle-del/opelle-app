@@ -18,6 +18,20 @@ export interface ContextParams {
   };
 }
 
+// ── Client match result (for disambiguation) ────────────────
+
+export interface ClientCandidate {
+  id: string;
+  name: string;
+  lastVisit?: string;
+  detail?: string; // distinguishing info: tag, service, etc.
+}
+
+export type ClientMatchResult =
+  | { type: "exact"; clientId: string }
+  | { type: "multiple"; candidates: ClientCandidate[] }
+  | { type: "none" };
+
 export interface FullContext {
   workspace: {
     id: string;
@@ -98,6 +112,9 @@ export interface FullContext {
 
   lessons: string[];
 
+  /** Result of smart client detection from the message */
+  clientMatch: ClientMatchResult;
+
   pageContext: {
     page: string;
     entityType?: string;
@@ -161,28 +178,129 @@ export async function buildFullContext(params: ContextParams): Promise<FullConte
       .in("status", ["pending", "in_progress"])
       .limit(10),
 
-    // Fetch all clients for name-matching fallback
+    // Fetch all clients for smart name-matching
     admin
       .from("clients")
-      .select("id, first_name, last_name")
+      .select("id, first_name, last_name, tags, notes")
       .eq("workspace_id", workspaceId),
   ]);
 
   const workspace = workspaceResult.data;
 
-  // ── Resolve client ID: explicit > name-match ───────────────
+  // ── Smart client resolution: explicit > scored name-match ──
   let resolvedClientId = clientId || undefined;
+  let clientMatch: ClientMatchResult = { type: "none" };
+
+  // Common words to ignore when extracting candidate names from messages
+  const STOP_WORDS = new Set([
+    "i", "me", "my", "the", "a", "an", "is", "are", "was", "were", "do", "does",
+    "did", "has", "have", "had", "will", "would", "could", "should", "can",
+    "what", "who", "how", "when", "where", "why", "which", "that", "this",
+    "for", "with", "about", "from", "into", "on", "at", "to", "of", "in",
+    "and", "or", "but", "not", "no", "yes", "please", "thanks", "thank",
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+    "january", "february", "march", "april", "may", "june", "july", "august",
+    "september", "october", "november", "december",
+    "today", "tomorrow", "yesterday", "week", "month", "year",
+    "metis", "formula", "color", "hair", "client", "product", "appointment",
+    "service", "book", "rebook", "schedule", "suggest", "help", "show", "tell",
+    "balayage", "highlights", "toner", "gloss", "bleach", "developer",
+  ]);
 
   if (!resolvedClientId && message) {
-    const messageLower = message.toLowerCase();
     const clients = allClientsResult.data || [];
-    const matched = clients.find((c: Record<string, unknown>) => {
-      const full = `${((c.first_name as string) || "").toLowerCase()} ${((c.last_name as string) || "").toLowerCase()}`.trim();
-      return full.length > 4 && messageLower.includes(full);
-    });
-    if (matched) {
-      resolvedClientId = (matched as Record<string, unknown>).id as string;
+
+    // Score each client against the message
+    const scored: { client: Record<string, unknown>; score: number }[] = [];
+
+    for (const c of clients as Record<string, unknown>[]) {
+      const first = ((c.first_name as string) || "").trim();
+      const last = ((c.last_name as string) || "").trim();
+      const full = `${first} ${last}`.trim();
+      const msgLower = message.toLowerCase();
+
+      let score = 0;
+
+      // Exact full name match (case-insensitive)
+      if (full.length > 2 && msgLower.includes(full.toLowerCase())) {
+        score = 100;
+      }
+      // First name + last initial (e.g. "Sarah J")
+      else if (first.length > 2 && last.length > 0) {
+        const firstLastInitial = `${first} ${last[0]}`.toLowerCase();
+        if (msgLower.includes(firstLastInitial)) {
+          score = 80;
+        }
+      }
+
+      // First name only (must not be a stop word, must be 3+ chars)
+      if (score === 0 && first.length >= 3 && !STOP_WORDS.has(first.toLowerCase())) {
+        // Check if the first name appears as a word boundary in the message
+        const nameRegex = new RegExp(`\\b${first.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, "i");
+        if (nameRegex.test(message)) {
+          score = 60;
+        }
+      }
+
+      // Last name only (must be 3+ chars and not a stop word)
+      if (score === 0 && last.length >= 3 && !STOP_WORDS.has(last.toLowerCase())) {
+        const nameRegex = new RegExp(`\\b${last.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, "i");
+        if (nameRegex.test(message)) {
+          score = 50;
+        }
+      }
+
+      if (score > 0) {
+        scored.push({ client: c, score });
+      }
     }
+
+    // Sort by score descending
+    scored.sort((a, b) => b.score - a.score);
+
+    if (scored.length === 1 && scored[0].score >= 50) {
+      // Single confident match
+      resolvedClientId = scored[0].client.id as string;
+      clientMatch = { type: "exact", clientId: resolvedClientId };
+    } else if (scored.length > 1) {
+      // Check if top scorer is clearly the best (full name match vs partial)
+      const top = scored[0];
+      const runnerUp = scored[1];
+      if (top.score >= 80 && top.score > runnerUp.score) {
+        // Unambiguous — full name or first+initial beats partials
+        resolvedClientId = top.client.id as string;
+        clientMatch = { type: "exact", clientId: resolvedClientId };
+      } else {
+        // Ambiguous — return candidates for disambiguation
+        // Fetch last appointment for each candidate to show lastVisit
+        const topCandidates = scored.slice(0, 5);
+        const lastVisitResults = await Promise.all(
+          topCandidates.map((s) =>
+            admin.from("appointments")
+              .select("start_at")
+              .eq("client_id", s.client.id as string)
+              .order("start_at", { ascending: false })
+              .limit(1)
+          )
+        );
+        const candidates: ClientCandidate[] = topCandidates.map((s, i) => {
+          const c = s.client;
+          const first = (c.first_name as string) || "";
+          const last = (c.last_name as string) || "";
+          const tags = Array.isArray(c.tags) ? (c.tags as string[]) : [];
+          const lastAppt = lastVisitResults[i].data?.[0] as Record<string, unknown> | undefined;
+          return {
+            id: c.id as string,
+            name: `${first} ${last}`.trim(),
+            lastVisit: lastAppt?.start_at as string | undefined,
+            detail: tags[0] || undefined,
+          };
+        });
+        clientMatch = { type: "multiple", candidates };
+      }
+    }
+  } else if (resolvedClientId) {
+    clientMatch = { type: "exact", clientId: resolvedClientId };
   }
 
   // ── Client-specific data (if we have a client) ─────────────
@@ -320,6 +438,7 @@ export async function buildFullContext(params: ContextParams): Promise<FullConte
     upcomingAppointments,
     pendingTasks,
     lessons,
+    clientMatch,
     pageContext: pageContext || { page: "metis_chat" },
   };
 }

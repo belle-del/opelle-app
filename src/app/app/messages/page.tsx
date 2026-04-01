@@ -83,7 +83,7 @@ export default async function MessagesPage() {
               fontSize: "10px",
               letterSpacing: "0.15em",
               textTransform: "uppercase",
-              color: "var(--brass, #C4AB70)",
+              color: "#6B5D4A",
               marginBottom: "4px",
             }}
           >
@@ -94,7 +94,7 @@ export default async function MessagesPage() {
               style={{
                 fontFamily: "'Fraunces', serif",
                 fontSize: "26px",
-                color: "var(--stone-lightest, #FAF8F3)",
+                color: "#2C2C24",
                 fontWeight: 300,
               }}
             >
@@ -107,7 +107,7 @@ export default async function MessagesPage() {
           <p
             style={{
               fontSize: "12px",
-              color: "var(--text-on-bark, #F5F0E8)",
+              color: "#7A7060",
               marginTop: "4px",
             }}
           >

@@ -5,11 +5,25 @@ import { Sparkles, Send, MessageSquarePlus, Check, X } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────── */
 
+interface DisambiguationCandidate {
+  id: string;
+  name: string;
+  lastVisit?: string;
+  detail?: string;
+}
+
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  /** Special message type for client disambiguation */
+  type?: "text" | "disambiguation";
+  disambiguation?: {
+    originalMessage: string;
+    candidates: DisambiguationCandidate[];
+    selectedId?: string; // set after user picks one
+  };
 }
 
 interface MetisChatContext {
@@ -282,6 +296,8 @@ export default function MetisChat({
   const [feedbackScope, setFeedbackScope] = useState<"client" | "general">("general");
   const [feedbackSending, setFeedbackSending] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState<Set<string>>(new Set());
+  const [resolvedClientId, setResolvedClientId] = useState<string | null>(null);
+  const [resolvedClientName, setResolvedClientName] = useState<string | null>(null);
   const hasAutoTitled = useRef(false);
   const justCreatedConvId = useRef<string | null>(null); // Track self-created conversations
 
@@ -302,8 +318,8 @@ export default function MetisChat({
           originalContent,
           correction: feedbackText.trim(),
           feedbackType,
-          entityType: feedbackScope === "client" && context?.clientId ? "client" : "general",
-          entityId: feedbackScope === "client" && context?.clientId ? context.clientId : undefined,
+          entityType: feedbackScope === "client" && (context?.clientId || resolvedClientId) ? "client" : "general",
+          entityId: feedbackScope === "client" ? (context?.clientId || resolvedClientId || undefined) : undefined,
         }),
       });
       setFeedbackSent((prev) => new Set(prev).add(messageId));
@@ -314,7 +330,7 @@ export default function MetisChat({
     } finally {
       setFeedbackSending(false);
     }
-  }, [feedbackText, feedbackType, feedbackSending, context]);
+  }, [feedbackText, feedbackType, feedbackSending, context, resolvedClientId]);
 
   /* Track external conversationId changes */
   useEffect(() => {
@@ -419,13 +435,19 @@ export default function MetisChat({
           content: m.content,
         }));
 
+        // Merge sticky resolvedClientId into context
+        const mergedContext = {
+          ...(context ?? {}),
+          ...(resolvedClientId ? { clientId: resolvedClientId } : {}),
+        };
+
         const res = await fetch("/api/intelligence/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             message: trimmed,
             conversationHistory,
-            context: context ?? {},
+            context: mergedContext,
           }),
         });
 
@@ -435,12 +457,41 @@ export default function MetisChat({
 
         const data = await res.json();
 
+        // Handle disambiguation response
+        if (data.disambiguation && !data.reply) {
+          const disambigMsg: Message = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: `I found multiple clients that could match. Which one did you mean?`,
+            timestamp: new Date().toISOString(),
+            type: "disambiguation",
+            disambiguation: {
+              originalMessage: data.disambiguation.originalMessage,
+              candidates: data.disambiguation.candidates,
+            },
+          };
+          setMessages((prev) => [...prev, disambigMsg]);
+
+          // Persist disambiguation message
+          if (fullPage && convId) {
+            persistMessage(convId, "assistant", disambigMsg.content);
+            onMessageSent?.();
+          }
+          return; // Don't call kernel yet — wait for user to pick
+        }
+
         const assistantMsg: Message = {
           id: crypto.randomUUID(),
           role: "assistant",
           content: data.reply || "I wasn't able to generate a response. Please try again.",
           timestamp: new Date().toISOString(),
         };
+
+        // If the API resolved a client, track it for sticky context
+        if (data.resolvedClientId && data.resolvedClientName) {
+          setResolvedClientId(data.resolvedClientId);
+          setResolvedClientName(data.resolvedClientName);
+        }
 
         setMessages((prev) => [...prev, assistantMsg]);
 
@@ -474,7 +525,78 @@ export default function MetisChat({
         setSending(false);
       }
     },
-    [messages, sending, context, activeConvId, fullPage, onConversationCreated, onMessageSent]
+    [messages, sending, context, activeConvId, fullPage, onConversationCreated, onMessageSent, resolvedClientId]
+  );
+
+  /* Handle client selection from disambiguation */
+  const handleSelectClient = useCallback(
+    (disambigMsgId: string, candidate: DisambiguationCandidate, originalMessage: string) => {
+      // Mark the selected candidate in the disambiguation message
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === disambigMsgId && m.disambiguation
+            ? { ...m, disambiguation: { ...m.disambiguation, selectedId: candidate.id } }
+            : m
+        )
+      );
+
+      // Set sticky client context
+      setResolvedClientId(candidate.id);
+      setResolvedClientName(candidate.name);
+
+      // Re-send the original message with the resolved clientId
+      // We need to bypass the normal sendMessage flow since we already have the user message
+      (async () => {
+        setSending(true);
+        try {
+          const conversationHistory = messages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          }));
+
+          const res = await fetch("/api/intelligence/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: originalMessage,
+              conversationHistory,
+              context: { ...(context ?? {}), clientId: candidate.id },
+            }),
+          });
+
+          if (!res.ok) throw new Error("Server error");
+          const data = await res.json();
+
+          const assistantMsg: Message = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: data.reply || "I wasn't able to generate a response.",
+            timestamp: new Date().toISOString(),
+          };
+
+          setMessages((prev) => [...prev, assistantMsg]);
+
+          if (fullPage && activeConvId) {
+            persistMessage(activeConvId, "assistant", assistantMsg.content);
+            onMessageSent?.();
+          }
+
+          if (data.suggestedFollowUps?.length) {
+            setSuggestedFollowUps(data.suggestedFollowUps);
+          }
+        } catch {
+          setMessages((prev) => [...prev, {
+            id: crypto.randomUUID(),
+            role: "assistant" as const,
+            content: "Sorry, I couldn't reach the server. Please try again.",
+            timestamp: new Date().toISOString(),
+          }]);
+        } finally {
+          setSending(false);
+        }
+      })();
+    },
+    [messages, context, fullPage, activeConvId, onMessageSent]
   );
 
   /* Key handler */
@@ -679,6 +801,74 @@ export default function MetisChat({
               >
                 {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
               </div>
+
+              {/* Disambiguation candidate cards */}
+              {msg.type === "disambiguation" && msg.disambiguation && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "8px" }}>
+                  {msg.disambiguation.candidates.map((candidate) => {
+                    const isSelected = msg.disambiguation?.selectedId === candidate.id;
+                    const isDisabled = !!msg.disambiguation?.selectedId;
+                    return (
+                      <button
+                        key={candidate.id}
+                        disabled={isDisabled && !isSelected}
+                        onClick={() => {
+                          if (!isDisabled) {
+                            handleSelectClient(msg.id, candidate, msg.disambiguation!.originalMessage);
+                          }
+                        }}
+                        style={{
+                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                          padding: "10px 14px", borderRadius: "10px",
+                          border: isSelected ? `2px solid ${BRASS}` : `1px solid ${STONE}`,
+                          background: isSelected ? `${BRASS}15` : CREAM,
+                          cursor: isDisabled ? "default" : "pointer",
+                          opacity: isDisabled && !isSelected ? 0.4 : 1,
+                          transition: "all 0.15s ease",
+                          textAlign: "left",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isDisabled) {
+                            e.currentTarget.style.borderColor = BRASS;
+                            e.currentTarget.style.background = `${BRASS}10`;
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isDisabled) {
+                            e.currentTarget.style.borderColor = STONE;
+                            e.currentTarget.style.background = CREAM;
+                          }
+                        }}
+                      >
+                        <div>
+                          <span style={{
+                            fontSize: "13px", fontWeight: 600,
+                            fontFamily: "'DM Sans', sans-serif", color: TEXT_PRIMARY,
+                          }}>
+                            {candidate.name}
+                          </span>
+                          {candidate.detail && (
+                            <span style={{
+                              fontSize: "11px", color: TEXT_FAINT,
+                              marginLeft: "8px", fontFamily: "'DM Sans', sans-serif",
+                            }}>
+                              {candidate.detail}
+                            </span>
+                          )}
+                        </div>
+                        {candidate.lastVisit && (
+                          <span style={{
+                            fontSize: "10px", color: TEXT_FAINT,
+                            fontFamily: "'DM Sans', sans-serif",
+                          }}>
+                            Last visit: {new Date(candidate.lastVisit).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <div
                 style={{
                   display: "flex",
@@ -705,7 +895,7 @@ export default function MetisChat({
                       setFeedbackMsgId(feedbackMsgId === msg.id ? null : msg.id);
                       setFeedbackText("");
                       setFeedbackType("note");
-                      setFeedbackScope(context?.clientId ? "client" : "general");
+                      setFeedbackScope((context?.clientId || resolvedClientId) ? "client" : "general");
                     }}
                     title="Teach Metis"
                     style={{
@@ -769,7 +959,7 @@ export default function MetisChat({
                       </button>
                     ))}
                     <span style={{ width: "1px", background: STONE, margin: "0 2px" }} />
-                    {(["general", ...(context?.clientId ? ["client" as const] : [])] as const).map((s) => (
+                    {(["general", ...((context?.clientId || resolvedClientId) ? ["client" as const] : [])] as const).map((s) => (
                       <button
                         key={s}
                         onClick={() => setFeedbackScope(s as "client" | "general")}
@@ -942,6 +1132,28 @@ export default function MetisChat({
           flexShrink: 0,
         }}
       >
+        {/* Sticky client context indicator */}
+        {resolvedClientName && (
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "4px 12px", marginBottom: "6px",
+            background: `${BRASS}12`, borderRadius: "8px",
+            fontSize: "11px", fontFamily: "'DM Sans', sans-serif", color: TEXT_FAINT,
+          }}>
+            <span>Talking about: <strong style={{ color: TEXT_PRIMARY, fontWeight: 600 }}>{resolvedClientName}</strong></span>
+            <button
+              onClick={() => { setResolvedClientId(null); setResolvedClientName(null); }}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                padding: "2px 4px", display: "flex", alignItems: "center",
+                color: TEXT_FAINT, borderRadius: "4px",
+              }}
+              title="Clear client context"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
         <div
           style={{
             display: "flex",

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CampaignBuilder } from "./CampaignBuilder";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  draft: { bg: "rgba(241,239,224,0.08)", color: "rgba(241,239,224,0.6)" },
+  draft: { bg: "rgba(107,93,74,0.08)", color: "#8A8778" },
   scheduled: { bg: "rgba(196,171,112,0.15)", color: "#C4AB70" },
   sending: { bg: "rgba(143,173,200,0.15)", color: "#8FADC8" },
   sent: { bg: "rgba(124,184,122,0.15)", color: "#7CB87A" },
@@ -53,7 +53,7 @@ export function CampaignList({
       </div>
 
       {campaigns.length === 0 && (
-        <div style={{ textAlign: "center", padding: "48px", color: "rgba(241,239,224,0.4)", fontSize: "13px" }}>
+        <div style={{ textAlign: "center", padding: "48px", color: "#8A8778", fontSize: "13px" }}>
           No campaigns yet. Create one to send messages to a group of clients.
         </div>
       )}

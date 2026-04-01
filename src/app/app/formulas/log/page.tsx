@@ -120,13 +120,13 @@ export default function LogFormulaPage() {
     <div className="space-y-8 max-w-2xl">
       {/* Header */}
       <header style={{ marginBottom: "20px" }}>
-        <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--brass, #C4AB70)", marginBottom: "4px" }}>
+        <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#6B5D4A", marginBottom: "4px" }}>
           Notepad
         </p>
-        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "var(--stone-lightest, #FAF8F3)", fontWeight: 300 }}>
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "#2C2C24", fontWeight: 300 }}>
           Log Formula
         </h2>
-        <p style={{ fontSize: "12px", color: "var(--text-on-bark, #F5F0E8)", marginTop: "4px" }}>
+        <p style={{ fontSize: "12px", color: "#7A7060", marginTop: "4px" }}>
           Jot down what you mixed — AI will format it for you.
         </p>
       </header>

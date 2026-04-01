@@ -103,13 +103,13 @@ export default function EditClientPage({ params }: EditClientPageProps) {
         <Link
           href={`/app/clients/${id}`}
           className="inline-flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
-          style={{ color: "var(--text-on-bark, #F5F0E8)" }}
+          style={{ color: "#6B5D4A" }}
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Client
         </Link>
         <div>
-          <h2 className="text-3xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest, #FAF8F3)" }}>Edit Client</h2>
+          <h2 className="text-3xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: "#2C2C24" }}>Edit Client</h2>
           <p className="text-muted-foreground">
             Update client information.
           </p>

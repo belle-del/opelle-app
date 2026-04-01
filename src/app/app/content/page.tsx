@@ -39,7 +39,7 @@ export default function ContentPage() {
               fontSize: "10px",
               letterSpacing: "0.15em",
               textTransform: "uppercase",
-              color: "var(--brass, #C4AB70)",
+              color: "#6B5D4A",
               marginBottom: "4px",
             }}
           >
@@ -49,7 +49,7 @@ export default function ContentPage() {
             style={{
               fontFamily: "'Fraunces', serif",
               fontSize: "26px",
-              color: "var(--stone-lightest, #FAF8F3)",
+              color: "#2C2C24",
               fontWeight: 300,
             }}
           >
@@ -58,7 +58,7 @@ export default function ContentPage() {
           <p
             style={{
               fontSize: "12px",
-              color: "var(--text-on-bark, #F5F0E8)",
+              color: "#7A7060",
               marginTop: "4px",
             }}
           >

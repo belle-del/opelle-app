@@ -39,13 +39,13 @@ export default function MarketingPage() {
   return (
     <div className="space-y-6">
       <header>
-        <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#C4AB70", marginBottom: "4px" }}>
+        <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#6B5D4A", marginBottom: "4px" }}>
           Practice
         </p>
-        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "#FAF8F3", fontWeight: 300 }}>
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "#2C2C24", fontWeight: 300 }}>
           Marketing
         </h2>
-        <p style={{ fontSize: "12px", color: "rgba(241,239,224,0.5)", marginTop: "4px" }}>
+        <p style={{ fontSize: "12px", color: "#7A7060", marginTop: "4px" }}>
           Automations, campaigns, and message history
         </p>
       </header>
@@ -59,10 +59,10 @@ export default function MarketingPage() {
             style={{
               padding: "10px 16px",
               fontSize: "12px",
-              color: tab === t.key ? "#C4AB70" : "rgba(241,239,224,0.5)",
+              color: tab === t.key ? "#6B5D4A" : "#8A8778",
               background: "none",
               border: "none",
-              borderBottom: tab === t.key ? "2px solid #C4AB70" : "2px solid transparent",
+              borderBottom: tab === t.key ? "2px solid #6B5D4A" : "2px solid transparent",
               cursor: "pointer",
               fontFamily: "'DM Sans', sans-serif",
               transition: "color 0.15s",
@@ -77,7 +77,7 @@ export default function MarketingPage() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "48px", color: "rgba(241,239,224,0.4)", fontSize: "14px" }}>
+        <div style={{ textAlign: "center", padding: "48px", color: "#8A8778", fontSize: "14px" }}>
           Loading...
         </div>
       ) : (

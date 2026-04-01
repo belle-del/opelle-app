@@ -60,7 +60,7 @@ export function AutomationList({
       </div>
 
       {automations.length === 0 && (
-        <div style={{ textAlign: "center", padding: "48px", color: "rgba(241,239,224,0.4)", fontSize: "13px" }}>
+        <div style={{ textAlign: "center", padding: "48px", color: "#8A8778", fontSize: "13px" }}>
           No automations yet. Create one to automatically send messages on triggers.
         </div>
       )}

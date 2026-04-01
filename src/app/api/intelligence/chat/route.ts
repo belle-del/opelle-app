@@ -39,6 +39,17 @@ export async function POST(req: NextRequest) {
         : undefined,
     });
 
+    // ── Handle disambiguation (multiple client matches) ────────
+    if (fullContext.clientMatch.type === "multiple") {
+      return NextResponse.json({
+        reply: null,
+        disambiguation: {
+          originalMessage: message,
+          candidates: fullContext.clientMatch.candidates,
+        },
+      });
+    }
+
     // Shape workspace context for the kernel
     const workspaceContext: Record<string, unknown> = {
       workspace: fullContext.workspace,
@@ -84,7 +95,14 @@ export async function POST(req: NextRequest) {
     const preview = message.length > 50 ? message.slice(0, 50) + "..." : message;
     await logActivity("metis.chat", "metis", "metis-chat", preview);
 
-    return NextResponse.json(result);
+    // Include resolved client info so the frontend can track it
+    return NextResponse.json({
+      ...result,
+      ...(fullContext.client ? {
+        resolvedClientId: fullContext.client.id,
+        resolvedClientName: fullContext.client.name,
+      } : {}),
+    });
   } catch (err) {
     console.error("Metis chat route error:", err);
     return NextResponse.json(

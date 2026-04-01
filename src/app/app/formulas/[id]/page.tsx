@@ -38,7 +38,7 @@ export default function FormulaDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: "64px", color: "rgba(241,239,224,0.4)" }}>
+      <div style={{ textAlign: "center", padding: "64px", color: "#8A8778" }}>
         Loading…
       </div>
     );
@@ -46,7 +46,7 @@ export default function FormulaDetailPage() {
 
   if (!entry) {
     return (
-      <div style={{ textAlign: "center", padding: "64px", color: "rgba(241,239,224,0.4)" }}>
+      <div style={{ textAlign: "center", padding: "64px", color: "#8A8778" }}>
         Formula not found.
       </div>
     );
@@ -58,15 +58,15 @@ export default function FormulaDetailPage() {
         <Link
           href="/app/formulas"
           className="inline-flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
-          style={{ color: "var(--text-on-bark, #F5F0E8)" }}
+          style={{ color: "#6B5D4A" }}
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Formulas
         </Link>
-        <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--brass, #C4AB70)" }}>
+        <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#6B5D4A" }}>
           Formula
         </p>
-        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", color: "var(--stone-lightest, #FAF8F3)", fontWeight: 300 }}>
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "24px", color: "#2C2C24", fontWeight: 300 }}>
           {formatDate(entry.serviceDate)}
         </h2>
       </header>
@@ -84,7 +84,7 @@ export default function FormulaDetailPage() {
             {entry.rawNotes}
           </pre>
           {entry.generalNotes && (
-            <p style={{ fontSize: "12px", color: "rgba(241,239,224,0.4)", fontStyle: "italic", borderTop: "1px solid rgba(196,171,112,0.1)", paddingTop: "8px" }}>
+            <p style={{ fontSize: "12px", color: "#8A8778", fontStyle: "italic", borderTop: "1px solid rgba(196,171,112,0.1)", paddingTop: "8px" }}>
               {entry.generalNotes}
             </p>
           )}
@@ -121,7 +121,7 @@ export default function FormulaDetailPage() {
                 })}
               </div>
               {photos.resultNotes && (
-                <p style={{ fontSize: "13px", color: "rgba(241,239,224,0.6)", fontStyle: "italic" }}>
+                <p style={{ fontSize: "13px", color: "#7A7060", fontStyle: "italic" }}>
                   {photos.resultNotes}
                 </p>
               )}
@@ -135,7 +135,7 @@ export default function FormulaDetailPage() {
               )}
             </>
           ) : (
-            <p style={{ fontSize: "13px", color: "rgba(241,239,224,0.4)" }}>
+            <p style={{ fontSize: "13px", color: "#8A8778" }}>
               No photo on file for this formula.
             </p>
           )}

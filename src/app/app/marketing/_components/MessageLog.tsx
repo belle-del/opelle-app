@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<string, string> = {
 export function MessageLog({ logs }: { logs: MessageLogType[] }) {
   if (logs.length === 0) {
     return (
-      <div style={{ textAlign: "center", padding: "48px", color: "rgba(241,239,224,0.4)", fontSize: "13px" }}>
+      <div style={{ textAlign: "center", padding: "48px", color: "#8A8778", fontSize: "13px" }}>
         No messages sent yet. Send a message or create an automation to get started.
       </div>
     );
@@ -31,7 +31,7 @@ export function MessageLog({ logs }: { logs: MessageLogType[] }) {
       {/* Header */}
       <div style={{
         display: "grid", gridTemplateColumns: "90px 1fr 80px 70px 120px",
-        gap: "8px", padding: "8px 12px", fontSize: "9px", color: "rgba(241,239,224,0.3)",
+        gap: "8px", padding: "8px 12px", fontSize: "9px", color: "#9A9485",
         letterSpacing: "0.1em", textTransform: "uppercase",
       }}>
         <span>Source</span>
@@ -52,19 +52,19 @@ export function MessageLog({ logs }: { logs: MessageLogType[] }) {
             fontSize: "11px", alignItems: "center",
           }}
         >
-          <span style={{ color: "rgba(241,239,224,0.6)" }}>
+          <span style={{ color: "#7A7060" }}>
             {SOURCE_LABELS[log.source] || log.source}
           </span>
-          <span style={{ color: "rgba(241,239,224,0.7)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ color: "#5C5A4F", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {log.body || log.subject || "—"}
           </span>
-          <span style={{ color: "rgba(241,239,224,0.5)", textTransform: "uppercase", fontSize: "9px" }}>
+          <span style={{ color: "#8A8778", textTransform: "uppercase", fontSize: "9px" }}>
             {log.channel}
           </span>
-          <span style={{ color: STATUS_COLORS[log.status] || "rgba(241,239,224,0.5)", fontSize: "10px", fontWeight: 600 }}>
+          <span style={{ color: STATUS_COLORS[log.status] || "#8A8778", fontSize: "10px", fontWeight: 600 }}>
             {log.status}
           </span>
-          <span style={{ color: "rgba(241,239,224,0.4)", fontSize: "10px" }}>
+          <span style={{ color: "#8A8778", fontSize: "10px" }}>
             {new Date(log.sentAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
           </span>
         </div>

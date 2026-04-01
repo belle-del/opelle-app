@@ -65,7 +65,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         <Link
           href="/app/products"
           className="inline-flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
-          style={{ color: "var(--text-on-bark, #F5F0E8)" }}
+          style={{ color: "#6B5D4A" }}
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Products
@@ -73,7 +73,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-3xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: "var(--stone-lightest, #FAF8F3)" }}>
+              <h2 className="text-3xl font-semibold" style={{ fontFamily: "'Fraunces', serif", color: "#2C2C24" }}>
                 {product.brand} {product.shade}
               </h2>
               <Badge variant="outline">
