@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { getCurrentWorkspace } from "@/lib/db/workspaces";
 import { AppNav } from "./_components/AppNav";
 import MetisFloatingChat from "./_components/MetisFloatingChat";
 import { DevWrapper } from "./_components/DevWrapper";
@@ -21,12 +22,8 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  // Get workspace
-  const { data: workspace } = await supabase
-    .from("workspaces")
-    .select("*")
-    .eq("owner_id", user.id)
-    .single();
+  // Get workspace (supports both owners and team members via membership fallback)
+  const workspace = await getCurrentWorkspace();
 
   const showDevTools =
     process.env.NODE_ENV === "development" ||

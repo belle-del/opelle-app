@@ -32,6 +32,8 @@ import {
   UsersRound,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+import { usePermissions } from "@/lib/hooks/use-permissions";
+import type { Permission } from "@/lib/permissions";
 
 // Which modes can see each nav item. 'god' always sees everything.
 const NAV_VISIBILITY: Record<string, ViewMode[]> = {
@@ -53,6 +55,23 @@ const NAV_VISIBILITY: Record<string, ViewMode[]> = {
   "/app/tasks":        ["god", "school", "salon", "practitioner"],
   "/app/history":      ["god", "school"],
   "/app/settings":     ["god", "school", "salon", "practitioner"],
+};
+
+// Which permission is needed to see each nav item. Items not listed are always visible.
+const NAV_PERMISSIONS: Partial<Record<string, Permission>> = {
+  "/app/floor":        "floor.view",
+  "/app/hours":        "hours.view_own",
+  "/app/progress":     "progress.view_own",
+  "/app/checkout":     "checkout.use",
+  "/app/appointments": "appointments.manage",
+  "/app/availability": "appointments.manage",
+  "/app/clients":      "clients.manage",
+  "/app/formulas":     "formulas.view_own",
+  "/app/portfolio":    "portfolio.manage",
+  "/app/products":     "clients.manage",
+  "/app/messages":     "messages.use",
+  "/app/team":         "team.view",
+  "/app/settings":     "settings.manage",
 };
 
 const NAV_SECTIONS = [
@@ -143,6 +162,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
 
   const devCtx = useContext(DevContext);
   const viewMode: ViewMode = devCtx?.viewMode ?? "god";
+  const { can, loading: permsLoading } = usePermissions();
 
   const handleSignOut = async () => {
     const supabase = createSupabaseBrowserClient();
@@ -224,8 +244,10 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
               {section.items
                 .filter((item) => {
                   const allowed = NAV_VISIBILITY[item.href];
-                  if (!allowed) return true; // unknown items always show
-                  return viewMode === "god" || allowed.includes(viewMode);
+                  if (allowed && viewMode !== "god" && !allowed.includes(viewMode)) return false;
+                  const requiredPerm = NAV_PERMISSIONS[item.href];
+                  if (requiredPerm && !permsLoading && !can(requiredPerm)) return false;
+                  return true;
                 })
                 .map((item) => {
                 const isActive =
