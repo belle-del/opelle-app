@@ -169,7 +169,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
   } as React.CSSProperties;
 
   const sidebarContent = (
-    <div className="flex flex-col flex-1 relative">
+    <div className="flex flex-col flex-1 relative min-h-0">
       {/* Brand */}
       <div className="px-4 pt-5 pb-4 relative z-10" style={{ borderBottom: "1px solid rgba(196,171,112,0.08)" }}>
         <Link href="/app" className="block">
