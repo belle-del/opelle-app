@@ -183,15 +183,32 @@ export async function acceptTeamInvite(
     .maybeSingle();
 
   if (existing) {
-    // Already a member — mark invite as accepted and return existing membership
+    // Already a member — update their role to the invited role (upgrade path)
+    // e.g., a client who is also a student, or a stylist getting promoted to instructor
+    const { data: updated, error: updateError } = await admin
+      .from("workspace_members")
+      .update({
+        role: invite.role,
+        display_name: displayName || undefined,
+        status: "active",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id)
+      .select("*")
+      .single();
+
     await admin
       .from("team_invites")
       .update({ accepted_at: new Date().toISOString() })
       .eq("id", invite.id);
-    return { member: null, error: "You are already a member of this workspace" };
+
+    if (updateError || !updated) {
+      return { member: null, error: `Failed to update role: ${updateError?.message}` };
+    }
+    return { member: workspaceMemberRowToModel(updated as WorkspaceMemberRow) };
   }
 
-  // Create workspace member
+  // New member — create workspace_members entry
   const { data: member, error: memberError } = await admin
     .from("workspace_members")
     .insert({
