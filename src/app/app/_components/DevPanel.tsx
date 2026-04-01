@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useDevMode } from "@/lib/dev-context";
 import type { ViewMode, ConsoleEntry, NetworkEntry } from "@/lib/dev-context";
 
-const MODES: ViewMode[] = ["god", "school", "salon", "practitioner", "client"];
+const MODES: ViewMode[] = ["god", "school", "salon", "practitioner"];
 
 const MODE_COLORS: Record<ViewMode, string> = {
   god:          "#9B7FE8",

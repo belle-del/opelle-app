@@ -282,34 +282,33 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
             </div>
           </div>
         ))}
+        {/* Log Formula CTA — scrolls with nav */}
+        <div className="px-0 pt-4 pb-1">
+          <Link href="/app/formulas/log">
+            <button
+              className="w-full flex items-center justify-center gap-1.5"
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                background: "#440606",
+                border: "1px solid #5C0B0B",
+                color: "#F1EFE0",
+                fontSize: "10px",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                fontFamily: "'DM Sans', sans-serif",
+                fontWeight: 500,
+              }}
+            >
+              <FlaskConical style={{ width: "14px", height: "14px" }} />
+              Log Formula
+            </button>
+          </Link>
+        </div>
       </nav>
 
-      {/* Log Formula CTA */}
-      <div className="px-3 pb-3 relative z-10">
-        <Link href="/app/formulas/log">
-          <button
-            className="w-full flex items-center justify-center gap-1.5"
-            style={{
-              padding: "8px 12px",
-              borderRadius: "6px",
-              background: "#440606",
-              border: "1px solid #5C0B0B",
-              color: "#F1EFE0",
-              fontSize: "10px",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              fontFamily: "'DM Sans', sans-serif",
-              fontWeight: 500,
-            }}
-          >
-            <FlaskConical style={{ width: "14px", height: "14px" }} />
-            Log Formula
-          </button>
-        </Link>
-      </div>
-
-      {/* User profile */}
-      <div className="mx-2 mb-2 px-2 py-3 rounded-lg relative z-10">
+      {/* User profile — pinned at bottom, never scrolls */}
+      <div className="mx-2 mb-2 px-2 py-3 rounded-lg relative z-10 flex-shrink-0" style={{ borderTop: "1px solid rgba(196,171,112,0.08)" }}>
         <div className="flex items-center gap-2 mb-2">
           <div
             className="flex items-center justify-center flex-shrink-0"
