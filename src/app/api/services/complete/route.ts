@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 import { createStockMovement, upsertStockAlert, listServiceProductUsage } from "@/lib/db/inventory";
 import { publishEvent } from "@/lib/kernel";
+import { fireAutomationsForTrigger } from "@/lib/marketing-triggers";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +15,11 @@ export async function POST(req: NextRequest) {
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 403 });
 
-    const { studentId, studentName, categoryId, clientId, notes } = await req.json();
+    const {
+      studentId, studentName, categoryId, clientId, notes,
+      beforePhotoUrl, afterPhotoUrl,
+      formulaData, formulaEntryId,
+    } = await req.json();
     if (!studentId || !categoryId) {
       return NextResponse.json({ error: "studentId and categoryId required" }, { status: 400 });
     }
@@ -22,7 +27,29 @@ export async function POST(req: NextRequest) {
     const admin = createSupabaseAdminClient();
     const now = new Date().toISOString();
 
-    // 1. Insert service completion
+    // Rule 9, Step 4: Check if category requires photos (color/chemical services)
+    const { data: category } = await admin
+      .from("service_categories")
+      .select("requires_photos, code")
+      .eq("id", categoryId)
+      .single();
+
+    if (category?.requires_photos) {
+      if (!beforePhotoUrl) {
+        return NextResponse.json(
+          { error: "Before photo required for this service type" },
+          { status: 400 }
+        );
+      }
+      if (!afterPhotoUrl) {
+        return NextResponse.json(
+          { error: "After photo required for this service type" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 1. Insert service completion (with photos)
     const { data: completion, error: insertError } = await admin
       .from("service_completions")
       .insert({
@@ -33,6 +60,8 @@ export async function POST(req: NextRequest) {
         client_id: clientId || null,
         completed_at: now,
         notes: notes || null,
+        before_photo_url: beforePhotoUrl || null,
+        after_photo_url: afterPhotoUrl || null,
       })
       .select("id")
       .single();
@@ -130,9 +159,62 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Rule 9, Step 5: Formula logging (create formula_history if formula data provided)
+    let formulaHistoryId: string | null = null;
+    if (formulaData && clientId && completion?.id) {
+      const { data: fh } = await admin
+        .from("formula_history")
+        .insert({
+          workspace_id: workspaceId,
+          client_id: clientId,
+          service_completion_id: completion.id,
+          formula: formulaData,
+          before_photo_url: beforePhotoUrl || null,
+          after_photo_url: afterPhotoUrl || null,
+          sharing_level: "private",
+        })
+        .select("id")
+        .single();
+      formulaHistoryId = fh?.id || null;
+    }
+
+    // Rule 9, Step 10: Kernel event (async, non-blocking)
+    publishEvent({
+      event_type: "service.completed",
+      workspace_id: workspaceId,
+      timestamp: now,
+      payload: {
+        completion_id: completion?.id,
+        student_id: studentId,
+        category_id: categoryId,
+        category_code: category?.code || null,
+        client_id: clientId || null,
+        before_photo_url: beforePhotoUrl || null,
+        after_photo_url: afterPhotoUrl || null,
+        formula_history_id: formulaHistoryId,
+        formula_entry_id: formulaEntryId || null,
+      },
+    });
+
+    // Fire marketing automations for service completion (non-blocking)
+    if (clientId) {
+      fireAutomationsForTrigger({
+        workspaceId,
+        trigger: "service_completed",
+        clientId: clientId || "",
+        context: {
+          clientId: clientId || null,
+          categoryCode: category?.code || null,
+          studentId,
+          studentName: studentName || null,
+        },
+      }).catch(() => {}); // fire-and-forget
+    }
+
     return NextResponse.json({
       success: true,
       completionId: completion?.id,
+      formulaHistoryId,
     });
   } catch (err) {
     console.error("Service complete error:", err);
