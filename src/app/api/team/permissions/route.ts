@@ -14,8 +14,8 @@ export async function GET() {
 
     const memberInfo = await getMemberRole(user.id, workspaceId);
     if (!memberInfo) {
-      // Fallback: if user isn't in workspace_members but owns the workspace
-      return NextResponse.json({ role: "owner", permissions: {} });
+      // User is not a recognized member — return minimal permissions (not owner!)
+      return NextResponse.json({ role: "student", permissions: {} });
     }
 
     return NextResponse.json({

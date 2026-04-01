@@ -261,13 +261,13 @@ export async function getMemberRole(
 ): Promise<{ role: TeamRole; permissions: Record<string, boolean> } | null> {
   const admin = createSupabaseAdminClient();
 
-  // Check workspace_members
+  // Check workspace_members (include active + null status for pre-migration rows)
   const { data } = await admin
     .from("workspace_members")
-    .select("role, permissions")
+    .select("role, permissions, status")
     .eq("workspace_id", workspaceId)
     .eq("user_id", userId)
-    .eq("status", "active")
+    .neq("status", "inactive")
     .single();
 
   if (data) {
