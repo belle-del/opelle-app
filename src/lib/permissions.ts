@@ -28,7 +28,9 @@ export type Permission =
   | 'metis.use'
   | 'history.view_own'
   | 'progress.view_all'
-  | 'progress.view_own';
+  | 'progress.view_own'
+  | 'marketing.manage'
+  | 'marketing.view';
 
 const ALL_PERMISSIONS: Permission[] = [
   'team.manage', 'team.view', 'floor.view',
@@ -43,6 +45,7 @@ const ALL_PERMISSIONS: Permission[] = [
   'products.view', 'earnings.view_own',
   'messages.use', 'metis.use', 'history.view_own',
   'progress.view_all', 'progress.view_own',
+  'marketing.manage', 'marketing.view',
 ];
 
 /** Default permissions granted to each role. */
@@ -60,6 +63,7 @@ export const ROLE_PERMISSIONS: Record<TeamRole, Permission[]> = {
     'products.view', 'earnings.view_own',
     'messages.use', 'metis.use', 'history.view_own',
     'progress.view_all', 'progress.view_own',
+    'marketing.view',
   ],
   stylist: [
     'hours.view_own',
@@ -71,6 +75,7 @@ export const ROLE_PERMISSIONS: Record<TeamRole, Permission[]> = {
     'products.view', 'earnings.view_own',
     'messages.use', 'metis.use', 'history.view_own',
     'progress.view_own',
+    'marketing.view',
   ],
   student: [
     'hours.view_own',

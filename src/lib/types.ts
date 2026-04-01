@@ -1327,6 +1327,156 @@ export function messageTemplateRowToModel(row: MessageTemplateRow): MessageTempl
   }
 }
 
+// ── Marketing & Communications ──────────────────────────────
+
+export type AutomationTrigger = 'appointment_booked' | 'service_completed' | 'days_since_visit' | 'client_birthday';
+export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';
+export type MessageLogSource = 'manual' | 'automation' | 'campaign' | 'cron';
+export type MessageLogStatus = 'sent' | 'failed' | 'delivered' | 'opened' | 'clicked';
+export type MessageChannel = 'in_app' | 'email' | 'sms';
+
+export type AudienceFilter = {
+  tags?: string[];
+  minVisits?: number;
+  maxVisits?: number;
+  daysSinceLastVisit?: number;
+  maxDaysSinceLastVisit?: number;
+};
+
+export type MessageLog = {
+  id: string;
+  workspaceId: string;
+  clientId?: string;
+  templateId?: string;
+  source: MessageLogSource;
+  channel: MessageChannel;
+  subject?: string;
+  body?: string;
+  status: MessageLogStatus;
+  metadata: Record<string, unknown>;
+  sentAt: string;
+  createdAt: string;
+};
+
+export type AutomationRule = {
+  id: string;
+  workspaceId: string;
+  name: string;
+  trigger: AutomationTrigger;
+  conditions: Record<string, unknown>;
+  templateId?: string;
+  delayMinutes: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Campaign = {
+  id: string;
+  workspaceId: string;
+  name: string;
+  templateId?: string;
+  audienceFilter: AudienceFilter;
+  scheduledAt?: string;
+  sentAt?: string;
+  status: CampaignStatus;
+  recipientsCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// DB Row types
+export type MessageLogRow = {
+  id: string;
+  workspace_id: string;
+  client_id: string | null;
+  template_id: string | null;
+  source: string;
+  channel: string;
+  subject: string | null;
+  body: string | null;
+  status: string;
+  metadata: Record<string, unknown> | null;
+  sent_at: string;
+  created_at: string;
+};
+
+export type AutomationRuleRow = {
+  id: string;
+  workspace_id: string;
+  name: string;
+  trigger: string;
+  conditions: Record<string, unknown> | null;
+  template_id: string | null;
+  delay_minutes: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CampaignRow = {
+  id: string;
+  workspace_id: string;
+  name: string;
+  template_id: string | null;
+  audience_filter: AudienceFilter | null;
+  scheduled_at: string | null;
+  sent_at: string | null;
+  status: string;
+  recipients_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+// Converters
+export function messageLogRowToModel(row: MessageLogRow): MessageLog {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    clientId: row.client_id ?? undefined,
+    templateId: row.template_id ?? undefined,
+    source: row.source as MessageLogSource,
+    channel: row.channel as MessageChannel,
+    subject: row.subject ?? undefined,
+    body: row.body ?? undefined,
+    status: row.status as MessageLogStatus,
+    metadata: row.metadata ?? {},
+    sentAt: row.sent_at,
+    createdAt: row.created_at,
+  };
+}
+
+export function automationRuleRowToModel(row: AutomationRuleRow): AutomationRule {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    name: row.name,
+    trigger: row.trigger as AutomationTrigger,
+    conditions: row.conditions ?? {},
+    templateId: row.template_id ?? undefined,
+    delayMinutes: row.delay_minutes,
+    active: row.active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function campaignRowToModel(row: CampaignRow): Campaign {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    name: row.name,
+    templateId: row.template_id ?? undefined,
+    audienceFilter: row.audience_filter ?? {},
+    scheduledAt: row.scheduled_at ?? undefined,
+    sentAt: row.sent_at ?? undefined,
+    status: row.status as CampaignStatus,
+    recipientsCount: row.recipients_count,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 export function contentPostRowToModel(row: ContentPostRow): ContentPost {
   return {
     id: row.id,
