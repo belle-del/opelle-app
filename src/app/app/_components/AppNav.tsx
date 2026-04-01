@@ -165,7 +165,7 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
 
   const devCtx = useContext(DevContext);
   const viewMode: ViewMode = devCtx?.viewMode ?? "god";
-  const { can, loading: permsLoading } = usePermissions();
+  const { role, can, loading: permsLoading } = usePermissions();
 
   const handleSignOut = async () => {
     const supabase = createSupabaseBrowserClient();
@@ -356,8 +356,8 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
             <p className="truncate" style={{ fontSize: "11px", color: "rgba(241,239,224,0.7)" }}>
               {displayName}
             </p>
-            <p className="truncate" style={{ fontSize: "9px", color: "rgba(241,239,224,0.4)" }}>
-              Practitioner
+            <p className="truncate" style={{ fontSize: "9px", color: "rgba(241,239,224,0.4)", textTransform: "capitalize" }}>
+              {permsLoading ? "..." : role.replace("_", " ")}
             </p>
           </div>
         </div>
