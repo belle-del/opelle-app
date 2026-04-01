@@ -50,12 +50,12 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     const { token } = await params;
     const { displayName } = await req.json().catch(() => ({ displayName: undefined }));
 
-    const member = await acceptTeamInvite(token, user.id, displayName || user.user_metadata?.full_name);
-    if (!member) {
-      return NextResponse.json({ error: "Failed to accept invite — it may be expired or already used" }, { status: 400 });
+    const result = await acceptTeamInvite(token, user.id, displayName || user.user_metadata?.full_name);
+    if (!result.member) {
+      return NextResponse.json({ error: result.error || "Failed to accept invite" }, { status: 400 });
     }
 
-    return NextResponse.json({ member, redirectTo: "/app" });
+    return NextResponse.json({ member: result.member, redirectTo: "/app" });
   } catch (err) {
     console.error("[team/invite/token] POST error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

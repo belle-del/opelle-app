@@ -165,14 +165,31 @@ export async function acceptTeamInvite(
   token: string,
   userId: string,
   displayName?: string,
-): Promise<WorkspaceMember | null> {
+): Promise<{ member: WorkspaceMember | null; error?: string }> {
   const admin = createSupabaseAdminClient();
 
   // Get invite
   const invite = await getTeamInviteByToken(token);
-  if (!invite) return null;
-  if (invite.acceptedAt) return null; // already accepted
-  if (new Date(invite.expiresAt) < new Date()) return null; // expired
+  if (!invite) return { member: null, error: "Invalid invite token" };
+  if (invite.acceptedAt) return { member: null, error: "Invite already used" };
+  if (new Date(invite.expiresAt) < new Date()) return { member: null, error: "Invite expired" };
+
+  // Check if user is already a member of this workspace
+  const { data: existing } = await admin
+    .from("workspace_members")
+    .select("id, role")
+    .eq("workspace_id", invite.workspaceId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing) {
+    // Already a member — mark invite as accepted and return existing membership
+    await admin
+      .from("team_invites")
+      .update({ accepted_at: new Date().toISOString() })
+      .eq("id", invite.id);
+    return { member: null, error: "You are already a member of this workspace" };
+  }
 
   // Create workspace member
   const { data: member, error: memberError } = await admin
@@ -188,8 +205,8 @@ export async function acceptTeamInvite(
     .single();
 
   if (memberError) {
-    console.error("[team] acceptTeamInvite member error:", memberError.message);
-    return null;
+    console.error("[team] acceptTeamInvite member error:", memberError.message, memberError.code, memberError.details);
+    return { member: null, error: `Failed to join: ${memberError.message}` };
   }
 
   // Mark invite as accepted
@@ -198,7 +215,7 @@ export async function acceptTeamInvite(
     .update({ accepted_at: new Date().toISOString() })
     .eq("id", invite.id);
 
-  return workspaceMemberRowToModel(member as WorkspaceMemberRow);
+  return { member: workspaceMemberRowToModel(member as WorkspaceMemberRow) };
 }
 
 export async function listPendingInvites(workspaceId: string): Promise<TeamInvite[]> {
