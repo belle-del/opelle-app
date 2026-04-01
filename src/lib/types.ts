@@ -924,14 +924,37 @@ export type ClientNotification = {
   createdAt: string
 }
 
-// ── Workspace Members (multi-stylist) ──────────────────────
+// ── Team Roles & Workspace Members ──────────────────────────
+
+export type TeamRole = 'owner' | 'admin' | 'instructor' | 'stylist' | 'student' | 'front_desk';
+export type PayType = 'hourly' | 'salary' | 'commission' | 'booth_rent';
+export type MemberStatus = 'active' | 'inactive' | 'pending';
 
 export type WorkspaceMember = {
   id: string
   workspaceId: string
   userId: string
-  role: 'owner' | 'stylist'
+  role: TeamRole
   displayName?: string
+  permissions: Record<string, boolean>
+  hireDate?: string
+  payType: PayType
+  status: MemberStatus
+  email?: string
+  phone?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type TeamInvite = {
+  id: string
+  workspaceId: string
+  email?: string
+  role: TeamRole
+  token: string
+  invitedBy?: string
+  expiresAt: string
+  acceptedAt?: string
   createdAt: string
 }
 
@@ -1076,6 +1099,25 @@ export type WorkspaceMemberRow = {
   user_id: string
   role: string
   display_name: string | null
+  permissions: Record<string, boolean> | null
+  hire_date: string | null
+  pay_type: string | null
+  status: string | null
+  email: string | null
+  phone: string | null
+  created_at: string
+  updated_at: string | null
+}
+
+export type TeamInviteRow = {
+  id: string
+  workspace_id: string
+  email: string | null
+  role: string
+  token: string
+  invited_by: string | null
+  expires_at: string
+  accepted_at: string | null
   created_at: string
 }
 
@@ -1205,8 +1247,29 @@ export function workspaceMemberRowToModel(row: WorkspaceMemberRow): WorkspaceMem
     id: row.id,
     workspaceId: row.workspace_id,
     userId: row.user_id,
-    role: row.role as WorkspaceMember['role'],
+    role: row.role as TeamRole,
     displayName: row.display_name ?? undefined,
+    permissions: row.permissions ?? {},
+    hireDate: row.hire_date ?? undefined,
+    payType: (row.pay_type ?? 'hourly') as PayType,
+    status: (row.status ?? 'active') as MemberStatus,
+    email: row.email ?? undefined,
+    phone: row.phone ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at ?? row.created_at,
+  };
+}
+
+export function teamInviteRowToModel(row: TeamInviteRow): TeamInvite {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    email: row.email ?? undefined,
+    role: row.role as TeamRole,
+    token: row.token,
+    invitedBy: row.invited_by ?? undefined,
+    expiresAt: row.expires_at,
+    acceptedAt: row.accepted_at ?? undefined,
     createdAt: row.created_at,
   };
 }
