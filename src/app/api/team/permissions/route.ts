@@ -4,26 +4,32 @@ import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 import { getMemberRole } from "@/lib/db/team";
 
 export async function GET() {
+  // Never cache — role can change at any time
+  const headers = { "Cache-Control": "no-store, no-cache, must-revalidate" };
+
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers });
 
     const workspaceId = await getWorkspaceId(user.id);
-    if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 404 });
+    if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 404, headers });
 
     const memberInfo = await getMemberRole(user.id, workspaceId);
+
+    // Log for debugging — remove once permissions are stable
+    console.log("[team/permissions]", user.email, "→", memberInfo?.role ?? "NO_MEMBER (fallback: student)");
+
     if (!memberInfo) {
-      // User is not a recognized member — return minimal permissions (not owner!)
-      return NextResponse.json({ role: "student", permissions: {} });
+      return NextResponse.json({ role: "student", permissions: {} }, { headers });
     }
 
     return NextResponse.json({
       role: memberInfo.role,
       permissions: memberInfo.permissions,
-    });
+    }, { headers });
   } catch (err) {
     console.error("[team/permissions] error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal error" }, { status: 500, headers });
   }
 }

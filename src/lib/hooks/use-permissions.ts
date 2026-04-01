@@ -34,7 +34,7 @@ export function usePermissions(): UsePermissionsReturn {
   useEffect(() => {
     let cancelled = false;
 
-    fetch("/api/team/permissions")
+    fetch("/api/team/permissions", { cache: "no-store" })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch permissions");
         return res.json();
