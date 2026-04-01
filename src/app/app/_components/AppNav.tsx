@@ -30,6 +30,7 @@ import {
   ShoppingCart,
   Images,
   UsersRound,
+  Megaphone,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { usePermissions } from "@/lib/hooks/use-permissions";
@@ -50,6 +51,7 @@ const NAV_VISIBILITY: Record<string, ViewMode[]> = {
   "/app/portfolio":    ["god", "school", "practitioner"],
   "/app/products":     ["god", "school", "salon", "practitioner"],
   "/app/messages":     ["god", "school", "salon", "practitioner"],
+  "/app/marketing":    ["god", "school", "salon", "practitioner"],
   "/app/content":      ["god", "salon", "practitioner"],
   "/app/metis":        ["god", "school", "salon", "practitioner"],
   "/app/tasks":        ["god", "school", "salon", "practitioner"],
@@ -71,6 +73,7 @@ const NAV_PERMISSIONS: Partial<Record<string, Permission>> = {
   "/app/portfolio":    "portfolio.view_own",
   "/app/products":     "products.view",
   "/app/messages":     "messages.use",
+  "/app/marketing":    "marketing.view",
   "/app/metis":        "metis.use",
   "/app/history":      "history.view_own",
   "/app/team":         "team.view",
@@ -99,6 +102,7 @@ const NAV_SECTIONS = [
       { href: "/app/portfolio", label: "Portfolio", icon: Images },
       { href: "/app/products", label: "Products", icon: Package },
       { href: "/app/messages", label: "Messages", icon: MessageCircle },
+      { href: "/app/marketing", label: "Marketing", icon: Megaphone },
       { href: "/app/content", label: "Content", icon: FileText },
       { href: "/app/metis", label: "Metis", icon: Sparkles },
       { href: "/app/tasks", label: "Tasks", icon: CheckSquare },
