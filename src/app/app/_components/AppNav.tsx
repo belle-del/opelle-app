@@ -29,6 +29,7 @@ import {
   GraduationCap,
   ShoppingCart,
   Images,
+  UsersRound,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
@@ -42,6 +43,7 @@ const NAV_VISIBILITY: Record<string, ViewMode[]> = {
   "/app/appointments": ["god", "school", "salon", "practitioner"],
   "/app/availability": ["god", "school", "salon", "practitioner"],
   "/app/clients":      ["god", "school", "salon", "practitioner"],
+  "/app/team":         ["god", "school", "salon"],
   "/app/formulas":     ["god", "school", "practitioner"],
   "/app/portfolio":    ["god", "school", "practitioner"],
   "/app/products":     ["god", "school", "salon", "practitioner"],
@@ -65,6 +67,7 @@ const NAV_SECTIONS = [
       { href: "/app/appointments", label: "Appointments", icon: Calendar },
       { href: "/app/availability", label: "Availability", icon: CalendarCheck },
       { href: "/app/clients", label: "Clients", icon: Users },
+      { href: "/app/team", label: "Team", icon: UsersRound },
     ],
   },
   {
