@@ -183,7 +183,16 @@ export async function acceptTeamInvite(
     .maybeSingle();
 
   if (existing) {
-    // Already a member — update their role to the invited role (upgrade path)
+    // Already a member — NEVER downgrade an owner
+    if (existing.role === "owner") {
+      await admin
+        .from("team_invites")
+        .update({ accepted_at: new Date().toISOString() })
+        .eq("id", invite.id);
+      return { member: null, error: "This user is already the workspace owner" };
+    }
+
+    // For non-owners: update their role to the invited role (upgrade path)
     // e.g., a client who is also a student, or a stylist getting promoted to instructor
     const { data: updated, error: updateError } = await admin
       .from("workspace_members")
@@ -261,7 +270,30 @@ export async function getMemberRole(
 ): Promise<{ role: TeamRole; permissions: Record<string, boolean> } | null> {
   const admin = createSupabaseAdminClient();
 
-  // Check workspace_members (include active, pending, and null status — only exclude inactive)
+  // FIRST: check if user is the workspace owner — this always takes priority
+  const { data: ws } = await admin
+    .from("workspaces")
+    .select("id")
+    .eq("id", workspaceId)
+    .eq("owner_id", userId)
+    .maybeSingle();
+
+  if (ws) {
+    // Owner — read their permission overrides from workspace_members if they have an entry
+    const { data: ownerMember } = await admin
+      .from("workspace_members")
+      .select("permissions")
+      .eq("workspace_id", workspaceId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    return {
+      role: "owner" as TeamRole,
+      permissions: (ownerMember?.permissions as Record<string, boolean>) ?? {},
+    };
+  }
+
+  // SECOND: check workspace_members for non-owners
   const { data } = await admin
     .from("workspace_members")
     .select("role, permissions, status")
@@ -275,18 +307,6 @@ export async function getMemberRole(
       role: data.role as TeamRole,
       permissions: (data.permissions as Record<string, boolean>) ?? {},
     };
-  }
-
-  // Fallback: check if user is workspace owner (might not be in workspace_members)
-  const { data: ws } = await admin
-    .from("workspaces")
-    .select("id")
-    .eq("id", workspaceId)
-    .eq("owner_id", userId)
-    .single();
-
-  if (ws) {
-    return { role: "owner" as TeamRole, permissions: {} };
   }
 
   return null;

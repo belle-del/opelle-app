@@ -50,8 +50,8 @@ export function usePermissions(): UsePermissionsReturn {
       })
       .catch(() => {
         if (!cancelled) {
-          // On error, keep owner default so nothing breaks
-          setState((prev) => ({ ...prev, loading: false }));
+          // On error, fall back to student (least privilege) — never grant owner on failure
+          setState({ role: "student", permissions: {}, loading: false });
         }
       });
 
