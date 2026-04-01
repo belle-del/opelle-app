@@ -58,18 +58,21 @@ const NAV_VISIBILITY: Record<string, ViewMode[]> = {
 };
 
 // Which permission is needed to see each nav item. Items not listed are always visible.
+// Uses the least-restrictive permission so the item shows if user has ANY level of access.
 const NAV_PERMISSIONS: Partial<Record<string, Permission>> = {
   "/app/floor":        "floor.view",
   "/app/hours":        "hours.view_own",
   "/app/progress":     "progress.view_own",
   "/app/checkout":     "checkout.use",
-  "/app/appointments": "appointments.manage",
-  "/app/availability": "appointments.manage",
-  "/app/clients":      "clients.manage",
+  "/app/appointments": "appointments.view_own",
+  "/app/availability": "availability.view_own",
+  "/app/clients":      "clients.view_own",
   "/app/formulas":     "formulas.view_own",
-  "/app/portfolio":    "portfolio.manage",
-  "/app/products":     "clients.manage",
+  "/app/portfolio":    "portfolio.view_own",
+  "/app/products":     "products.view",
   "/app/messages":     "messages.use",
+  "/app/metis":        "metis.use",
+  "/app/history":      "history.view_own",
   "/app/team":         "team.view",
   "/app/settings":     "settings.manage",
 };

@@ -10,6 +10,7 @@ export type Permission =
   | 'hours.view_all'
   | 'hours.view_own'
   | 'clients.manage'
+  | 'clients.view_own'
   | 'formulas.view_all'
   | 'formulas.view_own'
   | 'checkout.use'
@@ -17,22 +18,30 @@ export type Permission =
   | 'settings.manage'
   | 'settings.billing'
   | 'appointments.manage'
+  | 'appointments.view_own'
+  | 'availability.view_own'
   | 'portfolio.manage'
+  | 'portfolio.view_own'
+  | 'products.view'
+  | 'earnings.view_own'
   | 'messages.use'
+  | 'metis.use'
+  | 'history.view_own'
   | 'progress.view_all'
   | 'progress.view_own';
 
 const ALL_PERMISSIONS: Permission[] = [
   'team.manage', 'team.view', 'floor.view',
   'hours.view_all', 'hours.view_own',
-  'clients.manage',
+  'clients.manage', 'clients.view_own',
   'formulas.view_all', 'formulas.view_own',
   'checkout.use',
   'reports.view',
   'settings.manage', 'settings.billing',
-  'appointments.manage',
-  'portfolio.manage',
-  'messages.use',
+  'appointments.manage', 'appointments.view_own', 'availability.view_own',
+  'portfolio.manage', 'portfolio.view_own',
+  'products.view', 'earnings.view_own',
+  'messages.use', 'metis.use', 'history.view_own',
   'progress.view_all', 'progress.view_own',
 ];
 
@@ -43,35 +52,44 @@ export const ROLE_PERMISSIONS: Record<TeamRole, Permission[]> = {
   instructor: [
     'team.view', 'floor.view',
     'hours.view_all', 'hours.view_own',
-    'clients.manage',
+    'clients.manage', 'clients.view_own',
     'formulas.view_own',
     'checkout.use',
-    'appointments.manage',
-    'messages.use',
+    'appointments.manage', 'appointments.view_own', 'availability.view_own',
+    'portfolio.manage', 'portfolio.view_own',
+    'products.view', 'earnings.view_own',
+    'messages.use', 'metis.use', 'history.view_own',
     'progress.view_all', 'progress.view_own',
   ],
   stylist: [
     'hours.view_own',
-    'clients.manage',
+    'clients.manage', 'clients.view_own',
     'formulas.view_own',
     'checkout.use',
-    'appointments.manage',
-    'portfolio.manage',
-    'messages.use',
+    'appointments.manage', 'appointments.view_own', 'availability.view_own',
+    'portfolio.manage', 'portfolio.view_own',
+    'products.view', 'earnings.view_own',
+    'messages.use', 'metis.use', 'history.view_own',
     'progress.view_own',
   ],
   student: [
     'hours.view_own',
+    'clients.view_own',
     'formulas.view_own',
     'checkout.use',
-    'messages.use',
+    'appointments.view_own',
+    'availability.view_own',
+    'portfolio.view_own',
+    'products.view',
+    'earnings.view_own',
+    'messages.use', 'metis.use', 'history.view_own',
     'progress.view_own',
   ],
   front_desk: [
     'clients.manage',
     'checkout.use',
-    'appointments.manage',
-    'messages.use',
+    'appointments.manage', 'appointments.view_own',
+    'messages.use', 'metis.use', 'history.view_own',
   ],
 };
 
