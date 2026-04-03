@@ -30,7 +30,8 @@ export type Permission =
   | 'progress.view_all'
   | 'progress.view_own'
   | 'marketing.manage'
-  | 'marketing.view';
+  | 'marketing.view'
+  | 'translations.manage';
 
 const ALL_PERMISSIONS: Permission[] = [
   'team.manage', 'team.view', 'floor.view',
@@ -46,6 +47,7 @@ const ALL_PERMISSIONS: Permission[] = [
   'messages.use', 'metis.use', 'history.view_own',
   'progress.view_all', 'progress.view_own',
   'marketing.manage', 'marketing.view',
+  'translations.manage',
 ];
 
 /** Default permissions granted to each role. */
