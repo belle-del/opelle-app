@@ -1856,3 +1856,113 @@ export function translationOutcomeRowToModel(row: TranslationOutcomeRow): Transl
     createdAt: row.created_at,
   };
 }
+
+// ─── Badges & Certificates Types ──────────────────────────────────────────
+
+export type BadgeCriteriaType = 'hours_milestone' | 'service_milestone' | 'category_completion' | 'custom';
+
+export type BadgeRow = {
+  id: string;
+  workspace_id: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  criteria_type: BadgeCriteriaType;
+  criteria_value: Record<string, unknown> | null;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+};
+
+export type Badge2 = {
+  id: string;
+  workspaceId: string;
+  name: string;
+  description: string | null;
+  imageUrl: string | null;
+  criteriaType: BadgeCriteriaType;
+  criteriaValue: Record<string, unknown> | null;
+  sortOrder: number;
+  active: boolean;
+  createdAt: string;
+};
+
+export function badgeRowToModel(row: BadgeRow): Badge2 {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    name: row.name,
+    description: row.description,
+    imageUrl: row.image_url,
+    criteriaType: row.criteria_type,
+    criteriaValue: row.criteria_value,
+    sortOrder: row.sort_order,
+    active: row.active,
+    createdAt: row.created_at,
+  };
+}
+
+export type StudentBadgeRow = {
+  id: string;
+  workspace_id: string;
+  student_id: string;
+  badge_id: string;
+  earned_at: string;
+  awarded_by: string | null;
+  created_at: string;
+};
+
+export type StudentBadge = {
+  id: string;
+  workspaceId: string;
+  studentId: string;
+  badgeId: string;
+  earnedAt: string;
+  awardedBy: string | null;
+  createdAt: string;
+  badge?: Badge2;
+};
+
+export function studentBadgeRowToModel(row: StudentBadgeRow): StudentBadge {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    studentId: row.student_id,
+    badgeId: row.badge_id,
+    earnedAt: row.earned_at,
+    awardedBy: row.awarded_by,
+    createdAt: row.created_at,
+  };
+}
+
+export type StudentCertificateRow = {
+  id: string;
+  workspace_id: string;
+  student_id: string;
+  certificate_id: string;
+  issued_at: string;
+  certificate_url: string | null;
+  created_at: string;
+};
+
+export type StudentCertificate = {
+  id: string;
+  workspaceId: string;
+  studentId: string;
+  certificateId: string;
+  issuedAt: string;
+  certificateUrl: string | null;
+  createdAt: string;
+};
+
+export function studentCertificateRowToModel(row: StudentCertificateRow): StudentCertificate {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    studentId: row.student_id,
+    certificateId: row.certificate_id,
+    issuedAt: row.issued_at,
+    certificateUrl: row.certificate_url,
+    createdAt: row.created_at,
+  };
+}
