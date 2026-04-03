@@ -15,8 +15,11 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const productId = searchParams.get("product_id") ?? undefined;
     const limit = Math.min(parseInt(searchParams.get("limit") ?? "100"), 500);
+    const movementType = searchParams.get("movement_type") ?? undefined;
+    const startDate = searchParams.get("start_date") ?? undefined;
+    const endDate = searchParams.get("end_date") ?? undefined;
 
-    const movements = await listMovements({ workspaceId, productId, limit });
+    const movements = await listMovements({ workspaceId, productId, movementType, startDate, endDate, limit });
     return NextResponse.json({ movements });
   } catch (err) {
     console.error("List movements error:", err);
