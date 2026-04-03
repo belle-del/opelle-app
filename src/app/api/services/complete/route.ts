@@ -176,6 +176,20 @@ export async function POST(req: NextRequest) {
         .select("id")
         .single();
       formulaHistoryId = fh?.id || null;
+
+      // Auto-capture translation outcome (fire-and-forget)
+      if (formulaHistoryId && clientId) {
+        admin
+          .from("translation_outcomes")
+          .insert({
+            workspace_id: workspaceId,
+            formula_history_id: formulaHistoryId,
+            client_id: clientId,
+            outcome_success: null,
+          })
+          .then(() => {})
+          .catch(() => {});
+      }
     }
 
     // Rule 9, Step 10: Kernel event (async, non-blocking)
