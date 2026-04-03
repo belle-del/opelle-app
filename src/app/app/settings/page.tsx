@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ServiceTypesManager } from "./_components/ServiceTypesManager";
 import { StylistCodeBlock } from "./_components/StylistCodeBlock";
 import { BookingConfig } from "./_components/BookingConfig";
+import { BrandingConfig } from "./_components/BrandingConfig";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -85,6 +86,19 @@ export default async function SettingsPage() {
             <p className="text-xs text-muted-foreground uppercase tracking-wide">Workspace ID</p>
             <p className="text-sm font-mono text-muted-foreground">{workspace?.id}</p>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Branding */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Branding</CardTitle>
+          <CardDescription>
+            Customize your workspace appearance — colors, logo, background, and typography.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BrandingConfig />
         </CardContent>
       </Card>
 
