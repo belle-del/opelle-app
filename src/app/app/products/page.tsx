@@ -7,7 +7,7 @@ import { listActiveAlerts } from "@/lib/db/inventory";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 import { redirect } from "next/navigation";
-import { Plus, Package, ChevronRight } from "lucide-react";
+import { Plus, Package, ChevronRight, History } from "lucide-react";
 import { InventorySummaryBar } from "./_components/InventorySummaryBar";
 import { AlertBanner } from "./_components/AlertBanner";
 import { QuickAdjustButton } from "./_components/QuickAdjustButton";
@@ -66,12 +66,20 @@ export default async function ProductsPage() {
             {products.length} {products.length === 1 ? "product" : "products"} in inventory
           </p>
         </div>
-        <Link href="/app/products/new">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Product
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/app/products/movements">
+            <Button variant="outline" size="sm">
+              <History className="w-4 h-4 mr-2" />
+              Movement History
+            </Button>
+          </Link>
+          <Link href="/app/products/new">
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Product
+            </Button>
+          </Link>
+        </div>
       </header>
 
       {products.length > 0 && (
