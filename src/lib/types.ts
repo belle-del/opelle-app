@@ -2,6 +2,20 @@
 // Opelle v2 - TypeScript Types
 // ============================================================================
 
+// Workspace Theme
+export type WorkspaceTheme = {
+  logo_url: string | null;
+  plant: string;
+  background_texture: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    highlight: string;
+  };
+  typography: string;
+};
+
 // Workspace
 export type Workspace = {
   id: string;
@@ -11,6 +25,7 @@ export type Workspace = {
   bufferMinutes: number;
   workingHours: Record<string, { start: string; end: string; closed: boolean }> | null;
   allowIndividualAvailability: boolean;
+  theme: WorkspaceTheme | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -437,6 +452,7 @@ export type WorkspaceRow = {
   buffer_minutes: number | null;
   working_hours: Record<string, { start: string; end: string; closed: boolean }> | null;
   allow_individual_availability: boolean;
+  theme: WorkspaceTheme | null;
   created_at: string;
   updated_at: string;
 };
@@ -594,6 +610,7 @@ export function workspaceRowToModel(row: WorkspaceRow): Workspace {
     bufferMinutes: row.buffer_minutes ?? 0,
     workingHours: row.working_hours ?? null,
     allowIndividualAvailability: row.allow_individual_availability,
+    theme: row.theme ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
