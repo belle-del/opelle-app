@@ -327,8 +327,8 @@ function HoursView({ data }: { data: HoursReport }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KPICard label="Total Hours" value={data.totalHours.toFixed(1)} />
-        <KPICard label="Verified Hours" value={data.totalVerified.toFixed(1)} />
+        <KPICard label="Total Hours" value={data.totalHours.toFixed(1)} subtitle="All time" />
+        <KPICard label="Verified Hours" value={data.totalVerified.toFixed(1)} subtitle="All time" />
         <KPICard label="Verification Rate" value={
           data.totalHours > 0 ? `${Math.round((data.totalVerified / data.totalHours) * 100)}%` : "N/A"
         } />

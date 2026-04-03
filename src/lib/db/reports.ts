@@ -201,7 +201,8 @@ export async function getClientsReport(
   const { data: clients, error: clientsError } = await admin
     .from("clients")
     .select("id, created_at")
-    .eq("workspace_id", workspaceId);
+    .eq("workspace_id", workspaceId)
+    .limit(10000);
   if (clientsError) {
     console.error("[getClientsReport] clients error:", clientsError.message);
   }
@@ -226,7 +227,8 @@ export async function getClientsReport(
     .from("appointments")
     .select("id, client_id")
     .eq("workspace_id", workspaceId)
-    .eq("status", "completed");
+    .eq("status", "completed")
+    .limit(10000);
   if (allApptsError) {
     console.error("[getClientsReport] allAppts error:", allApptsError.message);
   }
@@ -308,7 +310,8 @@ export async function getInventoryReport(
       .select("product_id, movement_type, quantity_change, created_at")
       .eq("workspace_id", workspaceId)
       .gte("created_at", range.startDate)
-      .lte("created_at", range.endDate + "T23:59:59Z"),
+      .lte("created_at", range.endDate + "T23:59:59Z")
+      .limit(10000),
   ]);
   if (productsResult.error) console.error("[getInventoryReport] products error:", productsResult.error.message);
   if (movementsResult.error) console.error("[getInventoryReport] movements error:", movementsResult.error.message);
