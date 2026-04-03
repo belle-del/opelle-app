@@ -150,9 +150,14 @@ export async function POST() {
       { client_id: cMap["Riley"], service_name: "Partial Balayage", start_at: day(-3, 13), duration_mins: 120, status: "completed", notes: "Rose gold balayage refresh. Flash Lift + 20 vol on new growth areas. Toned with 09RB + 000 Shades EQ." },
       { client_id: cMap["Ethan"], service_name: "Toner", start_at: day(-2, 15), duration_mins: 45, status: "completed", notes: "Shades EQ 08V + 09T. Ashy dark blonde refresh." },
 
+      // Today
+      { client_id: cMap["Madison"], service_name: "Toner", start_at: day(0, 10), duration_mins: 45, status: "scheduled", notes: "Toner refresh before her event this weekend." },
+      { client_id: cMap["Sophia"], service_name: "Partial Highlight", start_at: day(0, 13), duration_mins: 90, status: "scheduled", notes: "First color service — keep it subtle. Plan: baby lights around face." },
+      { client_id: cMap["Jake"], service_name: "Base Color", start_at: day(0, 15, 30), duration_mins: 60, status: "scheduled", notes: "Regular grey blend. Cover Fusion 7NW." },
+
       // Upcoming scheduled
-      { client_id: cMap["Madison"], service_name: "Toner", start_at: day(1, 10), duration_mins: 45, status: "scheduled", notes: "Toner refresh before her event this weekend." },
-      { client_id: cMap["Sophia"], service_name: "Partial Highlight", start_at: day(1, 13), duration_mins: 90, status: "scheduled", notes: "First color service — keep it subtle. Plan: baby lights around face." },
+      { client_id: cMap["Olivia"], service_name: "Gloss", start_at: day(1, 11), duration_mins: 30, status: "scheduled", notes: "Gloss refresh between balayage sessions." },
+      { client_id: cMap["Harper"], service_name: "Partial Balayage", start_at: day(1, 13, 30), duration_mins: 120, status: "scheduled", notes: "New client consultation + partial balayage. Referred by Olivia." },
       { client_id: cMap["Olivia"], service_name: "Gloss", start_at: day(2, 11), duration_mins: 30, status: "scheduled", notes: "Gloss refresh between balayage sessions." },
       { client_id: cMap["Jake"], service_name: "Base Color", start_at: day(3, 9), duration_mins: 60, status: "scheduled", notes: "Regular grey blend appointment." },
       { client_id: cMap["Harper"], service_name: "Partial Balayage", start_at: day(3, 13, 30), duration_mins: 120, status: "scheduled", notes: "New client consultation + partial balayage. Referred by Olivia." },
@@ -231,6 +236,12 @@ export async function POST() {
 
     // ── 9. Activity Log ──
     const activities = [
+      // Today
+      { action: "appointment.created", entity_type: "appointment", label: "Toner — Madison Chen", created_at: day(0, 8, 15) },
+      { action: "appointment.created", entity_type: "appointment", label: "Partial Highlight — Sophia Patel", created_at: day(0, 8, 17) },
+      { action: "appointment.created", entity_type: "appointment", label: "Base Color — Jake Thompson", created_at: day(0, 8, 20) },
+      { action: "formula.created", entity_type: "formula_entry", label: "Ethan Kim — Toner", created_at: day(0, 8, 45) },
+      // Yesterday & earlier
       { action: "client.created", entity_type: "client", entity_id: cMap["Harper"], label: "Harper Lee", created_at: day(-1, 9) },
       { action: "appointment.created", entity_type: "appointment", label: "Partial Balayage — Harper Lee", created_at: day(-1, 9, 5) },
       { action: "appointment.completed", entity_type: "appointment", label: "Toner — Ethan Kim", created_at: day(-2, 16) },
