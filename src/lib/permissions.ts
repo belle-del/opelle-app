@@ -80,6 +80,7 @@ export const ROLE_PERMISSIONS: Record<TeamRole, Permission[]> = {
     'marketing.view',
   ],
   student: [
+    'floor.view',
     'hours.view_own',
     'clients.view_own',
     'formulas.view_own',
