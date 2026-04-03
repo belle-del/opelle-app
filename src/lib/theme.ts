@@ -85,7 +85,7 @@ export const DEFAULT_THEME: WorkspaceTheme = {
   logo_url: null,
   plant: "olive-branch",
   background_texture: "botanical-light",
-  colors: { primary: "#5C5346", secondary: "#A69F91", accent: "#8B3A3A", highlight: "#B8956E" },
+  colors: { primary: "#6E6960", secondary: "#F1EFE0", accent: "#440606", highlight: "#C4AB70" },
   typography: "classic",
 };
 
