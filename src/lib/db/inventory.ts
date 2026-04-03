@@ -51,6 +51,9 @@ export async function createStockMovement(input: {
 export async function listMovements(options?: {
   workspaceId?: string;
   productId?: string;
+  movementType?: string;
+  startDate?: string;
+  endDate?: string;
   limit?: number;
 }): Promise<StockMovement[]> {
   const wsId = options?.workspaceId ?? await resolveWorkspaceId();
@@ -66,6 +69,15 @@ export async function listMovements(options?: {
 
   if (options?.productId) {
     query = query.eq("product_id", options.productId);
+  }
+  if (options?.movementType) {
+    query = query.eq("movement_type", options.movementType);
+  }
+  if (options?.startDate) {
+    query = query.gte("created_at", options.startDate);
+  }
+  if (options?.endDate) {
+    query = query.lte("created_at", options.endDate + "T23:59:59.999Z");
   }
 
   const { data, error } = await query;
