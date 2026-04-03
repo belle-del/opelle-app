@@ -179,16 +179,16 @@ export async function POST(req: NextRequest) {
 
       // Auto-capture translation outcome (fire-and-forget)
       if (formulaHistoryId && clientId) {
-        admin
-          .from("translation_outcomes")
-          .insert({
-            workspace_id: workspaceId,
-            formula_history_id: formulaHistoryId,
-            client_id: clientId,
-            outcome_success: null,
-          })
-          .then(() => {})
-          .catch(() => {});
+        void Promise.resolve(
+          admin
+            .from("translation_outcomes")
+            .insert({
+              workspace_id: workspaceId,
+              formula_history_id: formulaHistoryId,
+              client_id: clientId,
+              outcome_success: null,
+            })
+        ).catch(() => {});
       }
     }
 
