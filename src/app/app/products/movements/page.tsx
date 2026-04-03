@@ -97,13 +97,13 @@ export default function MovementsPage() {
         <Link
           href="/app/products"
           className="inline-flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
-          style={{ color: "#6B5D4A" }}
+          style={{ color: "#4A3C2A" }}
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Products
         </Link>
         <div className="flex items-center gap-3">
-          <History className="w-5 h-5" style={{ color: "var(--brass)" }} />
+          <History className="w-5 h-5" style={{ color: "#4A3C2A" }} />
           <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "#2C2C24", fontWeight: 300 }}>
             Movement History
           </h2>
@@ -202,9 +202,9 @@ export default function MovementsPage() {
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "10px 14px",
-                  background: "rgba(255,255,255,0.03)",
+                  background: "rgba(255,255,255,0.55)",
                   borderRadius: "8px",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(0,0,0,0.08)",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -221,13 +221,13 @@ export default function MovementsPage() {
                     }
                   </div>
                   <div>
-                    <p style={{ fontSize: "11px", color: "var(--text-on-stone)", fontWeight: 500 }}>
+                    <p style={{ fontSize: "11px", color: "#2C2C24", fontWeight: 500 }}>
                       {pName}
                     </p>
-                    <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>
+                    <p style={{ fontSize: "9px", color: "#5C5347" }}>
                       {meta.label}{m.notes ? ` — ${m.notes}` : ""}
                     </p>
-                    <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>{formatDate(m.createdAt)}</p>
+                    <p style={{ fontSize: "9px", color: "#5C5347" }}>{formatDate(m.createdAt)}</p>
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
@@ -237,7 +237,7 @@ export default function MovementsPage() {
                   }}>
                     {m.quantityChange > 0 ? "+" : ""}{m.quantityChange}
                   </p>
-                  <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>
+                  <p style={{ fontSize: "9px", color: "#5C5347" }}>
                     {m.previousStock} → {m.newStock}
                   </p>
                 </div>
