@@ -68,7 +68,7 @@ export default async function ProductsPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link href="/app/products/movements">
-            <Button variant="outline" size="sm">
+            <Button variant="secondary" size="sm">
               <History className="w-4 h-4 mr-2" />
               Movement History
             </Button>
