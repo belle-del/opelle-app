@@ -210,6 +210,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Auto-award badges (fire-and-forget)
+    import("@/lib/db/badges").then(({ checkAndAwardBadges }) => {
+      checkAndAwardBadges(workspaceId, studentId).catch(() => {});
+    });
+
     // Fire marketing automations for service completion (non-blocking)
     if (clientId) {
       fireAutomationsForTrigger({

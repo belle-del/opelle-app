@@ -101,6 +101,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Auto-award badges (fire-and-forget)
+    import("@/lib/db/badges").then(({ checkAndAwardBadges }) => {
+      checkAndAwardBadges(workspaceId, studentId).catch(() => {});
+    });
+
     return NextResponse.json({
       success: true,
       status: "clocked_out",
