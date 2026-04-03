@@ -1750,3 +1750,109 @@ export function availabilityOverrideRowToModel(row: AvailabilityOverrideRow): Av
     updatedAt: row.updated_at,
   };
 }
+
+// ─── Translation Engine Types ─────────────────────────────────────────────
+
+export type ColorLineType = 'permanent' | 'demi-permanent' | 'semi-permanent';
+
+export type ColorLineRow = {
+  id: string;
+  brand: string;
+  line_name: string;
+  type: ColorLineType;
+  characteristics: Record<string, string>;
+  created_at: string;
+};
+
+export type ColorLine = {
+  id: string;
+  brand: string;
+  lineName: string;
+  type: ColorLineType;
+  characteristics: Record<string, string>;
+  createdAt: string;
+};
+
+export function colorLineRowToModel(row: ColorLineRow): ColorLine {
+  return {
+    id: row.id,
+    brand: row.brand,
+    lineName: row.line_name,
+    type: row.type,
+    characteristics: row.characteristics || {},
+    createdAt: row.created_at,
+  };
+}
+
+export type ColorShadeRow = {
+  id: string;
+  color_line_id: string;
+  shade_code: string;
+  shade_name: string;
+  level: number;
+  primary_tone: string;
+  secondary_tone: string | null;
+  created_at: string;
+};
+
+export type ColorShade = {
+  id: string;
+  colorLineId: string;
+  shadeCode: string;
+  shadeName: string;
+  level: number;
+  primaryTone: string;
+  secondaryTone: string | null;
+  createdAt: string;
+};
+
+export function colorShadeRowToModel(row: ColorShadeRow): ColorShade {
+  return {
+    id: row.id,
+    colorLineId: row.color_line_id,
+    shadeCode: row.shade_code,
+    shadeName: row.shade_name,
+    level: row.level,
+    primaryTone: row.primary_tone,
+    secondaryTone: row.secondary_tone,
+    createdAt: row.created_at,
+  };
+}
+
+export type TranslationOutcomeRow = {
+  id: string;
+  workspace_id: string;
+  formula_translation_id: string | null;
+  formula_history_id: string;
+  client_id: string;
+  outcome_success: boolean | null;
+  stylist_feedback: string | null;
+  adjustment_notes: string | null;
+  created_at: string;
+};
+
+export type TranslationOutcome = {
+  id: string;
+  workspaceId: string;
+  formulaTranslationId: string | null;
+  formulaHistoryId: string;
+  clientId: string;
+  outcomeSuccess: boolean | null;
+  stylistFeedback: string | null;
+  adjustmentNotes: string | null;
+  createdAt: string;
+};
+
+export function translationOutcomeRowToModel(row: TranslationOutcomeRow): TranslationOutcome {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    formulaTranslationId: row.formula_translation_id,
+    formulaHistoryId: row.formula_history_id,
+    clientId: row.client_id,
+    outcomeSuccess: row.outcome_success,
+    stylistFeedback: row.stylist_feedback,
+    adjustmentNotes: row.adjustment_notes,
+    createdAt: row.created_at,
+  };
+}
