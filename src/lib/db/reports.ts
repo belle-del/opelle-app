@@ -57,14 +57,17 @@ export async function getRevenueReport(
 
   let query = admin
     .from("student_earnings")
-    .select("*")
+    .select("created_at, service_amount, tip_amount, service_category, student_id, student_name")
     .eq("workspace_id", workspaceId)
     .gte("created_at", range.startDate)
     .lte("created_at", range.endDate + "T23:59:59Z");
 
   if (studentId) query = query.eq("student_id", studentId);
 
-  const { data: earnings } = await query;
+  const { data: earnings, error: earningsError } = await query;
+  if (earningsError) {
+    console.error("[getRevenueReport] DB error:", earningsError.message);
+  }
   const rows = earnings || [];
 
   let totalServices = 0;
@@ -140,9 +143,11 @@ export async function getServicesReport(
     .gte("start_at", range.startDate)
     .lte("start_at", range.endDate + "T23:59:59Z");
 
-  const [{ data: completions }, { data: cancellations }] = await Promise.all([compQuery, cancelQuery]);
-  const compRows = completions || [];
-  const cancelRows = cancellations || [];
+  const [completionsResult, cancellationsResult] = await Promise.all([compQuery, cancelQuery]);
+  if (completionsResult.error) console.error("[getServicesReport] completions error:", completionsResult.error.message);
+  if (cancellationsResult.error) console.error("[getServicesReport] cancellations error:", cancellationsResult.error.message);
+  const compRows = completionsResult.data || [];
+  const cancelRows = cancellationsResult.data || [];
 
   const catMap: Record<string, { name: string; count: number }> = {};
   const studentMap: Record<string, { name: string; count: number }> = {};
@@ -193,29 +198,38 @@ export async function getClientsReport(
   const admin = createSupabaseAdminClient();
 
   // All clients in workspace
-  const { data: clients } = await admin
+  const { data: clients, error: clientsError } = await admin
     .from("clients")
     .select("id, created_at")
     .eq("workspace_id", workspaceId);
+  if (clientsError) {
+    console.error("[getClientsReport] clients error:", clientsError.message);
+  }
 
   // Completed appointments in range
-  const { data: appointments } = await admin
+  const { data: appointments, error: appointmentsError } = await admin
     .from("appointments")
     .select("id, client_id, start_at")
     .eq("workspace_id", workspaceId)
     .eq("status", "completed")
     .gte("start_at", range.startDate)
     .lte("start_at", range.endDate + "T23:59:59Z");
+  if (appointmentsError) {
+    console.error("[getClientsReport] appointments error:", appointmentsError.message);
+  }
 
   const allClients = clients || [];
   const appts = appointments || [];
 
   // All completed appointments (for retention calculation)
-  const { data: allAppts } = await admin
+  const { data: allAppts, error: allApptsError } = await admin
     .from("appointments")
     .select("id, client_id")
     .eq("workspace_id", workspaceId)
     .eq("status", "completed");
+  if (allApptsError) {
+    console.error("[getClientsReport] allAppts error:", allApptsError.message);
+  }
 
   const allApptsArr = allAppts || [];
 
@@ -283,7 +297,7 @@ export async function getInventoryReport(
 ): Promise<InventoryReport> {
   const admin = createSupabaseAdminClient();
 
-  const [{ data: products }, { data: movements }] = await Promise.all([
+  const [productsResult, movementsResult] = await Promise.all([
     admin
       .from("products")
       .select("id, name, brand, line, shade, quantity, low_stock_threshold, reorder_quantity, unit_cost, active")
@@ -296,9 +310,10 @@ export async function getInventoryReport(
       .gte("created_at", range.startDate)
       .lte("created_at", range.endDate + "T23:59:59Z"),
   ]);
-
-  const prods = products || [];
-  const moves = movements || [];
+  if (productsResult.error) console.error("[getInventoryReport] products error:", productsResult.error.message);
+  if (movementsResult.error) console.error("[getInventoryReport] movements error:", movementsResult.error.message);
+  const prods = productsResult.data || [];
+  const moves = movementsResult.data || [];
 
   const lowStockCount = prods.filter(
     (p) => (p.quantity as number) <= (p.low_stock_threshold as number) && (p.quantity as number) > 0
@@ -370,7 +385,8 @@ export async function getHoursReport(
 ): Promise<HoursReport> {
   const admin = createSupabaseAdminClient();
 
-  // Get totals
+  // hour_totals stores all-time cumulative totals, not time-ranged data.
+  // The date range only applies to the weekly breakdown (time_entries).
   let totalsQuery = admin
     .from("hour_totals")
     .select("student_id, student_name, total_hours, verified_hours")
@@ -388,9 +404,11 @@ export async function getHoursReport(
 
   if (studentId) entriesQuery = entriesQuery.eq("student_id", studentId);
 
-  const [{ data: totals }, { data: entries }] = await Promise.all([totalsQuery, entriesQuery]);
-  const totalsArr = totals || [];
-  const entriesArr = entries || [];
+  const [totalsResult, entriesResult] = await Promise.all([totalsQuery, entriesQuery]);
+  if (totalsResult.error) console.error("[getHoursReport] totals error:", totalsResult.error.message);
+  if (entriesResult.error) console.error("[getHoursReport] entries error:", entriesResult.error.message);
+  const totalsArr = totalsResult.data || [];
+  const entriesArr = entriesResult.data || [];
 
   let totalHours = 0;
   let totalVerified = 0;
