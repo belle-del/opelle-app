@@ -35,7 +35,7 @@ export type InventoryReport = {
   lowStockCount: number;
   outOfStockCount: number;
   topUsed: { productName: string; brand: string; usageCount: number; usageValue: number }[];
-  lowStock: { productName: string; brand: string; currentQty: number; threshold: number; reorderQty: number }[];
+  lowStock: { productId: string; productName: string; brand: string; currentQty: number; threshold: number; reorderQty: number }[];
   movementsByType: { type: string; count: number; totalQty: number }[];
 };
 
@@ -356,6 +356,7 @@ export async function getInventoryReport(
   const lowStock = prods
     .filter((p) => (p.quantity as number) <= (p.low_stock_threshold as number))
     .map((p) => ({
+      productId: p.id as string,
       productName: `${p.brand || ""} ${p.name || ""}`.trim(),
       brand: (p.brand as string) || "",
       currentQty: p.quantity as number,

@@ -299,7 +299,7 @@ function InventoryView({ data }: { data: InventoryReport }) {
               { key: "reorderQty", label: "Reorder Qty" },
             ]}
             data={data.lowStock}
-            keyField="productName"
+            keyField="productId"
           />
         </CardContent>
       </Card>
