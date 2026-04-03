@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentWorkspace } from "@/lib/db/workspaces";
+import { randomUUID } from "crypto";
 
 /**
  * POST /api/seed — Populate workspace with realistic demo data.
@@ -8,6 +10,10 @@ import { getCurrentWorkspace } from "@/lib/db/workspaces";
  */
 export async function POST() {
   try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "No workspace" }, { status: 401 });
+
     const workspace = await getCurrentWorkspace();
     if (!workspace) {
       return NextResponse.json({ error: "No workspace" }, { status: 401 });
@@ -15,6 +21,14 @@ export async function POST() {
 
     const admin = createSupabaseAdminClient();
     const wid = workspace.id;
+
+    // ── 0. Fix owner account role — ensure current user is 'owner' in workspace_members ──
+    await admin
+      .from("workspace_members")
+      .upsert(
+        { workspace_id: wid, user_id: user.id, role: "owner" },
+        { onConflict: "workspace_id,user_id" }
+      );
 
     // ── 1. Clear existing demo data (order matters for FK constraints) ──
     await admin.from("service_logs").delete().eq("workspace_id", wid);
@@ -26,6 +40,7 @@ export async function POST() {
     await admin.from("clients").delete().eq("workspace_id", wid);
     await admin.from("service_types").delete().eq("workspace_id", wid);
     await admin.from("activity_log").delete().eq("workspace_id", wid);
+    await admin.from("floor_status").delete().eq("workspace_id", wid);
 
     // ── 2. Service Types ──
     const serviceTypeNames = [
@@ -260,9 +275,47 @@ export async function POST() {
       activities.map((a) => ({ workspace_id: wid, ...a }))
     );
 
+    // ── 10. Floor Status — demo students with realistic statuses ──
+    const floorStudents = [
+      { name: "Maya Johnson", status: "with_client", service: "Full Highlight" },
+      { name: "Sophia Chen", status: "with_client", service: "Partial Balayage" },
+      { name: "Isabella Rodriguez", status: "available" },
+      { name: "Ava Williams", status: "with_client", service: "Base Color" },
+      { name: "Emma Thompson", status: "available" },
+      { name: "Olivia Davis", status: "on_break" },
+      { name: "Mia Martinez", status: "with_client", service: "Gloss" },
+      { name: "Charlotte Brown", status: "clocked_out" },
+      { name: "Amelia Wilson", status: "available" },
+      { name: "Harper Anderson", status: "with_client", service: "Toner" },
+      { name: "Ella Taylor", status: "clocked_out" },
+      { name: "Lily Garcia", status: "on_break" },
+    ];
+
+    // Pull some real client IDs for the "with_client" students
+    const withClientStudents = floorStudents.filter((s) => s.status === "with_client");
+    const clientIds = Object.values(cMap).slice(0, withClientStudents.length);
+
+    const floorRows = floorStudents.map((s, i) => {
+      const isWithClient = s.status === "with_client";
+      const clientIdx = withClientStudents.findIndex((wc) => wc.name === s.name);
+      return {
+        workspace_id: wid,
+        student_id: randomUUID(),
+        student_name: s.name,
+        status: s.status,
+        current_client_id: isWithClient ? (clientIds[clientIdx] ?? null) : null,
+        current_service: isWithClient ? s.service : null,
+        status_changed_at: new Date(Date.now() - Math.floor(Math.random() * 90 + 10) * 60000).toISOString(),
+        clocked_in_at: s.status !== "clocked_out" ? new Date(Date.now() - 4 * 60 * 60000).toISOString() : null,
+      };
+    });
+
+    await admin.from("floor_status").insert(floorRows);
+
     return NextResponse.json({
       success: true,
       seeded: {
+        ownerRoleFixed: true,
         serviceTypes: serviceTypeNames.length,
         clients: clientData.length,
         products: products.length,
@@ -271,6 +324,7 @@ export async function POST() {
         formulaEntries: formulaEntries.length,
         tasks: tasks.length,
         activityLog: activities.length,
+        floorStudents: floorRows.length,
       },
     });
   } catch (error) {
