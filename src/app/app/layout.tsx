@@ -5,6 +5,7 @@ import { getCurrentWorkspace } from "@/lib/db/workspaces";
 import { AppNav } from "./_components/AppNav";
 import MetisFloatingChat from "./_components/MetisFloatingChat";
 import { DevWrapper } from "./_components/DevWrapper";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Practitioner Suite",
@@ -31,6 +32,7 @@ export default async function AppLayout({
     (user.user_metadata?.dev_mode === true);
 
   return (
+    <ThemeProvider theme={workspace?.theme ?? null}>
     <DevWrapper
       showDevTools={showDevTools}
       userId={user.id}
@@ -47,5 +49,6 @@ export default async function AppLayout({
         <MetisFloatingChat />
       </div>
     </DevWrapper>
+    </ThemeProvider>
   );
 }
