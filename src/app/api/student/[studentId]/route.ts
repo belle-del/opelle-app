@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ stud
     const { studentId } = await params;
     const admin = createSupabaseAdminClient();
 
-    const [floorResult, totalsResult, entriesResult, categoriesResult, progressResult, completionsResult, earningsResult] = await Promise.all([
+    const [floorResult, totalsResult, entriesResult, categoriesResult, progressResult, completionsResult, earningsResult, badgesResult, certificatesResult] = await Promise.all([
       admin.from("floor_status")
         .select("student_name, status, clocked_in_at, status_changed_at")
         .eq("workspace_id", workspaceId).eq("student_id", studentId).single(),
@@ -47,6 +47,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ stud
         .select("id, service_amount, tip_amount, total_amount, service_category, client_name, created_at")
         .eq("workspace_id", workspaceId).eq("student_id", studentId)
         .order("created_at", { ascending: false }).limit(10),
+
+      admin.from("student_badges")
+        .select("id, badge_id, earned_at, awarded_by, badges(name, description, image_url, criteria_type)")
+        .eq("workspace_id", workspaceId).eq("student_id", studentId)
+        .order("earned_at", { ascending: false }),
+
+      admin.from("student_certificates")
+        .select("id, certificate_id, issued_at, certificate_url")
+        .eq("workspace_id", workspaceId).eq("student_id", studentId)
+        .order("issued_at", { ascending: false }),
     ]);
 
     const progressMap: Record<string, { completed: number; verified: number }> = {};
@@ -75,6 +85,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ stud
       recentCompletions: (completionsResult.data || []).map((c: Record<string, unknown>) => ({
         id: c.id, completedAt: c.completed_at, verified: c.verified,
         categoryName: (c.service_categories as Record<string, unknown>)?.name || "Unknown",
+      })),
+      badges: (badgesResult.data || []).map((b: any) => ({
+        id: b.id,
+        badgeId: b.badge_id,
+        earnedAt: b.earned_at,
+        awardedBy: b.awarded_by,
+        name: b.badges?.name || "Badge",
+        description: b.badges?.description || "",
+        imageUrl: b.badges?.image_url,
+        criteriaType: b.badges?.criteria_type,
+      })),
+      certificates: (certificatesResult.data || []).map((c: any) => ({
+        id: c.id,
+        certificateId: c.certificate_id,
+        issuedAt: c.issued_at,
+        certificateUrl: c.certificate_url,
       })),
       earnings: {
         totalService: (earningsResult.data || []).reduce((sum: number, e: Record<string, unknown>) => sum + (Number(e.service_amount) || 0), 0),
