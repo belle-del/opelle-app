@@ -9,9 +9,10 @@ interface Column {
 interface ReportTableProps {
   columns: Column[];
   data: Record<string, unknown>[];
+  keyField?: string;
 }
 
-export function ReportTable({ columns, data }: ReportTableProps) {
+export function ReportTable({ columns, data, keyField }: ReportTableProps) {
   if (data.length === 0) {
     return (
       <p style={{ textAlign: "center", padding: "20px", color: "var(--text-on-stone-faint)", fontSize: "11px" }}>
@@ -46,7 +47,7 @@ export function ReportTable({ columns, data }: ReportTableProps) {
         </thead>
         <tbody>
           {data.map((row, i) => (
-            <tr key={i}>
+            <tr key={keyField ? String(row[keyField]) : i}>
               {columns.map((col) => (
                 <td
                   key={col.key}
