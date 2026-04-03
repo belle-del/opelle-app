@@ -35,10 +35,8 @@ export async function GET(req: NextRequest) {
     const endDate = params.get("end_date") || new Date().toISOString().slice(0, 10);
     const format = params.get("format");
 
-    let studentId = params.get("student_id") || undefined;
-    if (!hasPermission(role, "hours.view_all", overrides)) {
-      studentId = user.id;
-    }
+    // student_id filter from query param only (floor_status.student_id ≠ auth user id)
+    const studentId = params.get("student_id") || undefined;
 
     const report = await getHoursReport(workspaceId, { startDate, endDate }, studentId);
 

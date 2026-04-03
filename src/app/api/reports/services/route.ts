@@ -36,10 +36,8 @@ export async function GET(req: NextRequest) {
     const categoryId = params.get("category_id") || undefined;
     const format = params.get("format");
 
-    let studentId = params.get("student_id") || undefined;
-    if (!hasPermission(role, "reports.view", overrides) && !hasPermission(role, "progress.view_all", overrides)) {
-      studentId = user.id;
-    }
+    // student_id filter from query param only (floor_status.student_id ≠ auth user id)
+    const studentId = params.get("student_id") || undefined;
 
     const report = await getServicesReport(workspaceId, { startDate, endDate }, studentId, categoryId);
 

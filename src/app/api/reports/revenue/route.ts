@@ -35,11 +35,9 @@ export async function GET(req: NextRequest) {
     const endDate = params.get("end_date") || new Date().toISOString().slice(0, 10);
     const format = params.get("format");
 
-    // Non-admin users can only see their own data
-    let studentId = params.get("student_id") || undefined;
-    if (!hasPermission(role, "reports.view", overrides)) {
-      studentId = user.id;
-    }
+    // student_id filter from query param only (floor_status.student_id ≠ auth user id,
+    // so we can't auto-filter by user.id — data is workspace-scoped instead)
+    const studentId = params.get("student_id") || undefined;
 
     const report = await getRevenueReport(workspaceId, { startDate, endDate }, studentId);
 
