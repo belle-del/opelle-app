@@ -58,6 +58,7 @@ export async function GET() {
       },
       alerts: activeAlerts,
       categories: categoryBreakdown,
+      products: rows.map((p) => ({ id: p.id, brand: p.brand, shade: p.shade })),
     });
   } catch (err) {
     console.error("Inventory dashboard error:", err);
