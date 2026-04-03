@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
-import { X, Clock, CheckCircle, GraduationCap, DollarSign } from "lucide-react";
+import { X, Clock, CheckCircle, GraduationCap, DollarSign, Award, Star, Download } from "lucide-react";
 
 const BRASS = "#C4AB70";
 const CREAM = "#F1EFE0";
@@ -56,6 +56,24 @@ interface Earnings {
   recent: EarningEntry[];
 }
 
+interface EarnedBadge {
+  id: string;
+  badgeId: string;
+  earnedAt: string;
+  awardedBy: string | null;
+  name: string;
+  description: string;
+  imageUrl: string | null;
+  criteriaType: string;
+}
+
+interface EarnedCertificate {
+  id: string;
+  certificateId: string;
+  issuedAt: string;
+  certificateUrl: string | null;
+}
+
 interface StudentData {
   studentName: string;
   status: string;
@@ -66,6 +84,8 @@ interface StudentData {
   recentEntries: TimeEntry[];
   recentCompletions: Completion[];
   earnings: Earnings;
+  badges: EarnedBadge[];
+  certificates: EarnedCertificate[];
 }
 
 interface Props {
@@ -312,6 +332,90 @@ export function StudentProfilePanel({ studentId, onClose }: Props) {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Badges */}
+            {data.badges && data.badges.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{
+                  fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 500,
+                  color: TEXT_MAIN, margin: "0 0 12px",
+                  display: "flex", alignItems: "center", gap: 6,
+                }}>
+                  <Award size={16} /> Badges Earned
+                </h3>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 8 }}>
+                  {data.badges.map((b) => (
+                    <div
+                      key={b.id}
+                      style={{
+                        background: STONE, borderRadius: 10, padding: 12,
+                        textAlign: "center",
+                      }}
+                    >
+                      <div style={{
+                        width: 36, height: 36, borderRadius: "50%",
+                        background: BRASS, display: "flex", alignItems: "center",
+                        justifyContent: "center", margin: "0 auto 8px",
+                      }}>
+                        <Star size={18} color="#fff" fill="#fff" />
+                      </div>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: TEXT_MAIN, margin: "0 0 2px" }}>
+                        {b.name}
+                      </p>
+                      <p style={{ fontSize: 9, color: TEXT_FAINT, margin: 0 }}>
+                        {new Date(b.earnedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Certificates */}
+            {data.certificates && data.certificates.length > 0 && (
+              <div style={{ marginBottom: 20 }}>
+                <h3 style={{
+                  fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 500,
+                  color: TEXT_MAIN, margin: "0 0 12px",
+                  display: "flex", alignItems: "center", gap: 6,
+                }}>
+                  <GraduationCap size={16} /> Certificates
+                </h3>
+                {data.certificates.map((c) => (
+                  <div
+                    key={c.id}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "10px 12px", background: STONE, borderRadius: 8, marginBottom: 4,
+                    }}
+                  >
+                    <div>
+                      <p style={{ fontSize: 12, fontWeight: 500, color: TEXT_MAIN, margin: 0 }}>
+                        Completion Certificate
+                      </p>
+                      <p style={{ fontSize: 10, color: TEXT_FAINT, margin: "2px 0 0" }}>
+                        Issued {new Date(c.issuedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                    </div>
+                    {c.certificateUrl && (
+                      <a
+                        href={c.certificateUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: "flex", alignItems: "center", gap: 4,
+                          padding: "4px 10px", borderRadius: 6,
+                          background: BRASS, color: "#fff",
+                          fontSize: 10, fontWeight: 600, textDecoration: "none",
+                        }}
+                      >
+                        <Download size={12} /> PDF
+                      </a>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
 
