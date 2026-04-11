@@ -32,6 +32,7 @@ import {
   UsersRound,
   Megaphone,
   BarChart3,
+  Globe,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { usePermissions } from "@/lib/hooks/use-permissions";
@@ -50,6 +51,7 @@ const NAV_VISIBILITY: Record<string, ViewMode[]> = {
   "/app/team":         ["god", "school", "salon"],
   "/app/formulas":     ["god", "school", "practitioner"],
   "/app/portfolio":    ["god", "school", "practitioner"],
+  "/app/network":      ["god", "school", "salon", "practitioner"],
   "/app/products":     ["god", "school", "salon", "practitioner"],
   "/app/messages":     ["god", "school", "salon", "practitioner"],
   "/app/marketing":    ["god", "school", "salon", "practitioner"],
@@ -103,6 +105,7 @@ const NAV_SECTIONS = [
     items: [
       { href: "/app/formulas", label: "Formulas", icon: FlaskConical },
       { href: "/app/portfolio", label: "Portfolio", icon: Images },
+      { href: "/app/network", label: "Network", icon: Globe },
       { href: "/app/products", label: "Products", icon: Package },
       { href: "/app/messages", label: "Messages", icon: MessageCircle },
       { href: "/app/marketing", label: "Marketing", icon: Megaphone },
