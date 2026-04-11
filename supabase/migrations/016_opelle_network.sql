@@ -3,11 +3,10 @@
 -- Verified work sharing, profiles, engagement, brand partnerships
 -- ============================================================
 
--- Enable uuid generation if not already
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================
--- 1. Stylist Specialties (global catalog, like color_lines)
+-- 1. Stylist Specialties (global catalog)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS stylist_specialties (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -17,7 +16,6 @@ CREATE TABLE IF NOT EXISTS stylist_specialties (
   sort_order INTEGER DEFAULT 0
 );
 
--- Seed specialties
 INSERT INTO stylist_specialties (name, category, icon, sort_order) VALUES
   ('Balayage', 'color', 'paintbrush', 1),
   ('Highlights', 'color', 'sun', 2),
@@ -69,11 +67,9 @@ CREATE TABLE IF NOT EXISTS network_profiles (
 
 ALTER TABLE network_profiles ENABLE ROW LEVEL SECURITY;
 
--- Owner can do everything with own profile
 CREATE POLICY "own_profile_all" ON network_profiles
   FOR ALL USING (user_id = auth.uid());
 
--- Anyone authenticated can view visible profiles
 CREATE POLICY "view_visible_profiles" ON network_profiles
   FOR SELECT USING (portfolio_visible = true);
 
@@ -82,48 +78,61 @@ CREATE INDEX idx_network_profiles_location ON network_profiles(location);
 CREATE INDEX idx_network_profiles_specialties ON network_profiles USING GIN(specialties);
 
 -- ============================================================
--- 3. Network Posts (verified work only)
+-- 3. Network Follows (BEFORE posts — posts policy references this)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS network_follows (
+  follower_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  following_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (follower_id, following_id),
+  CHECK (follower_id != following_id)
+);
+
+ALTER TABLE network_follows ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "own_follows_insert" ON network_follows
+  FOR INSERT WITH CHECK (follower_id = auth.uid());
+
+CREATE POLICY "own_follows_delete" ON network_follows
+  FOR DELETE USING (follower_id = auth.uid());
+
+CREATE POLICY "view_follows" ON network_follows
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE INDEX idx_network_follows_follower ON network_follows(follower_id);
+CREATE INDEX idx_network_follows_following ON network_follows(following_id);
+
+-- ============================================================
+-- 4. Network Posts (verified work only)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS network_posts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE NOT NULL,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-
-  -- Linked to real work (REQUIRED — no standalone uploads)
   service_completion_id UUID REFERENCES service_completions(id) NOT NULL,
-  formula_history_id UUID, -- nullable, references formula_history if exists
-
-  -- Photo URLs (denormalized from formula_history/photos at creation time)
+  formula_history_id UUID,
   before_photo_url TEXT,
   after_photo_url TEXT NOT NULL,
-
-  -- Content
   caption TEXT,
   tags TEXT[] DEFAULT '{}',
   visibility VARCHAR(20) DEFAULT 'public' CHECK (visibility IN ('public', 'network', 'followers')),
-
-  -- Engagement counters (denormalized)
   likes_count INTEGER DEFAULT 0,
   saves_count INTEGER DEFAULT 0,
   comments_count INTEGER DEFAULT 0,
-
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 ALTER TABLE network_posts ENABLE ROW LEVEL SECURITY;
 
--- Owner can CRUD own posts
 CREATE POLICY "own_posts_all" ON network_posts
   FOR ALL USING (user_id = auth.uid());
 
--- Authenticated users can view public and network posts
 CREATE POLICY "view_public_posts" ON network_posts
   FOR SELECT USING (visibility = 'public');
 
 CREATE POLICY "view_network_posts" ON network_posts
   FOR SELECT USING (visibility = 'network' AND auth.uid() IS NOT NULL);
 
--- Followers can view followers-only posts
 CREATE POLICY "view_followers_posts" ON network_posts
   FOR SELECT USING (
     visibility = 'followers'
@@ -136,33 +145,6 @@ CREATE INDEX idx_network_posts_user ON network_posts(user_id, created_at DESC);
 CREATE INDEX idx_network_posts_discover ON network_posts(created_at DESC) WHERE visibility = 'public';
 CREATE INDEX idx_network_posts_service ON network_posts(service_completion_id);
 CREATE INDEX idx_network_posts_tags ON network_posts USING GIN(tags);
-
--- ============================================================
--- 4. Network Follows
--- ============================================================
-CREATE TABLE IF NOT EXISTS network_follows (
-  follower_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  following_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  PRIMARY KEY (follower_id, following_id),
-  CHECK (follower_id != following_id)
-);
-
-ALTER TABLE network_follows ENABLE ROW LEVEL SECURITY;
-
--- Users can manage their own follows
-CREATE POLICY "own_follows_insert" ON network_follows
-  FOR INSERT WITH CHECK (follower_id = auth.uid());
-
-CREATE POLICY "own_follows_delete" ON network_follows
-  FOR DELETE USING (follower_id = auth.uid());
-
--- Anyone authenticated can see follows
-CREATE POLICY "view_follows" ON network_follows
-  FOR SELECT USING (auth.uid() IS NOT NULL);
-
-CREATE INDEX idx_network_follows_follower ON network_follows(follower_id);
-CREATE INDEX idx_network_follows_following ON network_follows(following_id);
 
 -- ============================================================
 -- 5. Network Likes
@@ -244,7 +226,6 @@ CREATE TABLE IF NOT EXISTS brand_partnerships (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- No RLS — accessed only via admin client
 ALTER TABLE brand_partnerships ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
@@ -265,11 +246,9 @@ CREATE TABLE IF NOT EXISTS brand_verified_stylists (
 
 ALTER TABLE brand_verified_stylists ENABLE ROW LEVEL SECURITY;
 
--- Users can see their own brand verifications
 CREATE POLICY "own_brand_verifications" ON brand_verified_stylists
   FOR SELECT USING (user_id = auth.uid());
 
--- Public can see verified stylists (for badge display)
 CREATE POLICY "view_brand_badges" ON brand_verified_stylists
   FOR SELECT USING (auth.uid() IS NOT NULL AND verified_at IS NOT NULL);
 
@@ -277,7 +256,7 @@ CREATE INDEX idx_brand_verified_user ON brand_verified_stylists(user_id);
 CREATE INDEX idx_brand_verified_partnership ON brand_verified_stylists(brand_partnership_id);
 
 -- ============================================================
--- 10. Helper function: update post engagement counts
+-- 10. Triggers: auto-update engagement counters
 -- ============================================================
 CREATE OR REPLACE FUNCTION update_post_likes_count()
 RETURNS TRIGGER AS $$
