@@ -4,7 +4,21 @@ import { useState, useEffect } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { BeforeAfterGallery } from "@/components/BeforeAfterGallery";
 import { Card, CardContent } from "@/components/ui/card";
+import { Globe, Check } from "lucide-react";
+import { ShareToNetworkModal } from "@/components/ShareToNetworkModal";
+import { formatDate } from "@/lib/utils";
 import type { PhotoPair } from "@/lib/types";
+
+type PortfolioItem = {
+  id: string;
+  studentName: string;
+  categoryName: string;
+  completedAt: string;
+  beforePhotoUrl: string | null;
+  afterPhotoUrl: string | null;
+  notes: string | null;
+  shared: boolean;
+};
 
 type PortfolioData = {
   pairs: PhotoPair[];
@@ -16,9 +30,11 @@ type PortfolioData = {
 export default function PortfolioPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [data, setData] = useState<PortfolioData>(null);
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareItem, setShareItem] = useState<PortfolioItem | null>(null);
 
   // Get current user id
   useEffect(() => {
@@ -28,12 +44,20 @@ export default function PortfolioPage() {
     });
   }, []);
 
-  // Fetch portfolio data once we have userId
+  // Fetch both portfolio data sources
   useEffect(() => {
     if (!userId) return;
+
+    // Fetch legacy portfolio data (pairs + settings)
     fetch(`/api/portfolio/${userId}`)
       .then((r) => r.json())
       .then((d) => { if (d.pairs) setData(d); })
+      .catch(() => {});
+
+    // Fetch portfolio items with shared status
+    fetch("/api/portfolio")
+      .then((r) => r.json())
+      .then((d) => { if (d.items) setPortfolioItems(d.items); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [userId]);
@@ -66,6 +90,15 @@ export default function PortfolioPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  function handleShareSuccess() {
+    if (shareItem) {
+      setPortfolioItems((prev) =>
+        prev.map((item) => item.id === shareItem.id ? { ...item, shared: true } : item)
+      );
+    }
+    setShareItem(null);
+  }
+
   const publicUrl = userId ? `${typeof window !== "undefined" ? window.location.origin : "https://opelle.app"}/stylist/${userId}/work` : "";
 
   return (
@@ -78,7 +111,7 @@ export default function PortfolioPage() {
           Portfolio
         </h2>
         <p style={{ fontSize: "12px", color: "#7A7060", marginTop: "4px" }}>
-          {loading ? "Loading…" : `${data?.pairs.length ?? 0} photos`}
+          {loading ? "Loading..." : `${portfolioItems.length || data?.pairs.length || 0} photos`}
         </p>
       </header>
 
@@ -144,15 +177,135 @@ export default function PortfolioPage() {
         </CardContent>
       </Card>
 
-      {/* Gallery */}
+      {/* Gallery with network sharing */}
       {loading ? (
         <div style={{ textAlign: "center", padding: "48px", color: "#8A8778", fontSize: "14px" }}>
-          Loading portfolio…
+          Loading portfolio...
+        </div>
+      ) : portfolioItems.length > 0 ? (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+          gap: "16px",
+        }}>
+          {portfolioItems.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                borderRadius: "12px",
+                overflow: "hidden",
+                background: "var(--stone-dark, #2C2C24)",
+                border: "1px solid rgba(196,171,112,0.1)",
+                transition: "transform 0.15s, box-shadow 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.transform = "scale(1.02)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.3)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.transform = "scale(1)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+              }}
+            >
+              {/* Photo */}
+              <div style={{ aspectRatio: "4/3", position: "relative", background: "#1A1A14" }}>
+                {item.afterPhotoUrl ? (
+                  <img
+                    src={item.afterPhotoUrl}
+                    alt="After photo"
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                ) : (
+                  <div style={{
+                    width: "100%", height: "100%",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "rgba(196,171,112,0.3)", fontSize: "12px",
+                  }}>
+                    No photo
+                  </div>
+                )}
+
+                {/* Before overlay */}
+                {item.beforePhotoUrl && item.afterPhotoUrl && (
+                  <div style={{
+                    position: "absolute", bottom: "8px", left: "8px",
+                    width: "25%", aspectRatio: "4/3",
+                    borderRadius: "6px", overflow: "hidden",
+                    border: "2px solid rgba(255,255,255,0.3)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                  }}>
+                    <img
+                      src={item.beforePhotoUrl}
+                      alt="Before photo"
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Caption + Share Button */}
+              <div style={{ padding: "10px 12px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: 8 }}>
+                  <span style={{
+                    fontSize: "10px", fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase",
+                    color: "var(--brass, #C4AB70)",
+                    padding: "2px 8px", borderRadius: "100px",
+                    border: "1px solid rgba(196,171,112,0.2)",
+                  }}>
+                    {item.categoryName}
+                  </span>
+                  <span style={{ fontSize: "11px", color: "rgba(241,239,224,0.4)" }}>
+                    {formatDate(item.completedAt)}
+                  </span>
+                </div>
+
+                {/* Share / Shared status */}
+                {item.shared ? (
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    fontSize: "11px", color: "rgba(196,171,112,0.6)",
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}>
+                    <Check size={12} />
+                    Shared to Network
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShareItem(item)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      width: "100%", padding: "6px 10px", borderRadius: 6,
+                      border: "1px solid rgba(196,171,112,0.2)",
+                      background: "rgba(196,171,112,0.06)",
+                      color: "var(--brass, #C4AB70)",
+                      fontSize: "11px", fontWeight: 500, cursor: "pointer",
+                      fontFamily: "'DM Sans', sans-serif",
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    <Globe size={12} />
+                    Share to Network
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <BeforeAfterGallery
           pairs={data?.pairs ?? []}
           emptyMessage="No photos yet — complete color or chemical services with photos to build your portfolio."
+        />
+      )}
+
+      {/* Share Modal */}
+      {shareItem && shareItem.afterPhotoUrl && (
+        <ShareToNetworkModal
+          serviceCompletionId={shareItem.id}
+          beforePhotoUrl={shareItem.beforePhotoUrl || undefined}
+          afterPhotoUrl={shareItem.afterPhotoUrl}
+          onClose={() => setShareItem(null)}
+          onSuccess={handleShareSuccess}
         />
       )}
     </div>

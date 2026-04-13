@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, CreditCard, DollarSign, Banknote } from "lucide-react";
+import { CheckCircle, CreditCard, DollarSign, Banknote, Globe } from "lucide-react";
 import BeforeAfterCapture from "@/components/BeforeAfterCapture";
+import { ShareToNetworkModal } from "@/components/ShareToNetworkModal";
 
 const BRASS = "#C4AB70";
 const CREAM = "#F1EFE0";
-const STONE = "#E5E3D3";
 const STONE_MID = "#D4D0C0";
 const GARNET = "#6B2737";
 const TEXT_MAIN = "#2C2416";
@@ -64,6 +64,8 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
   const [processing, setProcessing] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [result, setResult] = useState<{ studentName: string; total: string } | null>(null);
+  const [completionId, setCompletionId] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const price = parseFloat(servicePrice) || 0;
   const tipPct = tipPreset === "custom" ? 0 : tipPreset;
@@ -78,7 +80,7 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
 
     try {
       // 1. Log service completion (this is real)
-      await fetch("/api/services/complete", {
+      const completionRes = await fetch("/api/services/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -90,6 +92,10 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
           afterPhotoUrl: capturedPhotos.afterPhotoUrl,
         }),
       });
+      const completionData = await completionRes.json().catch(() => ({}));
+      if (completionData.completionId) {
+        setCompletionId(completionData.completionId);
+      }
 
       // 2. Record earnings
       const category = categories.find((c) => c.id === categoryId);
@@ -146,10 +152,15 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
     setResult(null);
     setPhotosRequired(false);
     setCapturedPhotos({});
+    setCompletionId(null);
+    setShowShareModal(false);
   }
 
   // Success screen
   if (completed && result) {
+    const hasPhotos = !!capturedPhotos.afterPhotoUrl;
+    const canShare = hasPhotos && !!completionId;
+
     return (
       <div style={{ maxWidth: 480, margin: "0 auto", textAlign: "center", padding: "60px 20px" }}>
         <div style={{
@@ -168,6 +179,62 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
         <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: TEXT_MAIN, margin: "0 0 32px" }}>
           Service by {result.studentName} logged. Hours and progress updated.
         </p>
+
+        {/* Share to Network prompt */}
+        {canShare && (
+          <div style={{
+            background: CREAM, border: `1px solid ${STONE_MID}`, borderRadius: 12,
+            padding: 20, marginBottom: 24, textAlign: "left",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%", background: `${BRASS}15`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Globe size={18} color={BRASS} />
+              </div>
+              <div>
+                <p style={{
+                  fontFamily: "'Fraunces', serif", fontSize: 15, fontWeight: 600,
+                  color: TEXT_MAIN, margin: 0,
+                }}>
+                  Share to the Network?
+                </p>
+                <p style={{
+                  fontFamily: "'DM Sans', sans-serif", fontSize: 12,
+                  color: TEXT_FAINT, margin: 0,
+                }}>
+                  Show your verified work to the Opelle community
+                </p>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={() => setShowShareModal(true)}
+                style={{
+                  flex: 1, padding: "10px 16px", borderRadius: 8,
+                  border: "none", background: BRASS, color: "#fff",
+                  fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif",
+                }}
+              >
+                Share
+              </button>
+              <button
+                onClick={reset}
+                style={{
+                  padding: "10px 16px", borderRadius: 8,
+                  border: `1px solid ${STONE_MID}`, background: "#fff",
+                  fontSize: 13, fontWeight: 500, cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif", color: TEXT_FAINT,
+                }}
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        )}
+
         <button
           onClick={reset}
           style={{
@@ -178,6 +245,20 @@ export function CheckoutFlow({ students, categories, clients }: CheckoutFlowProp
         >
           New Checkout
         </button>
+
+        {/* Share Modal */}
+        {showShareModal && completionId && capturedPhotos.afterPhotoUrl && (
+          <ShareToNetworkModal
+            serviceCompletionId={completionId}
+            beforePhotoUrl={capturedPhotos.beforePhotoUrl}
+            afterPhotoUrl={capturedPhotos.afterPhotoUrl}
+            onClose={() => setShowShareModal(false)}
+            onSuccess={() => {
+              setShowShareModal(false);
+              reset();
+            }}
+          />
+        )}
       </div>
     );
   }

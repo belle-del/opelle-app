@@ -1,89 +1,166 @@
 "use client";
 
 import { useState } from "react";
-import { X, ShieldCheck, Globe, Users, Lock } from "lucide-react";
+import { X, Check, Globe, Users, UserCheck, Loader2 } from "lucide-react";
 import type { PostVisibility } from "@/lib/types/network";
 
-type ShareToNetworkModalProps = {
-  open: boolean;
-  onClose: () => void;
+const BRASS = "#C4AB70";
+const CREAM = "#F1EFE0";
+const STONE_MID = "#D4D0C0";
+const GARNET = "#6B2737";
+const TEXT_MAIN = "#2C2416";
+const TEXT_FAINT = "#8A7F6E";
+const GREEN = "#4A7C59";
+
+const TAG_OPTIONS = [
+  "Color",
+  "Highlights",
+  "Balayage",
+  "Extensions",
+  "Cut & Style",
+  "Texture",
+  "Blowout",
+  "Vivids",
+  "Corrective Color",
+];
+
+const VISIBILITY_OPTIONS: { value: PostVisibility; label: string; description: string; icon: typeof Globe }[] = [
+  { value: "public", label: "Public", description: "Anyone on the network", icon: Globe },
+  { value: "network", label: "Network Only", description: "Verified stylists only", icon: Users },
+  { value: "followers", label: "Followers Only", description: "People who follow you", icon: UserCheck },
+];
+
+interface ShareToNetworkModalProps {
   serviceCompletionId: string;
-  formulaHistoryId?: string;
   beforePhotoUrl?: string;
   afterPhotoUrl: string;
-};
+  onClose: () => void;
+  onSuccess: () => void;
+}
 
 export function ShareToNetworkModal({
-  open,
-  onClose,
   serviceCompletionId,
-  formulaHistoryId,
   beforePhotoUrl,
   afterPhotoUrl,
+  onClose,
+  onSuccess,
 }: ShareToNetworkModalProps) {
   const [caption, setCaption] = useState("");
-  const [tagInput, setTagInput] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [visibility, setVisibility] = useState<PostVisibility>("public");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!open) return null;
-
-  function addTag() {
-    const tag = tagInput.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
-    if (tag && !tags.includes(tag)) {
-      setTags([...tags, tag]);
-    }
-    setTagInput("");
+  function toggleTag(tag: string) {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
   }
 
-  async function handleSubmit() {
+  async function handleShare() {
     setSubmitting(true);
+    setError(null);
+
     try {
       const res = await fetch("/api/network/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           serviceCompletionId,
-          formulaHistoryId,
           beforePhotoUrl,
           afterPhotoUrl,
-          caption: caption || undefined,
-          tags,
+          caption: caption.trim() || undefined,
+          tags: selectedTags.map((t) => t.toLowerCase().replace(/ & /g, "-").replace(/ /g, "-")),
           visibility,
         }),
       });
 
-      if (res.ok) {
-        setSuccess(true);
-        setTimeout(() => {
-          onClose();
-          setSuccess(false);
-          setCaption("");
-          setTags([]);
-        }, 1500);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to share");
       }
+
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setSubmitting(false);
     }
   }
 
-  const visibilityOptions: { value: PostVisibility; label: string; icon: typeof Globe; desc: string }[] = [
-    { value: "public", label: "Public", icon: Globe, desc: "Visible to everyone on the network" },
-    { value: "network", label: "Network", icon: Users, desc: "Visible to logged-in stylists" },
-    { value: "followers", label: "Followers", icon: Lock, desc: "Only your followers can see this" },
-  ];
+  // Success state
+  if (success) {
+    return (
+      <div
+        style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: "rgba(0,0,0,0.5)",
+        }}
+        onClick={onSuccess}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background: "#fff", borderRadius: 16, padding: "48px 32px",
+            maxWidth: 400, width: "90%", textAlign: "center",
+          }}
+        >
+          <div style={{
+            width: 64, height: 64, borderRadius: "50%", background: GREEN,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 20px",
+          }}>
+            <Check size={32} color="#fff" />
+          </div>
+          <h2 style={{
+            fontFamily: "'Fraunces', serif", fontSize: 22, fontWeight: 600,
+            color: TEXT_MAIN, margin: "0 0 8px",
+          }}>
+            Shared to Network
+          </h2>
+          <p style={{
+            fontFamily: "'DM Sans', sans-serif", fontSize: 14,
+            color: TEXT_FAINT, margin: "0 0 24px",
+          }}>
+            Your work is now live on the Opelle Network.
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+            <button
+              onClick={onSuccess}
+              style={{
+                padding: "10px 20px", borderRadius: 8,
+                border: "1px solid " + STONE_MID, background: "#fff",
+                fontSize: 14, fontWeight: 500, cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif", color: TEXT_MAIN,
+              }}
+            >
+              Done
+            </button>
+            <a
+              href="/app/network"
+              style={{
+                padding: "10px 20px", borderRadius: 8, border: "none",
+                background: GARNET, color: "#fff", fontSize: 14,
+                fontWeight: 500, cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif", textDecoration: "none",
+                display: "inline-flex", alignItems: "center",
+              }}
+            >
+              View on Network
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
       style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 1000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        position: "fixed", inset: 0, zIndex: 9999,
+        display: "flex", alignItems: "center", justifyContent: "center",
         background: "rgba(0,0,0,0.5)",
       }}
       onClick={onClose}
@@ -91,217 +168,241 @@ export function ShareToNetworkModal({
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: "100%",
-          maxWidth: 520,
-          maxHeight: "90vh",
+          background: "#fff", borderRadius: 16,
+          maxWidth: 520, width: "90%", maxHeight: "90vh",
           overflow: "auto",
-          background: "var(--stone-lightest)",
-          borderRadius: "var(--radius-lg)",
-          padding: 24,
         }}
       >
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <div>
-            <h2
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: 22,
-                fontWeight: 400,
-                color: "var(--text-on-stone)",
-                margin: 0,
-              }}
-            >
-              Share to Network
-            </h2>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                fontSize: 11,
-                color: "var(--olive)",
-                marginTop: 4,
-              }}
-            >
-              <ShieldCheck size={13} />
-              Linked to verified service completion
-            </div>
-          </div>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "20px 24px 0",
+        }}>
+          <h2 style={{
+            fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 600,
+            color: TEXT_MAIN, margin: 0,
+          }}>
+            Share to Network
+          </h2>
           <button
             onClick={onClose}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-on-stone-dim)" }}
+            style={{
+              width: 32, height: 32, borderRadius: 8, border: "none",
+              background: "transparent", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: TEXT_FAINT,
+            }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        {success ? (
-          <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <ShieldCheck size={48} style={{ color: "var(--olive)", marginBottom: 12 }} />
-            <p style={{ fontSize: 16, fontWeight: 600, color: "var(--text-on-stone)" }}>
-              Posted to Opélle Network!
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Photo preview */}
-            <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-              {beforePhotoUrl && (
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-on-stone-dim)", marginBottom: 4 }}>
-                    Before
-                  </p>
+        <div style={{ padding: "20px 24px 24px" }}>
+          {/* Before / After Photos */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: beforePhotoUrl ? "1fr 1fr" : "1fr",
+            gap: 12, marginBottom: 20,
+          }}>
+            {beforePhotoUrl && (
+              <div>
+                <p style={{
+                  fontSize: 10, fontWeight: 600, letterSpacing: "0.1em",
+                  textTransform: "uppercase" as const, color: TEXT_FAINT,
+                  marginBottom: 6, fontFamily: "'DM Sans', sans-serif",
+                }}>
+                  Before
+                </p>
+                <div style={{
+                  borderRadius: 10, overflow: "hidden", aspectRatio: "3/4",
+                  border: "1px solid " + STONE_MID,
+                }}>
                   <img
                     src={beforePhotoUrl}
                     alt="Before"
-                    style={{ width: "100%", borderRadius: "var(--radius-md)", aspectRatio: "3/4", objectFit: "cover" }}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 </div>
-              )}
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-on-stone-dim)", marginBottom: 4 }}>
-                  After
-                </p>
+              </div>
+            )}
+            <div>
+              <p style={{
+                fontSize: 10, fontWeight: 600, letterSpacing: "0.1em",
+                textTransform: "uppercase" as const, color: TEXT_FAINT,
+                marginBottom: 6, fontFamily: "'DM Sans', sans-serif",
+              }}>
+                After
+              </p>
+              <div style={{
+                borderRadius: 10, overflow: "hidden", aspectRatio: "3/4",
+                border: "1px solid " + STONE_MID,
+              }}>
                 <img
                   src={afterPhotoUrl}
                   alt="After"
-                  style={{ width: "100%", borderRadius: "var(--radius-md)", aspectRatio: "3/4", objectFit: "cover" }}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               </div>
             </div>
+          </div>
 
-            {/* Caption */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-on-stone-dim)", display: "block", marginBottom: 4 }}>
-                Caption
-              </label>
-              <textarea
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder="Describe the transformation, technique, or story behind this service..."
-                rows={3}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  fontSize: 14,
-                  border: "1px solid var(--stone-light)",
-                  borderRadius: "var(--radius-md)",
-                  background: "var(--stone-card)",
-                  color: "var(--text-on-stone)",
-                  resize: "vertical",
-                  outline: "none",
-                }}
-              />
-            </div>
+          {/* Caption */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{
+              display: "block", fontSize: 11, color: TEXT_FAINT,
+              marginBottom: 6, fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 500, letterSpacing: "0.02em",
+            }}>
+              Caption (optional)
+            </label>
+            <textarea
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="Tell the story behind this transformation..."
+              maxLength={500}
+              rows={3}
+              style={{
+                width: "100%", padding: "10px 12px", borderRadius: 8,
+                border: "1px solid " + STONE_MID, background: CREAM,
+                fontSize: 13, fontFamily: "'DM Sans', sans-serif",
+                color: TEXT_MAIN, resize: "vertical" as const,
+              }}
+            />
+            <p style={{
+              fontSize: 11, color: TEXT_FAINT, textAlign: "right" as const,
+              marginTop: 4, fontFamily: "'DM Sans', sans-serif",
+            }}>
+              {caption.length}/500
+            </p>
+          </div>
 
-            {/* Tags */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-on-stone-dim)", display: "block", marginBottom: 4 }}>
-                Tags
-              </label>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
-                {tags.map((tag) => (
-                  <span
+          {/* Tags */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{
+              display: "block", fontSize: 11, color: TEXT_FAINT,
+              marginBottom: 8, fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 500, letterSpacing: "0.02em",
+            }}>
+              Tags
+            </label>
+            <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
+              {TAG_OPTIONS.map((tag) => {
+                const active = selectedTags.includes(tag);
+                return (
+                  <button
                     key={tag}
+                    onClick={() => toggleTag(tag)}
                     style={{
-                      fontSize: 12,
-                      color: "var(--brass)",
-                      background: "var(--stone-card)",
-                      borderRadius: "var(--radius-pill)",
-                      padding: "3px 10px",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 4,
+                      padding: "6px 14px", borderRadius: 20,
+                      border: active ? "1.5px solid " + BRASS : "1px solid " + STONE_MID,
+                      background: active ? BRASS + "18" : "transparent",
+                      color: active ? BRASS : TEXT_FAINT,
+                      fontSize: 12, fontWeight: 500, cursor: "pointer",
+                      fontFamily: "'DM Sans', sans-serif",
+                      transition: "all 0.15s ease",
                     }}
                   >
-                    #{tag}
-                    <button
-                      onClick={() => setTags(tags.filter((t) => t !== tag))}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-on-stone-faint)", fontSize: 14, padding: 0, lineHeight: 1 }}
-                    >
-                      x
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <input
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); } }}
-                placeholder="balayage, color-correction, blonde..."
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  fontSize: 13,
-                  border: "1px solid var(--stone-light)",
-                  borderRadius: "var(--radius-md)",
-                  background: "var(--stone-card)",
-                  color: "var(--text-on-stone)",
-                  outline: "none",
-                }}
-              />
+                    {tag}
+                  </button>
+                );
+              })}
             </div>
+          </div>
 
-            {/* Visibility */}
-            <div style={{ marginBottom: 24 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-on-stone-dim)", display: "block", marginBottom: 8 }}>
-                Visibility
-              </label>
-              <div style={{ display: "flex", gap: 8 }}>
-                {visibilityOptions.map((opt) => {
-                  const Icon = opt.icon;
-                  const selected = visibility === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => setVisibility(opt.value)}
-                      style={{
-                        flex: 1,
-                        padding: "10px 8px",
-                        fontSize: 12,
-                        fontWeight: selected ? 600 : 400,
-                        color: selected ? "var(--text-on-stone)" : "var(--text-on-stone-dim)",
-                        background: selected ? "var(--stone-card)" : "transparent",
-                        border: selected ? "1px solid var(--brass)" : "1px solid var(--stone-light)",
-                        borderRadius: "var(--radius-md)",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 4,
-                      }}
-                    >
-                      <Icon size={16} />
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
+          {/* Visibility */}
+          <div style={{ marginBottom: 24 }}>
+            <label style={{
+              display: "block", fontSize: 11, color: TEXT_FAINT,
+              marginBottom: 8, fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 500, letterSpacing: "0.02em",
+            }}>
+              Visibility
+            </label>
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
+              {VISIBILITY_OPTIONS.map((opt) => {
+                const active = visibility === opt.value;
+                const Icon = opt.icon;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setVisibility(opt.value)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "10px 14px", borderRadius: 10,
+                      border: active ? "1.5px solid " + BRASS : "1px solid " + STONE_MID,
+                      background: active ? BRASS + "10" : "transparent",
+                      cursor: "pointer", textAlign: "left" as const,
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <Icon size={16} color={active ? BRASS : TEXT_FAINT} />
+                    <div>
+                      <p style={{
+                        fontSize: 13, fontWeight: 500, color: TEXT_MAIN,
+                        margin: 0, fontFamily: "'DM Sans', sans-serif",
+                      }}>
+                        {opt.label}
+                      </p>
+                      <p style={{
+                        fontSize: 11, color: TEXT_FAINT, margin: 0,
+                        fontFamily: "'DM Sans', sans-serif",
+                      }}>
+                        {opt.description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+          </div>
 
-            {/* Submit */}
+          {/* Error */}
+          {error && (
+            <p style={{
+              fontSize: 13, color: "#B91C1C", marginBottom: 12,
+              fontFamily: "'DM Sans', sans-serif",
+            }}>
+              {error}
+            </p>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: "flex", gap: 10 }}>
             <button
-              onClick={handleSubmit}
-              disabled={submitting}
+              onClick={onClose}
               style={{
-                width: "100%",
-                padding: "12px",
-                fontSize: 14,
-                fontWeight: 600,
-                color: "var(--bark-deepest)",
-                background: "var(--brass)",
-                border: "none",
-                borderRadius: "var(--radius-md)",
-                cursor: submitting ? "wait" : "pointer",
-                transition: "opacity 0.2s",
-                opacity: submitting ? 0.7 : 1,
+                flex: 1, padding: "12px 20px", borderRadius: 10,
+                border: "1px solid " + STONE_MID, background: "#fff",
+                fontSize: 14, fontWeight: 500, cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif", color: TEXT_MAIN,
               }}
             >
-              {submitting ? "Posting..." : "Share to Opélle Network"}
+              Cancel
             </button>
-          </>
-        )}
+            <button
+              onClick={handleShare}
+              disabled={submitting}
+              style={{
+                flex: 1, padding: "12px 20px", borderRadius: 10,
+                border: "none", background: submitting ? STONE_MID : BRASS,
+                color: "#fff", fontSize: 14, fontWeight: 600,
+                cursor: submitting ? "not-allowed" : "pointer",
+                fontFamily: "'DM Sans', sans-serif",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                transition: "all 0.2s ease",
+              }}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Sharing...
+                </>
+              ) : (
+                "Share"
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
