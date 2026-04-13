@@ -97,8 +97,44 @@ export async function updateNetworkProfile(
 // Posts
 // ============================================================
 
-const POST_SELECT_WITH_JOINS =
-  "*, network_profiles(display_name, profile_photo_url, total_services), workspaces(name)";
+// PostgREST cannot resolve the implicit join between network_posts and
+// network_profiles because both tables FK to auth.users — not to each other.
+// We select only post columns, then enrich with profile/workspace data separately.
+const POST_SELECT = "*";
+
+async function enrichPostsWithProfiles(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  posts: Record<string, unknown>[]
+): Promise<NetworkPostRow[]> {
+  if (posts.length === 0) return [];
+
+  const userIds = [...new Set(posts.map((p) => p.user_id as string))];
+  const workspaceIds = [...new Set(posts.map((p) => p.workspace_id as string))];
+
+  const [{ data: profiles }, { data: workspaces }] = await Promise.all([
+    admin
+      .from("network_profiles")
+      .select("user_id, display_name, profile_photo_url, total_services")
+      .in("user_id", userIds),
+    admin
+      .from("workspaces")
+      .select("id, name")
+      .in("id", workspaceIds),
+  ]);
+
+  const profileMap = new Map(
+    (profiles || []).map((p) => [p.user_id, p])
+  );
+  const workspaceMap = new Map(
+    (workspaces || []).map((w) => [w.id, w])
+  );
+
+  return posts.map((post) => ({
+    ...post,
+    network_profiles: profileMap.get(post.user_id as string) || undefined,
+    workspaces: workspaceMap.get(post.workspace_id as string) || undefined,
+  })) as NetworkPostRow[];
+}
 
 export async function createNetworkPost(input: {
   serviceCompletionId: string;
@@ -135,12 +171,10 @@ export async function createNetworkPost(input: {
     visibility: input.visibility || "public",
   };
 
-  // Insert without joins — PostgREST can't resolve the network_profiles
-  // relationship on insert because both tables FK to auth.users, not to each other.
   const { data, error } = await admin
     .from("network_posts")
     .insert(insertPayload)
-    .select("*")
+    .select(POST_SELECT)
     .single();
 
   if (error || !data) {
@@ -149,26 +183,8 @@ export async function createNetworkPost(input: {
     return { error: errMsg };
   }
 
-  // Fetch the profile info separately for the response
-  const { data: profile } = await admin
-    .from("network_profiles")
-    .select("display_name, profile_photo_url, total_services")
-    .eq("user_id", user.id)
-    .single();
-
-  const { data: workspace } = await admin
-    .from("workspaces")
-    .select("name")
-    .eq("id", workspaceId)
-    .single();
-
-  const row = {
-    ...data,
-    network_profiles: profile || undefined,
-    workspaces: workspace || undefined,
-  } as NetworkPostRow;
-
-  return { post: networkPostRowToModel(row) };
+  const [enriched] = await enrichPostsWithProfiles(admin, [data]);
+  return { post: networkPostRowToModel(enriched) };
 }
 
 export async function getNetworkPost(
@@ -177,12 +193,13 @@ export async function getNetworkPost(
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("network_posts")
-    .select(POST_SELECT_WITH_JOINS)
+    .select(POST_SELECT)
     .eq("id", postId)
     .single();
 
   if (error || !data) return null;
-  return networkPostRowToModel(data as NetworkPostRow);
+  const [enriched] = await enrichPostsWithProfiles(admin, [data]);
+  return networkPostRowToModel(enriched);
 }
 
 export async function getDiscoverFeed(options: {
@@ -194,7 +211,7 @@ export async function getDiscoverFeed(options: {
 
   let query = admin
     .from("network_posts")
-    .select(POST_SELECT_WITH_JOINS)
+    .select(POST_SELECT)
     .eq("visibility", "public")
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -205,7 +222,8 @@ export async function getDiscoverFeed(options: {
 
   const { data, error } = await query;
   if (error || !data) return [];
-  return (data as NetworkPostRow[]).map(networkPostRowToModel);
+  const enriched = await enrichPostsWithProfiles(admin, data);
+  return enriched.map(networkPostRowToModel);
 }
 
 export async function getFollowingFeed(
@@ -227,7 +245,7 @@ export async function getFollowingFeed(
 
   let query = admin
     .from("network_posts")
-    .select(POST_SELECT_WITH_JOINS)
+    .select(POST_SELECT)
     .in("user_id", followingIds)
     .in("visibility", ["public", "network", "followers"])
     .order("created_at", { ascending: false })
@@ -239,7 +257,8 @@ export async function getFollowingFeed(
 
   const { data, error } = await query;
   if (error || !data) return [];
-  return (data as NetworkPostRow[]).map(networkPostRowToModel);
+  const enriched = await enrichPostsWithProfiles(admin, data);
+  return enriched.map(networkPostRowToModel);
 }
 
 export async function getUserPosts(
@@ -251,7 +270,7 @@ export async function getUserPosts(
 
   let query = admin
     .from("network_posts")
-    .select(POST_SELECT_WITH_JOINS)
+    .select(POST_SELECT)
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -262,7 +281,8 @@ export async function getUserPosts(
 
   const { data, error } = await query;
   if (error || !data) return [];
-  return (data as NetworkPostRow[]).map(networkPostRowToModel);
+  const enriched = await enrichPostsWithProfiles(admin, data);
+  return enriched.map(networkPostRowToModel);
 }
 
 export async function deleteNetworkPost(
