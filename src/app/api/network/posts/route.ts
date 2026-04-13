@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const post = await createNetworkPost({
+    const result = await createNetworkPost({
       serviceCompletionId,
       formulaHistoryId,
       beforePhotoUrl,
@@ -70,14 +70,14 @@ export async function POST(req: NextRequest) {
       visibility,
     });
 
-    if (!post) {
+    if ("error" in result) {
       return NextResponse.json(
-        { error: "Failed to create post — check server logs for details" },
+        { error: result.error },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ post });
+    return NextResponse.json({ post: result.post });
   } catch (err) {
     console.error("Create network post error:", err);
     return NextResponse.json(

@@ -108,15 +108,15 @@ export async function createNetworkPost(input: {
   caption?: string;
   tags?: string[];
   visibility?: PostVisibility;
-}): Promise<NetworkPost | null> {
+}): Promise<{ post: NetworkPost } | { error: string }> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) return { error: "Not authenticated" };
 
   const workspaceId = await getWorkspaceId(user.id);
-  if (!workspaceId) return null;
+  if (!workspaceId) return { error: "No workspace found" };
 
   // Ensure user has a network profile
   await getOrCreateNetworkProfile(user.id);
@@ -142,11 +142,11 @@ export async function createNetworkPost(input: {
     .single();
 
   if (error || !data) {
-    console.error("network_posts insert error:", error?.message, "code:", error?.code, "details:", error?.details, "hint:", error?.hint);
-    console.error("network_posts insert payload:", JSON.stringify({ serviceCompletionId: input.serviceCompletionId, userId: user.id, workspaceId }));
-    return null;
+    const errMsg = `${error?.message || "Unknown error"} (code: ${error?.code}, hint: ${error?.hint || "none"})`;
+    console.error("network_posts insert error:", errMsg);
+    return { error: errMsg };
   }
-  return networkPostRowToModel(data as NetworkPostRow);
+  return { post: networkPostRowToModel(data as NetworkPostRow) };
 }
 
 export async function getNetworkPost(
