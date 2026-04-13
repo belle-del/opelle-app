@@ -135,10 +135,12 @@ export async function createNetworkPost(input: {
     visibility: input.visibility || "public",
   };
 
+  // Insert without joins — PostgREST can't resolve the network_profiles
+  // relationship on insert because both tables FK to auth.users, not to each other.
   const { data, error } = await admin
     .from("network_posts")
     .insert(insertPayload)
-    .select(POST_SELECT_WITH_JOINS)
+    .select("*")
     .single();
 
   if (error || !data) {
@@ -146,7 +148,27 @@ export async function createNetworkPost(input: {
     console.error("network_posts insert error:", errMsg);
     return { error: errMsg };
   }
-  return { post: networkPostRowToModel(data as NetworkPostRow) };
+
+  // Fetch the profile info separately for the response
+  const { data: profile } = await admin
+    .from("network_profiles")
+    .select("display_name, profile_photo_url, total_services")
+    .eq("user_id", user.id)
+    .single();
+
+  const { data: workspace } = await admin
+    .from("workspaces")
+    .select("name")
+    .eq("id", workspaceId)
+    .single();
+
+  const row = {
+    ...data,
+    network_profiles: profile || undefined,
+    workspaces: workspace || undefined,
+  } as NetworkPostRow;
+
+  return { post: networkPostRowToModel(row) };
 }
 
 export async function getNetworkPost(
