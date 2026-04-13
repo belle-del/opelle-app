@@ -122,24 +122,28 @@ export async function createNetworkPost(input: {
   await getOrCreateNetworkProfile(user.id);
 
   const admin = createSupabaseAdminClient();
+
+  const insertPayload = {
+    workspace_id: workspaceId,
+    user_id: user.id,
+    service_completion_id: input.serviceCompletionId,
+    formula_history_id: input.formulaHistoryId || null,
+    before_photo_url: input.beforePhotoUrl || null,
+    after_photo_url: input.afterPhotoUrl,
+    caption: input.caption || null,
+    tags: input.tags || [],
+    visibility: input.visibility || "public",
+  };
+
   const { data, error } = await admin
     .from("network_posts")
-    .insert({
-      workspace_id: workspaceId,
-      user_id: user.id,
-      service_completion_id: input.serviceCompletionId,
-      formula_history_id: input.formulaHistoryId || null,
-      before_photo_url: input.beforePhotoUrl || null,
-      after_photo_url: input.afterPhotoUrl,
-      caption: input.caption || null,
-      tags: input.tags || [],
-      visibility: input.visibility || "public",
-    })
+    .insert(insertPayload)
     .select(POST_SELECT_WITH_JOINS)
     .single();
 
   if (error || !data) {
-    console.error("network_posts insert error:", error?.message);
+    console.error("network_posts insert error:", error?.message, "code:", error?.code, "details:", error?.details, "hint:", error?.hint);
+    console.error("network_posts insert payload:", JSON.stringify({ serviceCompletionId: input.serviceCompletionId, userId: user.id, workspaceId }));
     return null;
   }
   return networkPostRowToModel(data as NetworkPostRow);

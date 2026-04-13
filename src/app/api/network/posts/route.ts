@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createNetworkPost } from "@/lib/db/network";
+import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,6 +40,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validate that the service completion exists and belongs to this workspace
+    const workspaceId = await getWorkspaceId(user.id);
+    if (workspaceId) {
+      const admin = createSupabaseAdminClient();
+      const { data: completion, error: lookupErr } = await admin
+        .from("service_completions")
+        .select("id")
+        .eq("id", serviceCompletionId)
+        .eq("workspace_id", workspaceId)
+        .single();
+
+      if (lookupErr || !completion) {
+        console.error("Service completion lookup failed:", lookupErr?.message, "completionId:", serviceCompletionId, "workspaceId:", workspaceId);
+        return NextResponse.json(
+          { error: `Service completion not found (id: ${serviceCompletionId})` },
+          { status: 400 }
+        );
+      }
+    }
+
     const post = await createNetworkPost({
       serviceCompletionId,
       formulaHistoryId,
@@ -50,7 +72,7 @@ export async function POST(req: NextRequest) {
 
     if (!post) {
       return NextResponse.json(
-        { error: "Failed to create post" },
+        { error: "Failed to create post — check server logs for details" },
         { status: 500 }
       );
     }
