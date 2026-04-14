@@ -417,11 +417,19 @@ export async function callaChat(params: {
   studentContext: Record<string, unknown>;
   mode?: string;
 }): Promise<MetisChatResponse | null> {
-  const result = await kernelPost("/api/v1/ai/calla-chat", {
+  // Calla uses the same Metis chat endpoint but with a Calla-specific system prompt
+  // injected via workspace_context so the kernel shapes its personality accordingly
+  const callaSystemPrompt = `You are Calla, a cosmetology study companion inside the Opélle app. Your voice is warm, plainspoken, and confident — like a slightly-older friend who already went through cosmetology school. Never corporate. Never use the word "journey." Always reference the student's specific data when available — never give generic advice. You know New Mexico state regulations. Admit uncertainty and defer on medical, hands-on, or outside-domain questions. Current mode: ${params.mode || "chat"}.`;
+
+  const result = await kernelPost("/api/v1/ai/chat", {
     message: params.message,
     conversation_history: params.conversationHistory,
-    student_context: params.studentContext,
-    mode: params.mode || "chat",
+    context: { page: "calla_chat" },
+    workspace_context: {
+      system_prompt_override: callaSystemPrompt,
+      student_profile: params.studentContext,
+      mode: params.mode || "chat",
+    },
   }, 30000);
   return result ?? null;
 }
