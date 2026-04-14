@@ -144,15 +144,23 @@ export default function CallaOnboarding() {
     setSubmitting(true);
     setError(null);
     try {
+      // Map human-readable stage to database enum
+      const stageMap: Record<string, string> = {
+        "Just started": "just_started",
+        "A few months in": "few_months",
+        "Almost done": "almost_done",
+        "Boards are coming": "boards_soon",
+        "Already licensed": "licensed",
+      };
       const payload = {
-        stage,
-        worry: worry === "Other" ? worryOther : worry,
+        programStage: stageMap[stage] || stage,
+        primaryWorry: worry === "Other" ? worryOther : worry,
         textbook: textbook === "Other" ? textbookOther : textbook,
         strongAreas,
         weakAreas,
-        studyPrefs,
+        studyPreference: studyPrefs,
         state: usState,
-        firstLog: firstLog.trim() || null,
+        firstLogEntry: firstLog.trim() || null,
       };
       const res = await fetch("/api/calla/onboarding", {
         method: "POST",
