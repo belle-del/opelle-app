@@ -27,7 +27,12 @@ export async function middleware(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (!profile || !profile.onboarding_completed) {
+    // Only redirect to onboarding if profile exists AND is not completed.
+    // If no profile row exists, the user is either:
+    //   - An existing user (migration backfill should have created one), or
+    //   - A new user whose auth callback will handle profile creation on next login.
+    // In either case, don't block them — let them through.
+    if (profile && !profile.onboarding_completed) {
       const url = request.nextUrl.clone();
       url.pathname = "/onboarding";
       url.search = "";
