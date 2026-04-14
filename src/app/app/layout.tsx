@@ -26,10 +26,8 @@ export default async function AppLayout({
   // Get workspace (supports both owners and team members via membership fallback)
   const workspace = await getCurrentWorkspace();
 
-  const showDevTools =
-    process.env.NODE_ENV === "development" ||
-    process.env.NEXT_PUBLIC_DEV_TOOLS === "true" ||
-    (user.user_metadata?.dev_mode === true);
+  const GOD_MODE_EMAIL = "belle@dominusfoundry.com";
+  const showDevTools = user.email === GOD_MODE_EMAIL;
 
   return (
     <ThemeProvider theme={workspace?.theme ?? null}>
