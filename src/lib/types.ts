@@ -941,6 +941,36 @@ export type ClientNotification = {
   createdAt: string
 }
 
+// ── User Profiles (Onboarding) ──────────────────────────────
+
+export type UserType = 'student' | 'practitioner' | 'salon_owner' | 'school_admin';
+
+export type UserProfile = {
+  id: string;
+  userId: string;
+  userType: UserType | null;
+  onboardingCompleted: boolean;
+  createdAt: string;
+};
+
+export type UserProfileRow = {
+  id: string;
+  user_id: string;
+  user_type: string | null;
+  onboarding_completed: boolean;
+  created_at: string;
+};
+
+export function userProfileRowToModel(row: UserProfileRow): UserProfile {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    userType: row.user_type as UserType | null,
+    onboardingCompleted: row.onboarding_completed,
+    createdAt: row.created_at,
+  };
+}
+
 // ── Team Roles & Workspace Members ──────────────────────────
 
 export type TeamRole = 'owner' | 'admin' | 'instructor' | 'stylist' | 'student' | 'front_desk';

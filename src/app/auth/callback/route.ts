@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getUserProfile, createUserProfile } from "@/lib/db/user-profiles";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -11,41 +12,28 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Check if user has a workspace, create one if not
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
-        const { data: workspace } = await supabase
-          .from("workspaces")
-          .select("id")
-          .eq("owner_id", user.id)
-          .single();
+        // Ensure user_profiles row exists
+        const profile = await getUserProfile(user.id);
 
-        if (!workspace) {
-          // Check if user is already a team member (joined via invite) — don't create a workspace
-          const { createSupabaseAdminClient } = await import("@/lib/supabase/admin");
-          const admin = createSupabaseAdminClient();
-          const { data: membership } = await admin
-            .from("workspace_members")
-            .select("id")
-            .eq("user_id", user.id)
-            .limit(1)
-            .maybeSingle();
-
-          if (!membership) {
-            // New independent user — create their own workspace
-            const name = user.user_metadata?.full_name || user.email?.split("@")[0] || "My Workspace";
-            await supabase
-              .from("workspaces")
-              .insert({ owner_id: user.id, name: `${name}'s Studio` });
-          }
+        if (!profile) {
+          // New user — create profile, send to onboarding
+          await createUserProfile(user.id);
+          return NextResponse.redirect(`${origin}/onboarding`);
         }
-      }
 
-      return NextResponse.redirect(`${origin}${next}`);
+        if (!profile.onboardingCompleted) {
+          // Returning user who hasn't finished onboarding
+          return NextResponse.redirect(`${origin}/onboarding`);
+        }
+
+        // Onboarded user — send to their destination
+        return NextResponse.redirect(`${origin}${next}`);
+      }
     }
   }
 
-  // Return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/login?error=auth`);
 }
