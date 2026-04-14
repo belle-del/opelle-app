@@ -409,8 +409,42 @@ export async function generateInspoFormula(params: {
   }, 30000);
 }
 
+// --- CALLA AI (Student Companion) ---
+
+export async function callaChat(params: {
+  message: string;
+  conversationHistory: { role: "user" | "assistant"; content: string }[];
+  studentContext: Record<string, unknown>;
+  mode?: string;
+}): Promise<MetisChatResponse | null> {
+  const result = await kernelPost("/api/v1/ai/calla-chat", {
+    message: params.message,
+    conversation_history: params.conversationHistory,
+    student_context: params.studentContext,
+    mode: params.mode || "chat",
+  }, 30000);
+  return result ?? null;
+}
+
+export async function callaAnalyzeTechnique(params: {
+  imageUrl: string;
+  techniqueCategory: string;
+  studentContext: Record<string, unknown>;
+}): Promise<{
+  analysis: Record<string, unknown>;
+  feedbackText: string;
+  score: number;
+} | null> {
+  return kernelPost("/api/v1/ai/analyze-technique", {
+    image_url: params.imageUrl,
+    technique_category: params.techniqueCategory,
+    student_context: params.studentContext,
+  }, 30000);
+}
+
 // --- INTERNAL HELPERS ---
 
+// TODO: verify if kernelGet is still used or can be removed
 async function kernelGet(
   path: string,
   extract?: string

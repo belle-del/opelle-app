@@ -2020,3 +2020,128 @@ export function studentCertificateRowToModel(row: StudentCertificateRow): Studen
     createdAt: row.created_at,
   };
 }
+
+// ── Calla Study Companion ──────────────────────────────────
+
+export interface CallaProfile {
+  id: string;
+  userId: string;
+  programStage: 'just_started' | 'few_months' | 'almost_done' | 'boards_soon' | 'licensed';
+  primaryWorry: string | null;
+  textbook: string;
+  strongAreas: string[];
+  weakAreas: string[];
+  studyPreference: string[];
+  state: string;
+  onboardingCompletedAt: string | null;
+}
+
+export interface CallaConversation {
+  id: string;
+  userId: string;
+  title: string;
+  mode: 'chat' | 'quiz' | 'flashcard' | 'test';
+  messages: CallaMessage[];
+  topics: string[];
+  startedAt: string;
+  lastMessageAt: string;
+}
+
+export interface CallaMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  type?: 'text' | 'quiz' | 'flashcard' | 'test_question';
+  metadata?: Record<string, unknown>;
+}
+
+export interface CallaStudySession {
+  id: string;
+  userId: string;
+  conversationId: string | null;
+  mode: 'quiz' | 'flashcard' | 'test';
+  domains: string[];
+  durationMinutes: number;
+  questionsAttempted: number;
+  questionsCorrect: number;
+  accuracyPercentage: number;
+  topicsFlaggedWeak: string[];
+}
+
+export interface CallaExamContent {
+  id: string;
+  domain: string;
+  topic: string;
+  subtopic: string | null;
+  contentType: 'question' | 'flashcard';
+  questionText: string | null;
+  options: string[] | null;
+  correctAnswer: string | null;
+  explanation: string | null;
+  frontText: string | null;
+  backText: string | null;
+  difficulty: number;
+  state: string;
+}
+
+export interface CallaClassroomLog {
+  id: string;
+  userId: string;
+  techniqueName: string;
+  durationMinutes: number | null;
+  isMannequin: boolean;
+  photoUrls: string[];
+  selfAssessment: number | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface CallaFloorLog {
+  id: string;
+  userId: string;
+  serviceType: string;
+  clientIdentifier: string | null;
+  productsUsed: string[];
+  formulaNotes: string | null;
+  photoUrls: string[];
+  outcomeNotes: string | null;
+  createdAt: string;
+}
+
+export interface CallaTechniqueReview {
+  id: string;
+  userId: string;
+  photoUrl: string;
+  techniqueCategory: string;
+  analysis: Record<string, unknown> | null;
+  feedbackText: string | null;
+  score: number | null;
+  previousReviewId: string | null;
+  improvementDelta: number | null;
+  createdAt: string;
+}
+
+export interface CallaProgression {
+  id: string;
+  userId: string;
+  totalXp: number;
+  currentLevel: number;
+  currentStreak: number;
+  longestStreak: number;
+  streakFreezesAvailable: number;
+  lastActivityDate: string | null;
+}
+
+export interface CallaAchievement {
+  achievementKey: string;
+  earnedAt: string;
+}
+
+export interface CallaTopicPerformance {
+  domain: string;
+  topic: string;
+  questionsSeen: number;
+  questionsCorrect: number;
+  accuracyPercentage: number;
+  flaggedWeak: boolean;
+}
