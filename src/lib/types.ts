@@ -456,6 +456,7 @@ export type WorkspaceRow = {
   buffer_minutes: number | null;
   working_hours: Record<string, { start: string; end: string; closed: boolean }> | null;
   allow_individual_availability: boolean;
+  stylist_code: string | null;
   theme: WorkspaceTheme | null;
   created_at: string;
   updated_at: string;

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getOrCreateThread, createMessage } from "@/lib/db/messaging";
-import { getCurrentWorkspace } from "@/lib/db/workspaces";
 import { dispatchComms } from "@/lib/kernel";
 import { logActivity } from "@/lib/db/activity-log";
 

@@ -9,7 +9,7 @@ type Props = {
   initialOverrides: AvailabilityOverride[];
 };
 
-export function OverridesPanel({ workspaceId: _workspaceId, userId, initialOverrides }: Props) {
+export function OverridesPanel({ userId, initialOverrides }: Props) {
   const [overrides, setOverrides] = useState<AvailabilityOverride[]>(initialOverrides);
   const [date, setDate] = useState("");
   const [isAvailable, setIsAvailable] = useState(false);

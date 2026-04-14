@@ -52,7 +52,7 @@ export async function GET() {
   // Check for clients who haven't visited in a while (potential rebooks)
   const sixWeeksAgo = new Date();
   sixWeeksAgo.setDate(sixWeeksAgo.getDate() - 42);
-  const { data: overdueClients, count: overdueCount } = await supabase
+  const { count: overdueCount } = await supabase
     .from("clients")
     .select("id", { count: "exact", head: true })
     .eq("workspace_id", workspaceId)

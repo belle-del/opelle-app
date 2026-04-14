@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
+interface ClientInvite {
+  id: string;
+  token: string;
+  expires_at: string;
+  used_at: string | null;
+  created_at: string;
+}
+
 interface RouteParams { params: Promise<{ id: string }> }
 
 export async function GET(request: Request, { params }: RouteParams) {
@@ -25,6 +33,6 @@ export async function GET(request: Request, { params }: RouteParams) {
   return NextResponse.json({
     hasAccount: !!clientUser,
     accountCreatedAt: clientUser?.created_at || null,
-    pendingInvites: (invites || []).filter((i: any) => !i.used_at && new Date(i.expires_at) > new Date()),
+    pendingInvites: (invites || []).filter((i: ClientInvite) => !i.used_at && new Date(i.expires_at) > new Date()),
   });
 }

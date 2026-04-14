@@ -4,7 +4,6 @@ import { useState } from "react";
 import type { WorkspaceMember, PayType } from "@/lib/types";
 import type { TeamRole, Permission } from "@/lib/permissions";
 import { ALL_PERMISSIONS, getEffectivePermissions } from "@/lib/permissions";
-import { RoleBadge } from "./RoleBadge";
 
 const ROLES: { value: string; label: string }[] = [
   { value: "owner", label: "Owner" },

@@ -3,6 +3,26 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 
+interface Badge {
+  id: string;
+  badge_id: string;
+  earned_at: string;
+  awarded_by: string | null;
+  badges?: {
+    name: string;
+    description: string;
+    image_url: string | null;
+    criteria_type: string;
+  };
+}
+
+interface Certificate {
+  id: string;
+  certificate_id: string;
+  issued_at: string;
+  certificate_url: string;
+}
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ studentId: string }> }) {
   try {
     const supabase = await createSupabaseServerClient();
@@ -86,17 +106,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ stud
         id: c.id, completedAt: c.completed_at, verified: c.verified,
         categoryName: (c.service_categories as Record<string, unknown>)?.name || "Unknown",
       })),
-      badges: (badgesResult.data || []).map((b: any) => ({
-        id: b.id,
-        badgeId: b.badge_id,
-        earnedAt: b.earned_at,
-        awardedBy: b.awarded_by,
-        name: b.badges?.name || "Badge",
-        description: b.badges?.description || "",
-        imageUrl: b.badges?.image_url,
-        criteriaType: b.badges?.criteria_type,
+      badges: (badgesResult.data || []).map((b: Record<string, unknown>) => ({
+        id: b.id as string,
+        badgeId: b.badge_id as string,
+        earnedAt: b.earned_at as string,
+        awardedBy: b.awarded_by as string | null,
+        name: (b.badges as Record<string, unknown>[] | null)?.[0]?.name as string || "Badge",
+        description: (b.badges as Record<string, unknown>[] | null)?.[0]?.description as string || "",
+        imageUrl: (b.badges as Record<string, unknown>[] | null)?.[0]?.image_url as string | null,
+        criteriaType: (b.badges as Record<string, unknown>[] | null)?.[0]?.criteria_type as string,
       })),
-      certificates: (certificatesResult.data || []).map((c: any) => ({
+      certificates: (certificatesResult.data || []).map((c: Certificate) => ({
         id: c.id,
         certificateId: c.certificate_id,
         issuedAt: c.issued_at,

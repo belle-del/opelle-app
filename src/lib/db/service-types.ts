@@ -1,4 +1,3 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { ServiceType, ServiceTypeRow } from "@/lib/types";
 import { serviceTypeRowToModel } from "@/lib/types";

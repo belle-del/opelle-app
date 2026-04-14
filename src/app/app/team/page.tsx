@@ -1,6 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 import { listTeamMembers } from "@/lib/db/team";
 import { requirePermission } from "@/lib/db/team";
 import { TeamList } from "./_components/TeamList";

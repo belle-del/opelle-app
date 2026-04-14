@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, Loader2, X, Image, History, MessageSquarePlus, Check, Send, Eye } from "lucide-react";
 
 interface FormulaSuggestionProps {

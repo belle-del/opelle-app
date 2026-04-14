@@ -6,6 +6,14 @@ import { listShades, createShades } from "@/lib/db/translations";
 import { hasPermission } from "@/lib/permissions";
 import type { TeamRole } from "@/lib/permissions";
 
+interface ShadeInput {
+  shade_code: string;
+  shade_name: string;
+  level: number;
+  primary_tone: string;
+  secondary_tone?: string;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient();
@@ -72,7 +80,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "color_line_id and non-empty shades array required" }, { status: 400 });
     }
 
-    const count = await createShades(color_line_id, shades.map((s: any) => ({
+    const count = await createShades(color_line_id, shades.map((s: ShadeInput) => ({
       shadeCode: s.shade_code,
       shadeName: s.shade_name,
       level: s.level,

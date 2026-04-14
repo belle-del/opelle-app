@@ -1,6 +1,5 @@
 import { listActiveAutomationsByTrigger, createMessageLog } from "@/lib/db/marketing";
 import { emitCommsEvent } from "@/lib/comms-events";
-import type { AutomationRule } from "@/lib/types";
 
 /**
  * Fire all active automation rules for a given trigger.

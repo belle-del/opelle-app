@@ -115,7 +115,7 @@ export default async function MessagesPage() {
             {threadsWithClients.length === 1 ? "conversation" : "conversations"}
           </p>
         </div>
-        <ComposeDialog workspaceId={workspace.id} />
+        <ComposeDialog />
       </header>
 
       {/* Thread List */}

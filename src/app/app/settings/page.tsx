@@ -5,6 +5,7 @@ import { BookingConfig } from "./_components/BookingConfig";
 import { BrandingConfig } from "./_components/BrandingConfig";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import type { WorkspaceRow } from "@/lib/types";
 
 export default async function SettingsPage() {
   // Get user via cookie auth
@@ -14,8 +15,7 @@ export default async function SettingsPage() {
   // Get workspace using admin client (bypasses RLS)
   // Try by owner_id first, fall back to getting the first workspace
   const admin = createSupabaseAdminClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let workspace: any = null;
+  let workspace: WorkspaceRow | null = null;
 
   if (user?.id) {
     const { data } = await admin

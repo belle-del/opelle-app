@@ -13,7 +13,7 @@ type TemplateOption = {
   bodyTemplate: string;
 };
 
-export function ComposeDialog({ workspaceId }: { workspaceId: string }) {
+export function ComposeDialog() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [clients, setClients] = useState<ClientOption[]>([]);

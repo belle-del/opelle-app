@@ -16,14 +16,11 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
-  X,
   User,
   Bell,
   Paperclip,
-  Calendar as CalendarIcon,
-  Clock
 } from "lucide-react";
-import type { Task, Client, TaskAttachment } from "@/lib/types";
+import type { Task, Client } from "@/lib/types";
 import { getClientDisplayName } from "@/lib/types";
 
 export default function TasksPage() {

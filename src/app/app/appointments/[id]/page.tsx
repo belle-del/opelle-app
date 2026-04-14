@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getAppointment } from "@/lib/db/appointments";
 import { getClient } from "@/lib/db/clients";
 import { getClientDisplayName } from "@/lib/types";
-import { formatDateTime, formatDate } from "@/lib/utils";
 import { ArrowLeft, User, Clock, FileText } from "lucide-react";
 import { AppointmentActions } from "./_components/AppointmentActions";
 import { AftercareEditor } from "./_components/AftercareEditor";

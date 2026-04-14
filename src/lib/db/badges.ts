@@ -29,7 +29,7 @@ export async function listStudentBadges(workspaceId: string, studentId: string):
     .order("earned_at", { ascending: false });
 
   if (error || !data) return [];
-  return data.map((row: any) => ({
+  return data.map((row) => ({
     ...studentBadgeRowToModel(row as StudentBadgeRow),
     badge: badgeRowToModel(row.badges as BadgeRow),
   }));
@@ -119,7 +119,7 @@ export async function checkAndAwardBadges(workspaceId: string, studentId: string
   ]);
 
   const allBadges = (badgesResult.data || []) as BadgeRow[];
-  const earnedIds = new Set((earnedResult.data || []).map((e: any) => e.badge_id));
+  const earnedIds = new Set((earnedResult.data || []).map((e) => (e as { badge_id: string }).badge_id));
   const totalHours = Number(totalsResult.data?.total_hours) || 0;
   const totalServices = completionsCount.count ?? 0;
 

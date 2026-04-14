@@ -50,7 +50,7 @@ function buildInitialState(initialPatterns: AvailabilityPattern[]): Record<numbe
   return state;
 }
 
-export function WeeklyScheduleEditor({ workspaceId: _workspaceId, userId, initialPatterns }: Props) {
+export function WeeklyScheduleEditor({ userId, initialPatterns }: Props) {
   const [days, setDays] = useState<Record<number, DayState>>(() => buildInitialState(initialPatterns));
 
   function update(dayOfWeek: number, patch: Partial<DayState>) {

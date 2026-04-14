@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       const existingTexts = existingLessons.map((l) => l.lesson.toLowerCase());
 
       // Try AI-powered distillation via kernel, fall back to direct creation
-      let created: Awaited<ReturnType<typeof createLesson>>[] = [];
+      const created: Awaited<ReturnType<typeof createLesson>>[] = [];
       try {
         const result = await distillLessons({
           feedbackItems: feedback.map((f) => ({

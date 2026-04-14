@@ -91,7 +91,6 @@ function mergeTagsWithPreferences(
   }
 
   // Merge: add new tags that aren't already present (case-insensitive check)
-  const existingLower = new Set(existingTags.map((t) => t.toLowerCase()));
   // Remove old auto-generated tags that may have changed
   const autoTagPrefixes = ["maintenance:", "every ", "has allergies"];
   const filtered = existingTags.filter((t) => {

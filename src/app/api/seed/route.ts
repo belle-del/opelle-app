@@ -295,7 +295,7 @@ export async function POST() {
     const withClientStudents = floorStudents.filter((s) => s.status === "with_client");
     const clientIds = Object.values(cMap).slice(0, withClientStudents.length);
 
-    const floorRows = floorStudents.map((s, i) => {
+    const floorRows = floorStudents.map((s) => {
       const isWithClient = s.status === "with_client";
       const clientIdx = withClientStudents.findIndex((wc) => wc.name === s.name);
       return {

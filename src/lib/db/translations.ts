@@ -27,9 +27,9 @@ export async function listColorLines(brand?: string): Promise<(ColorLine & { sha
   const { data, error } = await query;
   if (error || !data) return [];
 
-  return data.map((row: any) => ({
+  return data.map((row) => ({
     ...colorLineRowToModel(row as ColorLineRow),
-    shadeCount: row.color_shades?.[0]?.count ?? 0,
+    shadeCount: (row as any).color_shades?.[0]?.count ?? 0,
   }));
 }
 

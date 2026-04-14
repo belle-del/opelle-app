@@ -33,7 +33,7 @@ const WINDOW_OPTIONS = [
 ];
 
 type Props = {
-  workspaceId: string;
+  workspaceId?: string;
   initialBookingWindow: number;
   initialBufferMinutes: number;
   initialWorkingHours: WorkingHours;

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { TeamRole } from "@/lib/permissions";
 
 const INVITE_ROLES: { value: string; label: string }[] = [
   { value: "admin", label: "Admin" },
