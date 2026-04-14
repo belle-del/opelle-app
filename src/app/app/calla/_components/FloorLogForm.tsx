@@ -123,6 +123,21 @@ export default function FloorLogForm({ onSuccess }: FloorLogFormProps) {
     setSubmitting(true);
 
     try {
+      // Upload photos first if any
+      let photoUrls: string[] = [];
+      if (files.length > 0) {
+        const formData = new FormData();
+        files.forEach((file, i) => formData.append(`photo${i}`, file));
+        const uploadRes = await fetch("/api/calla/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          photoUrls = uploadData.urls || [];
+        }
+      }
+
       const res = await fetch("/api/calla/log/floor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -131,7 +146,7 @@ export default function FloorLogForm({ onSuccess }: FloorLogFormProps) {
           clientIdentifier: clientIdentifier.trim() || null,
           productsUsed,
           formulaNotes: formulaNotes.trim() || null,
-          photoUrls: [],
+          photoUrls,
           outcomeNotes: outcomeNotes.trim() || null,
         }),
       });

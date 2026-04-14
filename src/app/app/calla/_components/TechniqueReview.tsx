@@ -147,11 +147,24 @@ export default function TechniqueReview({ onClose }: TechniqueReviewProps) {
     setSubmitting(true);
 
     try {
+      // Upload photo first
+      const formData = new FormData();
+      formData.append("photo0", file);
+      const uploadRes = await fetch("/api/calla/upload", {
+        method: "POST",
+        body: formData,
+      });
+      let photoUrl = "pending-upload";
+      if (uploadRes.ok) {
+        const uploadData = await uploadRes.json();
+        photoUrl = uploadData.urls?.[0] || "pending-upload";
+      }
+
       const res = await fetch("/api/calla/technique/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          photoUrl: "pending-upload",
+          photoUrl,
           techniqueCategory: category,
         }),
       });

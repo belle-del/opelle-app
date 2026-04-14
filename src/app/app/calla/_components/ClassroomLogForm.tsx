@@ -110,6 +110,21 @@ export default function ClassroomLogForm({ onSuccess }: ClassroomLogFormProps) {
     setSubmitting(true);
 
     try {
+      // Upload photos first if any
+      let photoUrls: string[] = [];
+      if (files.length > 0) {
+        const formData = new FormData();
+        files.forEach((file, i) => formData.append(`photo${i}`, file));
+        const uploadRes = await fetch("/api/calla/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          photoUrls = uploadData.urls || [];
+        }
+      }
+
       const res = await fetch("/api/calla/log/classroom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -117,7 +132,7 @@ export default function ClassroomLogForm({ onSuccess }: ClassroomLogFormProps) {
           techniqueName: techniqueName.trim(),
           durationMinutes: duration,
           isMannequin,
-          photoUrls: [],
+          photoUrls,
           selfAssessment: selfAssessment || null,
           notes: notes.trim() || null,
         }),
