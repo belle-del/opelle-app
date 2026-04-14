@@ -127,10 +127,11 @@ const NAV_SECTIONS = [
 interface AppNavProps {
   user: User;
   workspaceName?: string;
+  workspaceType?: string;
 }
 
 
-export function AppNav({ user, workspaceName }: AppNavProps) {
+export function AppNav({ user, workspaceName, workspaceType }: AppNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -175,7 +176,12 @@ export function AppNav({ user, workspaceName }: AppNavProps) {
   }, [mobileOpen]);
 
   const devCtx = useContext(DevContext);
-  const viewMode: ViewMode = devCtx?.viewMode ?? "god";
+  // Map workspace type to nav view mode; dev tools can override via DevContext
+  const workspaceViewMode: ViewMode =
+    workspaceType === "school" ? "school" :
+    workspaceType === "salon" ? "salon" :
+    "practitioner";
+  const viewMode: ViewMode = devCtx?.viewMode ?? workspaceViewMode;
   const { role, can, loading: permsLoading } = usePermissions();
 
   const handleSignOut = async () => {

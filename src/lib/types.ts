@@ -17,10 +17,13 @@ export type WorkspaceTheme = {
 };
 
 // Workspace
+export type WorkspaceType = 'school' | 'salon' | 'individual';
+
 export type Workspace = {
   id: string;
   ownerId: string;
   name: string;
+  type: WorkspaceType;
   bookingWindowDays: number;
   bufferMinutes: number;
   workingHours: Record<string, { start: string; end: string; closed: boolean }> | null;
@@ -448,6 +451,7 @@ export type WorkspaceRow = {
   id: string;
   owner_id: string;
   name: string;
+  type: string | null;
   booking_window_days: number | null;
   buffer_minutes: number | null;
   working_hours: Record<string, { start: string; end: string; closed: boolean }> | null;
@@ -602,10 +606,13 @@ export type TaskRow = {
 // ============================================================================
 
 export function workspaceRowToModel(row: WorkspaceRow): Workspace {
+  const validTypes: WorkspaceType[] = ['school', 'salon', 'individual'];
+  const wsType = validTypes.includes(row.type as WorkspaceType) ? (row.type as WorkspaceType) : 'individual';
   return {
     id: row.id,
     ownerId: row.owner_id,
     name: row.name,
+    type: wsType,
     bookingWindowDays: row.booking_window_days ?? 60,
     bufferMinutes: row.buffer_minutes ?? 0,
     workingHours: row.working_hours ?? null,

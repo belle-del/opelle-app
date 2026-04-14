@@ -38,7 +38,7 @@ export default async function AppLayout({
       workspaceName={workspace?.name}
     >
       <div className="min-h-screen flex">
-        <AppNav user={user} workspaceName={workspace?.name} />
+        <AppNav user={user} workspaceName={workspace?.name} workspaceType={workspace?.type} />
         <main className="flex-1 ml-0 md:ml-[170px] pt-[60px] md:pt-6 p-4 md:p-6">
           <div className="max-w-6xl mx-auto">
             {children}
