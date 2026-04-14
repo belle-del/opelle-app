@@ -1,4 +1,3 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Client, ClientRow } from "@/lib/types";
 import { clientRowToModel } from "@/lib/types";
@@ -60,7 +59,7 @@ export async function createClient(input: {
   if (!workspace) {
     const { data: ws } = await admin.from("workspaces").select("*").limit(1).single();
     if (ws) {
-      workspace = { id: ws.id, ownerId: ws.owner_id, name: ws.name, bookingWindowDays: ws.booking_window_days ?? 60, bufferMinutes: ws.buffer_minutes ?? 0, workingHours: ws.working_hours ?? null, allowIndividualAvailability: ws.allow_individual_availability ?? false, theme: ws.theme ?? null, createdAt: ws.created_at, updatedAt: ws.updated_at };
+      workspace = { id: ws.id, ownerId: ws.owner_id, name: ws.name, type: (ws.type === 'school' || ws.type === 'salon') ? ws.type : 'individual', bookingWindowDays: ws.booking_window_days ?? 60, bufferMinutes: ws.buffer_minutes ?? 0, workingHours: ws.working_hours ?? null, allowIndividualAvailability: ws.allow_individual_availability ?? false, theme: ws.theme ?? null, createdAt: ws.created_at, updatedAt: ws.updated_at };
     }
   }
   if (!workspace) return null;
