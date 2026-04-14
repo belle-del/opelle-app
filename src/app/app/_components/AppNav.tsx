@@ -59,6 +59,7 @@ const NAV_VISIBILITY: Record<string, ViewMode[]> = {
   "/app/content":      ["god", "salon", "practitioner"],
   "/app/metis":        ["god", "school", "salon", "practitioner"],
   "/app/tasks":        ["god", "school", "salon", "practitioner"],
+  "/app/calla":        ["god", "school", "practitioner"],
   "/app/history":      ["god", "school"],
   "/app/settings":     ["god", "school", "salon", "practitioner"],
 };
@@ -103,6 +104,7 @@ const NAV_SECTIONS = [
   {
     label: "Practice",
     items: [
+      { href: "/app/calla", label: "Calla", icon: GraduationCap },
       { href: "/app/formulas", label: "Formulas", icon: FlaskConical },
       { href: "/app/portfolio", label: "Portfolio", icon: Images },
       { href: "/app/network", label: "Network", icon: Globe },
