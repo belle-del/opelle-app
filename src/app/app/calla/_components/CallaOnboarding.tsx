@@ -153,7 +153,7 @@ export default function CallaOnboarding() {
         "Already licensed": "licensed",
       };
       const payload = {
-        programStage: stageMap[stage] || stage,
+        programStage: stage ? stageMap[stage] || stage : null,
         primaryWorry: worry === "Other" ? worryOther : worry,
         textbook: textbook === "Other" ? textbookOther : textbook,
         strongAreas,
