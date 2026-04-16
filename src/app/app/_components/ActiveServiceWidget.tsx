@@ -27,7 +27,12 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
   const [session, setSession] = useState(initialSession);
   const [expanded, setExpanded] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("cheatsheet");
-  const [cheatSheet, setCheatSheet] = useState<{ cheatSheet: CheatSheet; aiSummary: string | null } | null>(null);
+  const [cheatSheet, setCheatSheet] = useState<{
+    cheatSheet: CheatSheet;
+    aiSummary: string | null;
+    formulaHistory?: { date: string; notes: string; general: string | null }[];
+    appointmentHistory?: { service: string; date: string; status: string; notes: string | null }[];
+  } | null>(null);
   const [cheatSheetLoading, setCheatSheetLoading] = useState(false);
 
   // Consultation form state
@@ -531,7 +536,12 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
 // ── Sub-components ────────────────────────────────────────────────────
 
 function CheatSheetTab({ cheatSheet, loading }: {
-  cheatSheet: { cheatSheet: CheatSheet; aiSummary: string | null } | null;
+  cheatSheet: {
+    cheatSheet: CheatSheet;
+    aiSummary: string | null;
+    formulaHistory?: { date: string; notes: string; general: string | null }[];
+    appointmentHistory?: { service: string; date: string; status: string; notes: string | null }[];
+  } | null;
   loading: boolean;
 }) {
   if (loading) {
@@ -553,6 +563,8 @@ function CheatSheetTab({ cheatSheet, loading }: {
   }
 
   const cs = cheatSheet.cheatSheet;
+  const formulas = cheatSheet.formulaHistory || [];
+  const appointments = cheatSheet.appointmentHistory || [];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -571,28 +583,25 @@ function CheatSheetTab({ cheatSheet, loading }: {
         </div>
       )}
 
-      {/* Last Visit */}
-      {cs.lastVisit && (
-        <InfoBlock label="Last Visit">
-          <p style={{ fontSize: "11px", color: "var(--text-on-stone)" }}>
-            {cs.lastVisit.service} — {new Date(cs.lastVisit.date).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+      {/* Client Notes */}
+      {cs.serviceSnapshot?.pattern && (
+        <InfoBlock label="Client Notes">
+          <p style={{ fontSize: "11px", lineHeight: "1.5", color: "var(--text-on-stone)" }}>
+            {cs.serviceSnapshot.pattern}
           </p>
         </InfoBlock>
       )}
 
-      {/* Service Snapshot */}
-      {cs.serviceSnapshot && (
-        <InfoBlock label="Service Profile">
-          {cs.serviceSnapshot.pattern && <DetailRow label="Pattern" value={cs.serviceSnapshot.pattern} />}
-          {cs.serviceSnapshot.preferences && <DetailRow label="Preferences" value={cs.serviceSnapshot.preferences} />}
-          {cs.serviceSnapshot.treatments && <DetailRow label="Maintenance" value={cs.serviceSnapshot.treatments} />}
-          {cs.serviceSnapshot.goals && <DetailRow label="Goals" value={cs.serviceSnapshot.goals} />}
+      {/* Pronouns */}
+      {cs.serviceSnapshot?.preferences && (
+        <InfoBlock label="Details">
+          <p style={{ fontSize: "11px", color: "var(--text-on-stone)" }}>{cs.serviceSnapshot.preferences}</p>
         </InfoBlock>
       )}
 
-      {/* Personalization Cues */}
+      {/* Tags */}
       {cs.personalizationCues.length > 0 && (
-        <InfoBlock label="Quick Notes">
+        <InfoBlock label="Tags">
           <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
             {cs.personalizationCues.map((cue, i) => (
               <span key={i} style={{
@@ -604,6 +613,64 @@ function CheatSheetTab({ cheatSheet, loading }: {
               </span>
             ))}
           </div>
+        </InfoBlock>
+      )}
+
+      {/* Formula History */}
+      {formulas.length > 0 && (
+        <InfoBlock label="Formula History">
+          {formulas.map((f, i) => (
+            <div key={i} style={{
+              padding: "8px", borderRadius: "4px", background: "var(--stone-light)",
+              border: "1px solid var(--stone-mid)", marginBottom: i < formulas.length - 1 ? "6px" : 0,
+            }}>
+              <p style={{ fontSize: "9px", fontWeight: 600, color: "var(--text-on-stone-faint)", marginBottom: "3px" }}>
+                {new Date(f.date).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+              </p>
+              <p style={{ fontSize: "11px", lineHeight: "1.5", color: "var(--text-on-stone)", whiteSpace: "pre-wrap" }}>
+                {f.notes}
+              </p>
+              {f.general && (
+                <p style={{ fontSize: "10px", color: "var(--text-on-stone-faint)", marginTop: "4px", fontStyle: "italic" }}>
+                  {f.general}
+                </p>
+              )}
+            </div>
+          ))}
+        </InfoBlock>
+      )}
+
+      {/* Appointment History */}
+      {appointments.length > 0 && (
+        <InfoBlock label="Recent Appointments">
+          {appointments.slice(0, 3).map((a, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <span style={{
+                width: "6px", height: "6px", borderRadius: "50%", flexShrink: 0,
+                background: a.status === "completed" ? "#10B981" : a.status === "scheduled" ? "#3B82F6" : "#9CA3AF",
+              }} />
+              <span style={{ fontSize: "11px", color: "var(--text-on-stone)", fontWeight: 500 }}>
+                {a.service}
+              </span>
+              <span style={{ fontSize: "10px", color: "var(--text-on-stone-faint)" }}>
+                {new Date(a.date).toLocaleDateString([], { month: "short", day: "numeric" })}
+              </span>
+              {a.notes && (
+                <span style={{ fontSize: "9px", color: "var(--text-on-stone-ghost)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {a.notes}
+                </span>
+              )}
+            </div>
+          ))}
+        </InfoBlock>
+      )}
+
+      {/* Last Visit */}
+      {cs.lastVisit && (
+        <InfoBlock label="Last Visit">
+          <p style={{ fontSize: "11px", color: "var(--text-on-stone)" }}>
+            {cs.lastVisit.service} — {new Date(cs.lastVisit.date).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+          </p>
         </InfoBlock>
       )}
     </div>

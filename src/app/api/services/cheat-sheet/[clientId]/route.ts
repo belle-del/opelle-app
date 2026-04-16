@@ -20,10 +20,10 @@ export async function GET(
 
     const admin = createSupabaseAdminClient();
 
-    // Gather all client data in parallel
+    // Gather all client data in parallel — only query columns that exist
     const [clientResult, appointmentsResult, formulasResult, inspoResult] = await Promise.all([
       admin.from("clients")
-        .select("first_name, last_name, notes, tags, preference_profile")
+        .select("first_name, last_name, pronouns, notes, tags, phone, email")
         .eq("id", clientId)
         .eq("workspace_id", workspaceId)
         .single(),
@@ -44,7 +44,9 @@ export async function GET(
         .eq("client_id", clientId)
         .eq("workspace_id", workspaceId)
         .order("created_at", { ascending: false })
-        .limit(3),
+        .limit(3)
+        .then(r => r) // graceful if table has no rows
+        .catch(() => ({ data: [], error: null })),
     ]);
 
     const client = clientResult.data;
@@ -52,50 +54,62 @@ export async function GET(
 
     const appointments = appointmentsResult.data || [];
     const formulas = formulasResult.data || [];
-    const inspo = inspoResult.data || [];
+    const inspo = (inspoResult as { data: Record<string, unknown>[] | null }).data || [];
 
-    // Build raw cheat sheet (works without AI)
-    const lastVisit = appointments[0]
-      ? { date: appointments[0].start_at, service: appointments[0].service_name }
+    // Build raw cheat sheet from actual data — works without AI
+    const completedAppts = appointments.filter((a: Record<string, unknown>) => a.status === "completed" || a.status === "scheduled");
+    const lastCompleted = completedAppts.find((a: Record<string, unknown>) => a.status === "completed");
+    const lastVisit = lastCompleted
+      ? { date: lastCompleted.start_at as string, service: lastCompleted.service_name as string }
       : undefined;
 
-    const profile = client.preference_profile as Record<string, string> | null;
+    // Build service snapshot from actual notes and formula data
+    const clientNotes = client.notes as string | null;
+    const formulaNotes = formulas.map((f: Record<string, unknown>) => f.raw_notes as string).filter(Boolean);
+
     const rawCheatSheet: CheatSheet = {
       lastVisit,
-      serviceSnapshot: profile ? {
-        pattern: profile.colorDirection,
-        preferences: profile.processingPreferences,
-        treatments: profile.maintenanceLevel,
-        goals: profile.nextVisitSuggestion,
-      } : undefined,
+      serviceSnapshot: {
+        pattern: clientNotes || undefined,
+        preferences: client.pronouns ? `Pronouns: ${client.pronouns}` : undefined,
+        treatments: formulaNotes.length > 0 ? formulaNotes[0] : undefined,
+        goals: undefined,
+      },
       personalizationCues: [
-        ...(client.tags || []),
-        ...(inspo.filter((i: Record<string, unknown>) => i.stylist_flag).map((i: Record<string, unknown>) => `Inspo flag: ${i.stylist_flag}`)),
+        ...(client.tags as string[] || []),
+        ...(inspo.filter((i: Record<string, unknown>) => i.stylist_flag).map((i: Record<string, unknown>) => `Inspo: ${i.stylist_flag}`)),
       ],
       recommendations: { products: [], services: [] },
       rebooking: undefined,
     };
 
-    // Try to get Metis-enhanced cheat sheet (async, graceful degradation)
+    // Formula history for display
+    const formulaHistory = formulas.map((f: Record<string, unknown>) => ({
+      date: f.service_date as string,
+      notes: f.raw_notes as string,
+      general: f.general_notes as string | null,
+    }));
+
+    // Appointment history for display
+    const appointmentHistory = appointments.map((a: Record<string, unknown>) => ({
+      service: a.service_name as string,
+      date: a.start_at as string,
+      status: a.status as string,
+      notes: a.notes as string | null,
+    }));
+
+    // Try to get Metis-enhanced briefing (fire-and-forget, graceful degradation)
     const clientName = `${client.first_name} ${client.last_name || ""}`.trim();
     const aiResult = await metisChat({
-      message: `Generate a concise service cheat sheet for client "${clientName}". Include: key preferences, last visit notes, formula highlights, things to remember, and suggested approach for today.`,
+      message: `Generate a concise service cheat sheet for client "${clientName}". Include: key preferences, last visit notes, formula highlights, things to remember, and suggested approach for today. Be specific — use the actual data provided.`,
       conversationHistory: [],
       context: { page: "cheat_sheet", clientId, clientName },
       workspaceContext: {
-        client_notes: client.notes,
+        client_notes: clientNotes,
+        client_pronouns: client.pronouns,
         client_tags: client.tags,
-        preference_profile: client.preference_profile,
-        recent_appointments: appointments.slice(0, 3),
-        recent_formulas: formulas.slice(0, 3).map((f: Record<string, unknown>) => ({
-          date: f.service_date,
-          notes: f.raw_notes,
-          general: f.general_notes,
-        })),
-        recent_inspo: inspo.slice(0, 2).map((i: Record<string, unknown>) => ({
-          notes: i.client_notes,
-          flag: i.stylist_flag,
-        })),
+        recent_appointments: appointmentHistory.slice(0, 3),
+        recent_formulas: formulaHistory.slice(0, 3),
       },
     });
 
@@ -103,6 +117,8 @@ export async function GET(
       cheatSheet: rawCheatSheet,
       aiSummary: aiResult?.reply || null,
       clientName,
+      formulaHistory,
+      appointmentHistory,
     });
   } catch (err) {
     console.error("Cheat sheet error:", err);
