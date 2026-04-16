@@ -5,13 +5,13 @@ import type { ServiceSession, ServiceSessionStatus, ServiceTask, ServiceTaskType
 
 // ── Status Colors ─────────────────────────────────────────────────────
 const STATUS_COLORS: Record<ServiceSessionStatus, { bg: string; border: string; text: string; label: string }> = {
-  checked_in: { bg: "rgba(107,114,128,0.08)", border: "rgba(107,114,128,0.25)", text: "#6B7280", label: "Checked In" },
-  consultation: { bg: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.25)", text: "#3B82F6", label: "Consultation" },
-  in_progress: { bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.25)", text: "#10B981", label: "In Progress" },
-  processing: { bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.25)", text: "#F59E0B", label: "Processing" },
-  needs_help: { bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)", text: "#EF4444", label: "Needs Help" },
-  finishing: { bg: "rgba(139,92,246,0.08)", border: "rgba(139,92,246,0.25)", text: "#8B5CF6", label: "Finishing" },
-  complete: { bg: "rgba(5,150,105,0.08)", border: "rgba(5,150,105,0.25)", text: "#059669", label: "Complete" },
+  checked_in: { bg: "var(--brass-glow)", border: "var(--brass-soft)", text: "var(--stone-shadow)", label: "Checked In" },
+  consultation: { bg: "var(--brass-glow)", border: "var(--brass-soft)", text: "var(--brass)", label: "Consultation" },
+  in_progress: { bg: "var(--garnet-wash)", border: "rgba(68,6,6,0.20)", text: "var(--garnet)", label: "In Progress" },
+  processing: { bg: "var(--brass-glow)", border: "var(--brass-soft)", text: "var(--brass-warm)", label: "Processing" },
+  needs_help: { bg: "rgba(117,18,18,0.10)", border: "rgba(117,18,18,0.25)", text: "var(--garnet-ruby)", label: "Needs Help" },
+  finishing: { bg: "var(--garnet-wash)", border: "rgba(68,6,6,0.20)", text: "var(--garnet-blush)", label: "Finishing" },
+  complete: { bg: "rgba(143,173,200,0.10)", border: "rgba(143,173,200,0.25)", text: "var(--status-confirmed)", label: "Complete" },
 };
 
 const TASK_TYPE_LABELS: Record<ServiceTaskType, string> = {
@@ -108,7 +108,7 @@ export function FloorStatusWidget({ clients }: FloorStatusWidgetProps) {
         {helpSessions.length > 0 && (
           <span style={{
             padding: "2px 8px", borderRadius: "100px", fontSize: "9px", fontWeight: 700,
-            background: "rgba(239,68,68,0.12)", color: "#EF4444",
+            background: "rgba(117,18,18,0.12)", color: "var(--garnet-ruby)",
             animation: "pulse 2s ease-in-out infinite",
           }}>
             {helpSessions.length} need help
@@ -179,8 +179,8 @@ export function FloorStatusWidget({ clients }: FloorStatusWidgetProps) {
                     <div key={task.id} style={{
                       display: "flex", alignItems: "center", gap: "8px",
                       padding: "6px 8px", borderRadius: "4px",
-                      background: task.priority === "urgent" ? "rgba(239,68,68,0.06)" : "var(--stone-light)",
-                      border: `1px solid ${task.priority === "urgent" ? "rgba(239,68,68,0.2)" : "var(--stone-mid)"}`,
+                      background: task.priority === "urgent" ? "rgba(117,18,18,0.06)" : "var(--stone-light)",
+                      border: `1px solid ${task.priority === "urgent" ? "rgba(117,18,18,0.2)" : "var(--stone-mid)"}`,
                     }}>
                       <span style={{
                         fontSize: "9px", fontWeight: 700, color: task.priority === "urgent" ? "#EF4444" : "var(--text-on-stone)",
@@ -194,7 +194,7 @@ export function FloorStatusWidget({ clients }: FloorStatusWidgetProps) {
                         </span>
                       )}
                       {task.priority === "urgent" && (
-                        <span style={{ padding: "1px 6px", borderRadius: "100px", fontSize: "7px", fontWeight: 700, background: "#EF4444", color: "white" }}>
+                        <span style={{ padding: "1px 6px", borderRadius: "100px", fontSize: "7px", fontWeight: 700, background: "var(--garnet-ruby)", color: "white" }}>
                           URGENT
                         </span>
                       )}
@@ -272,7 +272,7 @@ function StationCard({ session, clientName, isHelp }: {
         </span>
       </div>
       {isHelp && session.helpRequestNote && (
-        <p style={{ fontSize: "10px", color: "#EF4444", fontWeight: 500, marginTop: "4px" }}>
+        <p style={{ fontSize: "10px", color: "var(--garnet-ruby)", fontWeight: 500, marginTop: "4px" }}>
           {session.helpRequestNote}
         </p>
       )}

@@ -3,15 +3,15 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ServiceSession, ServiceSessionStatus, CheatSheet } from "@/lib/types";
 
-// ── Status Config ─────────────────────────────────────────────────────
+// ── Status Config (uses Opelle design system: garnet, brass, stone) ──
 const STATUS_CONFIG: Record<ServiceSessionStatus, { label: string; color: string; bg: string; icon: string }> = {
-  checked_in: { label: "Checked In", color: "#6B7280", bg: "rgba(107,114,128,0.12)", icon: "◉" },
-  consultation: { label: "Consultation", color: "#3B82F6", bg: "rgba(59,130,246,0.12)", icon: "◎" },
-  in_progress: { label: "In Progress", color: "#10B981", bg: "rgba(16,185,129,0.12)", icon: "▶" },
-  processing: { label: "Processing", color: "#F59E0B", bg: "rgba(245,158,11,0.12)", icon: "⏱" },
-  needs_help: { label: "Needs Help", color: "#EF4444", bg: "rgba(239,68,68,0.12)", icon: "!" },
-  finishing: { label: "Finishing", color: "#8B5CF6", bg: "rgba(139,92,246,0.12)", icon: "✦" },
-  complete: { label: "Complete", color: "#059669", bg: "rgba(5,150,105,0.12)", icon: "✓" },
+  checked_in: { label: "Checked In", color: "var(--stone-shadow)", bg: "var(--brass-glow)", icon: "◉" },
+  consultation: { label: "Consultation", color: "var(--brass)", bg: "var(--brass-glow)", icon: "◎" },
+  in_progress: { label: "In Progress", color: "var(--garnet)", bg: "var(--garnet-wash)", icon: "▶" },
+  processing: { label: "Processing", color: "var(--brass-warm)", bg: "var(--brass-glow)", icon: "⏱" },
+  needs_help: { label: "Needs Help", color: "var(--garnet-ruby)", bg: "rgba(117,18,18,0.10)", icon: "!" },
+  finishing: { label: "Finishing", color: "var(--garnet-blush)", bg: "var(--garnet-wash)", icon: "✦" },
+  complete: { label: "Complete", color: "var(--status-confirmed)", bg: "rgba(143,173,200,0.10)", icon: "✓" },
 };
 
 const STEPS: ServiceSessionStatus[] = ["checked_in", "consultation", "in_progress", "processing", "finishing", "complete"];
@@ -137,6 +137,14 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
     }
   }, [activeTab, session.id, session.consultationId]);
 
+  // Map status → best tab to show
+  const STATUS_TAB_MAP: Partial<Record<ServiceSessionStatus, Tab>> = {
+    consultation: "consult",
+    in_progress: "formula",
+    processing: "cheatsheet",
+    finishing: "complete",
+  };
+
   const updateStatus = async (newStatus: ServiceSessionStatus, extras?: Record<string, unknown>) => {
     setStatusUpdating(true);
     try {
@@ -148,6 +156,9 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
       if (res.ok) {
         const data = await res.json();
         setSession(data.session);
+        // Auto-advance to the relevant tab
+        const nextTab = STATUS_TAB_MAP[newStatus];
+        if (nextTab) setActiveTab(nextTab);
       }
     } catch {}
     setStatusUpdating(false);
@@ -338,12 +349,12 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
       {/* Help request banner */}
       {session.status === "needs_help" && (
         <div style={{
-          padding: "8px 12px", background: "rgba(239,68,68,0.08)",
-          borderBottom: "1px solid rgba(239,68,68,0.2)",
+          padding: "8px 12px", background: "rgba(117,18,18,0.08)",
+          borderBottom: "1px solid rgba(117,18,18,0.2)",
           display: "flex", alignItems: "center", gap: "8px",
         }}>
           <span style={{ fontSize: "14px" }}>!</span>
-          <span style={{ fontSize: "11px", fontWeight: 600, color: "#EF4444" }}>
+          <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--garnet-ruby)" }}>
             Help requested: {session.helpRequestNote || "Waiting for assistance"}
           </span>
           <button
@@ -351,7 +362,7 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
             disabled={statusUpdating}
             style={{
               marginLeft: "auto", padding: "3px 10px", borderRadius: "4px",
-              fontSize: "9px", fontWeight: 600, background: "#EF4444", color: "white",
+              fontSize: "9px", fontWeight: 600, background: "var(--garnet-ruby)", color: "white",
               border: "none", cursor: "pointer",
             }}
           >
@@ -467,7 +478,7 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
           <>
             <button onClick={() => {
               updateStatus("processing", { processingTimerMinutes: timerMinutes || 30 });
-            }} disabled={statusUpdating} style={actionBtnStyle("#F59E0B")}>
+            }} disabled={statusUpdating} style={actionBtnStyle("var(--brass)")}>
               Start Processing
             </button>
             <input
@@ -486,9 +497,9 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
           <>
             <div style={{
               padding: "4px 10px", borderRadius: "4px",
-              background: processingOvertime ? "rgba(239,68,68,0.12)" : "rgba(245,158,11,0.12)",
+              background: processingOvertime ? "var(--garnet-wash)" : "var(--brass-glow)",
               fontSize: "12px", fontWeight: 700, fontVariantNumeric: "tabular-nums",
-              color: processingOvertime ? "#EF4444" : "#F59E0B",
+              color: processingOvertime ? "var(--garnet-ruby)" : "var(--brass)",
             }}>
               {processingOvertime ? "+" : ""}{formatTimer(processingOvertime ? timerElapsed - processingTotalSec : processingRemaining)}
             </div>
@@ -520,7 +531,7 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
             <button onClick={requestHelp} disabled={helpRequesting}
               style={{
                 padding: "4px 10px", borderRadius: "4px", fontSize: "9px",
-                fontWeight: 700, background: "#EF4444", color: "white",
+                fontWeight: 700, background: "var(--garnet-ruby)", color: "white",
                 border: "none", cursor: "pointer", textTransform: "uppercase",
                 letterSpacing: "0.05em",
               }}>
@@ -574,7 +585,7 @@ function CheatSheetTab({ cheatSheet, loading }: {
           padding: "10px", borderRadius: "6px", background: "rgba(139,92,246,0.06)",
           border: "1px solid rgba(139,92,246,0.15)",
         }}>
-          <p style={{ fontSize: "8px", fontWeight: 700, color: "#8B5CF6", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "4px" }}>
+          <p style={{ fontSize: "8px", fontWeight: 700, color: "var(--garnet-blush)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "4px" }}>
             Metis Briefing
           </p>
           <p style={{ fontSize: "11px", lineHeight: "1.5", color: "var(--text-on-stone)" }}>
