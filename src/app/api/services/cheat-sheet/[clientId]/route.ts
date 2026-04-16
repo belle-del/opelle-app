@@ -115,8 +115,20 @@ export async function GET(
 
     // Try to get Metis-enhanced briefing (fire-and-forget, graceful degradation)
     const clientName = `${client.first_name} ${client.last_name || ""}`.trim();
+
+    // Build a data-rich prompt so the AI actually uses the info
+    const dataBlock = [
+      `Client: ${clientName}`,
+      client.pronouns ? `Pronouns: ${client.pronouns}` : null,
+      clientNotes ? `Notes: ${clientNotes}` : null,
+      (client.tags as string[])?.length ? `Tags: ${(client.tags as string[]).join(", ")}` : null,
+      formulaHistory.length > 0 ? `Last formula (${formulaHistory[0].date}): ${formulaHistory[0].notes}` : null,
+      formulaHistory[0]?.general ? `General notes: ${formulaHistory[0].general}` : null,
+      appointmentHistory.length > 0 ? `Last appointment: ${appointmentHistory[0].service} on ${appointmentHistory[0].date}` : null,
+    ].filter(Boolean).join("\n");
+
     const aiResult = await metisChat({
-      message: `Generate a concise service cheat sheet for client "${clientName}". Include: key preferences, last visit notes, formula highlights, things to remember, and suggested approach for today. Be specific — use the actual data provided.`,
+      message: `Here is the client data. Write a 2-3 sentence service briefing summarizing what the stylist needs to know before starting today's service. Be specific and reference the actual data — do NOT ask for more information.\n\n${dataBlock}`,
       conversationHistory: [],
       context: { page: "cheat_sheet", clientId, clientName },
       workspaceContext: {
@@ -128,9 +140,14 @@ export async function GET(
       },
     });
 
+    // Filter out unhelpful AI responses that don't actually use the data
+    const aiSummary = aiResult?.reply && !aiResult.reply.includes("I don't have access") && !aiResult.reply.includes("I'd need")
+      ? aiResult.reply
+      : null;
+
     return NextResponse.json({
       cheatSheet: rawCheatSheet,
-      aiSummary: aiResult?.reply || null,
+      aiSummary,
       clientName,
       formulaHistory,
       appointmentHistory,
