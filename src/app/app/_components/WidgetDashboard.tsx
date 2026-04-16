@@ -289,6 +289,64 @@ function WidgetHead({ title, link }: { title: string; link: string }) {
   );
 }
 
+// ── Next Appointment Check-In ─────────────────────────────────────────
+function NextAppointmentCheckIn({ appointment, clientName }: {
+  appointment: Appointment;
+  clientName: string;
+}) {
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleCheckIn = async () => {
+    setChecking(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/services/${appointment.id}/check-in`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        const data = await res.json();
+        setError(data.error || "Check-in failed");
+      }
+    } catch {
+      setError("Check-in failed");
+    }
+    setChecking(false);
+  };
+
+  const time = new Date(appointment.startAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  return (
+    <div style={{ padding: "16px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+      <div style={{ textAlign: "center" }}>
+        <p style={{ fontFamily: "'Fraunces', serif", fontSize: "18px", fontWeight: 500, color: "var(--text-on-stone)" }}>
+          {clientName}
+        </p>
+        <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)", marginTop: "2px" }}>
+          {appointment.serviceName} · {time}
+        </p>
+      </div>
+      <button
+        onClick={handleCheckIn}
+        disabled={checking}
+        style={{
+          padding: "10px 28px", borderRadius: "6px", fontSize: "12px", fontWeight: 700,
+          background: "var(--garnet)", color: "white", border: "none", cursor: "pointer",
+          textTransform: "uppercase", letterSpacing: "0.08em",
+          opacity: checking ? 0.6 : 1,
+        }}
+      >
+        {checking ? "Checking in..." : "Check In"}
+      </button>
+      {error && <p style={{ fontSize: "10px", color: "#EF4444" }}>{error}</p>}
+    </div>
+  );
+}
+
 // ── Stat Widget ────────────────────────────────────────────────────────
 function StatWidget({ value, label, change, changePositive, link }: {
   value: string; label: string; change?: string; changePositive?: boolean; link: string;
@@ -622,12 +680,24 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
       }
       case "activeService": {
         if (!activeSession || activeSession.status === "complete") {
+          // Show next upcoming appointment with check-in button
+          const upcoming = todayAppts
+            .filter(a => a.status === "scheduled")
+            .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+          const next = upcoming[0];
           return (
             <>
               <WidgetHead title="Active Service" link="/app/appointments" />
-              <div style={{ padding: "16px 12px", textAlign: "center" }}>
-                <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>No active service session</p>
-              </div>
+              {next ? (
+                <NextAppointmentCheckIn
+                  appointment={next}
+                  clientName={getClientName(clients, next.clientId)}
+                />
+              ) : (
+                <div style={{ padding: "16px 12px", textAlign: "center" }}>
+                  <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>No upcoming appointments today</p>
+                </div>
+              )}
             </>
           );
         }
