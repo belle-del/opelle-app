@@ -2179,6 +2179,7 @@ export type ServiceSession = {
   checkedInBy?: string;
   startedAt?: string;
   completedAt?: string;
+  processes: ServiceProcess[];
   handedToCheckout: boolean;
   createdAt: string;
   updatedAt: string;
@@ -2203,6 +2204,7 @@ export type ServiceSessionRow = {
   checked_in_by: string | null;
   started_at: string | null;
   completed_at: string | null;
+  processes: ServiceProcess[] | null;
   handed_to_checkout: boolean;
   created_at: string;
   updated_at: string;
@@ -2228,6 +2230,7 @@ export function serviceSessionRowToModel(row: ServiceSessionRow): ServiceSession
     checkedInBy: row.checked_in_by ?? undefined,
     startedAt: row.started_at ?? undefined,
     completedAt: row.completed_at ?? undefined,
+    processes: row.processes || [],
     handedToCheckout: row.handed_to_checkout,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -2421,6 +2424,21 @@ export type CheatSheet = {
   personalizationCues: string[];
   recommendations?: { products: string[]; services: string[] };
   rebooking?: { status: string; nextAppointment?: string; note?: string };
+};
+
+// Service Process (multi-timer within a session)
+export type ServiceProcessStatus = 'waiting' | 'active' | 'paused' | 'complete';
+
+export type ServiceProcess = {
+  id: string;
+  name: string;
+  durationMinutes: number;
+  status: ServiceProcessStatus;
+  startedAt: string | null;
+  completedAt: string | null;
+  notes: string;
+  sequence: number;
+  dependsOn: string | null;
 };
 
 // Valid state machine transitions for service sessions

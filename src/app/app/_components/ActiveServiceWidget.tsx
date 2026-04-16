@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { ServiceSession, ServiceSessionStatus, CheatSheet } from "@/lib/types";
+import type { ServiceSession, ServiceSessionStatus, CheatSheet, ServiceProcess, ServiceTaskType } from "@/lib/types";
 
 // ── Status Config (uses Opelle design system: garnet, brass, stone) ──
 const STATUS_CONFIG: Record<ServiceSessionStatus, { label: string; color: string; bg: string; icon: string }> = {
@@ -49,12 +49,24 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
   const [consultSaving, setConsultSaving] = useState(false);
 
   // Help request
+  const [helpOpen, setHelpOpen] = useState(false);
   const [helpNote, setHelpNote] = useState("");
+  const [helpType, setHelpType] = useState<ServiceTaskType>("custom");
   const [helpRequesting, setHelpRequesting] = useState(false);
+  const [helpSent, setHelpSent] = useState(false);
 
-  // Processing timer
-  const [timerMinutes, setTimerMinutes] = useState(session.processingTimerMinutes || 0);
-  const [timerElapsed, setTimerElapsed] = useState(0);
+  // Process management
+  const [addingProcess, setAddingProcess] = useState(false);
+  const [newProcessName, setNewProcessName] = useState("");
+  const [newProcessMinutes, setNewProcessMinutes] = useState(30);
+
+  // Inline formula
+  const [formulaText, setFormulaText] = useState("");
+  const [formulaSaving, setFormulaSaving] = useState(false);
+  const [formulaSaved, setFormulaSaved] = useState(false);
+
+  // Inspo photos
+  const [inspoPhotos, setInspoPhotos] = useState<{ url: string; caption?: string }[]>([]);
 
   // Feedback form
   const [feedback, setFeedback] = useState({
@@ -83,17 +95,19 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
     return () => clearInterval(interval);
   }, []);
 
-  // Processing timer countdown
+  // Load inspo photos
   useEffect(() => {
-    if (session.status !== "processing" || !session.processingStartedAt) return;
-    const tick = () => {
-      const elapsed = Math.floor((Date.now() - new Date(session.processingStartedAt!).getTime()) / 1000);
-      setTimerElapsed(elapsed);
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [session.status, session.processingStartedAt]);
+    fetch(`/api/clients/${session.clientId}/inspo-photos`)
+      .then(r => r.ok ? r.json() : { photos: [] })
+      .then(data => {
+        const photos = (data.photos || []).map((p: { url: string; caption?: string }) => ({
+          url: p.url,
+          caption: p.caption,
+        }));
+        setInspoPhotos(photos);
+      })
+      .catch(() => {});
+  }, [session.clientId]);
 
   // Load cheat sheet
   const loadCheatSheet = useCallback(async () => {
@@ -190,19 +204,106 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
   const requestHelp = async () => {
     setHelpRequesting(true);
     try {
+      // Create a structured service task
+      await fetch("/api/service-tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: session.id,
+          assignedTo: session.stylistId,
+          taskType: helpType,
+          description: helpNote || HELP_OPTIONS.find(h => h.type === helpType)?.label || "Help needed",
+          priority: "urgent",
+        }),
+      });
+      // Also set session to needs_help
       await fetch(`/api/services/${session.id}/help`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ note: helpNote || "Help needed" }),
+        body: JSON.stringify({ note: helpNote || HELP_OPTIONS.find(h => h.type === helpType)?.label }),
       });
       const res = await fetch("/api/services/active");
       if (res.ok) {
         const data = await res.json();
         if (data.sessions?.[0]) setSession(data.sessions[0]);
       }
+      setHelpSent(true);
+      setTimeout(() => setHelpSent(false), 3000);
     } catch {}
     setHelpRequesting(false);
     setHelpNote("");
+    setHelpOpen(false);
+  };
+
+  // Process management
+  const addProcess = async () => {
+    if (!newProcessName) return;
+    try {
+      const res = await fetch(`/api/services/${session.id}/process`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newProcessName,
+          durationMinutes: newProcessMinutes,
+          sequence: (session.processes?.length || 0) + 1,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSession(data.session);
+      }
+    } catch {}
+    setNewProcessName("");
+    setNewProcessMinutes(30);
+    setAddingProcess(false);
+  };
+
+  const updateProcessAction = async (processId: string, action: "start" | "pause" | "complete") => {
+    try {
+      const res = await fetch(`/api/services/${session.id}/process/${processId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSession(data.session);
+      }
+    } catch {}
+  };
+
+  const removeProcessAction = async (processId: string) => {
+    try {
+      const res = await fetch(`/api/services/${session.id}/process/${processId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSession(data.session);
+      }
+    } catch {}
+  };
+
+  // Save inline formula
+  const saveFormula = async () => {
+    if (!formulaText.trim()) return;
+    setFormulaSaving(true);
+    try {
+      const res = await fetch("/api/formula-entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: session.clientId,
+          rawNotes: formulaText,
+          serviceDate: new Date().toISOString().split("T")[0],
+        }),
+      });
+      if (res.ok) {
+        setFormulaSaved(true);
+        setTimeout(() => setFormulaSaved(false), 3000);
+      }
+    } catch {}
+    setFormulaSaving(false);
   };
 
   const submitFeedback = async () => {
@@ -241,9 +342,9 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
     ? formatElapsed(Date.now() - new Date(session.checkedInAt).getTime())
     : "";
 
-  const processingTotalSec = (session.processingTimerMinutes || timerMinutes) * 60;
-  const processingRemaining = Math.max(0, processingTotalSec - timerElapsed);
-  const processingOvertime = timerElapsed > processingTotalSec && processingTotalSec > 0;
+  const processes = session.processes || [];
+  const allProcessesComplete = processes.length > 0 && processes.every(p => p.status === "complete");
+  const hasActiveProcess = processes.some(p => p.status === "active");
 
   if (session.status === "complete") return null;
 
@@ -408,39 +509,152 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
         )}
 
         {activeTab === "formula" && (
-          <div>
-            <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)", marginBottom: "8px" }}>
-              View and edit formulas for this client in the Formula workspace.
-            </p>
-            <a
-              href={`/app/formulas?client=${session.clientId}`}
-              style={{
-                display: "inline-block", padding: "6px 14px", borderRadius: "6px",
-                fontSize: "11px", fontWeight: 600, background: "var(--garnet)",
-                color: "white", textDecoration: "none",
-              }}
-            >
-              Open Formula Editor
-            </a>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {/* Previous formulas from cheat sheet data */}
+            {cheatSheet?.formulaHistory && cheatSheet.formulaHistory.length > 0 && (
+              <InfoBlock label="Previous Formulas">
+                {cheatSheet.formulaHistory.slice(0, 2).map((f, i) => (
+                  <div key={i} style={{
+                    padding: "8px", borderRadius: "4px", background: "var(--stone-light)",
+                    border: "1px solid var(--stone-mid)", marginBottom: "6px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3px" }}>
+                      <p style={{ fontSize: "9px", fontWeight: 600, color: "var(--text-on-stone-faint)" }}>
+                        {new Date(f.date).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                      <button
+                        onClick={() => { setFormulaText(f.notes); }}
+                        style={{
+                          padding: "2px 8px", borderRadius: "3px", fontSize: "8px", fontWeight: 700,
+                          background: "var(--brass-glow)", color: "var(--brass)", border: "1px solid var(--brass-soft)",
+                          cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.05em",
+                        }}
+                      >
+                        Remix
+                      </button>
+                    </div>
+                    <p style={{ fontSize: "11px", lineHeight: "1.5", color: "var(--text-on-stone)", whiteSpace: "pre-wrap" }}>
+                      {f.notes}
+                    </p>
+                    {f.general && (
+                      <p style={{ fontSize: "10px", color: "var(--text-on-stone-faint)", marginTop: "4px", fontStyle: "italic" }}>
+                        {f.general}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </InfoBlock>
+            )}
+
+            {/* Inline formula entry */}
+            <InfoBlock label="Today's Formula">
+              <textarea
+                value={formulaText}
+                onChange={e => { setFormulaText(e.target.value); setFormulaSaved(false); }}
+                placeholder="Enter formula notes...&#10;Bowl 1: Product + Developer (ratio)&#10;Process X min"
+                rows={5}
+                style={{
+                  width: "100%", padding: "8px", borderRadius: "4px",
+                  border: "1px solid var(--stone-warm)", background: "var(--stone-light)",
+                  fontSize: "11px", color: "var(--text-on-stone)",
+                  fontFamily: "'DM Sans', sans-serif", resize: "vertical",
+                  lineHeight: "1.6",
+                }}
+              />
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px" }}>
+                <button onClick={saveFormula} disabled={formulaSaving || !formulaText.trim()}
+                  style={{
+                    padding: "6px 14px", borderRadius: "5px", fontSize: "10px", fontWeight: 700,
+                    background: formulaSaved ? "var(--status-confirmed)" : "var(--garnet)",
+                    color: "white", border: "none", cursor: "pointer",
+                    opacity: !formulaText.trim() ? 0.5 : 1,
+                  }}>
+                  {formulaSaving ? "Saving..." : formulaSaved ? "Saved ✓" : "Save Formula"}
+                </button>
+                <a href={`/app/formulas?client=${session.clientId}`}
+                  style={{ fontSize: "10px", color: "var(--text-on-stone-faint)", textDecoration: "underline" }}>
+                  Full Editor
+                </a>
+              </div>
+            </InfoBlock>
           </div>
         )}
 
         {activeTab === "photos" && (
-          <div>
-            <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)", marginBottom: "8px" }}>
-              Before/after photos are captured through the service completion flow.
-            </p>
-            {session.beforePhotoUrl && (
-              <div style={{ marginBottom: "8px" }}>
-                <p style={{ fontSize: "9px", fontWeight: 600, color: "var(--text-on-stone)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.1em" }}>Before</p>
-                <img src={session.beforePhotoUrl} alt="Before" style={{ width: "120px", borderRadius: "6px", border: "1px solid var(--stone-mid)" }} />
-              </div>
-            )}
-            {session.afterPhotoUrl && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {/* Before/After Photos */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
               <div>
-                <p style={{ fontSize: "9px", fontWeight: 600, color: "var(--text-on-stone)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.1em" }}>After</p>
-                <img src={session.afterPhotoUrl} alt="After" style={{ width: "120px", borderRadius: "6px", border: "1px solid var(--stone-mid)" }} />
+                <p style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-on-stone-faint)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "4px" }}>Before</p>
+                {session.beforePhotoUrl ? (
+                  <img src={session.beforePhotoUrl} alt="Before" style={{ width: "100%", borderRadius: "6px", border: "1px solid var(--stone-mid)", aspectRatio: "3/4", objectFit: "cover" }} />
+                ) : (
+                  <PhotoUploadBox
+                    label="Capture Before"
+                    onUpload={async (url) => {
+                      await fetch(`/api/services/${session.id}/status`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ status: session.status, beforePhotoUrl: url }),
+                      });
+                      setSession({ ...session, beforePhotoUrl: url });
+                    }}
+                    clientId={session.clientId}
+                    photoType="before"
+                  />
+                )}
               </div>
+              <div>
+                <p style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-on-stone-faint)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "4px" }}>After</p>
+                {session.afterPhotoUrl ? (
+                  <img src={session.afterPhotoUrl} alt="After" style={{ width: "100%", borderRadius: "6px", border: "1px solid var(--stone-mid)", aspectRatio: "3/4", objectFit: "cover" }} />
+                ) : (
+                  <PhotoUploadBox
+                    label="Capture After"
+                    onUpload={async (url) => {
+                      await fetch(`/api/services/${session.id}/status`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ status: session.status, afterPhotoUrl: url }),
+                      });
+                      setSession({ ...session, afterPhotoUrl: url });
+                    }}
+                    clientId={session.clientId}
+                    photoType="after"
+                    disabled={!["in_progress", "processing", "finishing"].includes(session.status)}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Client Inspo Photos */}
+            {inspoPhotos.length > 0 && (
+              <InfoBlock label="Client Inspo Photos">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "6px" }}>
+                  {inspoPhotos.map((photo, i) => (
+                    <img key={i} src={photo.url} alt={photo.caption || "Inspo"} style={{
+                      width: "100%", borderRadius: "4px", border: "1px solid var(--stone-mid)",
+                      aspectRatio: "1", objectFit: "cover",
+                    }} />
+                  ))}
+                </div>
+              </InfoBlock>
+            )}
+
+            {/* Side-by-side comparison */}
+            {session.afterPhotoUrl && inspoPhotos.length > 0 && (
+              <InfoBlock label="Inspo vs Result">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  <div>
+                    <p style={{ fontSize: "8px", color: "var(--text-on-stone-ghost)", marginBottom: "2px" }}>INSPO</p>
+                    <img src={inspoPhotos[0].url} alt="Inspo" style={{ width: "100%", borderRadius: "4px", border: "1px solid var(--stone-mid)", aspectRatio: "3/4", objectFit: "cover" }} />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: "8px", color: "var(--text-on-stone-ghost)", marginBottom: "2px" }}>RESULT</p>
+                    <img src={session.afterPhotoUrl} alt="Result" style={{ width: "100%", borderRadius: "4px", border: "1px solid var(--stone-mid)", aspectRatio: "3/4", objectFit: "cover" }} />
+                  </div>
+                </div>
+              </InfoBlock>
             )}
           </div>
         )}
@@ -456,12 +670,34 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
         )}
       </div>
 
+      {/* Process Timers — show when processes exist */}
+      {processes.length > 0 && (
+        <div style={{ borderTop: "1px solid var(--stone-mid)", padding: "8px 12px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+            <p style={{ fontSize: "8px", fontWeight: 700, color: "var(--text-on-stone-faint)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+              Processes ({processes.filter(p => p.status === "complete").length}/{processes.length})
+            </p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            {processes.map(proc => (
+              <ProcessTimer
+                key={proc.id}
+                process={proc}
+                processes={processes}
+                onAction={(action) => updateProcessAction(proc.id, action)}
+                onRemove={() => removeProcessAction(proc.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Bottom Action Bar */}
       <div style={{
         padding: "8px 12px", borderTop: "1px solid var(--stone-mid)",
-        display: "flex", alignItems: "center", gap: "8px",
+        display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap",
       }}>
-        {/* Status actions based on current state */}
+        {/* Status actions */}
         {session.status === "checked_in" && (
           <button onClick={() => updateStatus("in_progress")} disabled={statusUpdating}
             style={actionBtnStyle("var(--garnet)")}>
@@ -474,39 +710,45 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
             Begin Service
           </button>
         )}
-        {session.status === "in_progress" && (
+        {(session.status === "in_progress" || session.status === "processing") && (
           <>
-            <button onClick={() => {
-              updateStatus("processing", { processingTimerMinutes: timerMinutes || 30 });
-            }} disabled={statusUpdating} style={actionBtnStyle("var(--brass)")}>
-              Start Processing
-            </button>
-            <input
-              type="number" min={1} max={120} value={timerMinutes || 30}
-              onChange={e => setTimerMinutes(parseInt(e.target.value) || 30)}
-              style={{
-                width: "48px", padding: "4px 6px", borderRadius: "4px",
-                border: "1px solid var(--stone-warm)", background: "var(--stone-light)",
-                fontSize: "11px", textAlign: "center", color: "var(--text-on-stone)",
-              }}
-            />
-            <span style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>min</span>
-          </>
-        )}
-        {session.status === "processing" && (
-          <>
-            <div style={{
-              padding: "4px 10px", borderRadius: "4px",
-              background: processingOvertime ? "var(--garnet-wash)" : "var(--brass-glow)",
-              fontSize: "12px", fontWeight: 700, fontVariantNumeric: "tabular-nums",
-              color: processingOvertime ? "var(--garnet-ruby)" : "var(--brass)",
-            }}>
-              {processingOvertime ? "+" : ""}{formatTimer(processingOvertime ? timerElapsed - processingTotalSec : processingRemaining)}
-            </div>
-            <button onClick={() => updateStatus("finishing")} disabled={statusUpdating}
-              style={actionBtnStyle("var(--garnet)")}>
-              Done Processing
-            </button>
+            {!addingProcess ? (
+              <button onClick={() => setAddingProcess(true)} style={actionBtnStyle("var(--brass)")}>
+                + Process
+              </button>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                <input value={newProcessName} onChange={e => setNewProcessName(e.target.value)}
+                  placeholder="Name..." style={inputStyle()} />
+                <input type="number" min={1} max={120} value={newProcessMinutes}
+                  onChange={e => setNewProcessMinutes(parseInt(e.target.value) || 30)}
+                  style={{ ...inputStyle(), width: "40px", textAlign: "center" }} />
+                <span style={{ fontSize: "8px", color: "var(--text-on-stone-faint)" }}>min</span>
+                <button onClick={addProcess} disabled={!newProcessName} style={actionBtnStyle("var(--garnet)")}>Add</button>
+                <button onClick={() => setAddingProcess(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "var(--text-on-stone-faint)" }}>×</button>
+              </div>
+            )}
+            {/* Move to processing if not already */}
+            {session.status === "in_progress" && processes.length > 0 && (
+              <button onClick={() => updateStatus("processing")} disabled={statusUpdating}
+                style={actionBtnStyle("var(--brass)")}>
+                Start Processing
+              </button>
+            )}
+            {/* Done Processing — only when all processes complete */}
+            {session.status === "processing" && allProcessesComplete && (
+              <button onClick={() => updateStatus("finishing")} disabled={statusUpdating}
+                style={actionBtnStyle("var(--garnet)")}>
+                Done Processing
+              </button>
+            )}
+            {/* Skip to finishing if no processes */}
+            {session.status === "processing" && processes.length === 0 && (
+              <button onClick={() => updateStatus("finishing")} disabled={statusUpdating}
+                style={actionBtnStyle("var(--garnet)")}>
+                Done
+              </button>
+            )}
           </>
         )}
         {session.status === "finishing" && (
@@ -515,20 +757,15 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
           </button>
         )}
 
-        {/* Help button — always visible during active service */}
+        {/* Help button — structured task request */}
         {!["checked_in", "complete", "needs_help"].includes(session.status) && (
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
-            <input
-              value={helpNote}
-              onChange={e => setHelpNote(e.target.value)}
-              placeholder="Note..."
-              style={{
-                width: "100px", padding: "4px 8px", borderRadius: "4px",
-                border: "1px solid var(--stone-warm)", background: "var(--stone-light)",
-                fontSize: "10px", color: "var(--text-on-stone)",
-              }}
-            />
-            <button onClick={requestHelp} disabled={helpRequesting}
+          <div style={{ marginLeft: "auto", position: "relative" }}>
+            {helpSent && (
+              <span style={{ fontSize: "9px", color: "var(--status-confirmed)", fontWeight: 600, marginRight: "8px" }}>
+                Task sent to floor ✓
+              </span>
+            )}
+            <button onClick={() => setHelpOpen(!helpOpen)}
               style={{
                 padding: "4px 10px", borderRadius: "4px", fontSize: "9px",
                 fontWeight: 700, background: "var(--garnet-ruby)", color: "white",
@@ -537,10 +774,185 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
               }}>
               Help
             </button>
+            {helpOpen && (
+              <div style={{
+                position: "absolute", bottom: "100%", right: 0, marginBottom: "4px",
+                background: "var(--stone-card)", borderRadius: "6px", padding: "10px",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.18)", border: "1px solid var(--stone-mid)",
+                minWidth: "200px", zIndex: 50,
+              }}>
+                <p style={{ fontSize: "8px", fontWeight: 700, color: "var(--text-on-stone-faint)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "6px" }}>
+                  What do you need?
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "3px", marginBottom: "6px" }}>
+                  {HELP_OPTIONS.map(opt => (
+                    <button key={opt.type} onClick={() => setHelpType(opt.type as ServiceTaskType)}
+                      style={{
+                        padding: "4px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 500,
+                        background: helpType === opt.type ? "var(--garnet-wash)" : "transparent",
+                        color: helpType === opt.type ? "var(--garnet)" : "var(--text-on-stone)",
+                        border: helpType === opt.type ? "1px solid var(--garnet)" : "1px solid var(--stone-mid)",
+                        cursor: "pointer", textAlign: "left",
+                      }}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <input value={helpNote} onChange={e => setHelpNote(e.target.value)}
+                  placeholder="Additional note..." style={{ ...inputStyle(), width: "100%", marginBottom: "6px" }} />
+                <button onClick={requestHelp} disabled={helpRequesting}
+                  style={{ ...actionBtnStyle("var(--garnet-ruby)"), width: "100%" }}>
+                  {helpRequesting ? "Sending..." : "Send Request"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+// ── Help Options ─────────────────────────────────────────────────────
+const HELP_OPTIONS = [
+  { type: "get_supplies", label: "Need supplies" },
+  { type: "check_processing", label: "Check processing" },
+  { type: "mix_color", label: "Mix color" },
+  { type: "rinse", label: "Rinse" },
+  { type: "shampoo", label: "Shampoo" },
+  { type: "custom", label: "Other (custom)" },
+];
+
+// ── Process Timer ────────────────────────────────────────────────────
+function ProcessTimer({ process, processes, onAction, onRemove }: {
+  process: ServiceProcess;
+  processes: ServiceProcess[];
+  onAction: (action: "start" | "pause" | "complete") => void;
+  onRemove: () => void;
+}) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (process.status !== "active" || !process.startedAt) return;
+    const tick = () => {
+      setElapsed(Math.floor((Date.now() - new Date(process.startedAt!).getTime()) / 1000));
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [process.status, process.startedAt]);
+
+  const totalSec = process.durationMinutes * 60;
+  const remaining = Math.max(0, totalSec - elapsed);
+  const overtime = elapsed > totalSec && totalSec > 0;
+  const isBlocked = process.dependsOn ? processes.find(p => p.id === process.dependsOn)?.status !== "complete" : false;
+
+  const statusColor = process.status === "complete" ? "var(--status-confirmed)"
+    : process.status === "active" ? (overtime ? "var(--garnet-ruby)" : "var(--brass)")
+    : process.status === "paused" ? "var(--stone-shadow)"
+    : "var(--stone-deep)";
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: "6px", padding: "5px 8px",
+      borderRadius: "4px", background: process.status === "active" ? (overtime ? "var(--garnet-wash)" : "var(--brass-glow)") : "var(--stone-light)",
+      border: `1px solid ${process.status === "active" ? (overtime ? "rgba(117,18,18,0.2)" : "var(--brass-soft)") : "var(--stone-mid)"}`,
+    }}>
+      {isBlocked && <span style={{ fontSize: "10px", color: "var(--stone-shadow)" }} title="Waiting for previous process">🔒</span>}
+      <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--text-on-stone)", flex: 1 }}>
+        {process.name}
+      </span>
+      {process.status === "active" && (
+        <span style={{ fontSize: "11px", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: statusColor }}>
+          {overtime ? "+" : ""}{formatTimer(overtime ? elapsed - totalSec : remaining)}
+        </span>
+      )}
+      {process.status === "complete" && (
+        <span style={{ fontSize: "9px", fontWeight: 600, color: statusColor }}>✓</span>
+      )}
+      {process.status === "waiting" && (
+        <span style={{ fontSize: "9px", color: "var(--text-on-stone-ghost)" }}>{process.durationMinutes}m</span>
+      )}
+      {/* Action buttons */}
+      {process.status === "waiting" && !isBlocked && (
+        <button onClick={() => onAction("start")} style={tinyBtnStyle("var(--garnet)")}>Start</button>
+      )}
+      {process.status === "active" && (
+        <>
+          <button onClick={() => onAction("pause")} style={tinyBtnStyle("var(--stone-shadow)")}>Pause</button>
+          <button onClick={() => onAction("complete")} style={tinyBtnStyle("var(--garnet)")}>Done</button>
+        </>
+      )}
+      {process.status === "paused" && (
+        <button onClick={() => onAction("start")} style={tinyBtnStyle("var(--brass)")}>Resume</button>
+      )}
+      {process.status === "waiting" && (
+        <button onClick={onRemove} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "10px", color: "var(--text-on-stone-ghost)", padding: "0 2px" }}>×</button>
+      )}
+    </div>
+  );
+}
+
+function tinyBtnStyle(bg: string): React.CSSProperties {
+  return {
+    padding: "2px 8px", borderRadius: "3px", fontSize: "8px", fontWeight: 700,
+    background: bg, color: "white", border: "none", cursor: "pointer",
+    textTransform: "uppercase", letterSpacing: "0.04em",
+  };
+}
+
+function inputStyle(): React.CSSProperties {
+  return {
+    padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--stone-warm)",
+    background: "var(--stone-light)", fontSize: "10px", color: "var(--text-on-stone)",
+    fontFamily: "'DM Sans', sans-serif", width: "80px",
+  };
+}
+
+// ── Photo Upload Box ─────────────────────────────────────────────────
+function PhotoUploadBox({ label, onUpload, clientId, photoType, disabled }: {
+  label: string;
+  onUpload: (url: string) => void;
+  clientId: string;
+  photoType: string;
+  disabled?: boolean;
+}) {
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("photo", file);
+      formData.append("photo_type", photoType);
+      formData.append("client_id", clientId);
+      const res = await fetch("/api/photos/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        onUpload(data.url);
+      }
+    } catch {}
+    setUploading(false);
+  };
+
+  return (
+    <label style={{
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      aspectRatio: "3/4", borderRadius: "6px", border: "2px dashed var(--stone-warm)",
+      background: "var(--stone-light)", cursor: disabled ? "not-allowed" : "pointer",
+      opacity: disabled ? 0.4 : 1,
+    }}>
+      <input type="file" accept="image/*" capture="environment" onChange={handleFile}
+        disabled={disabled || uploading} style={{ display: "none" }} />
+      <span style={{ fontSize: "20px", color: "var(--stone-shadow)", marginBottom: "4px" }}>
+        {uploading ? "..." : "📷"}
+      </span>
+      <span style={{ fontSize: "9px", fontWeight: 600, color: "var(--text-on-stone-faint)", textTransform: "uppercase" }}>
+        {uploading ? "Uploading" : label}
+      </span>
+    </label>
   );
 }
 

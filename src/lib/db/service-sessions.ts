@@ -1,5 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import type { ServiceSession, ServiceSessionRow, ServiceSessionStatus } from "@/lib/types";
+import type { ServiceSession, ServiceSessionRow, ServiceSessionStatus, ServiceProcess, ServiceProcessStatus } from "@/lib/types";
 import { serviceSessionRowToModel, SERVICE_SESSION_TRANSITIONS } from "@/lib/types";
 import { getWorkspaceId } from "./get-workspace-id";
 import { publishEvent } from "@/lib/kernel";
@@ -186,4 +186,138 @@ export async function completeSession(
   if (afterPhotoUrl) extras.after_photo_url = afterPhotoUrl;
 
   return updateSessionStatus(sessionId, workspaceId, "complete", extras);
+}
+
+// ── Process Management ──────────────────────────────────────────────
+
+export async function addProcess(
+  sessionId: string,
+  workspaceId: string,
+  process: Omit<ServiceProcess, "id" | "status" | "startedAt" | "completedAt">
+): Promise<ServiceSession | null> {
+  const admin = createSupabaseAdminClient();
+
+  const { data: session } = await admin
+    .from("service_sessions")
+    .select("processes")
+    .eq("id", sessionId)
+    .eq("workspace_id", workspaceId)
+    .single();
+
+  if (!session) return null;
+
+  const processes: ServiceProcess[] = session.processes || [];
+  const newProcess: ServiceProcess = {
+    id: crypto.randomUUID(),
+    name: process.name,
+    durationMinutes: process.durationMinutes,
+    status: "waiting",
+    startedAt: null,
+    completedAt: null,
+    notes: process.notes || "",
+    sequence: process.sequence,
+    dependsOn: process.dependsOn || null,
+  };
+
+  processes.push(newProcess);
+  processes.sort((a, b) => a.sequence - b.sequence);
+
+  const { data, error } = await admin
+    .from("service_sessions")
+    .update({ processes, updated_at: new Date().toISOString() })
+    .eq("id", sessionId)
+    .eq("workspace_id", workspaceId)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return serviceSessionRowToModel(data as ServiceSessionRow);
+}
+
+export async function updateProcess(
+  sessionId: string,
+  workspaceId: string,
+  processId: string,
+  action: "start" | "pause" | "complete",
+  notes?: string
+): Promise<ServiceSession | null> {
+  const admin = createSupabaseAdminClient();
+
+  const { data: session } = await admin
+    .from("service_sessions")
+    .select("processes")
+    .eq("id", sessionId)
+    .eq("workspace_id", workspaceId)
+    .single();
+
+  if (!session) return null;
+
+  const processes: ServiceProcess[] = session.processes || [];
+  const idx = processes.findIndex(p => p.id === processId);
+  if (idx === -1) return null;
+
+  const process = processes[idx];
+  const now = new Date().toISOString();
+
+  // Check dependency — can't start if depends_on isn't complete
+  if (action === "start" && process.dependsOn) {
+    const dep = processes.find(p => p.id === process.dependsOn);
+    if (dep && dep.status !== "complete") return null;
+  }
+
+  if (action === "start") {
+    process.status = "active";
+    process.startedAt = now;
+  } else if (action === "pause") {
+    process.status = "paused";
+  } else if (action === "complete") {
+    process.status = "complete";
+    process.completedAt = now;
+  }
+
+  if (notes !== undefined) process.notes = notes;
+  processes[idx] = process;
+
+  const { data, error } = await admin
+    .from("service_sessions")
+    .update({ processes, updated_at: now })
+    .eq("id", sessionId)
+    .eq("workspace_id", workspaceId)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return serviceSessionRowToModel(data as ServiceSessionRow);
+}
+
+export async function removeProcess(
+  sessionId: string,
+  workspaceId: string,
+  processId: string
+): Promise<ServiceSession | null> {
+  const admin = createSupabaseAdminClient();
+
+  const { data: session } = await admin
+    .from("service_sessions")
+    .select("processes")
+    .eq("id", sessionId)
+    .eq("workspace_id", workspaceId)
+    .single();
+
+  if (!session) return null;
+
+  const processes: ServiceProcess[] = (session.processes || []).filter(
+    (p: ServiceProcess) => p.id !== processId
+  );
+
+  const { data, error } = await admin
+    .from("service_sessions")
+    .update({ processes, updated_at: new Date().toISOString() })
+    .eq("id", sessionId)
+    .eq("workspace_id", workspaceId)
+    .select("*")
+    .single();
+
+  if (error || !data) return null;
+  return serviceSessionRowToModel(data as ServiceSessionRow);
 }
