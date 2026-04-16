@@ -50,11 +50,28 @@ export async function GET(
     ]);
 
     const client = clientResult.data;
-    if (!client) return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    if (!client) {
+      console.error("Cheat sheet: client not found", clientId, workspaceId, clientResult.error);
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
 
     const appointments = appointmentsResult.data || [];
     const formulas = formulasResult.data || [];
     const inspo = (inspoResult as { data: Record<string, unknown>[] | null }).data || [];
+
+    // Debug: log what data we found
+    console.log("CHEAT-SHEET-DEBUG:", {
+      clientId,
+      clientNotes: client.notes,
+      clientTags: client.tags,
+      clientPronouns: client.pronouns,
+      appointmentCount: appointments.length,
+      formulaCount: formulas.length,
+      inspoCount: inspo.length,
+      formulaRawNotes: formulas.map((f: Record<string, unknown>) => f.raw_notes),
+      appointmentErrors: appointmentsResult.error,
+      formulaErrors: formulasResult.error,
+    });
 
     // Build raw cheat sheet from actual data — works without AI
     const completedAppts = appointments.filter((a: Record<string, unknown>) => a.status === "completed" || a.status === "scheduled");
