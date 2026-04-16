@@ -5,10 +5,10 @@ import { getWorkspaceId } from "@/lib/db/get-workspace-id";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ clientId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { clientId } = await params;
+    const clientId = (await params).id;
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
