@@ -111,14 +111,14 @@ export function TranslationsPage() {
     return (
       <div className="space-y-8">
         <header>
-          <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#4A3C2A", marginBottom: "4px" }}>
+          <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--text-on-stone-dim)", marginBottom: "4px" }}>
             Translation Engine
           </p>
-          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "#2C2C24", fontWeight: 300 }}>
+          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "var(--text-on-stone)", fontWeight: 300 }}>
             Formula Translations
           </h2>
         </header>
-        <p style={{ fontSize: "12px", color: "#5C5347", textAlign: "center", padding: "48px 0" }}>
+        <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", textAlign: "center", padding: "48px 0" }}>
           Loading translation data...
         </p>
       </div>
@@ -129,13 +129,13 @@ export function TranslationsPage() {
     <div className="space-y-8">
       {/* Header */}
       <header>
-        <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#4A3C2A", marginBottom: "4px" }}>
+        <p style={{ fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--text-on-stone-dim)", marginBottom: "4px" }}>
           Translation Engine
         </p>
-        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "#2C2C24", fontWeight: 300 }}>
+        <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: "26px", color: "var(--text-on-stone)", fontWeight: 300 }}>
           Formula Translations
         </h2>
-        <p style={{ fontSize: "12px", color: "#5C5347", marginTop: "4px" }}>
+        <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", marginTop: "4px" }}>
           Infrastructure dashboard — data capture and catalog management
         </p>
       </header>
@@ -154,14 +154,14 @@ export function TranslationsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Palette className="w-5 h-5" style={{ color: "#4A3C2A" }} />
+            <Palette className="w-5 h-5" style={{ color: "var(--text-on-stone-dim)" }} />
             Color Line Catalog
           </CardTitle>
         </CardHeader>
         <CardContent>
           {Object.entries(brandGroups).map(([brand, lines]) => (
             <div key={brand} style={{ marginBottom: "16px" }}>
-              <p style={{ fontSize: "11px", fontWeight: 600, color: "#2C2C24", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "8px" }}>
+              <p style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-on-stone)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "8px" }}>
                 {brand}
               </p>
               {lines.map((line) => (
@@ -176,11 +176,11 @@ export function TranslationsPage() {
                     }}
                   >
                     {expandedLine === line.id
-                      ? <ChevronDown className="w-3.5 h-3.5" style={{ color: "#5C5347" }} />
-                      : <ChevronRight className="w-3.5 h-3.5" style={{ color: "#5C5347" }} />
+                      ? <ChevronDown className="w-3.5 h-3.5" style={{ color: "var(--text-on-stone-faint)" }} />
+                      : <ChevronRight className="w-3.5 h-3.5" style={{ color: "var(--text-on-stone-faint)" }} />
                     }
-                    <span style={{ fontSize: "12px", color: "#2C2C24", fontWeight: 500 }}>{line.lineName}</span>
-                    <span style={{ fontSize: "9px", color: "#5C5347", marginLeft: "4px" }}>
+                    <span style={{ fontSize: "12px", color: "var(--text-on-stone)", fontWeight: 500 }}>{line.lineName}</span>
+                    <span style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", marginLeft: "4px" }}>
                       {line.type} · {line.shadeCount} shades
                     </span>
                   </button>
@@ -193,12 +193,12 @@ export function TranslationsPage() {
                             style={{
                               padding: "4px 8px", borderRadius: "4px",
                               background: "rgba(255,255,255,0.4)",
-                              fontSize: "10px", color: "#2C2C24",
+                              fontSize: "10px", color: "var(--text-on-stone)",
                             }}
                           >
                             <span style={{ fontWeight: 500 }}>{s.shadeCode}</span>
-                            <span style={{ color: "#5C5347", marginLeft: "6px" }}>{s.shadeName}</span>
-                            <span style={{ color: "#7A7060", marginLeft: "6px" }}>L{s.level} {s.primaryTone}{s.secondaryTone ? `/${s.secondaryTone}` : ""}</span>
+                            <span style={{ color: "var(--text-on-stone-faint)", marginLeft: "6px" }}>{s.shadeName}</span>
+                            <span style={{ color: "var(--text-muted)", marginLeft: "6px" }}>L{s.level} {s.primaryTone}{s.secondaryTone ? `/${s.secondaryTone}` : ""}</span>
                           </div>
                         ))}
                       </div>
@@ -209,7 +209,7 @@ export function TranslationsPage() {
             </div>
           ))}
           {colorLines.length === 0 && (
-            <p style={{ fontSize: "12px", color: "#5C5347", textAlign: "center", padding: "24px 0" }}>
+            <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", textAlign: "center", padding: "24px 0" }}>
               No color lines loaded. Run the seed migration to populate.
             </p>
           )}
@@ -223,7 +223,7 @@ export function TranslationsPage() {
         </CardHeader>
         <CardContent>
           {outcomes.length === 0 ? (
-            <p style={{ fontSize: "12px", color: "#5C5347", textAlign: "center", padding: "24px 0" }}>
+            <p style={{ fontSize: "12px", color: "var(--text-on-stone-faint)", textAlign: "center", padding: "24px 0" }}>
               No translation outcomes recorded yet. Outcomes are auto-captured when services are completed with formulas.
             </p>
           ) : (
@@ -239,17 +239,17 @@ export function TranslationsPage() {
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    {o.outcomeSuccess === true && <CheckCircle className="w-4 h-4" style={{ color: "#4A7C59" }} />}
-                    {o.outcomeSuccess === false && <XCircle className="w-4 h-4" style={{ color: "#8B3A3A" }} />}
-                    {o.outcomeSuccess === null && <Clock className="w-4 h-4" style={{ color: "#5C5347" }} />}
+                    {o.outcomeSuccess === true && <CheckCircle className="w-4 h-4" style={{ color: "var(--status-confirmed)" }} />}
+                    {o.outcomeSuccess === false && <XCircle className="w-4 h-4" style={{ color: "var(--garnet)" }} />}
+                    {o.outcomeSuccess === null && <Clock className="w-4 h-4" style={{ color: "var(--text-on-stone-faint)" }} />}
                     <div>
-                      <p style={{ fontSize: "11px", color: "#2C2C24", fontWeight: 500 }}>
+                      <p style={{ fontSize: "11px", color: "var(--text-on-stone)", fontWeight: 500 }}>
                         {o.outcomeSuccess === true ? "Success" : o.outcomeSuccess === false ? "Needs Adjustment" : "Pending Feedback"}
                       </p>
                       {o.stylistFeedback && (
-                        <p style={{ fontSize: "9px", color: "#5C5347" }}>{o.stylistFeedback}</p>
+                        <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)" }}>{o.stylistFeedback}</p>
                       )}
-                      <p style={{ fontSize: "9px", color: "#7A7060" }}>{formatDate(o.createdAt)}</p>
+                      <p style={{ fontSize: "9px", color: "var(--text-muted)" }}>{formatDate(o.createdAt)}</p>
                     </div>
                   </div>
                 </div>
@@ -280,14 +280,14 @@ function QualityBar({ label, count, total, pct }: { label: string; count: number
   return (
     <div>
       <div className="flex justify-between" style={{ marginBottom: "4px" }}>
-        <span style={{ fontSize: "11px", color: "#2C2C24" }}>{label}</span>
-        <span style={{ fontSize: "11px", color: "#5C5347" }}>{count}/{total} ({pct}%)</span>
+        <span style={{ fontSize: "11px", color: "var(--text-on-stone)" }}>{label}</span>
+        <span style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>{count}/{total} ({pct}%)</span>
       </div>
       <div style={{ height: "6px", borderRadius: "3px", background: "rgba(0,0,0,0.06)" }}>
         <div
           style={{
             height: "100%", borderRadius: "3px", width: `${pct}%`,
-            background: pct > 50 ? "#4A7C59" : pct > 20 ? "#B8860B" : "#8B3A3A",
+            background: pct > 50 ? "var(--status-confirmed)" : pct > 20 ? "var(--brass)" : "var(--garnet)",
             transition: "width 0.3s ease",
           }}
         />

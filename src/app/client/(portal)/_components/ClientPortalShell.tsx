@@ -19,7 +19,7 @@ const navTabs = [
 ] as const;
 
 function NavIcon({ icon, active }: { icon: string; active: boolean }) {
-  const color = active ? "#C4AB70" : "rgba(255,255,255,0.45)";
+  const color = active ? "var(--brass)" : "rgba(255,255,255,0.45)";
   const size = 24;
 
   switch (icon) {
@@ -84,21 +84,21 @@ export function ClientPortalShell({ clientFirstName, stylistName, children }: Pr
   ];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#F7F4EF" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--stone-lightest)" }}>
       {/* Header */}
       <header
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5"
         style={{
           height: "60px",
-          background: "#2C2C24",
+          background: "var(--text-on-stone)",
           boxShadow: "0 1px 8px rgba(0,0,0,0.15)",
         }}
       >
-        <span style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", color: "#F7F4EF", letterSpacing: "-0.02em" }}>
+        <span style={{ fontFamily: "'Fraunces', serif", fontSize: "22px", color: "var(--stone-lightest)", letterSpacing: "-0.02em" }}>
           Opelle
         </span>
         <div className="text-right">
-          <span style={{ fontSize: "14px", color: "#F7F4EF", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+          <span style={{ fontSize: "14px", color: "var(--stone-lightest)", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
             {clientFirstName}
           </span>
           <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", display: "block", fontFamily: "'DM Sans', sans-serif" }}>
@@ -132,7 +132,7 @@ export function ClientPortalShell({ clientFirstName, stylistName, children }: Pr
         style={{
           bottom: "72px",
           transform: moreOpen ? "translateY(0)" : "translateY(100%)",
-          background: "#FFFFFF",
+          background: "var(--stone-lightest)",
           borderTopLeftRadius: "20px",
           borderTopRightRadius: "20px",
           maxWidth: "500px",
@@ -141,7 +141,7 @@ export function ClientPortalShell({ clientFirstName, stylistName, children }: Pr
         }}
       >
         <div className="px-5 py-4">
-          <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "#D5D0C7" }} />
+          <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--stone-warm)" }} />
           {moreItems.map((item) => (
             <Link
               key={item.href}
@@ -150,7 +150,7 @@ export function ClientPortalShell({ clientFirstName, stylistName, children }: Pr
               className="flex items-center gap-3 py-3.5 px-3 rounded-xl transition-colors"
               style={{
                 textDecoration: "none",
-                color: pathname.startsWith(item.href) ? "#C4AB70" : "#3D3D35",
+                color: pathname.startsWith(item.href) ? "var(--brass)" : "var(--olive-mid)",
                 fontSize: "16px",
                 fontWeight: pathname.startsWith(item.href) ? 500 : 400,
                 fontFamily: "'DM Sans', sans-serif",
@@ -160,7 +160,7 @@ export function ClientPortalShell({ clientFirstName, stylistName, children }: Pr
               {item.label}
             </Link>
           ))}
-          <div style={{ height: "1px", background: "#EDE9E1", margin: "8px 0" }} />
+          <div style={{ height: "1px", background: "var(--stone-light)", margin: "8px 0" }} />
           <button
             onClick={() => {
               setMoreOpen(false);
@@ -170,13 +170,13 @@ export function ClientPortalShell({ clientFirstName, stylistName, children }: Pr
             style={{
               background: "none",
               border: "none",
-              color: "#9E5A5A",
+              color: "var(--garnet-blush)",
               fontSize: "16px",
               fontFamily: "'DM Sans', sans-serif",
               cursor: "pointer",
             }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9E5A5A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--garnet-blush)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" x2="9" y1="12" y2="12" />
@@ -191,7 +191,7 @@ export function ClientPortalShell({ clientFirstName, stylistName, children }: Pr
         className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around"
         style={{
           height: "72px",
-          background: "#2C2C24",
+          background: "var(--text-on-stone)",
           borderTop: "1px solid rgba(255,255,255,0.08)",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
@@ -211,7 +211,7 @@ export function ClientPortalShell({ clientFirstName, stylistName, children }: Pr
                 <span style={{
                   fontSize: "11px",
                   fontWeight: active ? 600 : 400,
-                  color: active ? "#C4AB70" : "rgba(255,255,255,0.45)",
+                  color: active ? "var(--brass)" : "rgba(255,255,255,0.45)",
                   fontFamily: "'DM Sans', sans-serif",
                 }}>
                   {tab.label}
@@ -232,7 +232,7 @@ export function ClientPortalShell({ clientFirstName, stylistName, children }: Pr
               <span style={{
                 fontSize: "11px",
                 fontWeight: active ? 600 : 400,
-                color: active ? "#C4AB70" : "rgba(255,255,255,0.45)",
+                color: active ? "var(--brass)" : "rgba(255,255,255,0.45)",
                 fontFamily: "'DM Sans', sans-serif",
               }}>
                 {tab.label}
@@ -246,7 +246,7 @@ export function ClientPortalShell({ clientFirstName, stylistName, children }: Pr
 }
 
 function MoreIcon({ icon, active }: { icon: string; active: boolean }) {
-  const color = active ? "#C4AB70" : "#8A8778";
+  const color = active ? "var(--brass)" : "var(--text-muted)";
   const size = 22;
 
   switch (icon) {

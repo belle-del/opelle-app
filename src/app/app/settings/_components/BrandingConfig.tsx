@@ -4,21 +4,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, Check, Palette, Type, Flower2, Image } from "lucide-react";
 
-const BRASS = "#C4AB70";
-const STONE = "#E5E3D3";
-const STONE_MID = "#D4D0C0";
-const TEXT_MAIN = "#2C2C24";
-const TEXT_FAINT = "#5C5347";
+const BRASS = "var(--brass)";
+const STONE = "var(--stone-light)";
+const STONE_MID = "var(--stone-deep)";
+const TEXT_MAIN = "var(--text-on-stone)";
+const TEXT_FAINT = "var(--text-on-stone-faint)";
 
 const PLANT_OPTIONS = [
   { key: "olive-branch", label: "Olive Branch" },
-  { key: "monstera", label: "Monstera" },
-  { key: "fern", label: "Fern" },
-  { key: "succulent", label: "Succulent" },
-  { key: "cherry-blossom", label: "Cherry Blossom" },
-  { key: "eucalyptus", label: "Eucalyptus" },
-  { key: "palm", label: "Palm" },
-  { key: "fiddle-leaf", label: "Fiddle Leaf" },
 ];
 
 const BACKGROUND_OPTIONS = [
@@ -40,10 +33,10 @@ const TYPOGRAPHY_OPTIONS = [
 ];
 
 const DEFAULT_COLORS = {
-  primary: "#5C5346",
-  secondary: "#A69F91",
-  accent: "#8B3A3A",
-  highlight: "#B8956E",
+  primary: "#6E6960",
+  secondary: "#F1EFE0",
+  accent: "#440606",
+  highlight: "#C4AB70",
 };
 
 type Theme = {

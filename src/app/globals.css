@@ -74,6 +74,7 @@
   --text-on-stone-dim:   #1A1A1A;
   --text-on-stone-faint: #3B3C23;
   --text-on-stone-ghost: #9B988F;
+  --text-muted: #7A7A72;
 
   /* Status colors */
   --status-confirmed: #8FADC8;
@@ -103,7 +104,7 @@
 }
 
 body {
-  background-color: #ABA499;
+  background-color: var(--bark-mid);
   color: var(--text-on-bark);
   font-family: 'DM Sans', sans-serif;
   font-feature-settings: "rlig" 1, "calt" 1;

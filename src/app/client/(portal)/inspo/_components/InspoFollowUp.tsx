@@ -126,7 +126,7 @@ export function InspoFollowUp({
             style={{
               width: "48px",
               height: "48px",
-              color: "var(--status-confirmed, #4A7C59)",
+              color: "var(--status-confirmed)",
               margin: "0 auto 16px",
             }}
           />
@@ -134,13 +134,13 @@ export function InspoFollowUp({
             style={{
               fontFamily: "'Fraunces', serif",
               fontSize: "18px",
-              color: "#2C2C24",
+              color: "var(--text-on-stone)",
               marginBottom: "8px",
             }}
           >
             All done!
           </h3>
-          <p style={{ fontSize: "13px", color: "#7A7A72", marginBottom: "20px" }}>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>
             Your responses have been sent to your stylist.
           </p>
           <Button onClick={onComplete}>Back to Inspo</Button>
@@ -158,11 +158,11 @@ export function InspoFollowUp({
             style={{
               width: "32px",
               height: "32px",
-              color: "var(--brass, #C4AB70)",
+              color: "var(--brass)",
               margin: "0 auto 12px",
             }}
           />
-          <p style={{ fontSize: "13px", color: "#7A7A72" }}>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
             Checking for follow-up questions...
           </p>
         </CardContent>
@@ -179,11 +179,11 @@ export function InspoFollowUp({
             style={{
               width: "48px",
               height: "48px",
-              color: "var(--status-confirmed, #4A7C59)",
+              color: "var(--status-confirmed)",
               margin: "0 auto 16px",
             }}
           />
-          <p style={{ fontSize: "13px", color: "#7A7A72", marginBottom: "20px" }}>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>
             Your inspo has been submitted.
           </p>
           <Button onClick={onComplete}>Back to Inspo</Button>
@@ -201,7 +201,7 @@ export function InspoFollowUp({
             flex: 1,
             height: "3px",
             borderRadius: "2px",
-            background: "#E8E0D0",
+            background: "var(--stone-warm)",
           }}
         >
           <div
@@ -209,12 +209,12 @@ export function InspoFollowUp({
               width: `${((currentIndex + 1) / totalQuestions) * 100}%`,
               height: "100%",
               borderRadius: "2px",
-              background: "var(--brass, #C4AB70)",
+              background: "var(--brass)",
               transition: "width 0.3s ease",
             }}
           />
         </div>
-        <span style={{ fontSize: "11px", color: "#7A7A72" }}>
+        <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
           {currentIndex + 1} / {totalQuestions}
         </span>
       </div>
@@ -236,7 +236,7 @@ export function InspoFollowUp({
                 borderRadius: "8px",
                 overflow: "hidden",
                 aspectRatio: "1",
-                border: photoIdx === i ? "2px solid var(--brass, #C4AB70)" : "1px solid #E8E0D0",
+                border: photoIdx === i ? "2px solid var(--brass)" : "1px solid var(--stone-warm)",
               }}
             >
               <img
@@ -275,7 +275,7 @@ export function InspoFollowUp({
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontSize: "17px",
-              color: "#2C2C24",
+              color: "var(--text-on-stone)",
               lineHeight: "1.5",
               marginBottom: "16px",
             }}
@@ -298,17 +298,17 @@ export function InspoFollowUp({
                     textAlign: "left",
                     padding: "12px 16px",
                     borderRadius: "8px",
-                    border: "1px solid #E8E0D0",
-                    background: "#FAF8F3",
+                    border: "1px solid var(--stone-warm)",
+                    background: "var(--stone-lightest)",
                     fontSize: "13px",
-                    color: "#2C2C24",
+                    color: "var(--text-on-stone)",
                     cursor: "pointer",
                     transition: "all 0.15s",
                   }}
                 >
                   {option}
                   <ChevronRight
-                    style={{ width: "14px", height: "14px", color: "#7A7A72", flexShrink: 0 }}
+                    style={{ width: "14px", height: "14px", color: "var(--text-muted)", flexShrink: 0 }}
                   />
                 </button>
               ))}
@@ -322,10 +322,10 @@ export function InspoFollowUp({
                   textAlign: "center",
                   padding: "10px 16px",
                   borderRadius: "8px",
-                  border: "1px dashed #D4C9B5",
+                  border: "1px dashed var(--stone-deep)",
                   background: "transparent",
                   fontSize: "12px",
-                  color: "#7A7A72",
+                  color: "var(--text-muted)",
                   cursor: "pointer",
                 }}
               >
@@ -345,9 +345,9 @@ export function InspoFollowUp({
                   width: "100%",
                   padding: "12px",
                   borderRadius: "8px",
-                  border: "1px solid #E8E0D0",
+                  border: "1px solid var(--stone-warm)",
                   fontSize: "13px",
-                  color: "#2C2C24",
+                  color: "var(--text-on-stone)",
                   resize: "vertical",
                 }}
                 autoFocus

@@ -59,13 +59,6 @@ export const TYPOGRAPHY_PRESETS: Record<string, { heading: string; body: string;
 
 export const PLANT_PRESETS: Record<string, string> = {
   "olive-branch": "/textures/olive-branch.svg",
-  monstera: "/textures/monstera.svg",
-  fern: "/textures/fern.svg",
-  succulent: "/textures/succulent.svg",
-  "cherry-blossom": "/textures/cherry-blossom.svg",
-  eucalyptus: "/textures/eucalyptus.svg",
-  palm: "/textures/palm.svg",
-  "fiddle-leaf": "/textures/fiddle-leaf.svg",
 };
 
 export const BACKGROUND_PRESETS: Record<string, { label: string; opacity: number }> = {

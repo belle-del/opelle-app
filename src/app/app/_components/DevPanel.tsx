@@ -16,8 +16,8 @@ const MODE_COLORS: Record<ViewMode, string> = {
 
 const LEVEL_COLORS: Record<string, string> = {
   log:   "rgba(241,239,224,0.6)",
-  info:  "#8FADC8",
-  warn:  "#C4AB70",
+  info:  "var(--blue)",
+  warn:  "var(--brass)",
   error: "#C47A7A",
 };
 
@@ -168,8 +168,8 @@ export function DevPanel({ userId, workspaceId, workspaceName }: {
                 letterSpacing: "0.08em",
                 background: "none",
                 border: "none",
-                borderBottom: tab === t ? "2px solid #C4AB70" : "2px solid transparent",
-                color: tab === t ? "#C4AB70" : "rgba(241,239,224,0.4)",
+                borderBottom: tab === t ? "2px solid var(--brass)" : "2px solid transparent",
+                color: tab === t ? "var(--brass)" : "rgba(241,239,224,0.4)",
                 cursor: "pointer",
                 transition: "color 0.15s",
               }}
@@ -317,7 +317,7 @@ function NetworkRow({ entry }: { entry: NetworkEntry }) {
       <span style={{
         fontSize: "9px",
         fontWeight: 600,
-        color: entry.method === "GET" ? "#8FADC8" : "#C4AB70",
+        color: entry.method === "GET" ? "var(--blue)" : "var(--brass)",
         minWidth: "36px",
         marginTop: "2px",
       }}>
@@ -371,7 +371,7 @@ function ContextTab({ userId, workspaceId, workspaceName, viewMode }: {
           <span style={{ fontSize: "10px", color: "rgba(241,239,224,0.4)", minWidth: "110px", fontFamily: "monospace" }}>
             {key}
           </span>
-          <span style={{ fontSize: "10px", color: "#C4AB70", fontFamily: "monospace", wordBreak: "break-all" }}>
+          <span style={{ fontSize: "10px", color: "var(--brass)", fontFamily: "monospace", wordBreak: "break-all" }}>
             {value ?? "\u2014"}
           </span>
         </div>

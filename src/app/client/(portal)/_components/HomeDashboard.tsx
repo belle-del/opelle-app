@@ -48,8 +48,8 @@ function formatShortDate(dateStr: string): string {
 }
 
 const categoryColors: Record<string, { bg: string; text: string }> = {
-  tip: { bg: "#C4AB70", text: "#2C2C24" },
-  product_spotlight: { bg: "#9E5A5A", text: "#FFF" },
+  tip: { bg: "var(--brass)", text: "var(--text-on-stone)" },
+  product_spotlight: { bg: "var(--garnet-blush)", text: "#FFF" },
   seasonal: { bg: "#6A8E66", text: "#FFF" },
 };
 
@@ -104,8 +104,8 @@ export function HomeDashboard({
               style={{
                 padding: "16px 20px",
                 borderRadius: "12px",
-                background: "linear-gradient(135deg, #C4AB70 0%, #B89D5C 100%)",
-                color: "#2C2C24",
+                background: "linear-gradient(135deg, var(--brass) 0%, var(--brass-warm) 100%)",
+                color: "var(--text-on-stone)",
               }}
             >
               <p style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, marginBottom: "6px" }}>
@@ -124,8 +124,8 @@ export function HomeDashboard({
                   style={{
                     padding: "8px 20px",
                     borderRadius: "8px",
-                    background: "#2C2C24",
-                    color: "#FAF8F3",
+                    background: "var(--text-on-stone)",
+                    color: "var(--stone-lightest)",
                     border: "none",
                     fontSize: "12px",
                     fontWeight: 600,
@@ -141,7 +141,7 @@ export function HomeDashboard({
                     padding: "8px 20px",
                     borderRadius: "8px",
                     background: "transparent",
-                    color: "#2C2C24",
+                    color: "var(--text-on-stone)",
                     border: "1px solid rgba(44,44,36,0.3)",
                     fontSize: "12px",
                     cursor: "pointer",
@@ -161,14 +161,14 @@ export function HomeDashboard({
           style={{
             fontFamily: "'Fraunces', serif",
             fontSize: "28px",
-            color: "#2C2C24",
+            color: "var(--text-on-stone)",
             marginBottom: "2px",
             letterSpacing: "-0.02em",
           }}
         >
           Hi, {clientFirstName}
         </h1>
-        <p style={{ fontSize: "15px", color: "#8A8778", fontFamily: "'DM Sans', sans-serif" }}>
+        <p style={{ fontSize: "15px", color: "var(--text-muted)", fontFamily: "'DM Sans', sans-serif" }}>
           Here&apos;s what&apos;s happening
         </p>
       </div>
@@ -186,7 +186,7 @@ export function HomeDashboard({
           <div className="flex items-center gap-2 mb-3">
             <span
               style={{
-                background: "#9E5A5A",
+                background: "var(--garnet-blush)",
                 color: "#FFF",
                 fontSize: "11px",
                 fontWeight: 600,
@@ -203,16 +203,16 @@ export function HomeDashboard({
             style={{
               fontFamily: "'Fraunces', serif",
               fontSize: "20px",
-              color: "#2C2C24",
+              color: "var(--text-on-stone)",
               marginBottom: "6px",
             }}
           >
             {nextAppointment.service_name}
           </h3>
-          <p style={{ fontSize: "15px", color: "#5C5A4F", marginBottom: "4px", fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ fontSize: "15px", color: "var(--text-on-stone-faint)", marginBottom: "4px", fontFamily: "'DM Sans', sans-serif" }}>
             {formatDate(nextAppointment.start_at)}
           </p>
-          <p style={{ fontSize: "13px", color: "#8A8778", fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)", fontFamily: "'DM Sans', sans-serif" }}>
             with {stylistName}
           </p>
         </div>
@@ -220,7 +220,7 @@ export function HomeDashboard({
         <Link href="/client/book" style={{ textDecoration: "none", display: "block" }}>
           <div
             style={{
-              background: "linear-gradient(135deg, #2C2C24 0%, #3D3D35 100%)",
+              background: "linear-gradient(135deg, var(--text-on-stone) 0%, var(--olive-mid) 100%)",
               borderRadius: "16px",
               padding: "28px 24px",
               textAlign: "center",
@@ -230,13 +230,13 @@ export function HomeDashboard({
               style={{
                 fontFamily: "'Fraunces', serif",
                 fontSize: "20px",
-                color: "#F7F4EF",
+                color: "var(--stone-lightest)",
                 marginBottom: "6px",
               }}
             >
               Ready for your next visit?
             </p>
-            <span style={{ fontSize: "14px", color: "#C4AB70", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+            <span style={{ fontSize: "14px", color: "var(--brass)", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
               Book an appointment →
             </span>
           </div>
@@ -256,18 +256,18 @@ export function HomeDashboard({
                 className="flex items-center gap-2 whitespace-nowrap"
                 style={{
                   background: "#FFFFFF",
-                  border: "1px solid #EDE9E1",
+                  border: "1px solid var(--stone-light)",
                   borderRadius: "24px",
                   padding: "8px 14px",
                   fontSize: "13px",
-                  color: "#3D3D35",
+                  color: "var(--olive-mid)",
                   fontFamily: "'DM Sans', sans-serif",
                   boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                 }}
               >
                 <NotificationIcon type={n.type} />
                 {n.title.length > 35 ? n.title.slice(0, 35) + "..." : n.title}
-                <span style={{ color: "#C4AB70", fontWeight: 600 }}>→</span>
+                <span style={{ color: "var(--brass)", fontWeight: 600 }}>→</span>
               </div>
             </Link>
           ))}
@@ -291,24 +291,24 @@ export function HomeDashboard({
             boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
           }}
         >
-          <p style={{ fontSize: "11px", color: "#8A8778", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: "8px", fontFamily: "'DM Sans', sans-serif" }}>
+          <p style={{ fontSize: "11px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: "8px", fontFamily: "'DM Sans', sans-serif" }}>
             Last visit
           </p>
           <div className="flex items-center justify-between">
             <div>
-              <p style={{ fontSize: "16px", color: "#2C2C24", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+              <p style={{ fontSize: "16px", color: "var(--text-on-stone)", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
                 {lastVisit.service_name}
               </p>
-              <p style={{ fontSize: "13px", color: "#8A8778", fontFamily: "'DM Sans', sans-serif" }}>
+              <p style={{ fontSize: "13px", color: "var(--text-muted)", fontFamily: "'DM Sans', sans-serif" }}>
                 {formatShortDate(lastVisit.start_at)}
               </p>
             </div>
             {hasSharedFormula && (
-              <div className="flex items-center gap-1.5" style={{ background: "rgba(196,171,112,0.12)", padding: "5px 10px", borderRadius: "20px" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4AB70" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <div className="flex items-center gap-1.5" style={{ background: "var(--brass-glow)", padding: "5px 10px", borderRadius: "20px" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brass)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                <span style={{ fontSize: "12px", color: "#C4AB70", fontWeight: 500, fontFamily: "'DM Sans', sans-serif" }}>Formula on file</span>
+                <span style={{ fontSize: "12px", color: "var(--brass)", fontWeight: 500, fontFamily: "'DM Sans', sans-serif" }}>Formula on file</span>
               </div>
             )}
           </div>
@@ -323,14 +323,14 @@ export function HomeDashboard({
               style={{
                 fontFamily: "'Fraunces', serif",
                 fontSize: "20px",
-                color: "#2C2C24",
+                color: "var(--text-on-stone)",
               }}
             >
               From Your Stylist
             </h2>
             <Link
               href="/client/content"
-              style={{ fontSize: "14px", color: "#C4AB70", textDecoration: "none", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}
+              style={{ fontSize: "14px", color: "var(--brass)", textDecoration: "none", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}
             >
               See all
             </Link>
@@ -363,7 +363,7 @@ export function HomeDashboard({
                       >
                         {categoryLabel(post.category)}
                       </span>
-                      <span style={{ fontSize: "12px", color: "#8A8778", fontFamily: "'DM Sans', sans-serif" }}>
+                      <span style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "'DM Sans', sans-serif" }}>
                         {post.publishedAt ? formatShortDate(post.publishedAt) : ""}
                       </span>
                     </div>
@@ -371,13 +371,13 @@ export function HomeDashboard({
                       style={{
                         fontFamily: "'Fraunces', serif",
                         fontSize: "16px",
-                        color: "#2C2C24",
+                        color: "var(--text-on-stone)",
                         marginBottom: "4px",
                       }}
                     >
                       {post.title}
                     </h3>
-                    <p style={{ fontSize: "14px", color: "#8A8778", lineHeight: "1.5", fontFamily: "'DM Sans', sans-serif" }}>
+                    <p style={{ fontSize: "14px", color: "var(--text-muted)", lineHeight: "1.5", fontFamily: "'DM Sans', sans-serif" }}>
                       {post.body.length > 100 ? post.body.slice(0, 100) + "..." : post.body}
                     </p>
                   </div>

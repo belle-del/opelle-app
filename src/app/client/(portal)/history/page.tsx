@@ -46,15 +46,15 @@ function formatTime(dateStr: string): string {
 function getStatusBadge(status: string) {
   switch (status) {
     case "completed":
-      return { label: "Completed", color: "#4A7C59", bg: "rgba(74, 124, 89, 0.1)" };
+      return { label: "Completed", color: "var(--status-confirmed)", bg: "rgba(74, 124, 89, 0.1)" };
     case "scheduled":
-      return { label: "Upcoming", color: "#C4AB70", bg: "rgba(196, 171, 112, 0.1)" };
+      return { label: "Upcoming", color: "var(--brass)", bg: "var(--brass-glow)" };
     case "pending_confirmation":
-      return { label: "Pending", color: "#9E5A5A", bg: "rgba(158, 90, 90, 0.1)" };
+      return { label: "Pending", color: "var(--garnet-blush)", bg: "rgba(158, 90, 90, 0.1)" };
     case "cancelled":
-      return { label: "Cancelled", color: "#7A7A72", bg: "rgba(122, 122, 114, 0.1)" };
+      return { label: "Cancelled", color: "var(--text-muted)", bg: "rgba(122, 122, 114, 0.1)" };
     default:
-      return { label: status, color: "#7A7A72", bg: "rgba(122, 122, 114, 0.1)" };
+      return { label: status, color: "var(--text-muted)", bg: "rgba(122, 122, 114, 0.1)" };
   }
 }
 
@@ -104,7 +104,7 @@ export default function HistoryPage() {
         style={{
           fontFamily: "'Fraunces', serif",
           fontSize: "24px",
-          color: "#2C2C24",
+          color: "var(--text-on-stone)",
         }}
       >
         History
@@ -113,7 +113,7 @@ export default function HistoryPage() {
       {loading ? (
         <Card>
           <CardContent className="py-8 text-center">
-            <p style={{ fontSize: "13px", color: "#7A7A72" }}>Loading your appointments...</p>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>Loading your appointments...</p>
           </CardContent>
         </Card>
       ) : appointments.length === 0 ? (
@@ -124,7 +124,7 @@ export default function HistoryPage() {
               height="32"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#C4AB70"
+              stroke="var(--brass)"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -139,13 +139,13 @@ export default function HistoryPage() {
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
                 fontSize: "16px",
-                color: "#2C2C24",
+                color: "var(--text-on-stone)",
                 marginBottom: "4px",
               }}
             >
               No appointments yet
             </p>
-            <p style={{ fontSize: "12px", color: "#7A7A72" }}>
+            <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>
               Your appointment history will appear here after your first visit.
             </p>
           </CardContent>
@@ -161,7 +161,7 @@ export default function HistoryPage() {
                   fontWeight: 600,
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
-                  color: "#C4AB70",
+                  color: "var(--brass)",
                   marginBottom: "10px",
                   fontFamily: "'DM Sans', sans-serif",
                 }}
@@ -180,7 +180,7 @@ export default function HistoryPage() {
                               style={{
                                 fontFamily: "'Fraunces', serif",
                                 fontSize: "16px",
-                                color: "#2C2C24",
+                                color: "var(--text-on-stone)",
                                 marginBottom: "4px",
                               }}
                             >
@@ -189,7 +189,7 @@ export default function HistoryPage() {
                             <p
                               style={{
                                 fontSize: "13px",
-                                color: "#5C5A4F",
+                                color: "var(--text-on-stone-faint)",
                                 fontFamily: "'DM Sans', sans-serif",
                               }}
                             >
@@ -198,7 +198,7 @@ export default function HistoryPage() {
                             <p
                               style={{
                                 fontSize: "12px",
-                                color: "#8A8778",
+                                color: "var(--text-muted)",
                                 fontFamily: "'DM Sans', sans-serif",
                               }}
                             >
@@ -236,7 +236,7 @@ export default function HistoryPage() {
                   fontWeight: 600,
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
-                  color: "#8A8778",
+                  color: "var(--text-muted)",
                   marginBottom: "10px",
                   fontFamily: "'DM Sans', sans-serif",
                 }}
@@ -249,7 +249,7 @@ export default function HistoryPage() {
                     style={{
                       fontSize: "13px",
                       fontWeight: 500,
-                      color: "#5C5A4F",
+                      color: "var(--text-on-stone-faint)",
                       marginBottom: "8px",
                       fontFamily: "'DM Sans', sans-serif",
                     }}
@@ -271,7 +271,7 @@ export default function HistoryPage() {
                                   style={{
                                     fontSize: "14px",
                                     fontWeight: 500,
-                                    color: "#2C2C24",
+                                    color: "var(--text-on-stone)",
                                     fontFamily: "'DM Sans', sans-serif",
                                     marginBottom: "2px",
                                   }}
@@ -281,7 +281,7 @@ export default function HistoryPage() {
                                 <p
                                   style={{
                                     fontSize: "12px",
-                                    color: "#8A8778",
+                                    color: "var(--text-muted)",
                                     fontFamily: "'DM Sans', sans-serif",
                                   }}
                                 >
@@ -316,7 +316,7 @@ export default function HistoryPage() {
                                       fontSize: "9px",
                                       fontWeight: 600,
                                       textTransform: "uppercase",
-                                      color: "#8A8778",
+                                      color: "var(--text-muted)",
                                       marginBottom: "3px",
                                       fontFamily: "'DM Sans', sans-serif",
                                     }}>Before</p>
@@ -338,7 +338,7 @@ export default function HistoryPage() {
                                       fontSize: "9px",
                                       fontWeight: 600,
                                       textTransform: "uppercase",
-                                      color: "#8A8778",
+                                      color: "var(--text-muted)",
                                       marginBottom: "3px",
                                       fontFamily: "'DM Sans', sans-serif",
                                     }}>After</p>
