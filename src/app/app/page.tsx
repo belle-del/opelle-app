@@ -6,6 +6,8 @@ import { listProducts } from "@/lib/db/products";
 import { getUnreviewedInspoFlags, getInspoAppointmentAlerts } from "@/lib/db/inspo";
 import { getCurrentWorkspace } from "@/lib/db/workspaces";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getActiveSession } from "@/lib/db/service-sessions";
 import { WidgetDashboard } from "./_components/WidgetDashboard";
 import { MetisSuggestions } from "./_components/MetisSuggestions";
 
@@ -39,6 +41,23 @@ export default async function DashboardPage() {
     rebookRequests = data || [];
   }
 
+  // Get active service session for current user
+  let activeSession = null;
+  let activeSessionClientName = "";
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      activeSession = await getActiveSession(user.id);
+      if (activeSession) {
+        const client = clients.find(c => c.id === activeSession!.clientId);
+        activeSessionClientName = client
+          ? `${client.firstName || ""} ${client.lastName || ""}`.trim()
+          : "Client";
+      }
+    }
+  } catch {}
+
   return (
     <>
     <MetisSuggestions page="dashboard" entityType="dashboard" />
@@ -52,6 +71,8 @@ export default async function DashboardPage() {
       appointmentAlerts={appointmentAlerts}
       workingHours={workingHours}
       rebookRequests={rebookRequests}
+      activeSession={activeSession}
+      activeSessionClientName={activeSessionClientName}
     />
     </>
   );

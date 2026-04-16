@@ -31,7 +31,10 @@ export type Permission =
   | 'progress.view_own'
   | 'marketing.manage'
   | 'marketing.view'
-  | 'translations.manage';
+  | 'translations.manage'
+  | 'tasks.assign'
+  | 'services.view_all'
+  | 'services.check_in';
 
 const ALL_PERMISSIONS: Permission[] = [
   'team.manage', 'team.view', 'floor.view',
@@ -48,6 +51,7 @@ const ALL_PERMISSIONS: Permission[] = [
   'progress.view_all', 'progress.view_own',
   'marketing.manage', 'marketing.view',
   'translations.manage',
+  'tasks.assign', 'services.view_all', 'services.check_in',
 ];
 
 /** Default permissions granted to each role. */
@@ -66,6 +70,7 @@ export const ROLE_PERMISSIONS: Record<TeamRole, Permission[]> = {
     'messages.use', 'metis.use', 'history.view_own',
     'progress.view_all', 'progress.view_own',
     'marketing.view',
+    'tasks.assign', 'services.view_all',
   ],
   stylist: [
     'hours.view_own',
@@ -98,6 +103,7 @@ export const ROLE_PERMISSIONS: Record<TeamRole, Permission[]> = {
     'checkout.use',
     'appointments.manage', 'appointments.view_own',
     'messages.use', 'metis.use', 'history.view_own',
+    'services.check_in',
   ],
 };
 

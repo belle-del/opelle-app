@@ -6,9 +6,12 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import Link from "next/link";
 import { Trash2, Maximize2, Plus } from "lucide-react";
 import { LiveClock } from "@/components/LiveClock";
+import { ActiveServiceWidget } from "./ActiveServiceWidget";
+import { FloorStatusWidget as FloorStatusW } from "./FloorStatusWidget";
+import type { ServiceSession } from "@/lib/types";
 
 // ── Types ──────────────────────────────────────────────────────────────
-type WidgetType = "schedule" | "revenue" | "formulas" | "tasks" | "activity" | "inventory" | "inspoFlags" | "requests";
+type WidgetType = "schedule" | "revenue" | "formulas" | "tasks" | "activity" | "inventory" | "inspoFlags" | "requests" | "activeService" | "floorStatus";
 
 interface Widget {
   id: string;
@@ -26,6 +29,8 @@ const ALL_WIDGET_TYPES: { type: WidgetType; label: string; defaultCols: number; 
   { type: "inventory", label: "Inventory", defaultCols: 10, defaultRows: 4 },
   { type: "inspoFlags", label: "Inspo Flags", defaultCols: 6, defaultRows: 6 },
   { type: "requests", label: "Requests", defaultCols: 6, defaultRows: 6 },
+  { type: "activeService", label: "Active Service", defaultCols: 10, defaultRows: 8 },
+  { type: "floorStatus", label: "Floor Status", defaultCols: 10, defaultRows: 8 },
 ];
 
 const DEFAULT_WIDGETS: Widget[] = [
@@ -103,6 +108,8 @@ interface WidgetDashboardProps {
   appointmentAlerts?: AppointmentAlert[];
   workingHours?: Record<string, { start: string; end: string; closed: boolean }>;
   rebookRequests?: Array<{ id: string; client_id: string; service_type: string | null; status: string; created_at: string }>;
+  activeSession?: ServiceSession | null;
+  activeSessionClientName?: string;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -311,7 +318,7 @@ function StatWidget({ value, label, change, changePositive, link }: {
 }
 
 // ── Main Component ─────────────────────────────────────────────────────
-export function WidgetDashboard({ appointments, formulas, tasks, products, clients, inspoFlags = [], appointmentAlerts = [], workingHours, rebookRequests = [] }: WidgetDashboardProps) {
+export function WidgetDashboard({ appointments, formulas, tasks, products, clients, inspoFlags = [], appointmentAlerts = [], workingHours, rebookRequests = [], activeSession, activeSessionClientName }: WidgetDashboardProps) {
   const [widgets, setWidgets] = useState<Widget[]>(DEFAULT_WIDGETS);
   const [editMode, setEditMode] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -612,6 +619,22 @@ export function WidgetDashboard({ appointments, formulas, tasks, products, clien
             </div>
           </>
         );
+      }
+      case "activeService": {
+        if (!activeSession || activeSession.status === "complete") {
+          return (
+            <>
+              <WidgetHead title="Active Service" link="/app/appointments" />
+              <div style={{ padding: "16px 12px", textAlign: "center" }}>
+                <p style={{ fontSize: "11px", color: "var(--text-on-stone-faint)" }}>No active service session</p>
+              </div>
+            </>
+          );
+        }
+        return <ActiveServiceWidget session={activeSession} clientName={activeSessionClientName || "Client"} />;
+      }
+      case "floorStatus": {
+        return <FloorStatusW clients={clients} />;
       }
       default:
         return null;

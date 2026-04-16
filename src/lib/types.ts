@@ -2146,3 +2146,290 @@ export interface CallaTopicPerformance {
   accuracyPercentage: number;
   flaggedWeak: boolean;
 }
+
+// ============================================================================
+// Module 19: Unified Service Flow
+// ============================================================================
+
+export type ServiceSessionStatus =
+  | 'checked_in'
+  | 'consultation'
+  | 'in_progress'
+  | 'processing'
+  | 'needs_help'
+  | 'finishing'
+  | 'complete';
+
+export type ServiceSession = {
+  id: string;
+  workspaceId: string;
+  appointmentId?: string;
+  clientId: string;
+  stylistId: string;
+  serviceName: string;
+  status: ServiceSessionStatus;
+  consultationId?: string;
+  beforePhotoUrl?: string;
+  afterPhotoUrl?: string;
+  processingTimerMinutes?: number;
+  processingStartedAt?: string;
+  helpRequested: boolean;
+  helpRequestNote?: string;
+  checkedInAt?: string;
+  checkedInBy?: string;
+  startedAt?: string;
+  completedAt?: string;
+  handedToCheckout: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ServiceSessionRow = {
+  id: string;
+  workspace_id: string;
+  appointment_id: string | null;
+  client_id: string;
+  stylist_id: string;
+  service_name: string;
+  status: ServiceSessionStatus;
+  consultation_id: string | null;
+  before_photo_url: string | null;
+  after_photo_url: string | null;
+  processing_timer_minutes: number | null;
+  processing_started_at: string | null;
+  help_requested: boolean;
+  help_request_note: string | null;
+  checked_in_at: string | null;
+  checked_in_by: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  handed_to_checkout: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export function serviceSessionRowToModel(row: ServiceSessionRow): ServiceSession {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    appointmentId: row.appointment_id ?? undefined,
+    clientId: row.client_id,
+    stylistId: row.stylist_id,
+    serviceName: row.service_name,
+    status: row.status,
+    consultationId: row.consultation_id ?? undefined,
+    beforePhotoUrl: row.before_photo_url ?? undefined,
+    afterPhotoUrl: row.after_photo_url ?? undefined,
+    processingTimerMinutes: row.processing_timer_minutes ?? undefined,
+    processingStartedAt: row.processing_started_at ?? undefined,
+    helpRequested: row.help_requested,
+    helpRequestNote: row.help_request_note ?? undefined,
+    checkedInAt: row.checked_in_at ?? undefined,
+    checkedInBy: row.checked_in_by ?? undefined,
+    startedAt: row.started_at ?? undefined,
+    completedAt: row.completed_at ?? undefined,
+    handedToCheckout: row.handed_to_checkout,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+// Consultation
+export type HairCondition = 'excellent' | 'good' | 'fair' | 'damaged' | 'severely_damaged';
+export type ScalpCondition = 'healthy' | 'dry' | 'oily' | 'sensitive' | 'issues';
+
+export type ServiceConsultation = {
+  id: string;
+  workspaceId: string;
+  sessionId: string;
+  clientId: string;
+  currentCondition?: HairCondition;
+  scalpCondition?: ScalpCondition;
+  serviceRequested?: string;
+  specificRequests?: string;
+  referencedInspoIds?: string[];
+  stylistNotes?: string;
+  recommendedServices?: string[];
+  concerns?: string[];
+  clientConfirmed: boolean;
+  confirmedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ServiceConsultationRow = {
+  id: string;
+  workspace_id: string;
+  session_id: string;
+  client_id: string;
+  current_condition: HairCondition | null;
+  scalp_condition: ScalpCondition | null;
+  service_requested: string | null;
+  specific_requests: string | null;
+  referenced_inspo_ids: string[] | null;
+  stylist_notes: string | null;
+  recommended_services: string[] | null;
+  concerns: string[] | null;
+  client_confirmed: boolean;
+  confirmed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export function serviceConsultationRowToModel(row: ServiceConsultationRow): ServiceConsultation {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    sessionId: row.session_id,
+    clientId: row.client_id,
+    currentCondition: row.current_condition ?? undefined,
+    scalpCondition: row.scalp_condition ?? undefined,
+    serviceRequested: row.service_requested ?? undefined,
+    specificRequests: row.specific_requests ?? undefined,
+    referencedInspoIds: row.referenced_inspo_ids ?? undefined,
+    stylistNotes: row.stylist_notes ?? undefined,
+    recommendedServices: row.recommended_services ?? undefined,
+    concerns: row.concerns ?? undefined,
+    clientConfirmed: row.client_confirmed,
+    confirmedAt: row.confirmed_at ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+// Post-Service Feedback
+export type PostServiceFeedback = {
+  id: string;
+  workspaceId: string;
+  sessionId: string;
+  serviceCompletionId?: string;
+  formulaAchievedExpected?: boolean;
+  adjustmentNotes?: string;
+  clientSatisfaction?: number;
+  anyReactions: boolean;
+  reactionNotes?: string;
+  actualProcessingTime?: number;
+  processingNotes?: string;
+  createdAt: string;
+};
+
+export type PostServiceFeedbackRow = {
+  id: string;
+  workspace_id: string;
+  session_id: string;
+  service_completion_id: string | null;
+  formula_achieved_expected: boolean | null;
+  adjustment_notes: string | null;
+  client_satisfaction: number | null;
+  any_reactions: boolean;
+  reaction_notes: string | null;
+  actual_processing_time: number | null;
+  processing_notes: string | null;
+  created_at: string;
+};
+
+export function postServiceFeedbackRowToModel(row: PostServiceFeedbackRow): PostServiceFeedback {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    sessionId: row.session_id,
+    serviceCompletionId: row.service_completion_id ?? undefined,
+    formulaAchievedExpected: row.formula_achieved_expected ?? undefined,
+    adjustmentNotes: row.adjustment_notes ?? undefined,
+    clientSatisfaction: row.client_satisfaction ?? undefined,
+    anyReactions: row.any_reactions,
+    reactionNotes: row.reaction_notes ?? undefined,
+    actualProcessingTime: row.actual_processing_time ?? undefined,
+    processingNotes: row.processing_notes ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+// Service Tasks
+export type ServiceTaskType =
+  | 'mix_color' | 'check_processing' | 'get_supplies'
+  | 'rinse' | 'blowdry' | 'restock' | 'shampoo' | 'prep_station' | 'custom';
+
+export type ServiceTaskPriority = 'low' | 'normal' | 'high' | 'urgent';
+export type ServiceTaskStatus = 'pending' | 'in_progress' | 'done' | 'cancelled';
+
+export type ServiceTask = {
+  id: string;
+  workspaceId: string;
+  sessionId?: string;
+  assignedTo: string;
+  assignedBy: string;
+  taskType: ServiceTaskType;
+  description?: string;
+  dueInMinutes?: number;
+  dueAt?: string;
+  priority: ServiceTaskPriority;
+  status: ServiceTaskStatus;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ServiceTaskRow = {
+  id: string;
+  workspace_id: string;
+  session_id: string | null;
+  assigned_to: string;
+  assigned_by: string;
+  task_type: ServiceTaskType;
+  description: string | null;
+  due_in_minutes: number | null;
+  due_at: string | null;
+  priority: ServiceTaskPriority;
+  status: ServiceTaskStatus;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export function serviceTaskRowToModel(row: ServiceTaskRow): ServiceTask {
+  return {
+    id: row.id,
+    workspaceId: row.workspace_id,
+    sessionId: row.session_id ?? undefined,
+    assignedTo: row.assigned_to,
+    assignedBy: row.assigned_by,
+    taskType: row.task_type,
+    description: row.description ?? undefined,
+    dueInMinutes: row.due_in_minutes ?? undefined,
+    dueAt: row.due_at ?? undefined,
+    priority: row.priority,
+    status: row.status,
+    startedAt: row.started_at ?? undefined,
+    completedAt: row.completed_at ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+// Cheat Sheet (Metis-generated client briefing)
+export type CheatSheet = {
+  lastVisit?: { date: string; service: string; stylist?: string };
+  serviceSnapshot?: {
+    pattern?: string;
+    preferences?: string;
+    treatments?: string;
+    goals?: string;
+  };
+  personalizationCues: string[];
+  recommendations?: { products: string[]; services: string[] };
+  rebooking?: { status: string; nextAppointment?: string; note?: string };
+};
+
+// Valid state machine transitions for service sessions
+export const SERVICE_SESSION_TRANSITIONS: Record<ServiceSessionStatus, ServiceSessionStatus[]> = {
+  checked_in: ['consultation', 'in_progress'],
+  consultation: ['in_progress'],
+  in_progress: ['processing', 'needs_help', 'finishing'],
+  processing: ['in_progress', 'needs_help', 'finishing'],
+  needs_help: ['in_progress', 'processing', 'finishing'],
+  finishing: ['complete'],
+  complete: [],
+};

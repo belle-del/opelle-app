@@ -8,9 +8,11 @@ export type ActivityAction =
   | "appointment.created" | "appointment.updated" | "appointment.deleted"
   | "task.created" | "task.updated" | "task.deleted"
   | "metis.chat" | "metis.feedback" | "metis.lesson_created" | "metis.lessons_distilled"
-  | "message.sent" | "message.received";
+  | "message.sent" | "message.received"
+  | "service.checked_in" | "service.started" | "service.completed" | "service.help_requested"
+  | "service_task.assigned" | "service_task.completed";
 
-export type EntityType = "formula" | "client" | "product" | "appointment" | "task" | "metis" | "message";
+export type EntityType = "formula" | "client" | "product" | "appointment" | "task" | "metis" | "message" | "service_session" | "service_task";
 
 async function resolveWorkspaceId(): Promise<string | undefined> {
   const workspace = await getCurrentWorkspace();
