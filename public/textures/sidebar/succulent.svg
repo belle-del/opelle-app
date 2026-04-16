@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 800" width="170" height="800">
+  <rect width="170" height="800" fill="none"/>
+  <!-- Potted succulent arrangement -->
+  <g opacity="0.85">
+    <!-- Terracotta pot -->
+    <path d="M45 780 L50 680 L120 680 L125 780 Z" fill="#7A8A6A" opacity="0.5" stroke="#7A8A6A" stroke-width="1.5"/>
+    <!-- Pot rim -->
+    <rect x="42" y="672" width="86" height="14" rx="3" fill="#7A8A6A" opacity="0.6" stroke="#7A8A6A" stroke-width="1"/>
+    <!-- Pot texture lines -->
+    <line x1="65" y1="690" x2="63" y2="775" stroke="#8B9A7A" stroke-width="0.5" opacity="0.3"/>
+    <line x1="85" y1="690" x2="85" y2="775" stroke="#8B9A7A" stroke-width="0.5" opacity="0.3"/>
+    <line x1="105" y1="690" x2="107" y2="775" stroke="#8B9A7A" stroke-width="0.5" opacity="0.3"/>
+
+    <!-- Soil visible at top -->
+    <ellipse cx="85" cy="678" rx="37" ry="6" fill="#7A8A6A" opacity="0.4"/>
+
+    <!-- Large rosette succulent (center) - Echeveria style -->
+    <!-- Outer petals -->
+    <path d="M85 640 Q75 620 60 610 Q50 608 48 615 Q50 625 60 632 Q70 638 85 640Z" fill="#8B9A7A" opacity="0.6"/>
+    <path d="M85 640 Q95 620 110 610 Q120 608 122 615 Q120 625 110 632 Q100 638 85 640Z" fill="#8B9A7A" opacity="0.6"/>
+    <path d="M85 640 Q65 635 48 640 Q40 645 42 652 Q48 658 60 655 Q72 650 85 640Z" fill="#7A8A6A" opacity="0.65"/>
+    <path d="M85 640 Q105 635 122 640 Q130 645 128 652 Q122 658 110 655 Q98 650 85 640Z" fill="#7A8A6A" opacity="0.65"/>
+    <path d="M85 640 Q70 645 55 658 Q48 665 52 670 Q60 672 68 665 Q78 655 85 640Z" fill="#8B9A7A" opacity="0.55"/>
+    <path d="M85 640 Q100 645 115 658 Q122 665 118 670 Q110 672 102 665 Q92 655 85 640Z" fill="#8B9A7A" opacity="0.55"/>
+    <!-- Middle petals -->
+    <path d="M85 638 Q78 625 68 618 Q62 616 62 622 Q65 630 75 636 Z" fill="#8B9A7A" opacity="0.75"/>
+    <path d="M85 638 Q92 625 102 618 Q108 616 108 622 Q105 630 95 636 Z" fill="#8B9A7A" opacity="0.75"/>
+    <path d="M85 638 Q75 640 68 648 Q64 654 68 656 Q74 655 80 648 Z" fill="#7A8A6A" opacity="0.7"/>
+    <path d="M85 638 Q95 640 102 648 Q106 654 102 656 Q96 655 90 648 Z" fill="#7A8A6A" opacity="0.7"/>
+    <!-- Inner petals -->
+    <path d="M85 636 Q80 628 76 625 Q74 624 75 628 Q78 633 83 636Z" fill="#8B9A7A" opacity="0.85"/>
+    <path d="M85 636 Q90 628 94 625 Q96 624 95 628 Q92 633 87 636Z" fill="#8B9A7A" opacity="0.85"/>
+    <!-- Center -->
+    <circle cx="85" cy="636" r="3" fill="#7A8A6A" opacity="0.9"/>
+
+    <!-- Small round succulent (left) -->
+    <circle cx="58" cy="660" r="14" fill="none"/>
+    <path d="M58 648 Q52 650 50 656 Q50 662 54 665 Q58 660 58 648Z" fill="#7A8A6A" opacity="0.7"/>
+    <path d="M58 648 Q64 650 66 656 Q66 662 62 665 Q58 660 58 648Z" fill="#8B9A7A" opacity="0.7"/>
+    <path d="M54 665 Q50 668 52 672 Q56 674 58 670 Q56 667 54 665Z" fill="#7A8A6A" opacity="0.65"/>
+    <path d="M62 665 Q66 668 64 672 Q60 674 58 670 Q60 667 62 665Z" fill="#8B9A7A" opacity="0.65"/>
+    <circle cx="58" cy="658" r="4" fill="#8B9A7A" opacity="0.5"/>
+
+    <!-- Tall succulent (right) - Aloe-like -->
+    <path d="M112 670 Q108 648 106 625 Q105 610 108 595 Q110 588 112 595 Q114 610 112 625 Q112 648 112 670Z"
+          fill="#7A8A6A" opacity="0.7" stroke="#8B9A7A" stroke-width="0.5"/>
+    <path d="M112 670 Q118 652 122 635 Q125 620 122 608 Q120 602 118 608 Q116 620 115 635 Q114 650 112 670Z"
+          fill="#8B9A7A" opacity="0.65" stroke="#7A8A6A" stroke-width="0.5"/>
+    <path d="M112 670 Q106 655 102 640 Q98 628 100 618 Q102 612 104 618 Q106 628 108 640 Q110 655 112 670Z"
+          fill="#7A8A6A" opacity="0.6" stroke="#8B9A7A" stroke-width="0.5"/>
+    <!-- Aloe tooth details -->
+    <circle cx="108" cy="600" r="1" fill="#8B9A7A" opacity="0.5"/>
+    <circle cx="122" cy="612" r="1" fill="#8B9A7A" opacity="0.5"/>
+    <circle cx="100" cy="622" r="1" fill="#8B9A7A" opacity="0.5"/>
+
+    <!-- Trailing succulent (front, draping over pot) -->
+    <path d="M70 675 Q65 685 58 698 Q52 710 48 725 Q46 735 48 740"
+          stroke="#8B9A7A" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+    <circle cx="48" cy="740" r="5" fill="#8B9A7A" opacity="0.5"/>
+    <circle cx="52" cy="728" r="4.5" fill="#7A8A6A" opacity="0.5"/>
+    <circle cx="55" cy="715" r="4" fill="#8B9A7A" opacity="0.5"/>
+    <circle cx="60" cy="702" r="4" fill="#7A8A6A" opacity="0.5"/>
+
+    <!-- Another trailing strand -->
+    <path d="M100 675 Q108 688 115 702 Q120 718 122 730"
+          stroke="#7A8A6A" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+    <circle cx="122" cy="730" r="4.5" fill="#7A8A6A" opacity="0.45"/>
+    <circle cx="120" cy="718" r="4" fill="#8B9A7A" opacity="0.45"/>
+    <circle cx="116" cy="706" r="3.5" fill="#7A8A6A" opacity="0.45"/>
+
+    <!-- Small pebbles on soil -->
+    <circle cx="75" cy="676" r="2.5" fill="#8B9A7A" opacity="0.35"/>
+    <circle cx="95" cy="675" r="2" fill="#7A8A6A" opacity="0.35"/>
+    <circle cx="82" cy="678" r="1.8" fill="#8B9A7A" opacity="0.3"/>
+  </g>
+
+  <!-- Dev identification -->
+  <text x="85" y="792" text-anchor="middle" font-family="monospace" font-size="8" fill="#7A8A6A" opacity="0.5">succulent</text>
+</svg>

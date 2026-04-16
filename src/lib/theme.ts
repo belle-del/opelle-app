@@ -57,8 +57,15 @@ export const TYPOGRAPHY_PRESETS: Record<string, { heading: string; body: string;
   minimal: { heading: "'DM Sans', sans-serif", body: "'DM Sans', sans-serif", label: "Minimal" },
 };
 
-export const PLANT_PRESETS: Record<string, string> = {
-  "olive-branch": "/textures/olive-branch.svg",
+export const PLANT_PRESETS: Record<string, { background: string; sidebar: string; label: string }> = {
+  "olive-branch":   { background: "/textures/olive-branch.svg",   sidebar: "/textures/sidebar/olive-branch.svg",   label: "Olive Branch" },
+  monstera:         { background: "/textures/monstera.svg",        sidebar: "/textures/sidebar/monstera.svg",        label: "Monstera" },
+  fern:             { background: "/textures/fern.svg",            sidebar: "/textures/sidebar/fern.svg",            label: "Fern" },
+  succulent:        { background: "/textures/succulent.svg",       sidebar: "/textures/sidebar/succulent.svg",       label: "Succulent" },
+  "cherry-blossom": { background: "/textures/cherry-blossom.svg",  sidebar: "/textures/sidebar/cherry-blossom.svg",  label: "Cherry Blossom" },
+  eucalyptus:       { background: "/textures/eucalyptus.svg",      sidebar: "/textures/sidebar/eucalyptus.svg",      label: "Eucalyptus" },
+  palm:             { background: "/textures/palm.svg",            sidebar: "/textures/sidebar/palm.svg",            label: "Palm" },
+  "fiddle-leaf":    { background: "/textures/fiddle-leaf.svg",     sidebar: "/textures/sidebar/fiddle-leaf.svg",     label: "Fiddle Leaf" },
 };
 
 export const BACKGROUND_PRESETS: Record<string, { label: string; opacity: number }> = {
@@ -98,7 +105,7 @@ export function generateThemeCSS(theme: WorkspaceTheme | null): string {
   }
 
   const typo = TYPOGRAPHY_PRESETS[t.typography] ?? TYPOGRAPHY_PRESETS.classic;
-  const plantUrl = PLANT_PRESETS[t.plant] ?? PLANT_PRESETS["olive-branch"];
+  const plantPreset = PLANT_PRESETS[t.plant] ?? PLANT_PRESETS["olive-branch"];
   const bgPreset = BACKGROUND_PRESETS[t.background_texture] ?? BACKGROUND_PRESETS["botanical-light"];
 
   const primaryLight = lightenHex(primary, 0.3);
@@ -126,8 +133,12 @@ export function generateThemeCSS(theme: WorkspaceTheme | null): string {
     bgImageCSS = "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)";
   } else {
     // botanical-light, botanical-dark, custom — use plant URL
-    bgImageCSS = `url('${plantUrl}')`;
+    bgImageCSS = `url('${plantPreset.background}')`;
   }
+
+  // Sidebar: derive dark background from primary color
+  const sidebarBg = darkenHex(primary, 0.7);
+  const sidebarBgSemi = hexToRgba(sidebarBg, 0.55);
 
   return [
     `:root {`,
@@ -158,6 +169,9 @@ export function generateThemeCSS(theme: WorkspaceTheme | null): string {
     `  --background: ${primary};`,
     `  --card: ${secondaryLight};`,
     `  --foreground: ${getContrastColor(primary)};`,
+    `  --sidebar-bg: ${sidebarBg};`,
+    `  --sidebar-bg-semi: ${sidebarBgSemi};`,
+    `  --sidebar-image: url('${plantPreset.sidebar}');`,
     `}`,
     `body { background-color: ${primaryLight}; font-family: ${typo.body}; }`,
     `body::before { background-image: ${bgImageCSS}; opacity: ${bgPreset.opacity}; }`,

@@ -12,6 +12,13 @@ const TEXT_FAINT = "var(--text-on-stone-faint)";
 
 const PLANT_OPTIONS = [
   { key: "olive-branch", label: "Olive Branch" },
+  { key: "monstera", label: "Monstera" },
+  { key: "fern", label: "Fern" },
+  { key: "succulent", label: "Succulent" },
+  { key: "cherry-blossom", label: "Cherry Blossom" },
+  { key: "eucalyptus", label: "Eucalyptus" },
+  { key: "palm", label: "Palm" },
+  { key: "fiddle-leaf", label: "Fiddle Leaf" },
 ];
 
 const BACKGROUND_OPTIONS = [

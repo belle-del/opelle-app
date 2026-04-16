@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" fill="none">
+  <g stroke="#5C6148" fill="#5C6148" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Main branch -->
+    <path d="M-20,520 C80,500 200,460 350,420 C500,380 620,350 750,340 C880,330 980,340 1100,360" stroke-width="4" fill="none" fill-opacity="0"/>
+    <!-- Secondary branch up -->
+    <path d="M350,420 C380,360 420,280 480,200 C520,150 570,110 640,80" stroke-width="2.5" fill="none" fill-opacity="0"/>
+    <!-- Secondary branch down -->
+    <path d="M620,355 C660,400 720,460 790,510 C840,545 900,570 970,580" stroke-width="2.5" fill="none" fill-opacity="0"/>
+    <!-- Small twig -->
+    <path d="M480,200 C450,160 430,120 420,70" stroke-width="1.8" fill="none" fill-opacity="0"/>
+    <path d="M750,340 C780,290 810,250 850,220" stroke-width="1.8" fill="none" fill-opacity="0"/>
+
+    <!-- Blossoms - 5-petal flowers -->
+    <!-- Flower 1 -->
+    <g transform="translate(280, 440)" fill-opacity="0.12">
+      <path d="M0,-22 C6,-14 6,-6 0,0 C-6,-6 -6,-14 0,-22" />
+      <path d="M21,-7 C14,-4 7,1 0,0 C4,-7 12,-12 21,-7" />
+      <path d="M13,18 C8,11 5,4 0,0 C7,2 13,8 13,18" />
+      <path d="M-13,18 C-8,11 -5,4 0,0 C-7,2 -13,8 -13,18" />
+      <path d="M-21,-7 C-14,-4 -7,1 0,0 C-4,-7 -12,-12 -21,-7" />
+      <circle cx="0" cy="0" r="4" fill-opacity="0.2"/>
+    </g>
+
+    <!-- Flower 2 -->
+    <g transform="translate(420, 390) scale(1.2)" fill-opacity="0.12">
+      <path d="M0,-22 C6,-14 6,-6 0,0 C-6,-6 -6,-14 0,-22" />
+      <path d="M21,-7 C14,-4 7,1 0,0 C4,-7 12,-12 21,-7" />
+      <path d="M13,18 C8,11 5,4 0,0 C7,2 13,8 13,18" />
+      <path d="M-13,18 C-8,11 -5,4 0,0 C-7,2 -13,8 -13,18" />
+      <path d="M-21,-7 C-14,-4 -7,1 0,0 C-4,-7 -12,-12 -21,-7" />
+      <circle cx="0" cy="0" r="4" fill-opacity="0.2"/>
+    </g>
+
+    <!-- Flower 3 -->
+    <g transform="translate(520, 350) scale(0.9)" fill-opacity="0.12">
+      <path d="M0,-22 C6,-14 6,-6 0,0 C-6,-6 -6,-14 0,-22" />
+      <path d="M21,-7 C14,-4 7,1 0,0 C4,-7 12,-12 21,-7" />
+      <path d="M13,18 C8,11 5,4 0,0 C7,2 13,8 13,18" />
+      <path d="M-13,18 C-8,11 -5,4 0,0 C-7,2 -13,8 -13,18" />
+      <path d="M-21,-7 C-14,-4 -7,1 0,0 C-4,-7 -12,-12 -21,-7" />
+      <circle cx="0" cy="0" r="4" fill-opacity="0.2"/>
+    </g>
+
+    <!-- Flower 4 - on upper branch -->
+    <g transform="translate(460, 220) scale(1.1)" fill-opacity="0.12">
+      <path d="M0,-22 C6,-14 6,-6 0,0 C-6,-6 -6,-14 0,-22" />
+      <path d="M21,-7 C14,-4 7,1 0,0 C4,-7 12,-12 21,-7" />
+      <path d="M13,18 C8,11 5,4 0,0 C7,2 13,8 13,18" />
+      <path d="M-13,18 C-8,11 -5,4 0,0 C-7,2 -13,8 -13,18" />
+      <path d="M-21,-7 C-14,-4 -7,1 0,0 C-4,-7 -12,-12 -21,-7" />
+      <circle cx="0" cy="0" r="4" fill-opacity="0.2"/>
+    </g>
+
+    <!-- Flower 5 -->
+    <g transform="translate(580, 130) scale(1.0)" fill-opacity="0.12">
+      <path d="M0,-22 C6,-14 6,-6 0,0 C-6,-6 -6,-14 0,-22" />
+      <path d="M21,-7 C14,-4 7,1 0,0 C4,-7 12,-12 21,-7" />
+      <path d="M13,18 C8,11 5,4 0,0 C7,2 13,8 13,18" />
+      <path d="M-13,18 C-8,11 -5,4 0,0 C-7,2 -13,8 -13,18" />
+      <path d="M-21,-7 C-14,-4 -7,1 0,0 C-4,-7 -12,-12 -21,-7" />
+      <circle cx="0" cy="0" r="4" fill-opacity="0.2"/>
+    </g>
+
+    <!-- Flower 6 -->
+    <g transform="translate(700, 350) scale(1.3)" fill-opacity="0.12">
+      <path d="M0,-22 C6,-14 6,-6 0,0 C-6,-6 -6,-14 0,-22" />
+      <path d="M21,-7 C14,-4 7,1 0,0 C4,-7 12,-12 21,-7" />
+      <path d="M13,18 C8,11 5,4 0,0 C7,2 13,8 13,18" />
+      <path d="M-13,18 C-8,11 -5,4 0,0 C-7,2 -13,8 -13,18" />
+      <path d="M-21,-7 C-14,-4 -7,1 0,0 C-4,-7 -12,-12 -21,-7" />
+      <circle cx="0" cy="0" r="4" fill-opacity="0.2"/>
+    </g>
+
+    <!-- Flower 7 -->
+    <g transform="translate(830, 340) scale(0.85)" fill-opacity="0.12">
+      <path d="M0,-22 C6,-14 6,-6 0,0 C-6,-6 -6,-14 0,-22" />
+      <path d="M21,-7 C14,-4 7,1 0,0 C4,-7 12,-12 21,-7" />
+      <path d="M13,18 C8,11 5,4 0,0 C7,2 13,8 13,18" />
+      <path d="M-13,18 C-8,11 -5,4 0,0 C-7,2 -13,8 -13,18" />
+      <path d="M-21,-7 C-14,-4 -7,1 0,0 C-4,-7 -12,-12 -21,-7" />
+      <circle cx="0" cy="0" r="4" fill-opacity="0.2"/>
+    </g>
+
+    <!-- Flower 8 - on lower branch -->
+    <g transform="translate(750, 480) scale(1.0)" fill-opacity="0.12">
+      <path d="M0,-22 C6,-14 6,-6 0,0 C-6,-6 -6,-14 0,-22" />
+      <path d="M21,-7 C14,-4 7,1 0,0 C4,-7 12,-12 21,-7" />
+      <path d="M13,18 C8,11 5,4 0,0 C7,2 13,8 13,18" />
+      <path d="M-13,18 C-8,11 -5,4 0,0 C-7,2 -13,8 -13,18" />
+      <path d="M-21,-7 C-14,-4 -7,1 0,0 C-4,-7 -12,-12 -21,-7" />
+      <circle cx="0" cy="0" r="4" fill-opacity="0.2"/>
+    </g>
+
+    <!-- Flower 9 -->
+    <g transform="translate(880, 540) scale(0.9)" fill-opacity="0.12">
+      <path d="M0,-22 C6,-14 6,-6 0,0 C-6,-6 -6,-14 0,-22" />
+      <path d="M21,-7 C14,-4 7,1 0,0 C4,-7 12,-12 21,-7" />
+      <path d="M13,18 C8,11 5,4 0,0 C7,2 13,8 13,18" />
+      <path d="M-13,18 C-8,11 -5,4 0,0 C-7,2 -13,8 -13,18" />
+      <path d="M-21,-7 C-14,-4 -7,1 0,0 C-4,-7 -12,-12 -21,-7" />
+      <circle cx="0" cy="0" r="4" fill-opacity="0.2"/>
+    </g>
+
+    <!-- Flower 10 - on twig -->
+    <g transform="translate(420, 80) scale(0.8)" fill-opacity="0.12">
+      <path d="M0,-22 C6,-14 6,-6 0,0 C-6,-6 -6,-14 0,-22" />
+      <path d="M21,-7 C14,-4 7,1 0,0 C4,-7 12,-12 21,-7" />
+      <path d="M13,18 C8,11 5,4 0,0 C7,2 13,8 13,18" />
+      <path d="M-13,18 C-8,11 -5,4 0,0 C-7,2 -13,8 -13,18" />
+      <path d="M-21,-7 C-14,-4 -7,1 0,0 C-4,-7 -12,-12 -21,-7" />
+      <circle cx="0" cy="0" r="4" fill-opacity="0.2"/>
+    </g>
+
+    <!-- Flower 11 -->
+    <g transform="translate(850, 230) scale(0.75)" fill-opacity="0.12">
+      <path d="M0,-22 C6,-14 6,-6 0,0 C-6,-6 -6,-14 0,-22" />
+      <path d="M21,-7 C14,-4 7,1 0,0 C4,-7 12,-12 21,-7" />
+      <path d="M13,18 C8,11 5,4 0,0 C7,2 13,8 13,18" />
+      <path d="M-13,18 C-8,11 -5,4 0,0 C-7,2 -13,8 -13,18" />
+      <path d="M-21,-7 C-14,-4 -7,1 0,0 C-4,-7 -12,-12 -21,-7" />
+      <circle cx="0" cy="0" r="4" fill-opacity="0.2"/>
+    </g>
+
+    <!-- Floating petals -->
+    <g fill-opacity="0.08">
+      <path d="M180,620 C186,612 186,604 180,598 C174,604 174,612 180,620" transform="rotate(30, 180, 609)" />
+      <path d="M350,680 C356,672 356,664 350,658 C344,664 344,672 350,680" transform="rotate(-20, 350, 669)" />
+      <path d="M550,600 C556,592 556,584 550,578 C544,584 544,592 550,600" transform="rotate(45, 550, 589)" />
+      <path d="M720,650 C726,642 726,634 720,628 C714,634 714,642 720,650" transform="rotate(-35, 720, 639)" />
+      <path d="M900,700 C906,692 906,684 900,678 C894,684 894,692 900,700" transform="rotate(15, 900, 689)" />
+      <path d="M1050,500 C1056,492 1056,484 1050,478 C1044,484 1044,492 1050,500" transform="rotate(-25, 1050, 489)" />
+    </g>
+
+    <!-- Small buds -->
+    <g fill-opacity="0.1">
+      <circle cx="340" cy="425" r="5"/>
+      <circle cx="650" cy="100" r="4"/>
+      <circle cx="960" cy="570" r="5"/>
+      <circle cx="1010" cy="355" r="4"/>
+    </g>
+  </g>
+
+  <text x="600" y="885" text-anchor="middle" fill="#5C6148" fill-opacity="0.3" font-family="sans-serif" font-size="11">cherry-blossom</text>
+</svg>

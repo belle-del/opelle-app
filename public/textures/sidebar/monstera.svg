@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 800" width="170" height="800">
+  <rect width="170" height="800" fill="none"/>
+  <!-- Monstera plant with split leaves growing upward -->
+  <g opacity="0.85">
+    <!-- Main stems -->
+    <path d="M85 800 Q83 760 80 720 Q78 680 82 640 Q85 600 83 560"
+          stroke="#7A8A6A" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M85 800 Q90 770 95 730 Q98 690 92 650 Q88 620 95 580"
+          stroke="#7A8A6A" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M85 800 Q78 775 72 740 Q68 700 74 660 Q78 630 70 590"
+          stroke="#7A8A6A" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+    <!-- Leaf 1 - large right leaf -->
+    <path d="M95 580 Q100 570 120 540 Q140 515 145 490 Q148 470 140 455 Q130 445 115 450 Q105 458 100 470 Q95 455 105 440 Q115 430 110 420 Q100 415 90 430 Q85 445 88 460 Q80 450 82 435 Q78 425 70 430 Q65 440 72 455 Q78 468 85 475 Q80 480 75 475 Q65 468 60 478 Q58 490 68 498 Q78 502 88 498 Q85 510 88 530 Q90 550 95 580Z"
+          fill="#8B9A7A" opacity="0.7" stroke="#7A8A6A" stroke-width="1"/>
+    <!-- Leaf 1 holes -->
+    <ellipse cx="108" cy="470" rx="6" ry="8" fill="none" stroke="#7A8A6A" stroke-width="0.5" opacity="0.3"/>
+    <ellipse cx="92" cy="490" rx="4" ry="6" fill="none" stroke="#7A8A6A" stroke-width="0.5" opacity="0.3"/>
+    <!-- Leaf 1 center vein -->
+    <path d="M95 578 Q98 550 105 520 Q112 495 118 475 Q125 460 130 450"
+          stroke="#7A8A6A" stroke-width="1.5" fill="none" opacity="0.5"/>
+
+    <!-- Leaf 2 - large left leaf -->
+    <path d="M70 590 Q65 578 50 555 Q35 535 25 515 Q18 498 22 480 Q30 468 45 475 Q55 483 58 495 Q60 478 50 465 Q42 455 48 445 Q58 440 65 455 Q70 468 68 480 Q76 470 73 455 Q75 445 82 448 Q88 458 82 472 Q76 483 70 490 Q76 495 82 492 Q92 488 95 498 Q94 510 85 515 Q76 518 68 512 Q70 530 68 555 Q66 575 70 590Z"
+          fill="#7A8A6A" opacity="0.7" stroke="#8B9A7A" stroke-width="1"/>
+    <!-- Leaf 2 holes -->
+    <ellipse cx="50" cy="495" rx="5" ry="7" fill="none" stroke="#8B9A7A" stroke-width="0.5" opacity="0.3"/>
+    <ellipse cx="68" cy="505" rx="4" ry="5" fill="none" stroke="#8B9A7A" stroke-width="0.5" opacity="0.3"/>
+    <!-- Leaf 2 center vein -->
+    <path d="M70 588 Q60 560 45 535 Q35 515 28 498 Q24 485 25 478"
+          stroke="#8B9A7A" stroke-width="1.5" fill="none" opacity="0.5"/>
+
+    <!-- Leaf 3 - upper center leaf -->
+    <path d="M83 560 Q80 545 75 520 Q70 498 60 478 Q52 462 48 445 Q46 430 52 418 Q60 410 70 418 Q78 428 78 442 Q82 428 78 415 Q76 405 82 398 Q90 395 95 408 Q98 420 94 435 Q100 425 98 412 Q100 402 108 405 Q115 412 110 428 Q105 440 98 450 Q105 448 112 452 Q120 460 116 472 Q110 480 100 478 Q95 490 92 510 Q88 535 83 560Z"
+          fill="#8B9A7A" opacity="0.65" stroke="#7A8A6A" stroke-width="1"/>
+    <!-- Leaf 3 center vein -->
+    <path d="M83 558 Q78 530 70 505 Q62 482 55 462 Q50 445 50 430"
+          stroke="#7A8A6A" stroke-width="1.5" fill="none" opacity="0.5"/>
+
+    <!-- Leaf 4 - smaller right leaf -->
+    <path d="M95 650 Q105 630 118 615 Q130 602 138 588 Q142 575 138 565 Q130 558 120 565 Q112 575 115 588 Q108 578 112 568 Q108 560 100 565 Q95 575 100 588 Q95 595 92 608 Q90 625 95 650Z"
+          fill="#7A8A6A" opacity="0.6" stroke="#8B9A7A" stroke-width="1"/>
+
+    <!-- Leaf 5 - smaller left leaf -->
+    <path d="M74 660 Q62 645 48 632 Q38 622 32 610 Q28 598 34 588 Q42 582 50 590 Q56 600 52 612 Q60 602 55 592 Q58 585 65 590 Q70 598 66 610 Q70 618 72 635 Q74 648 74 660Z"
+          fill="#8B9A7A" opacity="0.6" stroke="#7A8A6A" stroke-width="1"/>
+
+    <!-- Aerial roots -->
+    <path d="M82 700 Q80 720 78 745 Q77 760 78 780" stroke="#7A8A6A" stroke-width="1.5" fill="none" opacity="0.4"/>
+    <path d="M90 710 Q92 735 91 755 Q90 775 92 795" stroke="#7A8A6A" stroke-width="1" fill="none" opacity="0.3"/>
+  </g>
+
+  <!-- Dev identification -->
+  <text x="85" y="792" text-anchor="middle" font-family="monospace" font-size="8" fill="#7A8A6A" opacity="0.5">monstera</text>
+</svg>

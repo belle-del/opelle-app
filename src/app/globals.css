@@ -87,6 +87,11 @@
   --radius-lg:  10px;
   --radius-pill: 100px;
 
+  /* Sidebar */
+  --sidebar-bg:      #1f231a;
+  --sidebar-bg-semi: rgba(31,35,26,0.55);
+  --sidebar-image:   url('/textures/sidebar/olive-branch.svg');
+
   --ease: cubic-bezier(0.19, 1, 0.22, 1);
 
   /* Legacy mappings for existing Tailwind classes */

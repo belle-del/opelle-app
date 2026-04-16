@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" fill="none">
+  <g stroke="#5C6148" fill="#5C6148" fill-opacity="0.12" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Large monstera leaf top-left -->
+    <g transform="translate(150, 120)">
+      <path d="M0,180 C20,140 60,40 120,0 C140,20 160,80 150,140 C180,100 220,60 280,50 C270,80 250,140 200,180 C240,170 290,160 340,170 C320,200 270,230 210,230 C250,250 280,290 290,340 C260,330 220,300 190,260 C190,300 200,350 180,400 C160,370 150,310 150,260 C120,300 80,330 40,340 C60,310 100,270 130,240 C80,260 30,260 -20,240 C10,220 60,200 110,200 C60,190 20,200 -20,230 C-10,190 20,170 60,170 C20,160 -10,170 -40,190 C-30,160 10,140 50,140 Z" />
+      <!-- Leaf holes -->
+      <ellipse cx="100" cy="120" rx="25" ry="35" fill="white" fill-opacity="1" stroke="none"/>
+      <ellipse cx="180" cy="150" rx="20" ry="30" fill="white" fill-opacity="1" stroke="none"/>
+      <ellipse cx="140" cy="200" rx="18" ry="25" fill="white" fill-opacity="1" stroke="none"/>
+      <!-- Central vein -->
+      <path d="M0,180 C80,160 140,100 150,0" stroke-width="2" fill="none"/>
+    </g>
+
+    <!-- Medium monstera leaf right -->
+    <g transform="translate(700, 250) scale(0.85)">
+      <path d="M0,180 C20,140 60,40 120,0 C140,20 160,80 150,140 C180,100 220,60 280,50 C270,80 250,140 200,180 C240,170 290,160 340,170 C320,200 270,230 210,230 C250,250 280,290 290,340 C260,330 220,300 190,260 C190,300 200,350 180,400 C160,370 150,310 150,260 C120,300 80,330 40,340 C60,310 100,270 130,240 C80,260 30,260 -20,240 C10,220 60,200 110,200 C60,190 20,200 -20,230 C-10,190 20,170 60,170 Z" />
+      <ellipse cx="100" cy="120" rx="22" ry="30" fill="white" fill-opacity="1" stroke="none"/>
+      <ellipse cx="170" cy="160" rx="18" ry="26" fill="white" fill-opacity="1" stroke="none"/>
+      <path d="M0,180 C80,160 140,100 150,0" stroke-width="2" fill="none"/>
+    </g>
+
+    <!-- Small monstera leaf bottom-center -->
+    <g transform="translate(420, 450) scale(0.7) rotate(-15)">
+      <path d="M0,180 C20,140 60,40 120,0 C140,20 160,80 150,140 C180,100 220,60 280,50 C270,80 250,140 200,180 C240,170 290,160 340,170 C320,200 270,230 210,230 C250,250 280,290 290,340 C260,330 220,300 190,260 C190,300 200,350 180,400 C160,370 150,310 150,260 C120,300 80,330 40,340 C60,310 100,270 130,240 C80,260 30,260 -20,240 C10,220 60,200 110,200 Z" />
+      <ellipse cx="110" cy="130" rx="20" ry="28" fill="white" fill-opacity="1" stroke="none"/>
+      <path d="M0,180 C80,160 140,100 150,0" stroke-width="2" fill="none"/>
+    </g>
+
+    <!-- Stems -->
+    <path d="M150,300 C140,420 120,550 130,700" stroke-width="2.5" fill="none"/>
+    <path d="M700,430 C690,520 680,600 700,720" stroke-width="2.5" fill="none"/>
+    <path d="M450,580 C440,650 430,720 440,800" stroke-width="2" fill="none"/>
+  </g>
+
+  <text x="600" y="885" text-anchor="middle" fill="#5C6148" fill-opacity="0.3" font-family="sans-serif" font-size="11">monstera</text>
+</svg>

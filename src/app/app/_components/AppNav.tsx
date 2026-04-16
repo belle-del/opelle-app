@@ -201,10 +201,10 @@ export function AppNav({ user, workspaceName, workspaceType }: AppNavProps) {
   // Layer 2: the tree image
   // Layer 3 (bottom): solid fallback color
   const treeBackgroundStyle = {
-    backgroundColor: "#1f231a",
+    backgroundColor: "var(--sidebar-bg)",
     backgroundImage: `
-      linear-gradient(to bottom, #1f231a 0%, #1f231a 25%, rgba(31,35,26,0.55) 40%, rgba(31,35,26,0.55) 100%),
-      url(/textures/olive-tree-cropped.png)
+      linear-gradient(to bottom, var(--sidebar-bg) 0%, var(--sidebar-bg) 25%, var(--sidebar-bg-semi) 40%, var(--sidebar-bg-semi) 100%),
+      var(--sidebar-image)
     `,
     backgroundSize: "100% 100%, 110% auto",
     backgroundPosition: "top left, bottom center",

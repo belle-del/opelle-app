@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 800" width="170" height="800">
+  <rect width="170" height="800" fill="none"/>
+  <!-- Cherry blossom tree branch -->
+  <g opacity="0.85">
+    <!-- Main branch coming from lower right -->
+    <path d="M160 790 Q140 760 120 730 Q105 705 95 680 Q85 655 80 630 Q75 605 78 580 Q80 555 85 530"
+          stroke="#7A8A6A" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <!-- Branch bark texture -->
+    <path d="M150 775 Q138 752 125 730" stroke="#8B9A7A" stroke-width="1" fill="none" opacity="0.3"/>
+    <path d="M115 715 Q105 695 98 675" stroke="#8B9A7A" stroke-width="1" fill="none" opacity="0.3"/>
+
+    <!-- Sub-branch left -->
+    <path d="M95 680 Q75 660 55 648 Q38 638 22 635"
+          stroke="#7A8A6A" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M55 648 Q42 638 30 640 Q22 645 15 638"
+          stroke="#7A8A6A" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+    <!-- Sub-branch upper left -->
+    <path d="M82 615 Q60 598 40 588 Q25 582 12 580"
+          stroke="#7A8A6A" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+    <!-- Sub-branch right -->
+    <path d="M85 600 Q105 585 125 575 Q140 568 155 565"
+          stroke="#7A8A6A" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <path d="M125 575 Q138 562 148 555 Q155 548 160 542"
+          stroke="#7A8A6A" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+    <!-- Upper branch -->
+    <path d="M85 530 Q80 510 75 490 Q72 475 75 460"
+          stroke="#7A8A6A" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M78 500 Q60 485 45 478 Q32 475 20 478"
+          stroke="#7A8A6A" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M76 475 Q95 462 110 458 Q125 455 138 460"
+          stroke="#7A8A6A" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+    <!-- Cherry blossoms - 5-petal flowers -->
+    <!-- Blossom cluster 1 (left branch) -->
+    <g transform="translate(25,632)" opacity="0.75">
+      <circle cx="0" cy="-7" r="4" fill="#8B9A7A"/>
+      <circle cx="6.5" cy="-2" r="4" fill="#8B9A7A"/>
+      <circle cx="4" cy="5.5" r="4" fill="#8B9A7A"/>
+      <circle cx="-4" cy="5.5" r="4" fill="#8B9A7A"/>
+      <circle cx="-6.5" cy="-2" r="4" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="2.5" fill="#7A8A6A" opacity="0.8"/>
+    </g>
+    <g transform="translate(40,640)" opacity="0.7">
+      <circle cx="0" cy="-6" r="3.5" fill="#8B9A7A"/>
+      <circle cx="5.5" cy="-2" r="3.5" fill="#8B9A7A"/>
+      <circle cx="3.5" cy="5" r="3.5" fill="#8B9A7A"/>
+      <circle cx="-3.5" cy="5" r="3.5" fill="#8B9A7A"/>
+      <circle cx="-5.5" cy="-2" r="3.5" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="2" fill="#7A8A6A" opacity="0.8"/>
+    </g>
+    <g transform="translate(15,638)" opacity="0.65">
+      <circle cx="0" cy="-5" r="3" fill="#8B9A7A"/>
+      <circle cx="5" cy="-1.5" r="3" fill="#8B9A7A"/>
+      <circle cx="3" cy="4" r="3" fill="#8B9A7A"/>
+      <circle cx="-3" cy="4" r="3" fill="#8B9A7A"/>
+      <circle cx="-5" cy="-1.5" r="3" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="1.8" fill="#7A8A6A" opacity="0.8"/>
+    </g>
+
+    <!-- Blossom cluster 2 (right branch) -->
+    <g transform="translate(140,568)" opacity="0.75">
+      <circle cx="0" cy="-7" r="4" fill="#8B9A7A"/>
+      <circle cx="6.5" cy="-2" r="4" fill="#8B9A7A"/>
+      <circle cx="4" cy="5.5" r="4" fill="#8B9A7A"/>
+      <circle cx="-4" cy="5.5" r="4" fill="#8B9A7A"/>
+      <circle cx="-6.5" cy="-2" r="4" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="2.5" fill="#7A8A6A" opacity="0.8"/>
+    </g>
+    <g transform="translate(155,558)" opacity="0.7">
+      <circle cx="0" cy="-6" r="3.5" fill="#8B9A7A"/>
+      <circle cx="5.5" cy="-2" r="3.5" fill="#8B9A7A"/>
+      <circle cx="3.5" cy="5" r="3.5" fill="#8B9A7A"/>
+      <circle cx="-3.5" cy="5" r="3.5" fill="#8B9A7A"/>
+      <circle cx="-5.5" cy="-2" r="3.5" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="2" fill="#7A8A6A" opacity="0.8"/>
+    </g>
+    <g transform="translate(125,572)" opacity="0.65">
+      <circle cx="0" cy="-5" r="3" fill="#8B9A7A"/>
+      <circle cx="5" cy="-1.5" r="3" fill="#8B9A7A"/>
+      <circle cx="3" cy="4" r="3" fill="#8B9A7A"/>
+      <circle cx="-3" cy="4" r="3" fill="#8B9A7A"/>
+      <circle cx="-5" cy="-1.5" r="3" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="1.8" fill="#7A8A6A" opacity="0.8"/>
+    </g>
+
+    <!-- Blossom cluster 3 (upper area) -->
+    <g transform="translate(22,478)" opacity="0.7">
+      <circle cx="0" cy="-7" r="4" fill="#8B9A7A"/>
+      <circle cx="6.5" cy="-2" r="4" fill="#8B9A7A"/>
+      <circle cx="4" cy="5.5" r="4" fill="#8B9A7A"/>
+      <circle cx="-4" cy="5.5" r="4" fill="#8B9A7A"/>
+      <circle cx="-6.5" cy="-2" r="4" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="2.5" fill="#7A8A6A" opacity="0.8"/>
+    </g>
+    <g transform="translate(130,458)" opacity="0.7">
+      <circle cx="0" cy="-6" r="3.5" fill="#8B9A7A"/>
+      <circle cx="5.5" cy="-2" r="3.5" fill="#8B9A7A"/>
+      <circle cx="3.5" cy="5" r="3.5" fill="#8B9A7A"/>
+      <circle cx="-3.5" cy="5" r="3.5" fill="#8B9A7A"/>
+      <circle cx="-5.5" cy="-2" r="3.5" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="2" fill="#7A8A6A" opacity="0.8"/>
+    </g>
+    <g transform="translate(75,462)" opacity="0.65">
+      <circle cx="0" cy="-6" r="3.5" fill="#8B9A7A"/>
+      <circle cx="5.5" cy="-2" r="3.5" fill="#8B9A7A"/>
+      <circle cx="3.5" cy="5" r="3.5" fill="#8B9A7A"/>
+      <circle cx="-3.5" cy="5" r="3.5" fill="#8B9A7A"/>
+      <circle cx="-5.5" cy="-2" r="3.5" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="2" fill="#7A8A6A" opacity="0.8"/>
+    </g>
+
+    <!-- Scattered blossoms along branches -->
+    <g transform="translate(55,645)" opacity="0.6">
+      <circle cx="0" cy="-5" r="3" fill="#8B9A7A"/>
+      <circle cx="5" cy="-1.5" r="3" fill="#8B9A7A"/>
+      <circle cx="3" cy="4" r="3" fill="#8B9A7A"/>
+      <circle cx="-3" cy="4" r="3" fill="#8B9A7A"/>
+      <circle cx="-5" cy="-1.5" r="3" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="1.5" fill="#7A8A6A"/>
+    </g>
+    <g transform="translate(90,590)" opacity="0.6">
+      <circle cx="0" cy="-5" r="3" fill="#8B9A7A"/>
+      <circle cx="5" cy="-1.5" r="3" fill="#8B9A7A"/>
+      <circle cx="3" cy="4" r="3" fill="#8B9A7A"/>
+      <circle cx="-3" cy="4" r="3" fill="#8B9A7A"/>
+      <circle cx="-5" cy="-1.5" r="3" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="1.5" fill="#7A8A6A"/>
+    </g>
+    <g transform="translate(50,585)" opacity="0.55">
+      <circle cx="0" cy="-5" r="3" fill="#8B9A7A"/>
+      <circle cx="5" cy="-1.5" r="3" fill="#8B9A7A"/>
+      <circle cx="3" cy="4" r="3" fill="#8B9A7A"/>
+      <circle cx="-3" cy="4" r="3" fill="#8B9A7A"/>
+      <circle cx="-5" cy="-1.5" r="3" fill="#8B9A7A"/>
+      <circle cx="0" cy="0" r="1.5" fill="#7A8A6A"/>
+    </g>
+
+    <!-- Falling petals -->
+    <ellipse cx="45" cy="710" rx="3" ry="2" transform="rotate(25 45 710)" fill="#8B9A7A" opacity="0.4"/>
+    <ellipse cx="120" cy="690" rx="2.5" ry="1.8" transform="rotate(-15 120 690)" fill="#8B9A7A" opacity="0.35"/>
+    <ellipse cx="65" cy="740" rx="2.5" ry="1.8" transform="rotate(40 65 740)" fill="#8B9A7A" opacity="0.3"/>
+    <ellipse cx="135" cy="720" rx="3" ry="2" transform="rotate(-30 135 720)" fill="#8B9A7A" opacity="0.3"/>
+    <ellipse cx="90" cy="750" rx="2" ry="1.5" transform="rotate(55 90 750)" fill="#8B9A7A" opacity="0.25"/>
+  </g>
+
+  <!-- Dev identification -->
+  <text x="85" y="792" text-anchor="middle" font-family="monospace" font-size="8" fill="#7A8A6A" opacity="0.5">cherry-blossom</text>
+</svg>
