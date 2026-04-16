@@ -44,9 +44,7 @@ export async function GET(
         .eq("client_id", clientId)
         .eq("workspace_id", workspaceId)
         .order("created_at", { ascending: false })
-        .limit(3)
-        .then(r => r) // graceful if table has no rows
-        .catch(() => ({ data: [], error: null })),
+        .limit(3),
     ]);
 
     const client = clientResult.data;
@@ -57,7 +55,7 @@ export async function GET(
 
     const appointments = appointmentsResult.data || [];
     const formulas = formulasResult.data || [];
-    const inspo = (inspoResult as { data: Record<string, unknown>[] | null }).data || [];
+    const inspo = inspoResult.data || [];
 
     // Debug: log what data we found
     console.log("CHEAT-SHEET-DEBUG:", {
