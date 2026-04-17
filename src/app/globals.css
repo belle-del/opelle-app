@@ -90,7 +90,7 @@
   /* Sidebar */
   --sidebar-bg:      #1f231a;
   --sidebar-bg-semi: rgba(31,35,26,0.55);
-  --sidebar-image:   url('/textures/sidebar/olive-branch.svg');
+  --sidebar-image:   url('/textures/olive-tree-cropped.png');
 
   --ease: cubic-bezier(0.19, 1, 0.22, 1);
 

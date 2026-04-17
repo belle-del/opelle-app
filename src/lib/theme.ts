@@ -58,7 +58,7 @@ export const TYPOGRAPHY_PRESETS: Record<string, { heading: string; body: string;
 };
 
 export const PLANT_PRESETS: Record<string, { background: string; sidebar: string; label: string }> = {
-  "olive-branch":   { background: "/textures/olive-branch.svg",   sidebar: "/textures/sidebar/olive-branch.svg",   label: "Olive Branch" },
+  "olive-branch":   { background: "/textures/olive-branch.svg",   sidebar: "/textures/olive-tree-cropped.png",     label: "Olive Branch" },
   monstera:         { background: "/textures/monstera.svg",        sidebar: "/textures/sidebar/monstera.svg",        label: "Monstera" },
   fern:             { background: "/textures/fern.svg",            sidebar: "/textures/sidebar/fern.svg",            label: "Fern" },
   succulent:        { background: "/textures/succulent.svg",       sidebar: "/textures/sidebar/succulent.svg",       label: "Succulent" },
