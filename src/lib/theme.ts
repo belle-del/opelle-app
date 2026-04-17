@@ -64,8 +64,6 @@ export const PLANT_PRESETS: Record<string, { background: string; sidebar: string
   succulent:        { background: "/textures/succulent.svg",       sidebar: "/textures/sidebar/succulent.svg",       label: "Succulent" },
   "cherry-blossom": { background: "/textures/cherry-blossom.svg",  sidebar: "/textures/sidebar/cherry-blossom.svg",  label: "Cherry Blossom" },
   eucalyptus:       { background: "/textures/eucalyptus.svg",      sidebar: "/textures/sidebar/eucalyptus.svg",      label: "Eucalyptus" },
-  palm:             { background: "/textures/palm.svg",            sidebar: "/textures/sidebar/palm.svg",            label: "Palm" },
-  "fiddle-leaf":    { background: "/textures/fiddle-leaf.svg",     sidebar: "/textures/sidebar/fiddle-leaf.svg",     label: "Fiddle Leaf" },
 };
 
 export const BACKGROUND_PRESETS: Record<string, { label: string; opacity: number }> = {
