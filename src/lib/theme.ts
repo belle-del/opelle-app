@@ -58,12 +58,12 @@ export const TYPOGRAPHY_PRESETS: Record<string, { heading: string; body: string;
 };
 
 export const PLANT_PRESETS: Record<string, { background: string; sidebar: string; label: string }> = {
-  "olive-branch":   { background: "/textures/olive-branch.svg",   sidebar: "/textures/olive-tree-cropped.png",     label: "Olive Branch" },
-  monstera:         { background: "/textures/monstera.svg",        sidebar: "/textures/sidebar/monstera.svg",        label: "Monstera" },
-  fern:             { background: "/textures/fern.svg",            sidebar: "/textures/sidebar/fern.svg",            label: "Fern" },
-  succulent:        { background: "/textures/succulent.svg",       sidebar: "/textures/sidebar/succulent.svg",       label: "Succulent" },
-  "cherry-blossom": { background: "/textures/cherry-blossom.svg",  sidebar: "/textures/sidebar/cherry-blossom.svg",  label: "Cherry Blossom" },
-  eucalyptus:       { background: "/textures/eucalyptus.svg",      sidebar: "/textures/sidebar/eucalyptus.svg",      label: "Eucalyptus" },
+  "olive-branch":   { background: "/textures/olive-branch.svg",   sidebar: "/textures/olive-tree-cropped.png",  label: "Olive Branch" },
+  monstera:         { background: "/textures/monstera.svg",        sidebar: "/textures/olive-tree-cropped.png",  label: "Monstera" },
+  fern:             { background: "/textures/fern.svg",            sidebar: "/textures/olive-tree-cropped.png",  label: "Fern" },
+  succulent:        { background: "/textures/succulent.svg",       sidebar: "/textures/olive-tree-cropped.png",  label: "Succulent" },
+  "cherry-blossom": { background: "/textures/cherry-blossom.svg",  sidebar: "/textures/olive-tree-cropped.png",  label: "Cherry Blossom" },
+  eucalyptus:       { background: "/textures/eucalyptus.svg",      sidebar: "/textures/olive-tree-cropped.png",  label: "Eucalyptus" },
 };
 
 export const BACKGROUND_PRESETS: Record<string, { label: string; opacity: number }> = {
