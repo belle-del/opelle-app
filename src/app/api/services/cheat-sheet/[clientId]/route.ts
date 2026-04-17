@@ -116,6 +116,25 @@ export async function GET(
     // Try to get Metis-enhanced briefing (fire-and-forget, graceful degradation)
     const clientName = `${client.first_name} ${client.last_name || ""}`.trim();
 
+    // Get inspo photo URLs for display
+    const inspoPhotoUrls: string[] = [];
+    if (inspo.length > 0) {
+      const inspoIds = inspo.map((i: Record<string, unknown>) => i.id as string).filter(Boolean);
+      if (inspoIds.length > 0) {
+        const { data: inspoPhotos } = await admin
+          .from("photos")
+          .select("url")
+          .eq("workspace_id", workspaceId)
+          .eq("client_id", clientId)
+          .in("photo_type", ["inspo", "other"])
+          .order("created_at", { ascending: false })
+          .limit(6);
+        if (inspoPhotos) {
+          inspoPhotoUrls.push(...inspoPhotos.map((p: { url: string }) => p.url));
+        }
+      }
+    }
+
     // Build a data-rich prompt so the AI actually uses the info
     const dataBlock = [
       `Client: ${clientName}`,
@@ -128,7 +147,7 @@ export async function GET(
     ].filter(Boolean).join("\n");
 
     const aiResult = await metisChat({
-      message: `Here is the client data. Write a 2-3 sentence service briefing summarizing what the stylist needs to know before starting today's service. Be specific and reference the actual data — do NOT ask for more information.\n\n${dataBlock}`,
+      message: `Here is the client data. Write a 2-3 sentence service briefing summarizing what the stylist needs to know before starting today's service. Be specific and reference the actual data — do NOT ask for more information. Also suggest 1-3 processing steps with durations (e.g. "Lightener: 30 min, Toner: 20 min").\n\n${dataBlock}`,
       conversationHistory: [],
       context: { page: "cheat_sheet", clientId, clientName },
       workspaceContext: {
@@ -151,6 +170,7 @@ export async function GET(
       clientName,
       formulaHistory,
       appointmentHistory,
+      inspoPhotoUrls,
     });
   } catch (err) {
     console.error("Cheat sheet error:", err);

@@ -32,6 +32,7 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
     aiSummary: string | null;
     formulaHistory?: { date: string; notes: string; general: string | null }[];
     appointmentHistory?: { service: string; date: string; status: string; notes: string | null }[];
+    inspoPhotoUrls?: string[];
   } | null>(null);
   const [cheatSheetLoading, setCheatSheetLoading] = useState(false);
 
@@ -1098,6 +1099,7 @@ function CheatSheetTab({ cheatSheet, loading }: {
     aiSummary: string | null;
     formulaHistory?: { date: string; notes: string; general: string | null }[];
     appointmentHistory?: { service: string; date: string; status: string; notes: string | null }[];
+    inspoPhotoUrls?: string[];
   } | null;
   loading: boolean;
 }) {
@@ -1122,6 +1124,7 @@ function CheatSheetTab({ cheatSheet, loading }: {
   const cs = cheatSheet.cheatSheet;
   const formulas = cheatSheet.formulaHistory || [];
   const appointments = cheatSheet.appointmentHistory || [];
+  const inspoUrls = cheatSheet.inspoPhotoUrls || [];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -1168,6 +1171,20 @@ function CheatSheetTab({ cheatSheet, loading }: {
               }}>
                 {cue}
               </span>
+            ))}
+          </div>
+        </InfoBlock>
+      )}
+
+      {/* Inspo Photos */}
+      {inspoUrls.length > 0 && (
+        <InfoBlock label="Client Inspo">
+          <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
+            {inspoUrls.map((url, i) => (
+              <img key={i} src={url} alt={`Inspo ${i + 1}`} style={{
+                width: "56px", height: "56px", borderRadius: "4px",
+                border: "1px solid var(--stone-mid)", objectFit: "cover", flexShrink: 0,
+              }} />
             ))}
           </div>
         </InfoBlock>
