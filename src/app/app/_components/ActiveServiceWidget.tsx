@@ -64,6 +64,10 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
   const [formulaText, setFormulaText] = useState("");
   const [formulaSaving, setFormulaSaving] = useState(false);
   const [formulaSaved, setFormulaSaved] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [suggestError, setSuggestError] = useState("");
+  const [suggestion, setSuggestion] = useState<{ suggested_formula: string; reasoning?: string; confidence?: number; based_on?: string } | null>(null);
 
   // Inspo photos
   const [inspoPhotos, setInspoPhotos] = useState<{ url: string; caption?: string }[]>([]);
@@ -282,6 +286,43 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
         setSession(data.session);
       }
     } catch {}
+  };
+
+  // Suggest formula (from inspo or history)
+  const fetchSuggestion = async (source: "inspo" | "history") => {
+    setSuggestLoading(true);
+    setSuggestError("");
+    setSuggestOpen(false);
+    try {
+      const endpoint = source === "inspo"
+        ? "/api/intelligence/suggest-formula-from-inspo"
+        : "/api/intelligence/suggest-formula";
+      const body = source === "inspo"
+        ? { clientId: session.clientId }
+        : { clientId: session.clientId, serviceTypeName: session.serviceName };
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.status === 404) {
+        const data = await res.json();
+        setSuggestError(data.error || (source === "inspo"
+          ? "No completed inspo consultation found."
+          : "Not enough formula history yet."));
+        return;
+      }
+      if (!res.ok) {
+        setSuggestError("Could not get suggestion right now.");
+        return;
+      }
+      const data = await res.json();
+      setSuggestion(data.suggestion || data);
+    } catch {
+      setSuggestError("Could not reach intelligence service.");
+    } finally {
+      setSuggestLoading(false);
+    }
   };
 
   // Save inline formula
@@ -545,6 +586,99 @@ export function ActiveServiceWidget({ session: initialSession, clientName }: Act
                 ))}
               </InfoBlock>
             )}
+
+            {/* Suggest Formula — From Inspo / From History */}
+            <div>
+              {!suggestion && !suggestLoading && (
+                <div style={{ marginBottom: "10px" }}>
+                  {!suggestOpen ? (
+                    <button onClick={() => setSuggestOpen(true)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: "6px",
+                        padding: "6px 12px", borderRadius: "6px",
+                        border: "1px solid var(--stone-warm)", background: "var(--brass-glow)",
+                        color: "var(--brass)", fontSize: "10px", fontWeight: 600,
+                        cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                      }}>
+                      ✦ Suggest Formula
+                    </button>
+                  ) : (
+                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                      <button onClick={() => fetchSuggestion("inspo")}
+                        style={{
+                          display: "flex", alignItems: "center", gap: "4px",
+                          padding: "6px 12px", borderRadius: "6px",
+                          border: "1px solid var(--stone-warm)", background: "var(--stone-light)",
+                          color: "var(--text-on-stone)", fontSize: "10px", fontWeight: 500,
+                          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                        }}>
+                        📷 From Inspo
+                      </button>
+                      <button onClick={() => fetchSuggestion("history")}
+                        style={{
+                          display: "flex", alignItems: "center", gap: "4px",
+                          padding: "6px 12px", borderRadius: "6px",
+                          border: "1px solid var(--stone-warm)", background: "var(--stone-light)",
+                          color: "var(--text-on-stone)", fontSize: "10px", fontWeight: 500,
+                          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                        }}>
+                        ↻ From History
+                      </button>
+                      <button onClick={() => setSuggestOpen(false)}
+                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", color: "var(--text-on-stone-faint)", padding: "2px" }}>
+                        ×
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {suggestLoading && (
+                <div style={{ padding: "12px", borderRadius: "6px", background: "var(--brass-glow)", border: "1px solid var(--brass-soft)", marginBottom: "10px" }}>
+                  <p style={{ fontSize: "10px", color: "var(--brass)", fontWeight: 600 }}>Generating suggestion...</p>
+                </div>
+              )}
+
+              {suggestError && (
+                <div style={{ padding: "8px 12px", borderRadius: "6px", background: "var(--garnet-wash)", border: "1px solid rgba(117,18,18,0.2)", marginBottom: "10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <p style={{ fontSize: "10px", color: "var(--garnet)" }}>{suggestError}</p>
+                  <button onClick={() => setSuggestError("")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "var(--text-on-stone-faint)" }}>×</button>
+                </div>
+              )}
+
+              {suggestion && (
+                <div style={{
+                  padding: "10px", borderRadius: "6px", background: "rgba(196,171,112,0.06)",
+                  border: "1px solid var(--brass-soft)", marginBottom: "10px",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <p style={{ fontSize: "8px", fontWeight: 700, color: "var(--brass)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                      Suggested Formula
+                    </p>
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      <button onClick={() => { setFormulaText(suggestion.suggested_formula); setSuggestion(null); }}
+                        style={{
+                          padding: "2px 8px", borderRadius: "3px", fontSize: "8px", fontWeight: 700,
+                          background: "var(--garnet)", color: "white",
+                          border: "none", cursor: "pointer", textTransform: "uppercase",
+                        }}>
+                        Use This
+                      </button>
+                      <button onClick={() => setSuggestion(null)}
+                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "var(--text-on-stone-faint)" }}>×</button>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: "11px", lineHeight: "1.6", color: "var(--text-on-stone)", whiteSpace: "pre-wrap" }}>
+                    {suggestion.suggested_formula}
+                  </p>
+                  {suggestion.reasoning && (
+                    <p style={{ fontSize: "9px", color: "var(--text-on-stone-faint)", marginTop: "6px", fontStyle: "italic" }}>
+                      {suggestion.reasoning}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Inline formula entry */}
             <InfoBlock label="Today's Formula">
