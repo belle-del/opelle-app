@@ -261,6 +261,27 @@ export async function POST(request: NextRequest) {
     if (imagesForClaude.length > 0) {
       try {
         const combinedNotes = [hairStory, goals].filter(Boolean).join("\n\n") || null;
+
+        // Pull the workspace's service catalog so the AI can ask informed
+        // questions (e.g. "are you open to extensions?" when the inspo is
+        // longer than current hair). Failure here is non-fatal — analysis
+        // just runs without service awareness.
+        let availableServices: string[] | undefined;
+        try {
+          const { data: serviceRows } = await admin
+            .from("service_types")
+            .select("name")
+            .eq("workspace_id", workspaceId)
+            .order("sort_order", { ascending: true });
+          if (serviceRows && serviceRows.length > 0) {
+            availableServices = serviceRows
+              .map((r: { name: string | null }) => (r.name || "").trim())
+              .filter(Boolean);
+          }
+        } catch (svcErr) {
+          console.error("[public/consult] service_types fetch failed:", svcErr);
+        }
+
         analysisResult = await analyzeInspoDirect({
           images: imagesForClaude,
           clientNotes: combinedNotes,
@@ -269,6 +290,7 @@ export async function POST(request: NextRequest) {
             lastName: lastName ?? undefined,
           },
           formulaHistory: null,
+          availableServices,
         });
       } catch (err) {
         console.error("[public/consult] Claude analysis failed:", err);

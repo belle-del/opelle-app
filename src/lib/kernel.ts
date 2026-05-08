@@ -309,6 +309,11 @@ export async function analyzeInspoVision(params: {
     processingPreferences?: string;
   } | null;
   formulaHistory: string | null;
+  // Names of services the stylist offers (e.g. "Tape-ins", "Vivids", "Women's cuts").
+  // The kernel should consider these when generating per-photo questions so the AI
+  // can ask, for example, "are you open to extensions?" when the inspo is longer
+  // than the client's current hair.
+  availableServices?: string[];
 }): Promise<{
   questions: { id: string; question: string; type: string; options?: string[]; photoIndex?: number }[];
   clientSummary: string;
@@ -319,6 +324,7 @@ export async function analyzeInspoVision(params: {
     client_notes: params.clientNotes,
     client_context: params.clientContext,
     formula_history: params.formulaHistory,
+    available_services: params.availableServices ?? null,
   }, 60000); // 60s for vision
 }
 

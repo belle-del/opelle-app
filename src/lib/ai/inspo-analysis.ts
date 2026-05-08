@@ -64,13 +64,25 @@ export async function analyzeInspoDirect(params: {
     processingPreferences?: string;
   } | null;
   formulaHistory: string | null;
+  availableServices?: string[];
 }): Promise<InspoAnalysisResult> {
+  // Inject the services list into clientNotes as well so the existing kernel
+  // prompt sees them even before it formally consumes `available_services`.
+  // Once the kernel's prompt explicitly reads the new field this duplication
+  // can be removed.
+  let augmentedNotes = params.clientNotes;
+  if (params.availableServices && params.availableServices.length > 0) {
+    const servicesLine = `Services this stylist offers: ${params.availableServices.join(", ")}. When the inspo implies a transformation (e.g. more length, dramatic color, different texture), consider whether one of these services is a relevant path and ask the client about it.`;
+    augmentedNotes = augmentedNotes ? `${augmentedNotes}\n\n${servicesLine}` : servicesLine;
+  }
+
   const result = await analyzeInspoVision({
     images: params.images,
     categoryMeta: params.categoryMeta,
-    clientNotes: params.clientNotes,
+    clientNotes: augmentedNotes,
     clientContext: params.clientContext,
     formulaHistory: params.formulaHistory,
+    availableServices: params.availableServices,
   });
 
   if (!result || !result.questions) {
