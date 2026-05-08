@@ -6,6 +6,7 @@ export const maxDuration = 60;
 
 const ALLOWED_ORIGINS = new Set<string>([
   "https://belle.co.beauty",
+  "https://belle-co-beauty.vercel.app",
   "http://localhost:4173",
   "http://127.0.0.1:4173",
 ]);

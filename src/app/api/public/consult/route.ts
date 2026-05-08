@@ -10,6 +10,7 @@ export const maxDuration = 60;
 // Localhost entries permit local dev of the v2 form against the live API.
 const ALLOWED_ORIGINS = new Set<string>([
   "https://belle.co.beauty",
+  "https://belle-co-beauty.vercel.app",
   "http://localhost:4173",
   "http://127.0.0.1:4173",
 ]);
