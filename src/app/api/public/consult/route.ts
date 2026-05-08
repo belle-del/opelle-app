@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createClientNotification } from "@/lib/client-notifications";
 import { analyzeInspoDirect } from "@/lib/ai/inspo-analysis";
+import { sendEmail, buildConsultEmail } from "@/lib/email";
 
 // Allow up to 60s for Claude vision analysis + photo uploads.
 export const maxDuration = 60;
@@ -313,6 +314,32 @@ export async function POST(request: NextRequest) {
       body: notifyBody,
       actionUrl: `/app/clients/${client.id}`,
     });
+
+    // 9. Email Belle so she gets a real inbox ping without having to check the
+    // app. Failures here are non-fatal — the submission is already saved and
+    // the in-app notification is in place.
+    try {
+      const appBase = process.env.NEXT_PUBLIC_APP_URL || "https://www.opelle.app";
+      const recipient = process.env.CONSULT_NOTIFICATION_TO || BELLE_OWNER_EMAIL;
+      const { subject, html, text } = buildConsultEmail({
+        name,
+        contact,
+        hairStory,
+        goals,
+        budget,
+        timing,
+        referrer,
+        photoCount: photoFiles.length,
+        appUrl: `${appBase}/app/clients/${client.id}`,
+      });
+      const replyTo = detectIsEmail(contact) ? contact : undefined;
+      const result = await sendEmail({ to: recipient, subject, html, text, replyTo });
+      if (!result.ok) {
+        console.error("[public/consult] email send failed:", result.error);
+      }
+    } catch (emailErr) {
+      console.error("[public/consult] email send threw:", emailErr);
+    }
 
     return NextResponse.json(
       {
