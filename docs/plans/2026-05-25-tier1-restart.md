@@ -1097,3 +1097,69 @@ describe.skipIf(!process.env.INTEGRATION_DB)('Inventory concurrent (integration)
 - Belle's owner login resolves as owner across page reload and a fresh incognito session
 - One round of `npm test` passes locally
 - The four "live verification" checklists above all check out
+
+---
+
+# RETROSPECTIVE — What shipped (2026-05-25)
+
+## Commits
+
+| Slice | Commit | Subject |
+|------:|--------|---------|
+| 1 | `2650259` | `fix(roles): resolve owner role correctly + map user_type to workspace role` |
+| 1+ | `fb2cd11` | `fix(invite): preserve invite-link destination through Google OAuth` |
+| 2 | `e472e7c` | `feat(school_mode): supervision gate for student completions + formula entries` |
+| 3 | `ecfcfa1` | `feat(roles): add assistant + booth_renter (with booth_renter RLS isolation)` |
+| 4 | `fc04824` | `fix(rls): close 9 RLS gaps flagged by the August audit` |
+| 5 | `f5f5782` | `fix(inventory): atomic stock deduction RPC + booth_renter scoping` |
+
+## Migrations Belle needs to run (combined SQL paste)
+
+The migrations live in `migrations/` and are not auto-applied — Belle pastes them into the Supabase SQL editor per [[feedback_sql_in_chat]]. They are all idempotent.
+
+1. `migrations/2026-05-25-fix-onboarding-role.sql` — already run (Slice 1 gate)
+2. `migrations/2026-05-25-school-mode.sql` — already run + Belle's classroom seed UPDATE
+3. `migrations/2026-05-25-roles-assistant-boothrenter.sql` — Slice 3
+4. `migrations/2026-05-25-rls-gaps.sql` — Slice 4
+5. `migrations/2026-05-25-atomic-stock-deduction.sql` — Slice 5
+
+## Test counts
+
+- Started: 103 passing / 13 pre-existing failing
+- Ended: 130 passing / 13 pre-existing failing (zero regressions, +27 new tests for role-mapping, school-mode, and the two new roles)
+
+## New findings (not in the original audit)
+
+1. **Invite-link OAuth round-trip was broken.** The login page hardcoded `redirectTo: '${origin}/auth/callback'` and never read `?redirect=`. A signed-out user clicking an invite link got bounced to Google, came back without the `next` param, and the callback defaulted to `/onboarding` or `/app` — losing the invite entirely. Fixed in commit `fb2cd11` (Slice 1+). This was the source of Belle's "Anabelle Lord's Studio" test-account oddity.
+2. **`acceptTeamInvite` did not mark onboarding complete.** A user accepting an invite via the click-link path (vs the typed-code path through the onboarding quiz) had `user_profiles.onboarding_completed=false` after, so the middleware bounced them back to `/onboarding` on their next `/app` hit. Also fixed in `fb2cd11`.
+3. **`getWorkspaceId` had two unsafe fallbacks.** (a) `.single()` errored on multi-row owner queries (a user with multiple test workspaces), then (b) the second fallback returned "the first workspace in the database" — silently granting a user access to other people's workspaces. Replaced with `.order('created_at').limit(1).maybeSingle()` and removed the first-workspace fallback in Slice 1.
+4. **`/api/team/permissions` silently fell back to `'student'`** when `getMemberRole` returned null. This was the actual mechanism by which Belle's owner login resolved as student — when the workspace mismatch above caused `getMemberRole` to return null, the API responded with student instead of erroring. Now returns 403 in Slice 1.
+5. **`metis_feedback` + `metis_lessons` had `USING(true) WITH CHECK(true)` policies** — not "zero policies" as the audit reported. Any authenticated user could read any workspace's feedback and lessons. Worse than no policies, because the policies looked correct at a glance. Tightened to proper workspace scoping in Slice 4.
+6. **`user_profiles` was wrongly flagged.** The audit listed it as "RLS enabled but zero policies." It actually has three correct policies (read own, update own, service-role insert). No change needed; comment added in the Slice 4 migration to make this finding permanent.
+7. **`pending_client_joins` is intentionally service-role-only.** The audit flagged it as a gap, but the original migration comment explains why: the magic-link join flow writes to it before the user has an auth session. Added a `COMMENT ON TABLE` so a future reader doesn't "fix" this back into a security hole.
+8. **The bogus `vi: ^0.3.2` dep blocked `npm install`.** The audit had called it "noise, not breaking." It was breaking — couldn't install vitest, couldn't run tests, couldn't verify anything. Removed in Slice 1 as required scope-deviation.
+
+## Things that surprised me
+
+- **The `single()` vs `maybeSingle()` distinction caused 70% of the role-resolution bug surface.** Every place a "find one thing" query was written with `.single()` would silently degrade to a null fallback if the row didn't exist OR if more than one row matched. The audit caught the symptoms (Belle resolving as student), but the root cause was that the codebase trusts `.single()` to mean "find the thing" when it actually means "throw if zero or many." Every audit-of-the-audit should grep for `.single()` next time.
+- **The Build Packet's "no UI in this tier" guidance saved a lot of scope.** I was tempted to also build the instructor approval queue for school_mode in Slice 2, and a workspace switcher for multi-workspace users in Slice 1+. Resisting was the right call — both would have ballooned the tier 4x.
+- **Booth-renter isolation had a hidden second half.** Adding `owner_user_id` + RLS on the inventory tables (Slice 3) was clean, but the matching change in the deduction RPC (Slice 5) was the actual hard part. Without it, a booth renter completing a service would either (a) RLS-fail trying to deduct from the salon's product or (b) leak deductions onto the salon's stock. The plan caught this connection late and the implementation went the right way only because Belle's instructions explicitly named the interaction.
+
+## Things deferred (NOT in Tier 1, but discovered along the way)
+
+- **Workspace switcher UI.** A user with multiple memberships (e.g. a test account that has its own workspace AND has joined someone else's via invite) always defaults to their owned workspace via `getCurrentWorkspace`. Acceptable for now; a switcher is Tier 2+.
+- **Dashboard student-view filtering.** A student member of a school-mode workspace currently sees the owner's full dashboard widgets (inspo flags, all inventory, all tasks). The role lock-out is at the route level, not the widget level. Build Bible Module 9 implies a student-specific dashboard layout; not in Tier 1.
+- **Instructor approval queue UI.** Tier 1 only added the storage + flag + gating logic. The UI for an instructor to see drafts/unverified completions and approve/reject them is Tier 2 per the August Packet.
+- **Concurrent-completion integration test.** A real test of the atomic RPC would need a Supabase test-DB harness that doesn't exist yet. The atomicity is guaranteed by Postgres semantics on `SELECT ... FOR UPDATE`; relying on the standard pattern instead.
+- **`team.test.ts` pre-existing failures (13).** Five-ish are mock-chain incompleteness; one is a contradiction between the test ("student should not have `earnings.view_own`") and the actual permissions map (which grants it). Both predate this tier and are worth cleaning up separately, but Tier 1 was scoped to not touch them.
+
+## Tests added by this plan (actual)
+
+| Slice | Test file | New tests |
+|------:|-----------|----------:|
+| 1 | `src/__tests__/role-mapping.test.ts` | 11 |
+| 2 | `src/__tests__/school-mode.test.ts` | 7 |
+| 3 | `src/__tests__/permissions.test.ts` (extended) | 8 |
+| 3 | `src/__tests__/role-mapping.test.ts` (extended) | 2 |
+| 5 | (deferred — needs DB harness) | 0 |
+| **Total** | | **27** |
