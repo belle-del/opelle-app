@@ -5,13 +5,15 @@ import type { WorkspaceMember, PayType } from "@/lib/types";
 import type { TeamRole, Permission } from "@/lib/permissions";
 import { ALL_PERMISSIONS, getEffectivePermissions } from "@/lib/permissions";
 
-const ROLES: { value: string; label: string }[] = [
+const ROLES: { value: TeamRole; label: string }[] = [
   { value: "owner", label: "Owner" },
   { value: "admin", label: "Admin" },
   { value: "instructor", label: "Instructor" },
   { value: "stylist", label: "Stylist" },
   { value: "student", label: "Student" },
   { value: "front_desk", label: "Front Desk" },
+  { value: "assistant", label: "Assistant" },
+  { value: "booth_renter", label: "Booth Renter" },
 ];
 
 export function MemberEditDrawer({
@@ -25,7 +27,7 @@ export function MemberEditDrawer({
   onUpdated: (m: WorkspaceMember) => void;
   onDeactivated: (id: string) => void;
 }) {
-  const [role, setRole] = useState(member.role);
+  const [role, setRole] = useState<TeamRole>(member.role as TeamRole);
   const [displayName, setDisplayName] = useState(member.displayName || "");
   const [email, setEmail] = useState(member.email || "");
   const [phone, setPhone] = useState(member.phone || "");

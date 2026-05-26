@@ -14,11 +14,13 @@ export function userTypeToRole(userType: UserType): TeamRole {
 
 export function roleToUserType(role: TeamRole): UserType {
   switch (role) {
-    case 'owner':       return 'salon_owner';
-    case 'admin':       return 'school_admin';
-    case 'instructor':  return 'practitioner';
-    case 'stylist':     return 'practitioner';
-    case 'student':     return 'student';
-    case 'front_desk':  return 'practitioner';
+    case 'owner':         return 'salon_owner';
+    case 'admin':         return 'school_admin';
+    case 'instructor':    return 'practitioner';
+    case 'stylist':       return 'practitioner';
+    case 'student':       return 'student';
+    case 'front_desk':    return 'practitioner';
+    case 'assistant':     return 'practitioner';
+    case 'booth_renter':  return 'practitioner';
   }
 }

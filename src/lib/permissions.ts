@@ -1,7 +1,15 @@
 // src/lib/permissions.ts
 // Pure permission logic — no React, no DB. Works server + client.
 
-export type TeamRole = 'owner' | 'admin' | 'instructor' | 'stylist' | 'student' | 'front_desk';
+export type TeamRole =
+  | 'owner'
+  | 'admin'
+  | 'instructor'
+  | 'stylist'
+  | 'student'
+  | 'front_desk'
+  | 'assistant'
+  | 'booth_renter';
 
 export type Permission =
   | 'team.manage'
@@ -104,6 +112,29 @@ export const ROLE_PERMISSIONS: Record<TeamRole, Permission[]> = {
     'appointments.manage', 'appointments.view_own',
     'messages.use', 'metis.use', 'history.view_own',
     'services.check_in',
+  ],
+  assistant: [
+    // Floor support: see who's where, pick up tasks, communicate.
+    'floor.view',
+    'appointments.view_own',
+    'tasks.assign',          // assistants can complete tasks assigned to them
+    'messages.use', 'metis.use', 'history.view_own',
+    'products.view',
+  ],
+  booth_renter: [
+    // Same permission shape as stylist — data isolation enforced via RLS
+    // (owner_user_id) so they see only their own clients/appointments/
+    // formulas/inventory, fully scoped away from the host salon.
+    'hours.view_own',
+    'clients.manage', 'clients.view_own',
+    'formulas.view_own',
+    'checkout.use',
+    'appointments.manage', 'appointments.view_own', 'availability.view_own',
+    'portfolio.manage', 'portfolio.view_own',
+    'products.view', 'earnings.view_own',
+    'messages.use', 'metis.use', 'history.view_own',
+    'progress.view_own',
+    'marketing.view',
   ],
 };
 

@@ -163,7 +163,7 @@ describe('Team Management - Permissions Module', () => {
     });
 
     it('should return complete effective permissions map for all roles', () => {
-      const roles: TeamRole[] = ['owner', 'admin', 'instructor', 'stylist', 'student', 'front_desk'];
+      const roles: TeamRole[] = ['owner', 'admin', 'instructor', 'stylist', 'student', 'front_desk', 'assistant', 'booth_renter'];
 
       for (const role of roles) {
         const effective = getEffectivePermissions(role);
@@ -171,6 +171,51 @@ describe('Team Management - Permissions Module', () => {
         expect(typeof effective['team.manage']).toBe('boolean');
       }
     });
+  });
+
+  describe('Role — assistant', () => {
+    it('can view floor status and use messages/metis', () => {
+      expect(hasPermission('assistant', 'floor.view')).toBe(true);
+      expect(hasPermission('assistant', 'messages.use')).toBe(true);
+      expect(hasPermission('assistant', 'metis.use')).toBe(true);
+    });
+    it('can mark tasks complete (tasks.assign granted for own-task completion)', () => {
+      expect(hasPermission('assistant', 'tasks.assign')).toBe(true);
+    });
+    it('can view (but not manage) appointments', () => {
+      expect(hasPermission('assistant', 'appointments.view_own')).toBe(true);
+      expect(hasPermission('assistant', 'appointments.manage')).toBe(false);
+    });
+    it('cannot edit formulas or complete checkouts', () => {
+      expect(hasPermission('assistant', 'formulas.view_all')).toBe(false);
+      expect(hasPermission('assistant', 'formulas.view_own')).toBe(false);
+      expect(hasPermission('assistant', 'checkout.use')).toBe(false);
+    });
+    it('cannot manage team or settings', () => {
+      expect(hasPermission('assistant', 'team.manage')).toBe(false);
+      expect(hasPermission('assistant', 'settings.manage')).toBe(false);
+      expect(hasPermission('assistant', 'settings.billing')).toBe(false);
+    });
+  });
+
+  describe('Role — booth_renter', () => {
+    it('has full access to their own clients/appointments/formulas/inventory', () => {
+      expect(hasPermission('booth_renter', 'clients.manage')).toBe(true);
+      expect(hasPermission('booth_renter', 'appointments.manage')).toBe(true);
+      expect(hasPermission('booth_renter', 'formulas.view_own')).toBe(true);
+      expect(hasPermission('booth_renter', 'products.view')).toBe(true);
+      expect(hasPermission('booth_renter', 'checkout.use')).toBe(true);
+      expect(hasPermission('booth_renter', 'earnings.view_own')).toBe(true);
+      expect(hasPermission('booth_renter', 'portfolio.manage')).toBe(true);
+    });
+    it('cannot manage the workspace team or billing', () => {
+      expect(hasPermission('booth_renter', 'team.manage')).toBe(false);
+      expect(hasPermission('booth_renter', 'settings.billing')).toBe(false);
+      expect(hasPermission('booth_renter', 'reports.view')).toBe(false);
+    });
+    // Note: booth_renter data isolation is enforced via RLS, NOT via the
+    // permission matrix. The permission set above is identical in shape to
+    // a stylist; RLS scopes the actual visible rows to owner_user_id.
   });
 
   describe('Access Control Checks', () => {

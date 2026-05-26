@@ -26,12 +26,14 @@ describe('userTypeToRole', () => {
 
 describe('roleToUserType', () => {
   it.each<[TeamRole, UserType]>([
-    ['owner',      'salon_owner'],
-    ['admin',      'school_admin'],
-    ['instructor', 'practitioner'],
-    ['stylist',    'practitioner'],
-    ['student',    'student'],
-    ['front_desk', 'practitioner'],
+    ['owner',        'salon_owner'],
+    ['admin',        'school_admin'],
+    ['instructor',   'practitioner'],
+    ['stylist',      'practitioner'],
+    ['student',      'student'],
+    ['front_desk',   'practitioner'],
+    ['assistant',    'practitioner'],
+    ['booth_renter', 'practitioner'],
   ])('maps %s → %s', (role, expected) => {
     expect(roleToUserType(role)).toBe(expected);
   });

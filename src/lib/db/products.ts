@@ -96,11 +96,28 @@ export async function createProduct(input: {
   const wsId = await resolveWorkspaceId();
   if (!wsId) return null;
 
+  // Booth-renter ownership stamp: when the caller is a booth_renter,
+  // the new product belongs to THEM (isolated from the salon's shared
+  // catalog by the RESTRICTIVE RLS policy). For everyone else, leave
+  // owner_user_id NULL → workspace-shared, pre-existing behavior.
+  const { createSupabaseServerClient } = await import("@/lib/supabase/server");
+  const { getMemberRole } = await import("@/lib/db/team");
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  let ownerUserId: string | null = null;
+  if (user) {
+    const memberInfo = await getMemberRole(user.id, wsId);
+    if (memberInfo?.role === 'booth_renter') {
+      ownerUserId = user.id;
+    }
+  }
+
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("products")
     .insert({
       workspace_id: wsId,
+      owner_user_id: ownerUserId,
       brand: input.brand,
       line: input.line || null,
       shade: input.shade,
