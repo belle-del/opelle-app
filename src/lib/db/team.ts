@@ -293,14 +293,17 @@ export async function getMemberRole(
     };
   }
 
-  // SECOND: check workspace_members for non-owners
+  // SECOND: check workspace_members for non-owners.
+  // maybeSingle() returns null instead of throwing when 0 rows match —
+  // the .single() variant errored on missing rows and silently produced
+  // a null role + the API's "student" fallback (the original bug).
   const { data } = await admin
     .from("workspace_members")
     .select("role, permissions, status")
     .eq("workspace_id", workspaceId)
     .eq("user_id", userId)
     .or("status.neq.inactive,status.is.null")
-    .single();
+    .maybeSingle();
 
   if (data) {
     return {

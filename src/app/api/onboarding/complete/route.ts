@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { completeOnboarding } from "@/lib/db/user-profiles";
 import { acceptTeamInvite } from "@/lib/db/team";
+import { userTypeToRole } from "@/lib/role-mapping";
 import { NextResponse } from "next/server";
 import type { UserType } from "@/lib/types";
 
@@ -61,6 +62,16 @@ export async function POST(request: Request) {
     joinedViaInvite = true;
   }
 
+  // Solo students must join an existing school/salon via invite — they
+  // have nothing to own. A personal-workspace student path can be added
+  // later as a deliberate, separate flow.
+  if (!joinedViaInvite && userType === "student") {
+    return NextResponse.json(
+      { error: "Students must join with an invite code from their school or salon." },
+      { status: 400 },
+    );
+  }
+
   // Create workspace if user didn't join via invite
   if (!joinedViaInvite) {
     const name =
@@ -118,13 +129,14 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Failed to create workspace" }, { status: 500 });
       }
 
-      // Create workspace_members entry for owner
+      // Create workspace_members entry — role mapped from user_type so
+      // students/stylists/admins are not silently promoted to owner.
       await admin
         .from("workspace_members")
         .insert({
           workspace_id: ws.id,
           user_id: user.id,
-          role: "owner",
+          role: userTypeToRole(userType),
           status: "active",
         });
     }

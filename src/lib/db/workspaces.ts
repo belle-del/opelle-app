@@ -36,48 +36,42 @@ export async function getCurrentWorkspace(): Promise<Workspace | null> {
   }
   console.log("[getCurrentWorkspace] User:", user.id, user.email);
 
-  // Use admin client to bypass RLS — we already verified the user is authenticated
+  // Use admin client to bypass RLS — we already verified the user is authenticated.
+  // Deterministic resolution: oldest owned workspace, else oldest membership.
+  // NEVER fall back to "first workspace in DB" — that silently grants access
+  // to other people's workspaces.
   const admin = createSupabaseAdminClient();
-  const { data, error } = await admin
+  const { data: owned } = await admin
     .from("workspaces")
     .select("*")
     .eq("owner_id", user.id)
-    .single();
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
 
-  if (error || !data) {
-    if (error) console.error("[getCurrentWorkspace] DB error:", error.message, "for user:", user.id);
-    else console.log("[getCurrentWorkspace] No owned workspace for user:", user.id, "— checking membership");
+  if (owned) return workspaceRowToModel(owned as WorkspaceRow);
 
-    // Fallback: check if user is a workspace member (non-owner stylist)
-    const { data: membership } = await admin
-      .from("workspace_members")
-      .select("workspace_id")
-      .eq("user_id", user.id)
-      .limit(1)
-      .single();
+  // Fallback: oldest membership (non-inactive)
+  const { data: membership } = await admin
+    .from("workspace_members")
+    .select("workspace_id")
+    .eq("user_id", user.id)
+    .or("status.neq.inactive,status.is.null")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
 
-    if (membership) {
-      const { data: ws } = await admin
-        .from("workspaces")
-        .select("*")
-        .eq("id", membership.workspace_id)
-        .single();
-      if (ws) return workspaceRowToModel(ws as WorkspaceRow);
-    }
-
-    // Final fallback: grab first workspace (single-salon setup)
-    console.warn("[getCurrentWorkspace] user", user.id, "not in owner_id or workspace_members — using first workspace fallback");
-    const { data: fallbackWs } = await admin
+  if (membership) {
+    const { data: ws } = await admin
       .from("workspaces")
       .select("*")
-      .limit(1)
-      .single();
-    if (fallbackWs) return workspaceRowToModel(fallbackWs as WorkspaceRow);
-
-    console.error("[getCurrentWorkspace] No workspace found at all for user:", user.id);
-    return null;
+      .eq("id", membership.workspace_id)
+      .maybeSingle();
+    if (ws) return workspaceRowToModel(ws as WorkspaceRow);
   }
-  return workspaceRowToModel(data as WorkspaceRow);
+
+  console.warn("[getCurrentWorkspace] no workspace claim for user:", user.id);
+  return null;
 }
 
 export async function createWorkspace(name: string): Promise<Workspace | null> {

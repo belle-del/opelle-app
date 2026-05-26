@@ -1,8 +1,10 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getUserProfile, createUserProfile, completeOnboarding } from "@/lib/db/user-profiles";
+import { roleToUserType } from "@/lib/role-mapping";
 import { NextResponse } from "next/server";
 import type { UserType } from "@/lib/types";
+import type { TeamRole } from "@/lib/permissions";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -24,26 +26,38 @@ export async function GET(request: Request) {
           return NextResponse.redirect(`${origin}${next}`);
         }
 
-        // Check if this is an existing user (has a workspace or membership)
+        // Check if this is an existing user (has a workspace or membership).
+        // Prefer ownership over membership when both exist — Belle owns her
+        // workspace AND is listed as an owner-member; ownership wins so she
+        // gets salon_owner.
         const admin = createSupabaseAdminClient();
 
         const { data: ownedWorkspace } = await admin
           .from("workspaces")
           .select("id")
           .eq("owner_id", user.id)
+          .order("created_at", { ascending: true })
+          .limit(1)
           .maybeSingle();
 
         const { data: membership } = await admin
           .from("workspace_members")
           .select("id, role")
           .eq("user_id", user.id)
+          .or("status.neq.inactive,status.is.null")
+          .order("created_at", { ascending: true })
           .limit(1)
           .maybeSingle();
 
         if (ownedWorkspace || membership) {
-          // Existing user with a workspace — auto-onboard, skip quiz
-          const userType: UserType = membership?.role === "student"
-            ? "student"
+          // Existing user with a workspace — auto-onboard, skip quiz.
+          // Ownership wins: if the user owns a workspace, treat them as
+          // salon_owner regardless of what membership row they have.
+          const derivedRole: TeamRole | null = ownedWorkspace
+            ? "owner"
+            : (membership?.role as TeamRole | undefined) ?? null;
+          const userType: UserType = derivedRole
+            ? roleToUserType(derivedRole)
             : "practitioner";
 
           if (!profile) {

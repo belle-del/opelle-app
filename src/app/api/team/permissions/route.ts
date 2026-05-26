@@ -21,7 +21,13 @@ export async function GET() {
     console.log("[team/permissions]", user.email, "→", memberInfo?.role ?? "NO_MEMBER (fallback: student)");
 
     if (!memberInfo) {
-      return NextResponse.json({ role: "student", permissions: {} }, { headers });
+      // No silent fallback. A user with no claim on this workspace must
+      // not be silently granted a fake role — that hid the original bug
+      // where a workspace mismatch caused Belle's owner login to resolve
+      // as a student. The client hook handles this 403 by falling back to
+      // least-privilege locally.
+      console.warn("[team/permissions] no member info for", user.email, "in workspace", workspaceId);
+      return NextResponse.json({ error: "Not a workspace member" }, { status: 403, headers });
     }
 
     return NextResponse.json({
