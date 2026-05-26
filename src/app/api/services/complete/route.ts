@@ -116,59 +116,100 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // NOTE: Stock deductions are not atomic (read-then-write). For a school environment
-    // with low concurrency this is acceptable. If concurrent completions become an issue,
-    // replace with a Postgres RPC using UPDATE ... RETURNING for atomic decrement.
-    // 3. Inventory deduction (Rule 9, Step 3)
+    // 3. Inventory deduction (Rule 9, Step 3) — ATOMIC via RPC.
+    // The deduct_product_stock RPC takes a row lock (SELECT ... FOR
+    // UPDATE), reads the current quantity, computes the clamped new
+    // value, writes it, and returns both — all in one statement.
+    // Concurrent service-completion calls on the same product
+    // serialize through the row lock instead of racing.
+    //
+    // For booth_renter callers: the caller's catalog is RLS-isolated
+    // from the salon's shared catalog. The templated product id may
+    // reference a salon product the booth_renter can't write to; if
+    // so, look up THEIR own product matching brand+shade and deduct
+    // from that. If no match exists, skip the deduction (don't
+    // silently deduct from the salon's stock — that would be the same
+    // multi-tenant leak we just closed in Slice 3 RLS).
     const usageTemplates = await listServiceProductUsage(categoryId, workspaceId);
+    const callerIsBoothRenter = memberInfo?.role === 'booth_renter';
 
     for (const usage of usageTemplates) {
-      // Fetch current product stock
+      let productIdToDeduct = usage.productId;
+
+      if (callerIsBoothRenter) {
+        const { data: template } = await admin
+          .from("products")
+          .select("brand, shade")
+          .eq("id", usage.productId)
+          .eq("workspace_id", workspaceId)
+          .maybeSingle();
+        if (!template?.brand || !template?.shade) continue;
+
+        const { data: ownProduct } = await admin
+          .from("products")
+          .select("id")
+          .eq("workspace_id", workspaceId)
+          .eq("owner_user_id", user.id)
+          .eq("brand", template.brand)
+          .eq("shade", template.shade)
+          .maybeSingle();
+        if (!ownProduct) continue;
+        productIdToDeduct = ownProduct.id;
+      }
+
+      const { data: rpcRows, error: rpcError } = await admin.rpc('deduct_product_stock', {
+        p_product_id: productIdToDeduct,
+        p_workspace_id: workspaceId,
+        p_quantity: usage.estimatedQuantity,
+      });
+
+      if (rpcError) {
+        console.error("[services/complete] deduct_product_stock rpc error:", rpcError.message);
+        continue;
+      }
+      const rpcRow = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows;
+      if (!rpcRow || rpcRow.previous_stock == null) continue;
+
+      const previousStock = Number(rpcRow.previous_stock) || 0;
+      const newStock = Number(rpcRow.new_stock) || 0;
+
+      // Re-fetch the row for alert thresholds + brand/shade for the event payload.
       const { data: product } = await admin
         .from("products")
-        .select("id, quantity, low_stock_threshold, brand, shade")
-        .eq("id", usage.productId)
-        .eq("workspace_id", workspaceId)
-        .single();
+        .select("low_stock_threshold, brand, shade, owner_user_id")
+        .eq("id", productIdToDeduct)
+        .maybeSingle();
 
-      if (!product) continue;
-
-      const previousStock = Number(product.quantity) || 0;
-      const newStock = Math.max(0, previousStock - usage.estimatedQuantity);
-
-      // Deduct from product
-      await admin
-        .from("products")
-        .update({ quantity: newStock, updated_at: now })
-        .eq("id", usage.productId);
-
-      // Create movement record
       await createStockMovement({
         workspaceId,
-        productId: usage.productId,
+        productId: productIdToDeduct,
         movementType: "service_deduct",
         quantityChange: -(usage.estimatedQuantity),
         previousStock,
         newStock,
         serviceCompletionId: completion?.id,
         createdBy: user.id,
+        ownerUserId: callerIsBoothRenter ? user.id : null,
       });
 
-      // Check for low-stock / out-of-stock alert (skip if no threshold configured)
-      const threshold = Number(product.low_stock_threshold) || 0;
+      const threshold = Number(product?.low_stock_threshold) || 0;
       if (threshold > 0 && newStock <= threshold) {
         const alertType = newStock === 0 ? "out_of_stock" : "low_stock";
-        await upsertStockAlert({ workspaceId, productId: usage.productId, alertType });
+        await upsertStockAlert({
+          workspaceId,
+          productId: productIdToDeduct,
+          alertType,
+          ownerUserId: callerIsBoothRenter ? user.id : null,
+        });
 
-        // Fire kernel event (non-blocking)
         publishEvent({
           event_type: "inventory.low_stock",
           workspace_id: workspaceId,
           timestamp: now,
           payload: {
-            product_id: usage.productId,
-            brand: product.brand,
-            shade: product.shade,
+            product_id: productIdToDeduct,
+            brand: product?.brand,
+            shade: product?.shade,
             quantity: newStock,
             low_stock_threshold: threshold,
             alert_type: alertType,

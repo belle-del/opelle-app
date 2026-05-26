@@ -26,6 +26,9 @@ export async function createStockMovement(input: {
   serviceCompletionId?: string;
   notes?: string;
   createdBy?: string;
+  /** Set to the booth_renter's user id when the movement is against
+   *  their isolated stock; leave NULL for workspace-shared stock. */
+  ownerUserId?: string | null;
 }): Promise<StockMovement | null> {
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
@@ -33,6 +36,7 @@ export async function createStockMovement(input: {
     .insert({
       workspace_id: input.workspaceId,
       product_id: input.productId,
+      owner_user_id: input.ownerUserId ?? null,
       movement_type: input.movementType,
       quantity_change: input.quantityChange,
       previous_stock: input.previousStock,
@@ -91,6 +95,9 @@ export async function upsertStockAlert(input: {
   workspaceId: string;
   productId: string;
   alertType: StockAlertType;
+  /** Set to the booth_renter's user id when alerting on their isolated
+   *  stock; leave NULL for workspace-shared stock. */
+  ownerUserId?: string | null;
 }): Promise<StockAlert | null> {
   const admin = createSupabaseAdminClient();
 
@@ -113,6 +120,7 @@ export async function upsertStockAlert(input: {
     .insert({
       workspace_id: input.workspaceId,
       product_id: input.productId,
+      owner_user_id: input.ownerUserId ?? null,
       alert_type: input.alertType,
     })
     .select("*")
