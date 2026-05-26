@@ -148,10 +148,22 @@ CREATE POLICY "metis_lessons_members_all"
 --    needs to write to it before the user has an auth session). Adding
 --    an explicit, documented no-op policy so a future reader doesn't
 --    "fix" it back into a security hole.
-COMMENT ON TABLE pending_client_joins IS
-  'Service-role-only. Magic-link join flow writes here before the user has '
-  'an auth session, so no anon/authenticated policy is appropriate. Any '
-  'reads must go through createSupabaseAdminClient().';
+--
+--    Wrapped in IF EXISTS because some live databases (Belle's as of
+--    2026-05-25) never had the 006b_pending_client_joins.sql migration
+--    applied — see retrospective in docs/plans/2026-05-25-tier1-restart.md.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema='public' AND table_name='pending_client_joins'
+  ) THEN
+    EXECUTE 'COMMENT ON TABLE pending_client_joins IS '
+      '''Service-role-only. Magic-link join flow writes here before the user has '
+      'an auth session, so no anon/authenticated policy is appropriate. Reads '
+      'must go through createSupabaseAdminClient().''';
+  END IF;
+END $$;
 
 -- 9. user_profiles — already correct (read own, update own, service-role
 --    insert). Audit summary was wrong about this one. No change.
