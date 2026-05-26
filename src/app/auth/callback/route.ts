@@ -67,11 +67,19 @@ export async function GET(request: Request) {
           return NextResponse.redirect(`${origin}${next}`);
         }
 
-        // Genuinely new user — no workspace, no membership
+        // Genuinely new user — no workspace, no membership.
+        // Respect `next` so an invite-link round-trip survives:
+        //   /join/abc → /login?redirect=/join/abc → Google → here with
+        //   next=/join/abc → redirect to /join/abc (NOT /onboarding).
+        // For the default next=/app, the middleware will still bounce
+        // the un-onboarded user to /onboarding on the next request.
         if (!profile) {
           await createUserProfile(user.id);
         }
-        return NextResponse.redirect(`${origin}/onboarding`);
+        const isOnboardingDestination = next === "/app" || next === "/";
+        return NextResponse.redirect(
+          `${origin}${isOnboardingDestination ? "/onboarding" : next}`,
+        );
       }
     }
   }

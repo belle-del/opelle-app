@@ -214,6 +214,7 @@ export async function acceptTeamInvite(
     if (updateError || !updated) {
       return { member: null, error: `Failed to update role: ${updateError?.message}` };
     }
+    await markOnboardingCompleteForInvite(admin, userId, invite.role);
     return { member: workspaceMemberRowToModel(updated as WorkspaceMemberRow) };
   }
 
@@ -241,7 +242,54 @@ export async function acceptTeamInvite(
     .update({ accepted_at: new Date().toISOString() })
     .eq("id", invite.id);
 
+  // Mark the user as onboarded so middleware doesn't bounce them back
+  // to /onboarding after they accept — they were onboarded via the
+  // invite-link click instead of the typed-code path.
+  await markOnboardingCompleteForInvite(admin, userId, invite.role);
+
   return { member: workspaceMemberRowToModel(member as WorkspaceMemberRow) };
+}
+
+/**
+ * Idempotently upsert user_profiles for an invite-link acceptance.
+ * - If no profile row exists, insert one with the derived user_type and
+ *   onboarding_completed=true.
+ * - If a profile exists, mark it completed (and backfill user_type only
+ *   when it's currently null — don't overwrite an existing choice).
+ */
+async function markOnboardingCompleteForInvite(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+  role: string,
+): Promise<void> {
+  const { roleToUserType } = await import("@/lib/role-mapping");
+  const userType = roleToUserType(role as TeamRole);
+
+  const { data: existing } = await admin
+    .from("user_profiles")
+    .select("id, user_type, onboarding_completed")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!existing) {
+    await admin.from("user_profiles").insert({
+      user_id: userId,
+      user_type: userType,
+      onboarding_completed: true,
+    });
+    return;
+  }
+
+  // Don't overwrite a user-chosen type; just ensure completed.
+  const updates: { onboarding_completed: boolean; user_type?: string } = {
+    onboarding_completed: true,
+  };
+  if (!existing.user_type) updates.user_type = userType;
+
+  await admin
+    .from("user_profiles")
+    .update(updates)
+    .eq("user_id", userId);
 }
 
 export async function listPendingInvites(workspaceId: string): Promise<TeamInvite[]> {

@@ -7,10 +7,18 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     const supabase = createSupabaseBrowserClient();
 
+    // Forward the post-login destination through the OAuth round-trip.
+    // Without this, an invite-link click → /login?redirect=/join/abc gets
+    // dropped during Google OAuth, the user lands on /auth/callback with
+    // no `next`, and the callback defaults to /onboarding — losing the
+    // invite entirely. The callback reads ?next= and respects it.
+    const search = new URLSearchParams(window.location.search);
+    const next = search.get("redirect") || "/app";
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
         queryParams: {
           prompt: "select_account",
         },
