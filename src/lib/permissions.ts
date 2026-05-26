@@ -142,3 +142,18 @@ export function getEffectivePermissions(
 
 /** All available permissions — used by UI to render the full matrix. */
 export { ALL_PERMISSIONS };
+
+/**
+ * Returns true when the actor is a student in a school-mode workspace.
+ * Callers use this to gate "requires instructor approval" behavior on
+ * service completions and formula entries (Build Bible Module 9).
+ *
+ * Pure function — no DB. Compose with isSchoolMode(workspaceId) to get
+ * the full picture for a given user/workspace pair.
+ */
+export function studentRequiresSupervision(
+  role: TeamRole,
+  isSchoolModeOn: boolean,
+): boolean {
+  return role === 'student' && isSchoolModeOn === true;
+}

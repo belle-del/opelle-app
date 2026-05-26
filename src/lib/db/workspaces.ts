@@ -113,6 +113,24 @@ export async function updateWorkspace(id: string, name: string): Promise<Workspa
   return workspaceRowToModel(data as WorkspaceRow);
 }
 
+/**
+ * Returns the workspace's school_mode flag (default false).
+ *
+ * Fail-closed: returns false on any error / missing row / missing column.
+ * That's the safer default — supervision is OPT-IN, not opt-out. If the
+ * column doesn't exist yet (pre-migration), the supervision gates are
+ * inactive, which matches the pre-school_mode behavior.
+ */
+export async function isSchoolMode(workspaceId: string): Promise<boolean> {
+  const admin = createSupabaseAdminClient();
+  const { data } = await admin
+    .from("workspaces")
+    .select("school_mode")
+    .eq("id", workspaceId)
+    .maybeSingle();
+  return Boolean((data as { school_mode?: boolean } | null)?.school_mode);
+}
+
 export async function regenerateStylistCode(workspaceId: string): Promise<string> {
   const admin = createSupabaseAdminClient();
   const newCode = await generateUniqueStylistCode();

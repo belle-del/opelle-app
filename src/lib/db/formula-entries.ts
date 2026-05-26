@@ -84,6 +84,10 @@ export async function createFormulaEntry(input: {
   rawNotes: string;
   generalNotes?: string;
   serviceDate?: string;
+  /** When provided, persists the status as-is. Defaults to 'posted' (the
+   *  pre-school_mode behavior). Callers in the API layer pass 'draft'
+   *  when the actor is a supervised student. */
+  status?: 'posted' | 'draft';
 }): Promise<FormulaEntry | null> {
   const workspace = await getCurrentWorkspace();
   if (!workspace) {
@@ -102,6 +106,7 @@ export async function createFormulaEntry(input: {
       raw_notes: input.rawNotes,
       general_notes: input.generalNotes || null,
       service_date: input.serviceDate || new Date().toISOString().split("T")[0],
+      status: input.status ?? 'posted',
     })
     .select("*")
     .single();

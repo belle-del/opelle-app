@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getWorkspaceId } from "@/lib/db/get-workspace-id";
+import { getMemberRole } from "@/lib/db/team";
+import { isSchoolMode } from "@/lib/db/workspaces";
+import { studentRequiresSupervision } from "@/lib/permissions";
 import { createStockMovement, upsertStockAlert, listServiceProductUsage } from "@/lib/db/inventory";
 import { publishEvent } from "@/lib/kernel";
 import { fireAutomationsForTrigger } from "@/lib/marketing-triggers";
@@ -49,6 +52,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // school_mode supervision gate: in a school-mode workspace, a student's
+    // completion stays verified=false (awaiting instructor approval). For
+    // everyone else, auto-verify so the curriculum + earnings flows treat
+    // it as a complete completion immediately. The DB column already defaults
+    // to false; we only flip it to true when supervision is NOT required.
+    const [memberInfo, schoolModeOn] = await Promise.all([
+      getMemberRole(user.id, workspaceId),
+      isSchoolMode(workspaceId),
+    ]);
+    const requiresSupervision = memberInfo
+      ? studentRequiresSupervision(memberInfo.role, schoolModeOn)
+      : false;
+    const autoVerify = !requiresSupervision;
+
     // 1. Insert service completion (with photos)
     const { data: completion, error: insertError } = await admin
       .from("service_completions")
@@ -62,6 +79,7 @@ export async function POST(req: NextRequest) {
         notes: notes || null,
         before_photo_url: beforePhotoUrl || null,
         after_photo_url: afterPhotoUrl || null,
+        verified: autoVerify,
       })
       .select("id")
       .single();

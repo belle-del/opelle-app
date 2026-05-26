@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createFormulaEntry, listAllFormulaEntries } from "@/lib/db/formula-entries";
 import { logActivity } from "@/lib/db/activity-log";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getWorkspaceId } from "@/lib/db/get-workspace-id";
+import { getMemberRole } from "@/lib/db/team";
+import { isSchoolMode } from "@/lib/db/workspaces";
+import { studentRequiresSupervision } from "@/lib/permissions";
 
 export async function GET(request: Request) {
   try {
@@ -30,12 +35,38 @@ export async function POST(request: Request) {
       );
     }
 
+    // school_mode supervision gate: if a student writes a formula entry
+    // in a school-mode workspace, persist it as 'draft' so an instructor
+    // can review before it shows up in the normal feed.
+    let status: 'posted' | 'draft' = 'posted';
+    try {
+      const supabase = await createSupabaseServerClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const workspaceId = await getWorkspaceId(user.id);
+        if (workspaceId) {
+          const [memberInfo, schoolModeOn] = await Promise.all([
+            getMemberRole(user.id, workspaceId),
+            isSchoolMode(workspaceId),
+          ]);
+          if (memberInfo && studentRequiresSupervision(memberInfo.role, schoolModeOn)) {
+            status = 'draft';
+          }
+        }
+      }
+    } catch (gateErr) {
+      // Fail-closed-toward-current-behavior: if the gate lookup errors,
+      // fall through with status='posted' (pre-school_mode default).
+      console.error("[formula-entries] supervision gate lookup failed:", gateErr);
+    }
+
     const entry = await createFormulaEntry({
       clientId: body.clientId,
       serviceTypeId: body.serviceTypeId,
       rawNotes: body.rawNotes.trim(),
       generalNotes: body.generalNotes?.trim() || undefined,
       serviceDate: body.serviceDate || undefined,
+      status,
     });
 
     if (!entry) {

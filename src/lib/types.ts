@@ -261,6 +261,8 @@ export type ParsedFormula = {
 };
 
 // Formula Entry (new notepad-based formula)
+export type FormulaEntryStatus = 'posted' | 'draft';
+
 export type FormulaEntry = {
   id: string;
   workspaceId: string;
@@ -270,6 +272,8 @@ export type FormulaEntry = {
   parsedFormula: ParsedFormula | null;
   generalNotes?: string;
   serviceDate: string;
+  /** 'draft' = written by a supervised student, awaiting instructor review. 'posted' = visible normally. */
+  status: FormulaEntryStatus;
   createdAt: string;
   updatedAt: string;
 };
@@ -572,6 +576,7 @@ export type FormulaEntryRow = {
   parsed_formula: ParsedFormula | null;
   general_notes: string | null;
   service_date: string;
+  status?: FormulaEntryStatus | null;
   created_at: string;
   updated_at: string;
 };
@@ -844,6 +849,7 @@ export function formulaEntryRowToModel(row: FormulaEntryRow): FormulaEntry {
     parsedFormula: row.parsed_formula,
     generalNotes: row.general_notes ?? undefined,
     serviceDate: row.service_date,
+    status: (row.status ?? 'posted') as FormulaEntryStatus,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
