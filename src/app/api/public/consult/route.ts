@@ -291,6 +291,7 @@ export async function POST(request: NextRequest) {
           },
           formulaHistory: null,
           availableServices,
+          answererRole: "client",
         });
       } catch (err) {
         console.error("[public/consult] Claude analysis failed:", err);

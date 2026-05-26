@@ -314,6 +314,11 @@ export async function analyzeInspoVision(params: {
   // can ask, for example, "are you open to extensions?" when the inspo is longer
   // than the client's current hair.
   availableServices?: string[];
+  // Who is answering the kernel's clarifying questions. "client" = end client via
+  // the client portal (plain-language phrasing). "stylist" = stylist/student
+  // answering on the client's behalf in the chair (cosmetology-fluent phrasing,
+  // e.g. K-tip lengths, Shades EQ shades, developer volumes).
+  answererRole: "client" | "stylist";
 }): Promise<{
   questions: { id: string; question: string; type: string; options?: string[]; photoIndex?: number }[];
   clientSummary: string;
@@ -325,6 +330,7 @@ export async function analyzeInspoVision(params: {
     client_context: params.clientContext,
     formula_history: params.formulaHistory,
     available_services: params.availableServices ?? null,
+    answerer_role: params.answererRole,
   }, 60000); // 60s for vision
 }
 
@@ -340,6 +346,10 @@ export async function generateStylistIntel(params: {
     styleNotes?: string;
   } | null;
   formulaHistory: string | null;
+  // Who supplied the `answers` above. Carried through into the synthesized
+  // intelligence so endpoints 2 (formula) and 4 (appointment-flag) inherit
+  // the correct voice without re-flagging. See analyzeInspoVision for details.
+  answererRole: "client" | "stylist";
 }): Promise<{
   whatWasLearned: string;
   appointmentPrep: string;
@@ -354,6 +364,7 @@ export async function generateStylistIntel(params: {
     client_notes: params.clientNotes,
     client_context: params.clientContext,
     formula_history: params.formulaHistory,
+    answerer_role: params.answererRole,
   }, 30000);
 }
 

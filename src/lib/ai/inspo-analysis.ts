@@ -65,6 +65,10 @@ export async function analyzeInspoDirect(params: {
   } | null;
   formulaHistory: string | null;
   availableServices?: string[];
+  // "client" for client portal / public consult flows (default voice).
+  // "stylist" for the student-standalone / stylist-in-chair flow — kernel
+  // will use cosmetology-fluent question phrasing.
+  answererRole: "client" | "stylist";
 }): Promise<InspoAnalysisResult> {
   // Inject the services list into clientNotes as well so the existing kernel
   // prompt sees them even before it formally consumes `available_services`.
@@ -83,6 +87,7 @@ export async function analyzeInspoDirect(params: {
     clientContext: params.clientContext,
     formulaHistory: params.formulaHistory,
     availableServices: params.availableServices,
+    answererRole: params.answererRole,
   });
 
   if (!result || !result.questions) {
@@ -112,6 +117,10 @@ export async function generateStylistIntelligence(params: {
     styleNotes?: string;
   } | null;
   formulaHistory: string | null;
+  // Must match the answererRole that was used on the corresponding
+  // analyzeInspoDirect() call — the kernel carries this through into the
+  // synthesized intelligence so endpoints 2 and 4 inherit the right voice.
+  answererRole: "client" | "stylist";
 }): Promise<StylistIntelligence> {
   const result = await generateStylistIntel({
     questions: params.questions,
@@ -120,6 +129,7 @@ export async function generateStylistIntelligence(params: {
     clientNotes: params.clientNotes,
     clientContext: params.clientContext,
     formulaHistory: params.formulaHistory,
+    answererRole: params.answererRole,
   });
 
   if (!result) {

@@ -183,6 +183,7 @@ export async function POST(request: NextRequest) {
           }
         : null,
       formulaHistory: formulaHistory || null,
+      answererRole: "client",
     });
   } catch (err) {
     console.error("Claude inspo analysis failed:", err);

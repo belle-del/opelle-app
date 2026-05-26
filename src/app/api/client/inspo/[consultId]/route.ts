@@ -167,6 +167,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
           }
         : null,
       formulaHistory: formulaHistory || null,
+      answererRole: "client",
     });
 
     // Check if next appointment time might not align with what was learned

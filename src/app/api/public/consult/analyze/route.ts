@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       clientNotes: null,
       clientContext: null,
       formulaHistory: null,
+      answererRole: "client",
     });
 
     return NextResponse.json(
